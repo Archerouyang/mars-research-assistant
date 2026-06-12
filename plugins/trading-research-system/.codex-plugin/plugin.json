@@ -1,0 +1,34 @@
+{
+  "name": "trading-research-system",
+  "version": "0.1.0+codex.20260612130625",
+  "description": "A trading research workflow for macro policy filtering, equity screening, price action timing, and portfolio risk checks.",
+  "author": {
+    "name": "Archer"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "trading",
+    "investment-research",
+    "macro",
+    "equity-screening",
+    "risk-management"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Trading Research System",
+    "shortDescription": "Macro-aware equity research, timing, and risk workflows.",
+    "longDescription": "Trading Research System helps Codex run a disciplined trading research workflow: filter macro and policy noise, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, and check portfolio risk exposure.",
+    "developerName": "Archer",
+    "category": "Productivity",
+    "capabilities": [
+      "Research",
+      "Analysis"
+    ],
+    "defaultPrompt": [
+      "Run my trading research workflow on NVDA.",
+      "Screen stocks for a falling-rate environment.",
+      "Check my portfolio risk exposure."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
