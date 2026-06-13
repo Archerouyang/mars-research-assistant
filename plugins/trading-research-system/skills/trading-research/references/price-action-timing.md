@@ -45,6 +45,27 @@ Every setup needs:
 7. What failure looks like after entry.
 8. Whether the setup fits the user's time horizon and portfolio.
 
+## Intraday Trigger Confirmation
+
+For plan-scoped intraday setup scans, do not mark a plan as `triggered` from price contact alone. A triggered setup needs all default confirmation checks:
+
+1. Price reaches the planned key level, zone, or structure.
+2. The execution timeframe shows the planned setup type.
+3. The signal bar is at least medium quality for that setup.
+4. The setup is not clearly against the higher-timeframe background.
+5. The post-trigger entry still has acceptable risk/reward.
+
+If price is near the level but execution-timeframe confirmation is missing, use `approaching`. If the plan's invalidation condition is hit, use `invalidated` before considering any new setup. If data, plan fields, timeframes, news context, or portfolio risk make the state unclear, use `needs_review`.
+
+## Instrument Strictness
+
+Adjust trigger strictness by `instrument_type`:
+
+- `qqq_0dte_call`, `qqq_0dte_put`, `spy_0dte_call`, `spy_0dte_put`: strictest. Require clear execution-timeframe confirmation, clean invalidation, and no vague signal bars.
+- `leveraged_etf_2x`, `leveraged_etf_3x`: strict. Confirm trend structure, 20/50 EMA context, and risk before treating a setup as triggered.
+- `stock_common`, `stock_high_momentum`, `etf_common`, `sector_etf`, `swing_option_call`, `swing_option_put`: balanced. Require planned setup confirmation and higher-timeframe alignment, but allow normal swing-trade noise.
+- `leap_call`, `leap_put`: slower confirmation. Weight daily/weekly background more heavily than exact intraday prints, while preserving the planned invalidation condition.
+
 ## Warnings
 
 - Do not buy in the middle of a trading range unless the trade is explicitly a scalp with tight risk.
