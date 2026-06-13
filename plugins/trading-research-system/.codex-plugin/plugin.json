@@ -1,6 +1,6 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260613084726",
+  "version": "0.1.0+codex.20260613085202",
   "description": "A trading research workflow for macro policy filtering, equity screening, price action timing, and portfolio risk checks.",
   "author": {
     "name": "Archer"

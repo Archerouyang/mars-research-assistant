@@ -65,6 +65,8 @@ Google Sheets sync is planned as a later mirror/review layer.
 
 In the source repository, `docs/ROADMAP.md` is the public planning document for capability boundaries, execution method, task breakdown, and progress tracking.
 
+Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates and important plugin changes.
+
 ## Scripts
 
 ```bash

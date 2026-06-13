@@ -51,11 +51,23 @@ This repository keeps only distributable plugin artifacts and user-readable docu
 - `CONTEXT.md`
 - `docs/adr/`
 - `docs/ROADMAP.md`
+- `docs/PROJECT_LOG.md`
 - `交易研究工作流.md`
 - `投资分析提示词.md`
 - `.gitignore`
 
 Internal collaboration rules, private trade-analysis material, credentials, and agent coordination docs stay outside this public plugin repository.
+
+## GitHub Trajectory
+
+Project trajectory should be visible on GitHub through four public artifacts:
+
+- commit history for exact code/document changes;
+- `docs/PROJECT_LOG.md` for human-readable update records;
+- `docs/ROADMAP.md` for current plan, progress, milestones, and next implementation tasks;
+- `docs/adr/` for hard-to-reverse architecture decisions.
+
+Update `docs/PROJECT_LOG.md` whenever a change materially affects capability boundaries, execution method, roadmap milestones, schemas, plugin behavior, or external integration decisions.
 
 ## Current Progress
 
