@@ -1,13 +1,21 @@
 ---
 name: trading-research
-description: Run a disciplined trading and investment research workflow covering market-moving macro policy, Treasury policy, rates and bond yields, equity screening, research-note verification, Al Brooks-style price action timing, and portfolio risk exposure. Use when the user asks for stock screening, trading research, macro-to-equity analysis, buy/sell timing, position review, portfolio risk, or explicitly invokes trading-research.
+description: Run a disciplined trading and investment research workflow covering market-moving macro policy, Treasury policy, rates and bond yields, equity screening, research-note verification, Al Brooks-style price action timing, intraday setup scanning, trade review, and portfolio risk exposure. Use when the user asks for stock screening, trading research, macro-to-equity analysis, buy/sell timing, intraday plan monitoring, position review, portfolio risk, or explicitly invokes trading-research.
 ---
 
 # Trading Research
 
-Use this skill to help the user research trading ideas, screen stocks, validate market narratives, time entries/exits, and review portfolio risk.
+Use this skill to help the user research trading ideas, screen stocks, validate market narratives, time entries/exits, monitor current-day plans, record actual trades, and review portfolio risk.
 
 This is a decision-support workflow. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
+
+## Operating Modes
+
+- Research memo: macro/rates, thesis validation, screening, price action, and portfolio impact.
+- Daily preparation: initialize local records, prepare watchlists, trade plans, and macro checklists.
+- Intraday setup scan: monitor only planned trades for `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
+- Trade review: collect actual trade details through one-question-at-a-time review intake.
+- Statistics: summarize closed trades by setup, instrument, timeframe, confidence, mistake tag, and R-multiple.
 
 ## Workflow
 
@@ -33,6 +41,7 @@ This is a decision-support workflow. Do not present outputs as guaranteed return
    - For entry/exit timing, chart interpretation, or trade setup classification, read `references/price-action-timing.md`.
    - For holdings, sizing, correlation, or portfolio risk, read `references/portfolio-risk.md`.
    - For trade plans, trade records, reviews, or system statistics, read `references/trade-journal.md`.
+   - For intraday plan monitoring or setup scans, read `references/intraday-setup-scan.md`.
    - For daily actual trade review intake or journal completion, read `references/interactive-trade-review.md`.
    - For final formatting, read `references/output-templates.md`.
 
