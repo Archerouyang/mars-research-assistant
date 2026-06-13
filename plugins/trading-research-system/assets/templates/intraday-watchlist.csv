@@ -1,0 +1,2 @@
+date,trade_id,ticker,underlying,direction,instrument_type,market_analysis_timeframes,execution_timeframe,setup_type,key_levels,entry_trigger,invalidation_condition,current_status,last_checked,attention_reason,notes
+2026-06-12,20260612-QQQ-001,QQQ 0DTE 485C,QQQ,long,qqq_0dte_call,"Daily;1h;15m",5m,breakout_pullback,"485;487;480",5m pullback holds 20EMA and breaks signal bar low risk,back into range and 5m close below 20EMA,planned,,waiting for setup,

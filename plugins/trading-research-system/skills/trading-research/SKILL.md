@@ -32,20 +32,31 @@ This is a decision-support workflow. Do not present outputs as guaranteed return
    - For stock screening, research-note validation, or company analysis, read `references/equity-screening.md`.
    - For entry/exit timing, chart interpretation, or trade setup classification, read `references/price-action-timing.md`.
    - For holdings, sizing, correlation, or portfolio risk, read `references/portfolio-risk.md`.
+   - For trade plans, trade records, reviews, or system statistics, read `references/trade-journal.md`.
+   - For daily actual trade review intake or journal completion, read `references/interactive-trade-review.md`.
    - For final formatting, read `references/output-templates.md`.
 
-5. For Seeking Alpha or similar sources:
+5. Use bundled scripts when structured CSV input is available:
+   - For holdings or exposure files, run `scripts/portfolio_risk.py`.
+   - For candidate/watchlist files, run `scripts/watchlist_score.py`.
+   - To create `data/daily/YYYY-MM-DD/`, run `scripts/init_daily.py`.
+   - For closed-trade statistics, run `scripts/trade_stats.py`.
+   - To append a completed review section to `reviews.md`, run `scripts/append_review.py`.
+   - Use templates in `assets/templates/` when the user wants a data-capture format.
+   - Treat script output as arithmetic support, not a substitute for judgment or current-data verification.
+
+6. For Seeking Alpha or similar sources:
    - If content is publicly available, summarize only short relevant claims and cite the page.
    - If content is paywalled or unavailable, ask the user to provide excerpts or links they are authorized to use.
    - Do not quote large portions of copyrighted research.
    - Cross-check author claims against company filings, investor relations, official statistics, and current market data.
 
-6. For Al Brooks-style price action:
+7. For Al Brooks-style price action:
    - Use high-level concepts only: trend, trading range, breakout, failed breakout, pullback, second entry, reversal attempt, measured move, risk/reward.
    - Do not claim a pattern guarantees an outcome.
    - Avoid stale chart conclusions. Use current chart data or ask the user for the chart/timeframe.
 
-7. Finish with a compact action-oriented memo:
+8. Finish with a compact action-oriented memo:
    - Research conclusion.
    - What is verified vs assumed.
    - Best long case and best short case.
@@ -53,6 +64,18 @@ This is a decision-support workflow. Do not present outputs as guaranteed return
    - Invalidation and risk controls.
    - Portfolio exposure impact.
    - Next research steps.
+
+## Interactive Trade Review Mode
+
+When the user wants to record actual trades, complete daily trading records, or review a trade, switch to interactive trade review mode:
+
+1. Read `references/interactive-trade-review.md`.
+2. Ask one question at a time.
+3. Map each answer to `trades.csv` fields and a `reviews.md` section.
+4. Compare against `trade-plans.csv` when a matching plan exists.
+5. Do not write final records until the key fields are resolved and the user confirms.
+
+Key fields to resolve include entry reason, market background, signal bar, auxiliary signal, confidence, risk plan, exit result, mistake tag, and lesson.
 
 ## Default Output Style
 
@@ -76,3 +99,14 @@ Use clear labels:
 - Do not use unsupported live facts from memory.
 - Do not rely on one author, article, or social-media post as the thesis.
 - Do not provide tax, legal, or regulated investment advice.
+
+## Bundled Data Templates
+
+- `assets/templates/holdings.csv`: portfolio risk input.
+- `assets/templates/watchlist.csv`: candidate scoring input.
+- `assets/templates/trade-plans.csv`: planned trades and intraday setup-scan input.
+- `assets/templates/intraday-watchlist.csv`: plan-scoped intraday setup scan list.
+- `assets/templates/trades.csv`: actual trade records.
+- `assets/templates/reviews.md`: daily review notes.
+- `assets/templates/research-note-log.csv`: research-note validation log.
+- `assets/templates/daily-macro-checklist.md`: daily macro policy checklist.
