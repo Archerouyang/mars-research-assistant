@@ -2,6 +2,34 @@
 
 这个目录用于整理交易想法、金融研究、投资复盘和风险检查。
 
+## Quick Reference for Codex (English)
+
+- **Claude** (this agent): implementation, execution, code/scripts/templates/tests, TDD delivery.
+- **Codex**: planning, architecture, PRD, issue triage, review, high-level design.
+- **Source of truth for norms**: `AGENTS.md` (this file). Keep `CLAUDE.md` minimal.
+- **Domain language**: read `CONTEXT.md` and `docs/adr/` before acting.
+- **TDD**: behavior-first, vertical slices, red-green-refactor. See "TDD 规范" below.
+- **Git**: small commits, one logical change per commit, no destructive commands without explicit user approval, prefer worktrees for parallel work.
+- **Issue tracker**: GitHub Issues in `Archerouyang/dailytrades`, managed via `gh` CLI. See `docs/agents/issue-tracker.md`.
+- **Skills**: read `SKILL.md` before invoking. Codex commonly uses `to-prd`, `to-issues`, `triage`, `improve-codebase-architecture`, `zoom-out`, `diagnose`, `grill-with-docs`. Claude commonly uses `tdd`, `prototype`, `handoff`, `verify`.
+
+## Agent 协作分工 / Agent Collaboration
+
+- **Codex 是主导者（boss）**：负责规划、架构设计、PRD、issue triage、审查、高层设计决策、任务拆分与优先级判断。Claude 完全服务于 Codex 的规划，执行前必须确认 Codex 给出的方向。
+- **Claude（本对话 agent）**：主负责实现、执行、写代码/脚本/模板/文档、跑测试、按 TDD 循环交付。对不确定或可能偏离规划的问题，先请示 Codex 或用户，不擅自改方向。
+- 双方都必须先读 `AGENTS.md` 和 `CONTEXT.md`，用项目里的领域语言说话。
+- 交接方式：文件 > Git 分支 > handoff 文档。不要假设另一个 agent 记得当前对话。
+- **AGENTS.md 是本项目的核心规范入口；CLAUDE.md 只保留最简指针，不重复放规范。**
+
+## Agent skills / 技能配置
+
+- **Issue tracker**: GitHub Issues in `Archerouyang/dailytrades`. See `docs/agents/issue-tracker.md`.
+- **Triage labels**: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+- **Domain docs**: single-context repo with `CONTEXT.md` at root and `docs/adr/` for ADRs. See `docs/agents/domain.md`.
+
+Use a skill only after reading its `SKILL.md`.
+
+
 ## 投资协作边界
 
 - 以研究、分析框架、情景推演、风险控制、复盘和决策支持为主。
@@ -53,7 +81,96 @@
 6. Price action 择时：区分趋势跟随、回调买入/卖出、突破、失败突破、交易区间高抛低吸、反转交易等类型。
 7. 组合风险检查：评估新增交易对总仓位、相关性、行业集中和情景回撤的影响。
 
-## 工作区与分支策略
+## Git 规范 / Git Norms
+
+- **以 AGENTS.md 为规范源**：修改规范优先改 `AGENTS.md`，不往 `CLAUDE.md` 堆新内容。
+- **早提交、小提交**：一个 commit 只做一件事，commit message 用动词开头，说明“为什么”而非“改了什么”。
+- **提交前检查**：`git status`、`git diff`，确认只包含相关改动；不要把 `.DS_Store`、临时文件或 credentials 提交。
+- **危险操作必须经用户确认**：`git push`、`git reset --hard`、`git clean -f`、`git branch -D`、`git checkout .` 等破坏性操作默认不执行。
+- **隔离实验性改动**：当前工作区有未提交改动，且任务需要切分支、大幅修改、实验、并行探索、review 其他分支或让另一个 agent 独立处理时，优先 `fork in new worktree`。
+- **GitHub issue tracker**：issue/PRD/task 使用 `Archerouyang/dailytrades` 的 GitHub Issues，通过 `gh` CLI 管理。详见 `docs/agents/issue-tracker.md`。
+
+## TDD 规范 / TDD Norms
+
+基于 Matt Pocock `tdd` skill。
+
+### 核心原则 / Core Principles
+
+- **测试行为，不测试实现**：通过公共接口验证行为；内部重构不应导致测试失败。
+- **集成优先**：尽量走真实代码路径，少 mock 内部协作对象。
+- **一个测试描述一个行为**，测试读起来像规格说明。
+
+### 工作流：垂直切片 / Vertical Slices
+
+禁止“先把所有测试写完，再写实现”的水平切片。
+
+正确循环：
+
+```
+RED  → 写一个测试，确认它失败
+GREEN → 写最少代码让它通过
+REFACTOR → 清理代码，保持测试通过
+```
+
+重复：一次一个测试 → 一个实现 → 下一个测试。
+
+### 每个周期检查清单 / Per-Cycle Checklist
+
+- [ ] 测试描述的是行为，不是实现细节。/ Test describes behavior, not implementation.
+- [ ] 测试只使用公共接口。/ Test uses public interface only.
+- [ ] 内部重构后测试仍能存活。/ Test survives internal refactor.
+- [ ] 当前代码只满足当前测试，不预测未来测试。/ Code is minimal for this test.
+- [ ] 不添加推测性功能。/ No speculative features added.
+
+### 规划阶段 / Planning
+
+写代码前：
+
+- 确认公共接口长什么样。
+- 确认哪些行为最值得测（抓关键路径和复杂逻辑，不穷举边角）。
+- 使用 `CONTEXT.md` 里的领域语言命名测试和接口。
+- 列出要测的行为清单，经用户认可后再开始 red-green-refactor。
+
+### 重构规则 / Refactor Rules
+
+- 测试全绿之前不重构。
+- 每次重构后跑测试。
+- 寻找重复、深化模块、自然应用 SOLID。
+
+## Skill 使用规范 / Skill Usage
+
+已安装 Matt Pocock skills，Claude 和 Codex 按需调用。
+
+### 规划/审查类 / Planning & Review (mainly Codex)
+
+- `to-prd`：把需求/想法转成 PRD。
+- `to-issues`：把任务拆成可追踪 issue。
+- `triage`：处理 incoming issue，打标签、分状态。
+- `improve-codebase-architecture`：找架构深化机会。
+- `zoom-out`：宏观审视当前改动方向。
+- `diagnose`：复杂问题诊断。
+- `grill-with-docs`：用文档拷问自己设计是否自洽。
+
+### 实现类 / Implementation (mainly Claude)
+
+- `tdd`：测试驱动开发，red-green-refactor。
+- `prototype`：快速原型验证想法。
+- `handoff`：把当前上下文压缩，交给另一个 agent。
+- `verify`：跑应用验证改动真的生效。
+
+### 项目配置类 / Project Setup
+
+- `setup-matt-pocock-skills`：如果 `docs/agents/` 还不存在，先跑这个配置 issue tracker、标签体系和 domain docs。
+- `git-guardrails-claude-code`：安装危险 git 命令拦截 hook；推荐在项目 `.claude/settings.json` 启用。
+
+### 其他 / Others
+
+- `obsidian-vault`：管理 Obsidian 笔记和链接。
+- `caveman`、`grill-me`、`teach`：学习、拷问、教学场景。
+
+使用 skill 前先读它的 `SKILL.md`，不要只看名字就调用。
+
+## 工作区与分支策略 / Worktree & Branch Strategy
 
 - 当当前工作区存在未提交改动，而任务需要切分支、大幅修改、实验性方案、并行探索、review 其他分支或让另一个 agent 独立处理时，可以主动建议或选择 fork in new worktree，以隔离文件状态和降低冲突风险。
 - 对普通问答、只读研究、小范围笔记编辑或低风险单文件修改，默认不需要创建新 worktree。
