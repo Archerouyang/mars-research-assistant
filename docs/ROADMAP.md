@@ -52,6 +52,7 @@ This repository keeps only distributable plugin artifacts and user-readable docu
 - `docs/adr/`
 - `docs/ROADMAP.md`
 - `docs/PROJECT_LOG.md`
+- `docs/DEVELOPMENT_PLAN.md`
 - `交易研究工作流.md`
 - `投资分析提示词.md`
 - `.gitignore`
@@ -67,6 +68,7 @@ Project trajectory should be visible on GitHub through four public artifacts:
 - commit history for exact code/document changes;
 - `docs/PROJECT_LOG.md` for human-readable update records;
 - `docs/ROADMAP.md` for current plan, progress, milestones, and next implementation tasks;
+- `docs/DEVELOPMENT_PLAN.md` for active development priorities, daily planning, and progress review;
 - `docs/adr/` for hard-to-reverse architecture decisions.
 
 Update `docs/PROJECT_LOG.md` whenever a change materially affects capability boundaries, execution method, roadmap milestones, schemas, plugin behavior, or external integration decisions.
@@ -105,6 +107,7 @@ Rules:
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
+| Daily development automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Google Sheets sync implementation | Planned | no script yet |
 | IBKR-driven chart/scan artifacts | Planned | no artifact generator yet |
 | Option-flow anomaly module | Planned | data vendor not selected |
