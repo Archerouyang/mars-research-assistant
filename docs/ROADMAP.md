@@ -71,6 +71,27 @@ Project trajectory should be visible on GitHub through four public artifacts:
 
 Update `docs/PROJECT_LOG.md` whenever a change materially affects capability boundaries, execution method, roadmap milestones, schemas, plugin behavior, or external integration decisions.
 
+## Branch Strategy
+
+Use a lightweight branch model:
+
+- `master`: stable baseline for the public plugin repository. It represents the current reviewed canonical state, not a complete product release.
+- `dev`: integration branch for reviewed work before it becomes the stable baseline.
+- `codex/<task>`: task branches for implementation, documentation, experiments, or Claude Code worker tasks.
+
+Default flow:
+
+```text
+codex/<task> -> dev -> master
+```
+
+Rules:
+
+- Claude Code works on task branches or isolated worktrees, not directly on `master`.
+- Codex reviews task output before merge or promotion.
+- `master` receives only staged stable snapshots from `dev`.
+- Do not create release tags or public version semantics until the initial complete workflow, production chain, and interaction model are settled.
+
 ## Current Progress
 
 | Area | Status | Evidence |
