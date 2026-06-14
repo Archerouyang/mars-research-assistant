@@ -31,6 +31,12 @@ Use this shape:
 
 ## 2026-06-14
 
+- Commit: `7799a12` `Refocus daily planning on product capability`
+- Scope: planning
+- What changed: corrected `docs/DEVELOPMENT_PLAN.md` and weekday automation prompts so daily planning prioritizes product-capability work over process or harness work.
+- Why it matters: keeps the project centered on the trading research plugin's product loop: local records, planned setup scanning, trade review, statistics, sync, and chart artifacts.
+- Next step: start the next task with fixture data, then implement the local intraday scan script against those fixtures.
+
 - Commit: `abf125a` `Define development workflow and test scope`
 - Scope: decision
 - What changed: added `docs/DEVELOPMENT.md` to define Codex/Claude handoff, worktree use, TDD boundaries, test scope, lightweight CI policy, and acceptance gates. Clarified that live IBKR connector behavior is outside this repo's test scope.
