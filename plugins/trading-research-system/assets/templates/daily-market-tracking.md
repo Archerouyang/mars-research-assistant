@@ -1,9 +1,10 @@
-# Daily Market Tracking
+# Market Plan Update
 
 ## Date
 
 - Date:
-- Linked weekly review plan:
+- Update depth: deep_update / quick_update / trigger_update / review_update
+- Linked market plan:
 - Market regime:
 - Rates/yields:
 - Macro / policy events:
@@ -33,15 +34,15 @@
 
 ## Momentum Leaderboard Update
 
-| Ticker/theme | Direction | Change since weekly review plan | Setup impact |
+| Ticker/theme | Direction | Change since Active Market Plan | Setup impact |
 | --- | --- | --- | --- |
 |  |  |  |  |
 
-## Active Ideas From Weekly Review Plan
+## Setup Status Changes
 
-| trade_id | Ticker | Status | Current read | Trigger zone | Invalidation | Updated levels | Attention |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  | waiting / approaching / triggered / invalidated / needs_review |  |  |  |  |  |
+| setup_id | Symbol | Instrument | Previous status | New status | Current read | Trigger zone | Invalidation | Updated levels | Attention |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  | candidate / active / approaching / triggered / invalidated / needs_review / completed |  |  |  |  |  |
 
 ## New Evidence
 
@@ -52,7 +53,7 @@
 
 ## Opportunity Updates
 
-### {trade_id} - {ticker}
+### {setup_id} - {ticker}
 
 - What changed:
 - Setup read:
@@ -66,4 +67,4 @@
 - Best opportunity:
 - Missed opportunity:
 - Invalidated idea:
-- Plan update for tomorrow:
+- Plan update for next session:

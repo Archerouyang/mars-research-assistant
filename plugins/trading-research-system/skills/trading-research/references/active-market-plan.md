@@ -1,0 +1,107 @@
+# Active Market Plan
+
+Use this reference for the core market planning loop. Weekly, daily, intraday, and post-trade work are not separate products; they are different update depths against the same active plan.
+
+## Files
+
+Use:
+
+```text
+data/market-plan.md
+data/updates/YYYY-MM-DD.md
+data/daily/YYYY-MM-DD/
+```
+
+- `data/market-plan.md`: overwriteable living state. It should always show the current plan.
+- `data/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
+- `data/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
+
+## Update Depths
+
+Use one loop with different depth, not separate modes:
+
+- `deep_update`: weekend or major reset. Includes prior-week trade summary, market state, macro/rates, policy/news, event preview, momentum leaderboard rebuild, setup pool refresh, and risk budget review.
+- `quick_update`: weekday premarket or market-hours update. Focuses on what changed since the current plan and which setups move status or priority.
+- `trigger_update`: intraday update focused on setup status, trigger zone, invalidation, execution checklist, and exposure constraints.
+- `review_update`: post-order or post-exit update linking actual trade facts and review notes back to the setup.
+
+## Setup Pool
+
+The setup is the smallest planning unit. A setup is not just a ticker and not just a broad trade idea.
+
+Required setup fields:
+
+- `setup_id`
+- `theme_id`
+- `market_context_id`
+- `symbol`
+- `underlying`
+- `direction`
+- `instrument_type`
+- `analysis_timeframe`
+- `trigger_timeframe`
+- `setup_type`
+- `status`
+- `trigger_zone`
+- `invalidation`
+- `stop_concept`
+- `target_zone`
+- `risk_budget`
+- `evidence_needed`
+- `last_updated`
+
+If the same market opportunity can be traded with multiple instruments, create multiple setups that share the same `theme_id` or `market_context_id`.
+
+Example:
+
+- `theme_id`: `qqq-risk-on-breakout`
+- `setup_id`: `qqq-0dte-call-breakout-pullback`
+- `setup_id`: `tqqq-daytrade-breakout-pullback`
+- `setup_id`: `qqq-etf-swing-breakout-pullback`
+
+## Setup Statuses
+
+Use stable statuses:
+
+- `candidate`: candidate idea, not yet actively tracked.
+- `active`: confirmed in the current plan and should be updated.
+- `approaching`: near the planned key area, but execution confirmation is missing.
+- `triggered`: planned trigger conditions appeared and a human decision is needed.
+- `invalidated`: the original plan is no longer valid.
+- `needs_review`: classification is unsafe because data, context, plan quality, event risk, or portfolio risk needs human review.
+- `completed`: trade completed, setup expired, or setup archived.
+
+Do not use `triggered` as a buy/sell instruction. `triggered` means `execution_check_required`.
+
+## Execution Check
+
+Before a triggered setup can become an actual trade, check:
+
+- portfolio exposure and correlated risk;
+- day risk limit and emotional/operational constraints;
+- nearby macro, earnings, policy, or auction events;
+- liquidity, spread, IV, and product-specific costs;
+- instrument-specific time window and trigger strictness;
+- whether the setup still has acceptable risk/reward.
+
+The plugin may surface the checklist. The user places orders manually.
+
+## Update Rules
+
+When updating `market-plan.md`:
+
+1. Preserve current useful state.
+2. Change only fields justified by new evidence.
+3. Mark stale assumptions explicitly.
+4. Move setup statuses forward or to `needs_review` when evidence is incomplete.
+5. Do not resurrect `invalidated` setups automatically; create a new setup or require human review.
+6. Append the update rationale to `data/updates/YYYY-MM-DD.md`.
+
+When writing update notes, keep the audit trail compact:
+
+- update depth;
+- changed market variables;
+- changed setup statuses;
+- changed levels;
+- source/evidence;
+- next inspection order.

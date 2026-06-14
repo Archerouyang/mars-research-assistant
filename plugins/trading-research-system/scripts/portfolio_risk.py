@@ -86,11 +86,18 @@ def enrich_rows(rows: list[dict[str, str]]) -> list[dict[str, object]]:
         enriched.append(
             {
                 "ticker": (row.get("ticker") or row.get("symbol") or "").strip().upper(),
+                "broker_account": (
+                    f"{(row.get('broker') or 'manual').strip() or 'manual'}:"
+                    f"{(row.get('account_id') or 'unknown').strip() or 'unknown'}"
+                ),
+                "underlying": (row.get("underlying") or row.get("ticker") or row.get("symbol") or "").strip().upper(),
                 "direction": direction,
                 "weight": weight,
                 "signed_weight": signed_weight,
                 "sector": (row.get("sector") or "Unclassified").strip() or "Unclassified",
                 "asset_class": (row.get("asset_class") or "Equity").strip() or "Equity",
+                "instrument_type": (row.get("instrument_type") or "unspecified").strip() or "unspecified",
+                "theme_id": (row.get("theme_id") or "unmapped").strip() or "unmapped",
                 "beta": parse_number(row.get("beta")),
                 "rate_sensitivity": (row.get("rate_sensitivity") or "").strip(),
                 "usd_sensitivity": (row.get("usd_sensitivity") or "").strip(),
@@ -136,6 +143,10 @@ def render_markdown(rows: list[dict[str, object]], top: int) -> str:
     beta = weighted_average_beta(rows)
     sectors = aggregate_by(rows, "sector")
     asset_classes = aggregate_by(rows, "asset_class")
+    broker_accounts = aggregate_by(rows, "broker_account")
+    underlyings = aggregate_by(rows, "underlying")
+    instruments = aggregate_by(rows, "instrument_type")
+    themes = aggregate_by(rows, "theme_id")
     top_rows = sorted(rows, key=lambda row: abs(float(row["signed_weight"])), reverse=True)[:top]
 
     lines = [
@@ -158,6 +169,22 @@ def render_markdown(rows: list[dict[str, object]], top: int) -> str:
     lines.extend(["", "## Asset Class Exposure", "| Asset Class | Net Weight |", "|---|---:|"])
     for asset_class, value in asset_classes.items():
         lines.append(f"| {asset_class} | {pct(value)} |")
+
+    lines.extend(["", "## Broker / Account Exposure", "| Broker Account | Net Weight |", "|---|---:|"])
+    for broker_account, value in broker_accounts.items():
+        lines.append(f"| {broker_account} | {pct(value)} |")
+
+    lines.extend(["", "## Underlying Exposure", "| Underlying | Net Weight |", "|---|---:|"])
+    for underlying, value in underlyings.items():
+        lines.append(f"| {underlying or 'N/A'} | {pct(value)} |")
+
+    lines.extend(["", "## Instrument Exposure", "| Instrument Type | Net Weight |", "|---|---:|"])
+    for instrument, value in instruments.items():
+        lines.append(f"| {instrument} | {pct(value)} |")
+
+    lines.extend(["", "## Theme Exposure", "| Theme | Net Weight |", "|---|---:|"])
+    for theme, value in themes.items():
+        lines.append(f"| {theme} | {pct(value)} |")
 
     lines.extend(
         [

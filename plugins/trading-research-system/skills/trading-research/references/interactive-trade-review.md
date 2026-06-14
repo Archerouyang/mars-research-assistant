@@ -22,8 +22,8 @@ Do not accept vague answers when the field matters for statistics. If the user s
 
 - Ask one question at a time.
 - Prefer concrete facts: time, price, timeframe, signal bar, stop, target, quantity, cost, PnL.
-- Use IBKR order/trade facts when available for objective fields such as symbol, side, quantity, price, fees, order time, fill time, and PnL. Ask the user to confirm before writing.
-- If the user already has a planned trade in `trade-plans.csv`, compare the actual trade to that plan.
+- Use read-only broker order/trade facts when available for objective fields such as symbol, side, quantity, price, fees, order time, fill time, and PnL. Ask the user to confirm before writing.
+- If the user already has a setup in `market-plan.md` or a planned trade in `trade-plans.csv`, compare the actual trade to that setup/plan.
 - Keep a running draft of mapped fields internally and write the final result only after the key fields are resolved.
 - If exact numeric data is missing, mark it as `unknown` or leave the field blank; do not fabricate.
 - Preserve the user's original review wording in `review_raw` when useful.
@@ -64,14 +64,14 @@ Map to:
 - `parent_trade_id`
 - `trade_id`
 
-If IBKR trade facts are available, prefill objective fields and ask the user to confirm the mapping.
+If broker trade facts are available, prefill objective fields and ask the user to confirm the mapping.
 
 ### 2. Link To The Plan
 
 Ask:
 
 ```text
-这笔交易来自哪个周度市场复盘与下周计划、每日盘面追踪条目或预备交易计划？如果是计划外交易，为什么当时允许自己做？
+这笔交易来自哪个 Active Market Plan setup、每日更新条目或预备交易计划？如果是计划外交易，为什么当时允许自己做？
 ```
 
 Map to:
@@ -93,8 +93,8 @@ Map to:
 
 - `trade_type`
 - `instrument_type`
-- `market_analysis_timeframes`
-- `execution_timeframe`
+- `analysis_timeframe`
+- `trigger_timeframe`
 
 ### 4. Market Background
 
@@ -211,7 +211,7 @@ Post-order output should set:
 Ask:
 
 ```text
-这笔结束的交易对应哪一条 open trade？如果 IBKR 里有成交记录，请确认 trade_id、标的、方向、数量、入场价、出场价和时间。
+这笔结束的交易对应哪一条 open trade？如果 broker 里有成交记录，请确认 trade_id、setup_id、标的、方向、数量、入场价、出场价和时间。
 ```
 
 Map to:

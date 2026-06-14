@@ -1,4 +1,4 @@
-# Weekly Market Review And Trading Plan
+# Deep Active Market Plan Update
 
 ## Week
 
@@ -10,6 +10,7 @@
 - Major event window:
 - Risk budget:
 - Max concurrent risk:
+- Linked market-plan.md:
 
 ## Last Week Trade Review
 
@@ -85,13 +86,13 @@
 - Portfolio exposure impact:
 - Evidence still needed:
 
-## Setup Discovery
+## Setup Pool Refresh
 
-| trade_id | Ticker | Setup | Instrument | Analysis timeframe | Trigger timeframe | Trigger zone | Invalidation | Priority |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |  |
+| setup_id | theme_id | Ticker | Setup | Instrument | Analysis timeframe | Trigger timeframe | Trigger zone | Invalidation | Status | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  | candidate / active / approaching / triggered / invalidated / needs_review / completed |  |
 
-## Daily Tracking Priorities
+## Next Update Priorities
 
 - Monday:
 - Tuesday:

@@ -4,8 +4,9 @@ Every new trade should be evaluated against the full book.
 
 ## Required Inputs
 
-If the user provides holdings, use them. If not, ask for:
+If the user provides holdings or canonical broker data, use them. If not, ask for:
 
+- broker/account when relevant
 - ticker
 - direction
 - position size or percentage
@@ -22,6 +23,8 @@ If holdings are unavailable, make risk comments conditional and say what cannot 
 Review:
 
 - net long/short exposure
+- total exposure across broker sources
+- broker/account split
 - single-name concentration
 - sector concentration
 - factor exposure: beta, growth, value, momentum, small-cap, quality
@@ -32,6 +35,8 @@ Review:
 - correlation between positions
 - liquidity and gap risk
 - max drawdown scenarios
+
+When canonical broker files exist, prefer `portfolio_snapshot.csv` for current exposure and keep `broker` and `account_id` visible in the output. The default view should be total portfolio exposure, then broker/account breakdown.
 
 ## Scenario Tests
 

@@ -1,6 +1,6 @@
 # Trading Research System
 
-这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可优化的交易研究笔记、预备交易计划、实际交易记录和交易系统统计。
+这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、实际交易记录和交易系统统计。
 
 ## Language
 
@@ -13,16 +13,44 @@ _Avoid_: 自动交易系统, 荐股系统
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
-Trading Research System 作为一个 plugin 保持统一产品边界，但内部拆成多个 focused skills。`trading-research` 是路由入口；周度市场复盘与下周计划、每日盘面追踪、盘中扫描、交易复盘、宏观/标的研究、组合风险和统计复盘分别由小 skill 承担。
+Trading Research System 作为一个 plugin 保持统一产品边界，但内部拆成多个 focused skills。`trading-research` 是路由入口；Active Market Plan 深度更新、快速更新、盘中 setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘分别由小 skill 承担。
 _Avoid_: 一个巨型提示词, 多个互不相干的 plugin
+
+**Active Market Plan**:
+当前有效市场计划，是系统的 living state。它保存在 `data/market-plan.md`，可以被覆盖更新，始终代表当前操作视图。周末、盘前、盘中和交易后都不是新建一套流程，而是对同一个 Active Market Plan 做不同深度的更新。
+_Avoid_: 一次性周报, 每天从零开始
+
+**市场计划更新轨迹**:
+Active Market Plan 的 append-only 审计记录，保存在 `data/updates/YYYY-MM-DD.md`。它记录本次更新类型、哪些市场变量变了、哪些 setup 状态或点位变了、依据是什么、下一步看什么。
+_Avoid_: 覆盖后无历史, 聊天记录当日志
+
+**Setup Pool**:
+Active Market Plan 中的核心计划池。最小计划单元是 setup，而不是标的或交易工具。Setup 需要带 `theme_id`、`symbol`、`instrument_type`、分析时间框架、触发时间框架、状态、触发区域、失效条件和风险预算。同一市场机会如果有多个交易工具执行方式，应拆成多个 setup，并共享同一个 `theme_id` 或 `market_context_id`。
+_Avoid_: 股票清单, 一个想法塞多个工具
 
 **信息收集**:
 收集会影响交易决策的原始信息，包括宏观政策、利率、债券收益率、研报、公司数据、价格行为、量化因子、异常期权信号和组合持仓。信息收集本身不等于交易结论。
 _Avoid_: 新闻流, 噪音收集
 
 **第一阶段数据源**:
-交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、IBKR 行情数据、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
+交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、IBKR 行情数据、read-only broker source、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
 _Avoid_: 全自动数据湖, 不可核验来源
+
+**Broker Source**:
+提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill/plugin 或手动 CSV。Broker Source 是可插拔 adapter，不是 Trading Research System 的核心逻辑。
+_Avoid_: 单一券商绑定, 券商即系统
+
+**Read-only Broker Adapter**:
+把 broker 原始数据转换成 canonical broker data 的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。
+_Avoid_: 自动下单插件, 账户控制层
+
+**Longbridge Broker Source**:
+Longbridge 作为可选 broker source，第一阶段只提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
+_Avoid_: 内置 Longbridge 依赖, 自动安装
+
+**Canonical Broker Data**:
+券商数据统一后的本地 CSV 层，包括 `portfolio_snapshot.csv`、`broker_executions.csv` 和 `broker_orders.csv`。核心分析只读 canonical 文件，不直接依赖 IBKR、Longbridge 或其它券商的原始结构。
+_Avoid_: 直接读各券商私有结构
 
 **IBKR 行情数据**:
 通过 Interactive Brokers 提供的行情、历史价格和账户数据。它是优先行情来源，但不负责替代研报校验、宏观来源核验或交易系统统计。
@@ -45,11 +73,11 @@ _Avoid_: 摘要, 复制粘贴
 _Avoid_: 信号, 荐股
 
 **周度市场复盘与下周交易计划**:
-每周开始前或周末形成的工作包，用于复盘上周交易，分析当前盘面、宏观、利率、政策、新闻和重大事件，预览下周宏观政策与事件风险，更新动量强弱榜单，并挖掘交易想法、交易机会和 K 线 setup。它是每日盘面追踪的母计划。
-_Avoid_: 泛泛周报, 只有下周愿望清单
+Active Market Plan 的 `deep_update`。它通常发生在周末或周初，用于复盘上周交易，分析当前盘面、宏观、利率、政策、新闻和重大事件，预览未来事件风险，重建动量强弱榜单，并刷新 setup pool。它不是另一套 workflow。
+_Avoid_: 泛泛周报, 每周另起炉灶
 
 **每日盘面追踪**:
-交易日内或盘前/盘中把当前市场状态与周度市场复盘与下周交易计划进行对照，快速更新盘面、宏观、政策、新闻、事件预览、动量榜单和关键点位，判断哪些想法仍有效、哪些接近触发、哪些失效、哪些需要补充证据。每日盘面追踪可以发掘机会，但机会必须落回已有主题、观察清单或新建预备交易计划。
+Active Market Plan 的 `quick_update` 或轻量 `trigger_update`。交易日内或盘前/盘中把当前市场状态与 `market-plan.md` 对照，快速更新盘面、宏观、政策、新闻、事件预览、动量榜单、setup 状态和关键点位。每日盘面追踪可以发掘机会，但机会必须落回已有主题或新建 `candidate` setup。
 _Avoid_: 随机盘中扫股, 新闻驱动追单
 
 **信息验证**:
@@ -73,7 +101,7 @@ _Avoid_: 买入名单, 黑箱排名
 _Avoid_: 期权内幕信号, 无风险信号
 
 **预备交易计划**:
-在下单前形成的可执行计划，包含标的、方向、入场触发、止损、目标、仓位、时间框架、失效条件和组合风险影响。
+在下单前形成的可执行 setup 计划，包含标的、方向、交易工具、分析时间框架、触发时间框架、入场触发、止损、目标、仓位、失效条件和组合风险影响。
 _Avoid_: 想法, 临时下单理由
 
 **盘面分析时间框架**:
@@ -93,11 +121,11 @@ _Avoid_: 标的一概而论
 _Avoid_: 所有产品共用一个时间框架
 
 **实际交易记录**:
-真实发生的交易事实记录，包括入场、出场、时间、价格、仓位、盈亏、执行偏差和当时依据。可用 IBKR 成交记录作为事实来源，但入场理由、信号 K、信心和经验必须通过交互式追问补全。
+真实发生的交易事实记录，包括入场、出场、时间、价格、仓位、盈亏、执行偏差和当时依据。可用 broker 成交记录作为事实来源，但入场理由、信号 K、信心和经验必须通过交互式追问补全。
 _Avoid_: 事后解释, 记忆中的交易
 
-**IBKR 成交事实**:
-来自 Interactive Brokers 的真实成交、订单或账户记录，例如标的、方向、数量、价格、手续费、时间和盈亏。它用于减少手工录入错误，但不能替代用户对盘面背景、入场理由和执行质量的复盘。
+**券商成交事实**:
+来自 IBKR、Longbridge 或其它 broker source 的真实成交、订单或账户记录，例如标的、方向、数量、价格、手续费、时间和盈亏。它用于减少手工录入错误，但不能替代用户对盘面背景、入场理由和执行质量的复盘。
 _Avoid_: 自动复盘结论, 经纪商即完整日志
 
 **交互式交易复盘采集**:
@@ -117,7 +145,7 @@ _Avoid_: 把盈亏当成唯一质量判断
 _Avoid_: 随机追问
 
 **本地日分区记录**:
-按交易日期在本地保存的观察清单、预备交易计划、实际交易记录和复盘材料。它是系统的第一事实记录层，便于 Git 管理、离线使用和后续同步。
+按交易日期在本地保存 canonical broker data、观察清单、预备交易计划、实际交易记录和复盘材料。Active Market Plan 当前状态在 `data/market-plan.md`，每日变化轨迹在 `data/updates/YYYY-MM-DD.md`，日分区记录在 `data/daily/YYYY-MM-DD/`。
 _Avoid_: 临时聊天记录, 未归档输出
 
 **盘中分析**:
@@ -125,15 +153,15 @@ _Avoid_: 临时聊天记录, 未归档输出
 _Avoid_: 自动交易, 盯盘聊天
 
 **盘中 Setup 扫描**:
-盘中分析中的核心能力，用于在多个预备交易计划之间同步检查当前盘面是否出现计划内信号或合适的 K 线 setup。它帮助用户同时兼顾多个交易计划，但不主动创造没有计划依据的新交易。
+盘中分析中的核心能力，用于在 Active Market Plan 的 setup pool 中同步检查当前盘面是否出现计划内信号或合适的 K 线 setup。它帮助用户同时兼顾多个 setup，但不主动创造没有计划依据的新交易。
 _Avoid_: 全市场扫股, 自动下单信号
 
 **盘中扫描状态**:
-盘中 Setup 扫描对每个计划输出的状态，包括 `waiting`、`approaching`、`triggered`、`invalidated` 和 `needs_review`。这些状态用于提醒用户关注计划进展，不等同于买卖指令。
+盘中 Setup 扫描对每个 setup 输出的状态，包括 `candidate`、`active`、`approaching`、`triggered`、`invalidated`、`needs_review` 和 `completed`。这些状态用于提醒用户关注计划进展，不等同于买卖指令。
 _Avoid_: buy, sell, 自动交易信号
 
 **Triggered 状态**:
-盘中扫描状态之一，表示计划关键价位已经到达或突破，并且执行时间框架出现计划内 K 线 setup 确认。单纯触及价格只能算 `approaching`，不能算 `triggered`。
+盘中扫描状态之一，表示 setup 关键价位已经到达或突破，并且执行时间框架出现计划内 K 线 setup 确认。`triggered` 只代表需要人工决策和 execution check，不等于可以下单。单纯触及价格只能算 `approaching`，不能算 `triggered`。
 _Avoid_: 触价即买入
 
 **触发确认规则**:
@@ -157,7 +185,7 @@ _Avoid_: 接近就入场
 _Avoid_: 模糊信号, 系统硬判
 
 **盘中注意力优先级**:
-盘中 Setup 扫描对多个计划排序的规则。状态优先级从高到低为 `invalidated`、`triggered`、`needs_review`、`approaching`、`waiting`；同一状态内按交易工具紧急度排序，通常为 0DTE 期权、短周期期权、杠杆 ETF、普通 swing、LEAP。注意力优先级用于安排用户先看什么，不代表交易建议强弱。
+盘中 Setup 扫描对多个 setup 排序的规则。状态优先级从高到低为 `invalidated`、`triggered`、`needs_review`、`approaching`、`active`、`candidate`、`completed`；同一状态内按交易工具紧急度排序，通常为 0DTE 期权、短周期期权、杠杆 ETF、普通 swing、LEAP。注意力优先级用于安排用户先看什么，不代表交易建议强弱。
 _Avoid_: 交易推荐排名, 自动下单优先级
 
 **盘中监控列表**:

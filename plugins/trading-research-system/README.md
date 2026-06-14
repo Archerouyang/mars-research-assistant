@@ -11,11 +11,13 @@ It is designed for research, screening, risk review, and decision support. It do
 - Equity screening with thesis verification against primary sources.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
-- Weekly market review and next-week trading plan construction.
-- Daily premarket and intraday tracking with level updates.
-- Plan-scoped intraday setup scanning for prepared trade plans.
-- Interactive post-order and post-exit actual-trade review intake and trade statistics.
-- Portfolio risk exposure checks.
+- Active Market Plan maintenance with an overwriteable current state and append-only update trail.
+- Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
+- Quick updates for weekday premarket and intraday level/status changes.
+- Setup-scoped intraday scanning for prepared setup plans.
+- Interactive post-order and post-exit actual-trade review intake from read-only broker facts and user context.
+- Broker-agnostic portfolio risk exposure checks.
+- Canonical broker data templates for read-only IBKR, Longbridge, or manual CSV sources.
 - Local daily trading records with CSV and Markdown templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
 
@@ -29,10 +31,10 @@ $trading-research
 
 For more specific workflows, use the smaller skills directly:
 
-- `$weekly-trading-plan`: last-week review, current market/macro/policy/news analysis, next-week preview, momentum update, and setup discovery.
-- `$daily-market-tracking`: quick daily market/macro/policy/news update, momentum update, planned opportunity tracking, and level updates.
+- `$weekly-trading-plan`: deep-update the Active Market Plan with prior trade review, market/macro/policy/news analysis, event preview, momentum update, and setup discovery.
+- `$daily-market-tracking`: quick-update the Active Market Plan with market/macro/policy/news changes, setup status changes, and level updates.
 - `$intraday-setup-scan`: plan-scoped intraday setup status.
-- `$trade-review`: post-order and post-exit actual trade review.
+- `$trade-review`: post-order and post-exit actual trade review using broker facts when available.
 - `$macro-equity-research`: macro/rates, research validation, and screening.
 - `$portfolio-risk`: exposure and sizing review.
 - `$trading-stats`: win rate, R-multiple, setup performance, and system review.
@@ -40,11 +42,11 @@ For more specific workflows, use the smaller skills directly:
 Example prompts:
 
 ```text
-$weekly-trading-plan Build my weekly market review and next-week trading plan.
+$weekly-trading-plan Deep-update my Active Market Plan for next week.
 ```
 
 ```text
-$daily-market-tracking Track today's market, update levels, and compare against my weekly review plan.
+$daily-market-tracking Quick-update today's market plan and setup levels.
 ```
 
 ```text
@@ -52,7 +54,7 @@ $macro-equity-research Screen US stocks that benefit from lower long-end yields.
 ```
 
 ```text
-$trade-review Review my latest IBKR trade interactively.
+$trade-review Review my latest broker execution interactively.
 ```
 
 ## Data Boundaries
@@ -64,8 +66,9 @@ For current policy, market prices, rates, yields, financial statements, or news,
 This plugin does not:
 
 - place trades or automate order execution;
+- modify or cancel broker orders;
 - generate guaranteed buy/sell instructions;
-- scan the entire market for unplanned intraday trades outside the weekly review plan, watchlist, or prepared plans in the initial scope;
+- scan the entire market for unplanned intraday trades outside the Active Market Plan, watchlist, or prepared setups in the initial scope;
 - use Google Sheets as the canonical source of truth;
 - provide tax, legal, or regulated investment advice.
 
@@ -74,10 +77,14 @@ This plugin does not:
 Use local daily folders as the first source of truth:
 
 ```text
+data/market-plan.md
+data/updates/YYYY-MM-DD.md
 data/daily/YYYY-MM-DD/
 ```
 
-The plugin includes templates for weekly market review plans, daily market tracking, holdings, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+
+Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into canonical local files before core risk or review workflows consume them.
 
 Google Sheets sync is planned as a later mirror/review layer.
 

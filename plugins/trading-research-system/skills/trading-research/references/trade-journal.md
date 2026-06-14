@@ -12,7 +12,7 @@ The schema is informed by the user's Google Sheet `2026交易记录`.
 - One row equals one smallest statistically measurable unit.
 - Split partial fills into multiple rows and link them with `trade_id`.
 - A trade can be reviewed in two stages: post-order creates or updates an `open` row, and post-exit completes the same row with outcome, exit review, realized R, and lesson.
-- IBKR order/trade facts may prefill objective execution fields, but discretionary fields still require interactive review.
+- Broker order/trade facts may prefill objective execution fields, but discretionary fields still require interactive review.
 - Preserve raw review text, but extract structured fields for statistics.
 
 ## Daily Directory
@@ -26,6 +26,9 @@ data/daily/YYYY-MM-DD/
 Recommended files:
 
 - `daily-market-tracking.md`
+- `portfolio_snapshot.csv`
+- `broker_executions.csv`
+- `broker_orders.csv`
 - `watchlist.csv`
 - `trade-plans.csv`
 - `intraday-watchlist.csv`
@@ -34,7 +37,7 @@ Recommended files:
 - `research-notes.md`
 - `portfolio.csv`
 
-Weekly market review plans can use `assets/templates/weekly-plan.md` and should link to the daily folders that track execution during that week.
+The current Active Market Plan should live at `data/market-plan.md`. Append update trails to `data/updates/YYYY-MM-DD.md`. Deep update notes can use `assets/templates/weekly-plan.md`.
 
 Create this structure with:
 
@@ -48,18 +51,20 @@ Required planning fields:
 
 - `date`
 - `trade_id`
+- `setup_id`
+- `theme_id`
 - `status`
 - `ticker`
 - `underlying`
 - `direction`
 - `instrument_type`
 - `strategy_type`
-- `market_analysis_timeframes`
-- `execution_timeframe`
+- `analysis_timeframe`
+- `trigger_timeframe`
 - `setup_type`
 - `entry_trigger`
-- `trigger_price`
-- `invalidation_condition`
+- `trigger_zone`
+- `invalidation`
 - `stop_price`
 - `target_1`
 - `target_2`
@@ -78,6 +83,8 @@ Required execution fields:
 
 - `trade_id`
 - `parent_trade_id`
+- `setup_id`
+- `theme_id`
 - `status`
 - `entry_date`
 - `exit_date`
@@ -87,8 +94,8 @@ Required execution fields:
 - `trade_type`
 - `product`
 - `instrument_type`
-- `market_analysis_timeframes`
-- `execution_timeframe`
+- `analysis_timeframe`
+- `trigger_timeframe`
 - `setup_tag`
 - `signal_quality`
 - `confidence`
@@ -111,6 +118,9 @@ Required execution fields:
 - `review_raw`
 - `chart_link`
 - `currency`
+- `broker`
+- `account_id`
+- `execution_id`
 
 Actual trade records should normally be filled through interactive trade review intake, not from memory in one freeform paragraph. Use `references/interactive-trade-review.md` when asking the user to complete missing fields.
 
@@ -124,8 +134,8 @@ Post-order intake should fill the fields known at entry time:
 - `trade_type`
 - `product`
 - `instrument_type`
-- `market_analysis_timeframes`
-- `execution_timeframe`
+- `analysis_timeframe`
+- `trigger_timeframe`
 - `setup_tag`
 - `signal_quality`
 - `confidence`
