@@ -1,6 +1,6 @@
 ---
 name: trading-research
-description: Route trading research requests to the right Trading Research System workflow. Use when the user invokes trading-research generally, asks for trading help without naming a specific sub-skill, or needs coordination across Active Market Plan updates, weekly deep updates, daily quick updates, intraday setup scanning, trade review, broker data reconciliation, macro/equity research, portfolio risk, and trading statistics.
+description: Route trading research requests to the right Trading Research System workflow. Use when the user invokes trading-research generally, asks for trading help without naming a specific sub-skill, or needs coordination across Active Market Plan updates, weekly deep updates, daily quick updates, intraday setup scanning, trade review, broker data reconciliation, automations, macro/equity research, portfolio risk, and trading statistics.
 ---
 
 # Trading Research Router
@@ -25,6 +25,8 @@ This is decision support, not automated trading. Do not present outputs as guara
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:
   use `trading-stats`.
+- Automation design, recurring brief, scheduled Active Market Plan update, or monitor:
+  read `references/automation-contract.md` and use the Codex automation tool when creating or updating actual automations.
 
 If a request spans multiple workflows, run them in the natural order:
 
@@ -44,6 +46,7 @@ Detailed domain rules remain in:
 - `references/equity-screening.md`
 - `references/active-market-plan.md`
 - `references/broker-data-contract.md`
+- `references/automation-contract.md`
 - `references/price-action-timing.md`
 - `references/intraday-setup-scan.md`
 - `references/interactive-trade-review.md`

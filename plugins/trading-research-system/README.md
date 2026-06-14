@@ -12,6 +12,7 @@ It is designed for research, screening, risk review, and decision support. It do
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
+- Automation-ready deep update, quick update, intraday monitor, and post-market review workflows.
 - Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
 - Quick updates for weekday premarket and intraday level/status changes.
 - Setup-scoped intraday scanning for prepared setup plans.
@@ -85,6 +86,8 @@ data/daily/YYYY-MM-DD/
 The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
 
 Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into canonical local files before core risk or review workflows consume them.
+
+Codex automations can be used to schedule prompts around the Active Market Plan loop, but they should ask before editing local records and must not touch broker write actions.
 
 Google Sheets sync is planned as a later mirror/review layer.
 

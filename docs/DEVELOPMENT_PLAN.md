@@ -1,6 +1,6 @@
 # Development Plan
 
-This document is the public source of truth for Dailytrades plugin development planning and progress. It is used by the weekday development brief and end-of-day progress review automations.
+This document is the public source of truth for Dailytrades plugin development planning, daily task planning, and progress. It is used by the weekday development brief and end-of-day progress review automations.
 
 Do not include private trade records, credentials, account details, unpublished research excerpts, or internal agent prompts. Keep this focused on project execution.
 
@@ -25,8 +25,9 @@ The current product sequence is:
 7. broker-agnostic portfolio reconciliation and risk view;
 8. basic stats and system review;
 9. one-way Google Sheets sync;
-10. OHLCV-backed chart artifacts;
-11. option-flow anomaly research.
+10. user-confirmed Active Market Plan automations;
+11. OHLCV-backed chart artifacts;
+12. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -43,6 +44,7 @@ Weekday morning brief:
    - optional secondary task;
    - definition of done;
    - expected verification;
+   - whether Claude Code should be assigned work;
    - whether progress should update this document, public roadmap/log, or both.
 
 End-of-day progress review:
@@ -86,6 +88,7 @@ Use these statuses:
 | P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping from Active Market Plan, canonical broker CSV, and trade records first. |
+| P2 | planned | Add Active Market Plan automations | Turns deep update, quick update, intraday monitor, and post-market review into recurring Codex prompts after the user confirms cadence and broker data permissions. | Define automation prompts from `automation-contract.md`; create or update actual Codex automations only after cadence confirmation. |
 | P2 | planned | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Start with a pure data-to-chart artifact layer and fixture OHLCV; do not test live connector behavior in this repo. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
@@ -119,7 +122,11 @@ Date: 2026-06-14
 
 Automations should use this document as the development progress source of truth:
 
-- `dailytrades-weekday-development-brief`: weekday morning brief and planning interaction.
+- `dailytrades-weekday-development-brief`: weekday morning brief and daily task-planning interaction.
 - `dailytrades-end-of-day-progress-review`: weekday end-of-day progress review and update prompt.
 
+The morning automation should recommend one main product-capability task for the day, ask for available time, chosen task, optional secondary task, definition of done, expected verification, whether Claude Code should be assigned work, and which docs should be updated after completion.
+
 Automation outputs should be concise Chinese Markdown notes. They should ask before editing files and should not touch broker write actions, private trade data, or live external services.
+
+Trading operations automations are separate from development automations. They should use `data/market-plan.md` as current state and `data/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions.

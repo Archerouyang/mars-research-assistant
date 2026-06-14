@@ -15,6 +15,7 @@ The system supports:
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
+- automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, and post-market review prompts;
 - deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, momentum leaderboard rebuild, and setup discovery;
 - quick updates for weekday premarket/intraday changes in tape, macro/rates, policy/news, events, momentum, setup status, and key levels;
 - setup-scoped intraday scanning for `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, and `completed` states;
@@ -117,9 +118,10 @@ Rules:
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Active Market Plan update loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md` |
 | Broker data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
+| Automation contract | Started | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
-| Daily development automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
+| Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Google Sheets sync implementation | Planned | no script yet |
 | OHLCV-driven chart/scan artifacts | Planned | no artifact generator yet |
 | Option-flow anomaly module | Planned | data vendor not selected |
@@ -137,6 +139,7 @@ Deliverables:
 - Keep `trading-research` as the router skill.
 - Maintain focused skills for Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
 - Keep active plan, broker data, macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
+- Keep automation rules aligned with the Active Market Plan loop and broker read-only boundary.
 - Keep the plugin installable from the personal marketplace.
 
 Exit criteria:
@@ -224,6 +227,7 @@ Exit criteria:
 - Local daily records can mirror to Google Sheets without treating Sheets as source of truth.
 - Intraday scans can use current market data instead of manual chart descriptions.
 - Daily and post-market workflows can be scheduled or triggered reliably.
+- Automations ask before editing local plan/trade records and never touch broker write actions.
 
 ## Milestone Plan
 
@@ -239,6 +243,8 @@ Target result:
 Target result:
 
 - User can maintain an Active Market Plan, initialize a trading day, parse current market state against that plan, create setup-level trade plans, update levels, track intraday state manually, reconcile read-only broker facts, record actual trades, append two-stage reviews, and run basic stats locally.
+- User can attach Codex automations to deep update, quick update, intraday monitor, post-market review, and development progress workflows without changing the broker read-only boundary.
+- Weekday development automations can recommend and review daily project tasks from the current roadmap without duplicating trading-operation automations.
 
 ### M3: Data-Assisted Research MVP
 
@@ -269,6 +275,7 @@ Target result:
 5. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
 6. Add chart artifact generation from fixture-backed authorized OHLCV data.
 7. Research option-flow data vendors and define the minimum anomaly schema.
+8. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, and post-market review after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 
