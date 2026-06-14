@@ -31,6 +31,12 @@ Use this shape:
 
 ## 2026-06-14
 
+- Commit: `1a40139` `Document automation planning contract`
+- Scope: planning, skill, decision
+- What changed: added an automation contract for development task planning and Active Market Plan operations. Updated the existing Codex weekday development brief and end-of-day progress review automations to recommend and review daily product-capability tasks from the current roadmap.
+- Why it matters: the project now has two explicit automation layers: development task planning for building the plugin, and future trading-operation prompts for Active Market Plan deep updates, quick updates, intraday monitors, post-market review, and broker reconciliation.
+- Next step: confirm cadence and data-source permissions before creating trading-operation automations.
+
 - Commit: `414a9ca` `Define active market plan and broker data contracts`
 - Scope: planning, skill, template, script, decision
 - What changed: replaced the weekly/daily split with one overwriteable Active Market Plan plus append-only update notes. Added setup-level status semantics, Active Market Plan and broker data contract references, canonical broker CSV templates, broker-neutral trade review language, Longbridge/IBKR/manual CSV read-only source boundaries, and broker/account risk splits in `portfolio_risk.py`.
