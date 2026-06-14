@@ -58,6 +58,8 @@ This repository keeps only distributable plugin artifacts and user-readable docu
 
 Internal collaboration rules, private trade-analysis material, credentials, and agent coordination docs stay outside this public plugin repository.
 
+A separate development repository is not required at this stage. Codex/Claude collaboration rules can run as the current harness protocol; if private settings or agent coordination templates become durable later, keep them outside this public plugin repository.
+
 ## GitHub Trajectory
 
 Project trajectory should be visible on GitHub through four public artifacts:

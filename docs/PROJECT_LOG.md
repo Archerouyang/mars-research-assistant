@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-06-14
+
+- Commit: pending
+- Scope: decision
+- What changed: confirmed that a separate `dailytrades-dev` repository is not required for the current stage. The local clone created for exploration was removed, and Codex/Claude collaboration rules will run as harness protocol until they become durable enough to need their own private storage.
+- Why it matters: reduces process overhead while preserving the public/private boundary for the plugin repository.
+- Next step: use the harness protocol on the next implementation task, then decide whether any part of it needs a persistent private template.
+
 ## 2026-06-13
 
 - Commit: `46c46fa` `Document intraday scan roadmap`
@@ -52,8 +60,8 @@ Use this shape:
 - Commit: `a1a9d02` `Remove internal agent collaboration docs from plugin repo`
 - Scope: repo boundary
 - What changed: removed internal collaboration files from the public plugin repository.
-- Why it matters: `dailytrades` stays focused on distributable plugin artifacts and user-readable docs; internal planning belongs in the private development repository.
-- Next step: keep future public updates limited to plugin artifacts, roadmap, ADRs, and user-facing docs.
+- Why it matters: `dailytrades` stays focused on distributable plugin artifacts and user-readable docs; internal planning and agent coordination settings stay outside the public plugin repository.
+- Next step: keep future public updates limited to plugin artifacts, roadmap, ADRs, project log, and user-facing docs.
 
 - Commit: `fb36618` `Add daily trade review workflow`
 - Scope: skill, template, script
