@@ -31,7 +31,7 @@ Use this shape:
 
 ## 2026-06-14
 
-- Commit: pending
+- Commit: `dc83ad2` `Document no separate dev repo requirement`
 - Scope: decision
 - What changed: confirmed that a separate `dailytrades-dev` repository is not required for the current stage. The local clone created for exploration was removed, and Codex/Claude collaboration rules will run as harness protocol until they become durable enough to need their own private storage.
 - Why it matters: reduces process overhead while preserving the public/private boundary for the plugin repository.
