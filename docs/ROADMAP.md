@@ -110,7 +110,7 @@ Rules:
 | Plan-scoped intraday scan boundary | Done | `docs/adr/0003-intraday-scan-plan-scoped.md` |
 | One-way Google Sheets sync decision | Done | `docs/adr/0004-one-way-google-sheets-sync.md` |
 | Domain glossary | In progress | `CONTEXT.md` |
-| Core skill routing | Started | `plugins/trading-research-system/skills/trading-research/SKILL.md` |
+| Skill set architecture | Started | Router skill plus focused skills under `plugins/trading-research-system/skills/` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Weekly and daily plan loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/SKILL.md` |
@@ -131,13 +131,15 @@ Deliverables:
 
 - Maintain canonical glossary in `CONTEXT.md`.
 - Maintain research memo and trade plan output templates.
-- Keep macro, equity screening, price action, intraday scan, risk, journal, and output references inside the plugin skill.
+- Keep `trading-research` as the router skill.
+- Maintain focused skills for weekly planning, daily tracking, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
+- Keep macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
 - Keep the plugin installable from the personal marketplace.
 
 Exit criteria:
 
 - A new agent can understand the core language from `CONTEXT.md`.
-- The skill can route research, planning, intraday scan, review, and statistics tasks to the right reference files.
+- The router can send research, planning, intraday scan, review, risk, and statistics tasks to focused skills and shared references.
 
 ### P1: Local Data Structure
 
@@ -254,12 +256,13 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Add sample weekly/daily fixture data that covers weekly plans, daily market tracking, prepared plans, IBKR-like trade facts, post-order review, post-exit review, and expected scan outputs.
-2. Add an intraday scan script that reads `intraday-watchlist.csv` and emits status/attention summaries.
-3. Connect interactive review intake to post-order and post-exit `trades.csv` updates.
-4. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
-5. Add chart artifact generation from fixture-backed authorized OHLCV data.
-6. Research option-flow data vendors and define the minimum anomaly schema.
+1. Complete the focused skill split by forward-testing router behavior and each priority skill on realistic prompts.
+2. Add sample weekly/daily fixture data that covers weekly plans, daily market tracking, prepared plans, IBKR-like trade facts, post-order review, post-exit review, and expected scan outputs.
+3. Add an intraday scan script that reads `intraday-watchlist.csv` and emits status/attention summaries.
+4. Connect interactive review intake to post-order and post-exit `trades.csv` updates.
+5. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
+6. Add chart artifact generation from fixture-backed authorized OHLCV data.
+7. Research option-flow data vendors and define the minimum anomaly schema.
 
 ## MVP 1 Acceptance Criteria
 

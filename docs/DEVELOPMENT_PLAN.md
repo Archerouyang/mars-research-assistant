@@ -78,6 +78,7 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
+| P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly plan, daily tracking, and trade review prompts. |
 | P1 | in_progress | Add sample weekly/daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for weekly plans, daily market tracking, plans, intraday watchlist, holdings, IBKR-like trade facts, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add weekly plan and daily market tracking templates | Supports the user's current hard need: build initial trade ideas and plans, then track them dynamically as the market changes. | Use these templates in the fixture package and later script flows. |
 | P1 | ready | Implement local intraday scan script | Turns documented scan states into executable status and attention-priority summaries. | Build with TDD from fixture CSVs. |
@@ -108,8 +109,9 @@ Date: 2026-06-14
 - Blockers: none.
 - Decision: confirmed the user's hard need is weekly trade-plan construction, daily market tracking, opportunity discovery within the plan/watchlist, and two-stage trade review based on actual trade facts.
 - Completed: added weekly plan and daily market tracking templates to the plugin and aligned review references around post-order and post-exit stages.
+- Completed: split the plugin into a lightweight `trading-research` router plus focused skills for weekly planning, daily tracking, intraday scan, trade review, macro/equity research, portfolio risk, and trading stats.
 - Decision: confirmed fixture data as the next product-capability implementation slice before `intraday_scan.py`.
-- Next: define the fixture package using the new weekly/daily templates, then implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
+- Next: forward-test focused skill routing, then define the fixture package using the new weekly/daily templates, implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
 
 ## Automation Contract
 

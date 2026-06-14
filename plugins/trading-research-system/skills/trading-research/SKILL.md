@@ -1,105 +1,64 @@
 ---
 name: trading-research
-description: Run a disciplined trading and investment research workflow covering market-moving macro policy, Treasury policy, rates and bond yields, equity screening, research-note verification, Al Brooks-style price action timing, intraday setup scanning, trade review, and portfolio risk exposure. Use when the user asks for stock screening, trading research, macro-to-equity analysis, buy/sell timing, intraday plan monitoring, position review, portfolio risk, or explicitly invokes trading-research.
+description: Route trading research requests to the right Trading Research System workflow. Use when the user invokes trading-research generally, asks for trading help without naming a specific sub-skill, or needs coordination across weekly planning, daily tracking, intraday scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
 ---
 
-# Trading Research
+# Trading Research Router
 
-Use this skill to help the user build weekly trading plans, parse the current market, research trading ideas, screen stocks, validate market narratives, time entries/exits, monitor current-day plans, record actual trades, run two-stage trade reviews, and review portfolio risk.
+Use this skill as the general entrypoint for the Trading Research System plugin. Keep it lightweight: choose the most specific sub-skill and follow that workflow.
 
-This is a decision-support workflow. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
+This is decision support, not automated trading. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
 
-## Operating Modes
+## Routing
 
-- Research memo: macro/rates, thesis validation, screening, price action, and portfolio impact.
-- Weekly planning: build initial trade ideas, priority watchlists, candidate plans, invalidations, timeframes, and risk budgets for the coming week.
-- Daily preparation: initialize local records, prepare watchlists, trade plans, and macro checklists.
-- Daily market tracking: parse the current market against the weekly plan and update which ideas are active, approaching, invalidated, or need more evidence.
-- Intraday setup scan: monitor prepared trades and high-priority watchlist ideas for `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
-- Post-order review: after an order or fill appears, use IBKR trade facts when available and collect entry rationale, signal bar, confidence, and risk plan.
-- Post-exit review: after the trade closes, collect exit rationale, result, R-multiple, mistake tag, lesson, and rule update.
-- Statistics: summarize closed trades by setup, instrument, timeframe, confidence, mistake tag, and R-multiple.
+- Weekly plan, next-week prep, initial trade ideas, priority watchlist:
+  use `weekly-trading-plan`.
+- Current market read, premarket/market-hours update, dynamic tracking:
+  use `daily-market-tracking`.
+- Several active plans, multiple tickers/charts, setup status:
+  use `intraday-setup-scan`.
+- Actual trade record, IBKR trade facts, post-order note, post-exit review:
+  use `trade-review`.
+- Macro policy, rates/yields, research-note verification, stock screening:
+  use `macro-equity-research`.
+- Holdings, sizing, portfolio exposure, risk budget, trade impact:
+  use `portfolio-risk`.
+- Win rate, R-multiple, setup performance, mistake tags, system review:
+  use `trading-stats`.
 
-## Workflow
+If a request spans multiple workflows, run them in the natural order:
 
-1. Clarify the research target only when needed.
-   - If the user gives a ticker, theme, industry, watchlist, or portfolio, proceed.
-   - If the user asks for concrete trade timing without time horizon, allowed instruments, account constraints, or current holdings, state the missing assumptions and produce a research memo instead of a direct trade instruction.
+1. `macro-equity-research`
+2. `weekly-trading-plan`
+3. `daily-market-tracking`
+4. `intraday-setup-scan`
+5. `portfolio-risk`
+6. `trade-review`
+7. `trading-stats`
 
-2. Use current sources for time-sensitive facts.
-   - You must browse or use available live-data tools for policy, news, yields, prices, financial statements, valuation, earnings, ratings, analyst commentary, and market state.
-   - Prefer primary sources. Use market commentary and Seeking Alpha-like articles as thesis inputs, not as facts.
-   - Cite sources and dates in the final output.
+## Shared Resources
 
-3. Apply the research stack in this order:
-   - Macro policy filter.
-   - Rates, bond yields, liquidity, and factor impact.
-   - Equity screening and thesis validation.
-   - Price action timing.
-   - Portfolio risk exposure.
-   - Weekly plan construction.
-   - Daily market tracking against the plan.
+Detailed domain rules remain in:
 
-4. Load only the references needed for the task:
-   - For macro/policy/rates tasks, read `references/macro-policy-filter.md`.
-   - For stock screening, research-note validation, or company analysis, read `references/equity-screening.md`.
-   - For entry/exit timing, chart interpretation, or trade setup classification, read `references/price-action-timing.md`.
-   - For holdings, sizing, correlation, or portfolio risk, read `references/portfolio-risk.md`.
-   - For trade plans, trade records, reviews, or system statistics, read `references/trade-journal.md`.
-   - For intraday plan monitoring or setup scans, read `references/intraday-setup-scan.md`.
-   - For daily actual trade review intake or journal completion, read `references/interactive-trade-review.md`.
-   - For final formatting, read `references/output-templates.md`.
+- `references/macro-policy-filter.md`
+- `references/equity-screening.md`
+- `references/price-action-timing.md`
+- `references/intraday-setup-scan.md`
+- `references/interactive-trade-review.md`
+- `references/trade-journal.md`
+- `references/portfolio-risk.md`
+- `references/output-templates.md`
 
-5. Use bundled scripts when structured CSV input is available:
-   - For holdings or exposure files, run `scripts/portfolio_risk.py`.
-   - For candidate/watchlist files, run `scripts/watchlist_score.py`.
-   - To create `data/daily/YYYY-MM-DD/`, run `scripts/init_daily.py`.
-   - For closed-trade statistics, run `scripts/trade_stats.py`.
-   - To append a completed review section to `reviews.md`, run `scripts/append_review.py`.
-   - Use templates in `assets/templates/` when the user wants a data-capture format.
-   - Treat script output as arithmetic support, not a substitute for judgment or current-data verification.
+Shared scripts and templates remain in the plugin root:
 
-6. For Seeking Alpha or similar sources:
-   - If content is publicly available, summarize only short relevant claims and cite the page.
-   - If content is paywalled or unavailable, ask the user to provide excerpts or links they are authorized to use.
-   - Do not quote large portions of copyrighted research.
-   - Cross-check author claims against company filings, investor relations, official statistics, and current market data.
+- `../../scripts/`
+- `../../assets/templates/`
 
-7. For Al Brooks-style price action:
-   - Use high-level concepts only: trend, trading range, breakout, failed breakout, pullback, second entry, reversal attempt, measured move, risk/reward.
-   - Do not claim a pattern guarantees an outcome.
-   - Avoid stale chart conclusions. Use current chart data or ask the user for the chart/timeframe.
-
-8. Finish with a compact action-oriented memo:
-   - Research conclusion.
-   - What is verified vs assumed.
-   - Best long case and best short case.
-   - Candidate ranking when screening.
-   - Invalidation and risk controls.
-   - Portfolio exposure impact.
-   - Next research steps.
-
-## Interactive Trade Review Mode
-
-When the user wants to record actual trades, complete daily trading records, or review a trade, switch to interactive trade review mode:
-
-1. Read `references/interactive-trade-review.md`.
-2. Ask one question at a time.
-3. Determine whether the review is post-order or post-exit.
-4. Use IBKR trade/order facts when available as factual inputs, but still ask the user for the discretionary context.
-5. Map each answer to `trades.csv` fields and a `reviews.md` section.
-6. Compare against `trade-plans.csv` when a matching plan exists.
-7. Do not write final records until the key fields are resolved and the user confirms.
-
-For post-order review, resolve entry reason, market background, signal bar, auxiliary signal, confidence, and risk plan while the trade is fresh.
-
-For post-exit review, resolve exit result, exit quality, realized R, mistake tag, lesson, and whether the original plan needs an update.
-
-## Default Output Style
+## Output Style
 
 Use Chinese unless the user asks otherwise. Prefer Markdown notes suitable for Obsidian.
 
-Use clear labels:
+Use clear labels when applicable:
 
 - `事实`
 - `假设`
@@ -110,23 +69,4 @@ Use clear labels:
 - `组合风险`
 - `下一步`
 
-## Safety Boundaries
-
-- Do not tell the user that a trade is safe, certain, guaranteed, or risk-free.
-- Do not ignore portfolio exposure, downside, liquidity, event risk, or position sizing.
-- Do not use unsupported live facts from memory.
-- Do not rely on one author, article, or social-media post as the thesis.
-- Do not provide tax, legal, or regulated investment advice.
-
-## Bundled Data Templates
-
-- `assets/templates/weekly-plan.md`: weekly trading plan and candidate trade idea structure.
-- `assets/templates/daily-market-tracking.md`: daily market tracking against the active weekly plan.
-- `assets/templates/holdings.csv`: portfolio risk input.
-- `assets/templates/watchlist.csv`: candidate scoring input.
-- `assets/templates/trade-plans.csv`: planned trades and intraday setup-scan input.
-- `assets/templates/intraday-watchlist.csv`: plan-scoped intraday setup scan list.
-- `assets/templates/trades.csv`: actual trade records.
-- `assets/templates/reviews.md`: daily review notes.
-- `assets/templates/research-note-log.csv`: research-note validation log.
-- `assets/templates/daily-macro-checklist.md`: daily macro policy checklist.
+When a task needs current facts, use browsing or authorized connectors. Do not rely on memory for policy, market data, yields, company facts, or current prices.

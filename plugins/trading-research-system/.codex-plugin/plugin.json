@@ -1,7 +1,7 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260614074339",
-  "description": "A trading research workflow for weekly plans, daily market tracking, setup timing, trade review, and risk checks.",
+  "version": "0.1.0+codex.20260614075335",
+  "description": "Focused trading research skills for weekly plans, daily tracking, setup scans, trade review, and risk checks.",
   "author": {
     "name": "Archer"
   },
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Trading Research System",
     "shortDescription": "Weekly plans, daily market tracking, trade review, and risk workflows.",
-    "longDescription": "Trading Research System helps Codex run a disciplined trading research workflow: build weekly trading plans, track the current market against those plans, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews, and check portfolio risk exposure.",
+    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: build weekly trading plans, track the current market against those plans, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews, check portfolio risk exposure, and review trading statistics.",
     "developerName": "Archer",
     "category": "Productivity",
     "capabilities": [

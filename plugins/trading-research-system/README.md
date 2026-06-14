@@ -20,20 +20,38 @@ It is designed for research, screening, risk review, and decision support. It do
 
 ## Skill
 
-Invoke the bundled skill with:
+Invoke the router skill with:
 
 ```text
 $trading-research
 ```
 
+For more specific workflows, use the smaller skills directly:
+
+- `$weekly-trading-plan`: weekly plan and initial trade ideas.
+- `$daily-market-tracking`: current market read against the active plan.
+- `$intraday-setup-scan`: plan-scoped intraday setup status.
+- `$trade-review`: post-order and post-exit actual trade review.
+- `$macro-equity-research`: macro/rates, research validation, and screening.
+- `$portfolio-risk`: exposure and sizing review.
+- `$trading-stats`: win rate, R-multiple, setup performance, and system review.
+
 Example prompts:
 
 ```text
-$trading-research Analyze NVDA using my workflow: macro, research-note validation, price action, and portfolio risk.
+$weekly-trading-plan Build my weekly trading plan.
 ```
 
 ```text
-$trading-research Screen US stocks that benefit from lower long-end yields. My current holdings are...
+$daily-market-tracking Track today's market against my active trade plans.
+```
+
+```text
+$macro-equity-research Screen US stocks that benefit from lower long-end yields. My current holdings are...
+```
+
+```text
+$trade-review Review my latest IBKR trade interactively.
 ```
 
 ## Data Boundaries
