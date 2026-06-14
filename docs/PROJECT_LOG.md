@@ -31,6 +31,12 @@ Use this shape:
 
 ## 2026-06-14
 
+- Commit: `cc981f9` `Refine weekly and daily trading workflows`
+- Scope: planning, skill, template
+- What changed: realigned the plugin around a weekly market review and next-week trading plan package, plus daily premarket/intraday tracking with quick market, macro, policy, news, event, momentum, and level updates. Updated router behavior, weekly/daily skills, templates, shared references, roadmap, development plan, README, and glossary.
+- Why it matters: keeps the product focused on the user's actual workflow: weekly review and opportunity discovery first, then daily dynamic tracking of prepared plans and trade levels.
+- Next step: build fixture data that represents the full weekly package and daily tracking loop, then use it for TDD on intraday scanning and two-stage trade review writing.
+
 - Commit: `4749ff0` `Split trading research plugin into focused skills`
 - Scope: skill
 - What changed: split the Trading Research System plugin from one oversized `trading-research` skill into a lightweight router plus focused skills for weekly planning, daily market tracking, intraday setup scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
