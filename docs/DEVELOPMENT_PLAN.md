@@ -83,7 +83,7 @@ Date: 2026-06-14
 - Planned: create a dedicated development planning/progress document and align weekday automations to it.
 - Completed: created `docs/DEVELOPMENT_PLAN.md`, registered it in `docs/ROADMAP.md`, and updated both weekday development automations to use it as the progress source of truth.
 - Completed: added `docs/DEVELOPMENT.md` as the lightweight development workflow, TDD, CI, worktree, and Codex/Claude handoff standard. Clarified that live IBKR connector behavior is outside this repo's test scope.
-- Verification: read both automation configs after update; confirmed they reference `docs/DEVELOPMENT_PLAN.md`.
+- Verification: read both automation configs after update; confirmed they reference `docs/DEVELOPMENT_PLAN.md`; plugin validation passed after development workflow review.
 - Blockers: none.
 - Next: use the next morning brief to choose between `intraday_scan.py`, fixture data, or trade-review CSV writing as the next implementation task.
 

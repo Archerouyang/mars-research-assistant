@@ -31,6 +31,12 @@ Use this shape:
 
 ## 2026-06-14
 
+- Commit: `abf125a` `Define development workflow and test scope`
+- Scope: decision
+- What changed: added `docs/DEVELOPMENT.md` to define Codex/Claude handoff, worktree use, TDD boundaries, test scope, lightweight CI policy, and acceptance gates. Clarified that live IBKR connector behavior is outside this repo's test scope.
+- Why it matters: gives implementation tasks a stable development harness without confusing external connector capabilities with repo-owned code.
+- Next step: add fixture data and a lightweight local test harness before enabling GitHub Actions CI.
+
 - Commit: `3248b5b` `Add daily development plan and automation source`
 - Scope: planning
 - What changed: added `docs/DEVELOPMENT_PLAN.md` as the source of truth for active development priorities, daily planning, and progress review; registered it in `docs/ROADMAP.md`; updated weekday development automations to use it.
