@@ -11,6 +11,8 @@ The schema is informed by the user's Google Sheet `2026交易记录`.
 - Do not silently merge Google Sheets edits back into local records.
 - One row equals one smallest statistically measurable unit.
 - Split partial fills into multiple rows and link them with `trade_id`.
+- A trade can be reviewed in two stages: post-order creates or updates an `open` row, and post-exit completes the same row with outcome, exit review, realized R, and lesson.
+- IBKR order/trade facts may prefill objective execution fields, but discretionary fields still require interactive review.
 - Preserve raw review text, but extract structured fields for statistics.
 
 ## Daily Directory
@@ -23,6 +25,7 @@ data/daily/YYYY-MM-DD/
 
 Recommended files:
 
+- `daily-market-tracking.md`
 - `watchlist.csv`
 - `trade-plans.csv`
 - `intraday-watchlist.csv`
@@ -30,6 +33,8 @@ Recommended files:
 - `reviews.md`
 - `research-notes.md`
 - `portfolio.csv`
+
+Weekly plans can use `assets/templates/weekly-plan.md` and should link to the daily folders that track execution during that week.
 
 Create this structure with:
 
@@ -108,6 +113,45 @@ Required execution fields:
 - `currency`
 
 Actual trade records should normally be filled through interactive trade review intake, not from memory in one freeform paragraph. Use `references/interactive-trade-review.md` when asking the user to complete missing fields.
+
+Post-order intake should fill the fields known at entry time:
+
+- `status`
+- `entry_date`
+- `symbol`
+- `underlying`
+- `direction`
+- `trade_type`
+- `product`
+- `instrument_type`
+- `market_analysis_timeframes`
+- `execution_timeframe`
+- `setup_tag`
+- `signal_quality`
+- `confidence`
+- `entry_price`
+- `stop_price`
+- `target_price`
+- `quantity`
+- `cost`
+- `fees`
+- `risk_amount`
+- `planned_R`
+- `setup_review`
+- `entry_review`
+- `review_raw`
+
+Post-exit intake should update the same row with:
+
+- `status`
+- `exit_date`
+- `pnl`
+- `realized_R`
+- `outcome`
+- `mistake_tag`
+- `exit_review`
+- `lesson`
+- `review_raw`
 
 ## R-Multiple
 

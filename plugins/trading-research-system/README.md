@@ -11,8 +11,9 @@ It is designed for research, screening, risk review, and decision support. It do
 - Equity screening with thesis verification against primary sources.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
+- Weekly trading plan construction and daily market tracking.
 - Plan-scoped intraday setup scanning for prepared trade plans.
-- Interactive actual-trade review intake and trade statistics.
+- Interactive post-order and post-exit actual-trade review intake and trade statistics.
 - Portfolio risk exposure checks.
 - Local daily trading records with CSV and Markdown templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
@@ -45,7 +46,7 @@ This plugin does not:
 
 - place trades or automate order execution;
 - generate guaranteed buy/sell instructions;
-- scan the entire market for unplanned intraday trades in the initial scope;
+- scan the entire market for unplanned intraday trades outside the weekly plan, watchlist, or prepared plans in the initial scope;
 - use Google Sheets as the canonical source of truth;
 - provide tax, legal, or regulated investment advice.
 
@@ -57,7 +58,7 @@ Use local daily folders as the first source of truth:
 data/daily/YYYY-MM-DD/
 ```
 
-The plugin includes templates for holdings, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+The plugin includes templates for weekly plans, daily market tracking, holdings, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
 
 Google Sheets sync is planned as a later mirror/review layer.
 

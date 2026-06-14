@@ -1,7 +1,7 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260613085202",
-  "description": "A trading research workflow for macro policy filtering, equity screening, price action timing, and portfolio risk checks.",
+  "version": "0.1.0+codex.20260614074339",
+  "description": "A trading research workflow for weekly plans, daily market tracking, setup timing, trade review, and risk checks.",
   "author": {
     "name": "Archer"
   },
@@ -16,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Trading Research System",
-    "shortDescription": "Macro-aware equity research, timing, and risk workflows.",
-    "longDescription": "Trading Research System helps Codex run a disciplined trading research workflow: filter macro and policy noise, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, and check portfolio risk exposure.",
+    "shortDescription": "Weekly plans, daily market tracking, trade review, and risk workflows.",
+    "longDescription": "Trading Research System helps Codex run a disciplined trading research workflow: build weekly trading plans, track the current market against those plans, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews, and check portfolio risk exposure.",
     "developerName": "Archer",
     "category": "Productivity",
     "capabilities": [
@@ -25,9 +25,10 @@
       "Analysis"
     ],
     "defaultPrompt": [
-      "Run my trading research workflow on NVDA.",
+      "Build my weekly trading plan.",
+      "Track today's market against my active trade plans.",
       "Screen stocks for a falling-rate environment.",
-      "Check my portfolio risk exposure."
+      "Review my latest IBKR trade interactively."
     ],
     "brandColor": "#2563EB"
   }

@@ -17,6 +17,7 @@ TEMPLATE_NAMES = {
     "holdings.csv": "portfolio.csv",
     "research-note-log.csv": "research-note-log.csv",
     "daily-macro-checklist.md": "daily-macro-checklist.md",
+    "daily-market-tracking.md": "daily-market-tracking.md",
     "reviews.md": "reviews.md",
 }
 

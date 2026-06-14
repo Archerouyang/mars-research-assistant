@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into verified research notes, planned trades, intraday setup scans, actual trade records, review notes, and statistics for improving a discretionary trading system.
+Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into weekly trading plans, daily market tracking notes, verified research notes, planned trades, intraday setup scans, actual trade records, review notes, and statistics for improving a discretionary trading system.
 
 The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
 
@@ -14,8 +14,10 @@ The system supports:
 - research-note and market-view validation against primary/current sources;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
+- weekly trading plan construction from macro context, watchlists, current market structure, and candidate trade ideas;
+- daily market parsing and dynamic tracking of the active weekly plan, watchlist, and prepared trade plans;
 - plan-scoped intraday setup scanning for prepared trade plans;
-- local trade planning, actual-trade recording, interactive trade review, and statistics;
+- local trade planning, IBKR-backed actual-trade fact capture when available, two-stage interactive trade review, and statistics;
 - portfolio risk exposure checks before and after trades;
 - one-way local-to-Google-Sheets sync as a later mirror/review layer.
 
@@ -23,7 +25,7 @@ The system does not support in the initial scope:
 
 - auto-order placement or fully automated trading;
 - guaranteed buy/sell instructions;
-- whole-market real-time intraday opportunity discovery;
+- unbounded whole-market real-time intraday scanning without a weekly theme, watchlist, or prepared plan;
 - two-way Google Sheets sync;
 - a persistent dashboard/frontend;
 - unverified paywalled research extraction;
@@ -38,10 +40,13 @@ The default workflow is:
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
 5. **Setup analysis**: classify market state, trade type, higher-timeframe background, 20/50 EMA context, trigger, stop, and targets.
-6. **Plan creation**: write structured `trade-plans.csv` rows and, when needed, `intraday-watchlist.csv` rows.
-7. **Intraday scan**: monitor only prepared plans and classify them as `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
-8. **Actual trade review**: collect execution facts through interactive review intake and append structured records to `trades.csv` plus narrative notes to `reviews.md`.
-9. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
+6. **Weekly plan creation**: form initial trade ideas and structured plans for the coming week, including market regime, priority watchlist, candidate setups, invalidation, trigger timeframe, and risk budget.
+7. **Daily market tracking**: parse the current market against the weekly plan, update which ideas are active, invalidated, approaching, or require new evidence.
+8. **Plan creation**: write structured `trade-plans.csv` rows and, when needed, `intraday-watchlist.csv` rows.
+9. **Intraday scan**: monitor prepared plans and high-priority watchlist ideas; classify plans as `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
+10. **Post-order review**: after an order or fill appears, use IBKR trade facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
+11. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
+12. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
 
 ## Public Repo Boundary
 
@@ -108,6 +113,7 @@ Rules:
 | Core skill routing | Started | `plugins/trading-research-system/skills/trading-research/SKILL.md` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
+| Weekly and daily plan loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/SKILL.md` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
 | Daily development automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
@@ -140,14 +146,16 @@ Status: started.
 Deliverables:
 
 - Daily directory convention: `data/daily/YYYY-MM-DD/`.
-- Templates for `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
+- Weekly plan convention for initial trade ideas, priority watchlist, active themes, and candidate setups.
+- Daily market tracking convention for current market read, plan updates, and opportunity status.
+- Templates for `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
 - `init_daily.py` to create a daily folder from templates.
 - Local records remain the first source of truth.
 
 Exit criteria:
 
 - A trading day can be initialized locally.
-- Planned trades, intraday watch state, actual trades, and review notes can be stored without Google Sheets.
+- Weekly plans, daily market tracking notes, planned trades, intraday watch state, actual trades, and review notes can be stored without Google Sheets.
 
 ### P2: Analysis Modules
 
@@ -179,7 +187,7 @@ Deliverables:
 - Win rate, average R, expectancy, and drawdown.
 - Setup, instrument, timeframe, and confidence performance.
 - Mistake-tag frequency.
-- Review workflow that distinguishes trade quality from outcome.
+- Two-stage review workflow that distinguishes post-order entry review from post-exit outcome review.
 - System optimization notes based on statistically meaningful samples.
 
 Exit criteria:
@@ -198,8 +206,10 @@ Deliverables:
 - External connector-provided market/account data use for market state, holdings, and chart artifacts.
 - Option data API integration after vendor research.
 - Daily market brief.
+- Weekly trading plan brief.
 - Intraday plan monitor.
-- Post-market review prompt.
+- Post-order review prompt.
+- Post-exit review prompt.
 
 Exit criteria:
 
@@ -220,7 +230,7 @@ Target result:
 
 Target result:
 
-- User can initialize a trading day, create trade plans, track intraday state manually, record actual trades, append reviews, and run basic stats locally.
+- User can construct a weekly trading plan, initialize a trading day, parse current market state against that plan, create trade plans, track intraday state manually, record actual trades, append two-stage reviews, and run basic stats locally.
 
 ### M3: Data-Assisted Research MVP
 
@@ -233,7 +243,7 @@ Target result:
 Target result:
 
 - Local records sync one-way to Google Sheets.
-- Interactive trade review produces structured `trades.csv` rows and daily `reviews.md`.
+- Interactive trade review produces post-order and post-exit updates to structured `trades.csv` rows plus daily `reviews.md`.
 
 ### M5: Intraday Monitor MVP
 
@@ -244,11 +254,12 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
+1. Add sample weekly/daily fixture data that covers weekly plans, daily market tracking, prepared plans, IBKR-like trade facts, post-order review, post-exit review, and expected scan outputs.
 2. Add an intraday scan script that reads `intraday-watchlist.csv` and emits status/attention summaries.
-3. Add sample daily fixture data to test end-to-end local workflow scripts.
-4. Add chart artifact generation from fixture-backed authorized OHLCV data.
-5. Research option-flow data vendors and define the minimum anomaly schema.
+3. Connect interactive review intake to post-order and post-exit `trades.csv` updates.
+4. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
+5. Add chart artifact generation from fixture-backed authorized OHLCV data.
+6. Research option-flow data vendors and define the minimum anomaly schema.
 
 ## MVP 1 Acceptance Criteria
 

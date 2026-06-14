@@ -6,7 +6,12 @@ The interaction should feel like a disciplined `grill-me` session: ask one quest
 
 ## Purpose
 
-Produce two outputs:
+Support two review stages:
+
+1. **Post-order review**: immediately after an order or fill, capture the entry facts and decision context while the memory is fresh.
+2. **Post-exit review**: after the trade is closed, complete result, exit quality, realized R, mistake tags, lessons, and next rules.
+
+Each stage should produce or update two outputs:
 
 1. A structured `trades.csv` row or row update.
 2. A readable `reviews.md` section.
@@ -17,13 +22,28 @@ Do not accept vague answers when the field matters for statistics. If the user s
 
 - Ask one question at a time.
 - Prefer concrete facts: time, price, timeframe, signal bar, stop, target, quantity, cost, PnL.
+- Use IBKR order/trade facts when available for objective fields such as symbol, side, quantity, price, fees, order time, fill time, and PnL. Ask the user to confirm before writing.
 - If the user already has a planned trade in `trade-plans.csv`, compare the actual trade to that plan.
 - Keep a running draft of mapped fields internally and write the final result only after the key fields are resolved.
 - If exact numeric data is missing, mark it as `unknown` or leave the field blank; do not fabricate.
 - Preserve the user's original review wording in `review_raw` when useful.
 - Extract structured review fields from the raw text.
+- Do not wait until the trade is closed to capture entry rationale. The post-order review exists to prevent hindsight rewriting.
 
-## Question Sequence
+## Stage Selection
+
+First determine the stage:
+
+```text
+这笔交易是刚下单/刚成交，需要做下单后记录，还是已经结束，需要做结束后复盘？
+```
+
+Use:
+
+- `post_order` when the trade is open, newly filled, partially filled, or just entered.
+- `post_exit` when the trade is closed, expired, stopped, scratched, or otherwise finished.
+
+## Post-Order Question Sequence
 
 ### 1. Identify The Trade
 
@@ -44,7 +64,24 @@ Map to:
 - `parent_trade_id`
 - `trade_id`
 
-### 2. Define The Trade Type And Timeframes
+If IBKR trade facts are available, prefill objective fields and ask the user to confirm the mapping.
+
+### 2. Link To The Plan
+
+Ask:
+
+```text
+这笔交易来自哪个每周计划、每日盘面追踪条目或预备交易计划？如果是计划外交易，为什么当时允许自己做？
+```
+
+Map to:
+
+- `parent_trade_id`
+- `setup_review`
+- `review_raw`
+- `mistake_tag` if this was a planless entry
+
+### 3. Define The Trade Type And Timeframes
 
 Ask:
 
@@ -59,7 +96,7 @@ Map to:
 - `market_analysis_timeframes`
 - `execution_timeframe`
 
-### 3. Market Background
+### 4. Market Background
 
 Ask:
 
@@ -74,7 +111,7 @@ Map to:
 - `ema_context` when updating a plan
 - `review_raw`
 
-### 4. Entry Reason
+### 5. Entry Reason
 
 Ask:
 
@@ -88,7 +125,7 @@ Map to:
 - `entry_review`
 - `entry_trigger` when updating a plan
 
-### 5. Signal Bar
+### 6. Signal Bar
 
 Ask:
 
@@ -109,7 +146,7 @@ Signal labels:
 - `weak`
 - `no_signal`
 
-### 6. Auxiliary Evidence
+### 7. Auxiliary Evidence
 
 Ask:
 
@@ -123,7 +160,7 @@ Map to:
 - `options_context` when relevant
 - `macro_context` when relevant
 
-### 7. Confidence
+### 8. Confidence
 
 Ask:
 
@@ -142,7 +179,7 @@ Confidence labels:
 - `medium`
 - `low`
 
-### 8. Execution And Risk
+### 9. Execution And Risk
 
 Ask:
 
@@ -161,7 +198,31 @@ Map to:
 - `risk_amount`
 - `planned_R`
 
-### 9. Exit And Result
+Post-order output should set:
+
+- `status`: `open`
+- `outcome`: `open`
+- `exit_date`, `pnl`, `realized_R`, `exit_review`: blank or `unknown`
+
+## Post-Exit Question Sequence
+
+### 1. Identify Or Match The Open Trade
+
+Ask:
+
+```text
+这笔结束的交易对应哪一条 open trade？如果 IBKR 里有成交记录，请确认 trade_id、标的、方向、数量、入场价、出场价和时间。
+```
+
+Map to:
+
+- `trade_id`
+- `exit_date`
+- `quantity`
+- `fees`
+- `pnl`
+
+### 2. Exit And Result
 
 Ask:
 
@@ -187,7 +248,23 @@ Outcome labels:
 - `invalidated_before_entry`
 - `missed`
 
-### 10. Mistake And Lesson
+### 3. Plan Versus Actual
+
+Ask:
+
+```text
+这笔交易从入场到出场是否遵守了原计划？如果偏离了，是因为盘面变化、情绪、仓位、时间框架，还是原计划本身不完整？
+```
+
+Map to:
+
+- `setup_review`
+- `entry_review`
+- `exit_review`
+- `mistake_tag`
+- `lesson`
+
+### 4. Mistake And Lesson
 
 Ask:
 
@@ -201,12 +278,22 @@ Map to:
 - `lesson`
 - `review_raw`
 
+Post-exit output should update:
+
+- `status`: `closed` when the trade is fully finished, or keep `open` for partial exits.
+- `outcome`
+- `pnl`
+- `realized_R`
+- `exit_review`
+- `mistake_tag`
+- `lesson`
+
 ## Final Output
 
 After the questions, produce:
 
-1. A `trades.csv` row draft.
-2. A `reviews.md` section draft.
+1. A `trades.csv` row draft or row update.
+2. A `reviews.md` post-order or post-exit section draft.
 3. Any missing fields.
 4. Suggested `mistake_tag`, `outcome`, and confidence calibration.
 
@@ -218,6 +305,7 @@ Then ask the user whether to write it into the local daily folder.
 ### {trade_id} - {symbol}
 
 - 产品/方向：
+- 阶段：post_order / post_exit
 - 分析时间框架：
 - 触发时间框架：
 - 盘面背景：
@@ -227,6 +315,7 @@ Then ask the user whether to write it into the local daily folder.
 - 入场信心：
 - 风险计划：
 - 出场与结果：
+- 计划 vs 实际：
 - 错误标签：
 - 经验：
 - 下次规则：

@@ -5,16 +5,19 @@ description: Run a disciplined trading and investment research workflow covering
 
 # Trading Research
 
-Use this skill to help the user research trading ideas, screen stocks, validate market narratives, time entries/exits, monitor current-day plans, record actual trades, and review portfolio risk.
+Use this skill to help the user build weekly trading plans, parse the current market, research trading ideas, screen stocks, validate market narratives, time entries/exits, monitor current-day plans, record actual trades, run two-stage trade reviews, and review portfolio risk.
 
 This is a decision-support workflow. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
 
 ## Operating Modes
 
 - Research memo: macro/rates, thesis validation, screening, price action, and portfolio impact.
+- Weekly planning: build initial trade ideas, priority watchlists, candidate plans, invalidations, timeframes, and risk budgets for the coming week.
 - Daily preparation: initialize local records, prepare watchlists, trade plans, and macro checklists.
-- Intraday setup scan: monitor only planned trades for `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
-- Trade review: collect actual trade details through one-question-at-a-time review intake.
+- Daily market tracking: parse the current market against the weekly plan and update which ideas are active, approaching, invalidated, or need more evidence.
+- Intraday setup scan: monitor prepared trades and high-priority watchlist ideas for `waiting`, `approaching`, `triggered`, `invalidated`, or `needs_review`.
+- Post-order review: after an order or fill appears, use IBKR trade facts when available and collect entry rationale, signal bar, confidence, and risk plan.
+- Post-exit review: after the trade closes, collect exit rationale, result, R-multiple, mistake tag, lesson, and rule update.
 - Statistics: summarize closed trades by setup, instrument, timeframe, confidence, mistake tag, and R-multiple.
 
 ## Workflow
@@ -34,6 +37,8 @@ This is a decision-support workflow. Do not present outputs as guaranteed return
    - Equity screening and thesis validation.
    - Price action timing.
    - Portfolio risk exposure.
+   - Weekly plan construction.
+   - Daily market tracking against the plan.
 
 4. Load only the references needed for the task:
    - For macro/policy/rates tasks, read `references/macro-policy-filter.md`.
@@ -80,11 +85,15 @@ When the user wants to record actual trades, complete daily trading records, or 
 
 1. Read `references/interactive-trade-review.md`.
 2. Ask one question at a time.
-3. Map each answer to `trades.csv` fields and a `reviews.md` section.
-4. Compare against `trade-plans.csv` when a matching plan exists.
-5. Do not write final records until the key fields are resolved and the user confirms.
+3. Determine whether the review is post-order or post-exit.
+4. Use IBKR trade/order facts when available as factual inputs, but still ask the user for the discretionary context.
+5. Map each answer to `trades.csv` fields and a `reviews.md` section.
+6. Compare against `trade-plans.csv` when a matching plan exists.
+7. Do not write final records until the key fields are resolved and the user confirms.
 
-Key fields to resolve include entry reason, market background, signal bar, auxiliary signal, confidence, risk plan, exit result, mistake tag, and lesson.
+For post-order review, resolve entry reason, market background, signal bar, auxiliary signal, confidence, and risk plan while the trade is fresh.
+
+For post-exit review, resolve exit result, exit quality, realized R, mistake tag, lesson, and whether the original plan needs an update.
 
 ## Default Output Style
 
@@ -111,6 +120,8 @@ Use clear labels:
 
 ## Bundled Data Templates
 
+- `assets/templates/weekly-plan.md`: weekly trading plan and candidate trade idea structure.
+- `assets/templates/daily-market-tracking.md`: daily market tracking against the active weekly plan.
 - `assets/templates/holdings.csv`: portfolio risk input.
 - `assets/templates/watchlist.csv`: candidate scoring input.
 - `assets/templates/trade-plans.csv`: planned trades and intraday setup-scan input.
