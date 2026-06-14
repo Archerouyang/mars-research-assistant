@@ -51,6 +51,7 @@ This repository keeps only distributable plugin artifacts and user-readable docu
 - `CONTEXT.md`
 - `docs/adr/`
 - `docs/ROADMAP.md`
+- `docs/DEVELOPMENT.md`
 - `docs/PROJECT_LOG.md`
 - `docs/DEVELOPMENT_PLAN.md`
 - `交易研究工作流.md`
@@ -68,6 +69,7 @@ Project trajectory should be visible on GitHub through four public artifacts:
 - commit history for exact code/document changes;
 - `docs/PROJECT_LOG.md` for human-readable update records;
 - `docs/ROADMAP.md` for current plan, progress, milestones, and next implementation tasks;
+- `docs/DEVELOPMENT.md` for development workflow, testing, CI, and Codex/Claude handoff rules;
 - `docs/DEVELOPMENT_PLAN.md` for active development priorities, daily planning, and progress review;
 - `docs/adr/` for hard-to-reverse architecture decisions.
 
@@ -107,9 +109,10 @@ Rules:
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
+| Development workflow norms | Done | `docs/DEVELOPMENT.md` |
 | Daily development automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Google Sheets sync implementation | Planned | no script yet |
-| IBKR-driven chart/scan artifacts | Planned | no artifact generator yet |
+| OHLCV-driven chart/scan artifacts | Planned | no artifact generator yet |
 | Option-flow anomaly module | Planned | data vendor not selected |
 
 ## Task Breakdown
@@ -192,7 +195,7 @@ Deliverables:
 
 - One-way Google Sheets sync from local daily records.
 - Google Drive research archive support.
-- IBKR price/account data use for market state, holdings, and chart artifacts.
+- External connector-provided market/account data use for market state, holdings, and chart artifacts.
 - Option data API integration after vendor research.
 - Daily market brief.
 - Intraday plan monitor.
@@ -244,7 +247,7 @@ Target result:
 1. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
 2. Add an intraday scan script that reads `intraday-watchlist.csv` and emits status/attention summaries.
 3. Add sample daily fixture data to test end-to-end local workflow scripts.
-4. Add chart artifact generation from authorized OHLCV data.
+4. Add chart artifact generation from fixture-backed authorized OHLCV data.
 5. Research option-flow data vendors and define the minimum anomaly schema.
 
 ## MVP 1 Acceptance Criteria

@@ -60,9 +60,10 @@ Use these statuses:
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P1 | ready | Implement local intraday scan script | Turns documented scan states into executable status and attention-priority summaries. | Build with TDD from fixture CSVs. |
 | P1 | ready | Add sample daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Add fixtures for plans, intraday watchlist, holdings, and trades. |
+| P1 | ready | Add lightweight test harness | Gives Claude/Codex tasks a local acceptance gate before CI exists. | Start with unittest fixtures for existing scripts and template schemas. |
 | P1 | ready | Connect interactive review output to local trade records | Makes trade review produce structured `trades.csv` rows plus `reviews.md` sections. | Extend current review append flow with CSV write support. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping and fixture-driven tests first. |
-| P2 | planned | Add IBKR OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Start with a pure data-to-chart artifact layer and fixture OHLCV. |
+| P2 | planned | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Start with a pure data-to-chart artifact layer and fixture OHLCV; do not test live connector behavior in this repo. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
 ## Today
@@ -81,6 +82,7 @@ Date: 2026-06-14
 
 - Planned: create a dedicated development planning/progress document and align weekday automations to it.
 - Completed: created `docs/DEVELOPMENT_PLAN.md`, registered it in `docs/ROADMAP.md`, and updated both weekday development automations to use it as the progress source of truth.
+- Completed: added `docs/DEVELOPMENT.md` as the lightweight development workflow, TDD, CI, worktree, and Codex/Claude handoff standard. Clarified that live IBKR connector behavior is outside this repo's test scope.
 - Verification: read both automation configs after update; confirmed they reference `docs/DEVELOPMENT_PLAN.md`.
 - Blockers: none.
 - Next: use the next morning brief to choose between `intraday_scan.py`, fixture data, or trade-review CSV writing as the next implementation task.
