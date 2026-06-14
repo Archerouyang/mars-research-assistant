@@ -75,7 +75,7 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
-| P1 | ready | Add sample daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Add fixtures for plans, intraday watchlist, holdings, and trades. |
+| P1 | in_progress | Add sample daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for plans, intraday watchlist, holdings, trades, reviews, and expected scan outputs. |
 | P1 | ready | Implement local intraday scan script | Turns documented scan states into executable status and attention-priority summaries. | Build with TDD from fixture CSVs. |
 | P1 | ready | Connect interactive review output to local trade records | Makes trade review produce structured `trades.csv` rows plus `reviews.md` sections. | Extend current review append flow with CSV write support. |
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
@@ -87,10 +87,10 @@ Use these statuses:
 
 Date: 2026-06-14
 
-- Morning main task:
-- Secondary task:
-- Definition of done:
-- Verification:
+- Morning main task: define the fixture package as the next implementation slice for the local trading research workflow MVP.
+- Secondary task: none until the fixture package shape is accepted.
+- Definition of done: document or create fixture expectations for `trade-plans.csv`, `intraday-watchlist.csv`, `holdings.csv`, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option plans.
+- Verification: fixture package should be usable by later TDD work for `intraday_scan.py`, trade-review CSV writing, stats, Google Sheets sync, and chart artifact generation without live IBKR or Google data.
 - End-of-day result:
 
 ## Progress Log
@@ -102,7 +102,8 @@ Date: 2026-06-14
 - Completed: added `docs/DEVELOPMENT.md` as the lightweight development workflow, TDD, CI, worktree, and Codex/Claude handoff standard. Clarified that live IBKR connector behavior is outside this repo's test scope.
 - Verification: read both automation configs after update; confirmed they reference `docs/DEVELOPMENT_PLAN.md`; plugin validation passed after development workflow review.
 - Blockers: none.
-- Next: choose the next product-capability task. Recommended order: fixture data, then `intraday_scan.py`, then trade-review CSV writing.
+- Decision: confirmed fixture data as the next product-capability implementation slice before `intraday_scan.py`.
+- Next: define the fixture package, then implement `intraday_scan.py`, then connect trade-review CSV writing.
 
 ## Automation Contract
 
