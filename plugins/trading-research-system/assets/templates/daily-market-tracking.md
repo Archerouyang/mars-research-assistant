@@ -3,10 +3,13 @@
 ## Date
 
 - Date:
-- Linked weekly plan:
+- Linked weekly review plan:
 - Market regime:
 - Rates/yields:
-- Macro or policy events:
+- Macro / policy events:
+- News catalysts:
+- Event preview:
+- Momentum leaderboard change:
 - Portfolio exposure concern:
 
 ## Current Market Read
@@ -18,11 +21,27 @@
 - Trading range or trend:
 - Noise to ignore:
 
-## Active Ideas From Weekly Plan
+## Quick Macro / Policy / News
 
-| trade_id | Ticker | Status | Current read | Next evidence needed | Invalidation | Attention |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  | waiting / approaching / triggered / invalidated / needs_review |  |  |  |  |
+- Macro:
+- Rates:
+- Treasury / fiscal policy:
+- Fed policy:
+- Trump-related market-moving policy:
+- News:
+- Next major event:
+
+## Momentum Leaderboard Update
+
+| Ticker/theme | Direction | Change since weekly review plan | Setup impact |
+| --- | --- | --- | --- |
+|  |  |  |  |
+
+## Active Ideas From Weekly Review Plan
+
+| trade_id | Ticker | Status | Current read | Trigger zone | Invalidation | Updated levels | Attention |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  | waiting / approaching / triggered / invalidated / needs_review |  |  |  |  |  |
 
 ## New Evidence
 

@@ -1,7 +1,7 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260614075335",
-  "description": "Focused trading research skills for weekly plans, daily tracking, setup scans, trade review, and risk checks.",
+  "version": "0.1.0+codex.20260614080515",
+  "description": "Focused trading research skills for weekly reviews, daily tracking, setup scans, trade review, and risk checks.",
   "author": {
     "name": "Archer"
   },
@@ -16,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Trading Research System",
-    "shortDescription": "Weekly plans, daily market tracking, trade review, and risk workflows.",
-    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: build weekly trading plans, track the current market against those plans, verify market narratives against primary sources, screen equity candidates, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews, check portfolio risk exposure, and review trading statistics.",
+    "shortDescription": "Weekly reviews, daily tracking, trade review, and risk workflows.",
+    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: review last week's trades, analyze current market tape, macro, policy, news, and upcoming events, update momentum rankings, build next-week trading plans, track the current market against those plans, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews, check portfolio risk exposure, and review trading statistics.",
     "developerName": "Archer",
     "category": "Productivity",
     "capabilities": [
@@ -25,8 +25,8 @@
       "Analysis"
     ],
     "defaultPrompt": [
-      "Build my weekly trading plan.",
-      "Track today's market against my active trade plans.",
+      "Build my weekly market review and next-week trading plan.",
+      "Track today's market and update active trade levels.",
       "Screen stocks for a falling-rate environment.",
       "Review my latest IBKR trade interactively."
     ],

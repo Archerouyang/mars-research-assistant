@@ -1,8 +1,8 @@
 # Intraday Setup Scan
 
-Use this reference when monitoring current-day trade plans, weekly-plan watchlist ideas, and planned setups.
+Use this reference when monitoring current-day trade plans, weekly review plan watchlist ideas, and planned setups.
 
-The intraday scanner is a decision-support workflow. It can surface opportunities only inside the current weekly plan, daily tracking note, watchlist, or prepared trade plans. It does not place orders or turn price alerts into buy/sell instructions.
+The intraday scanner is a decision-support workflow. It can surface opportunities only inside the current weekly market review plan, daily tracking note, watchlist, or prepared trade plans. It does not place orders or turn price alerts into buy/sell instructions.
 
 ## Inputs
 
@@ -10,7 +10,7 @@ Use the current day's local records:
 
 - `trade-plans.csv`
 - `intraday-watchlist.csv`
-- weekly plan and daily market tracking notes when available
+- weekly market review plan and daily market tracking notes when available
 - `portfolio.csv` or current holdings data when available
 - current price/chart data from IBKR or another authorized source
 - current macro/news context when a plan may be affected by events

@@ -71,7 +71,7 @@ If IBKR trade facts are available, prefill objective fields and ask the user to 
 Ask:
 
 ```text
-这笔交易来自哪个每周计划、每日盘面追踪条目或预备交易计划？如果是计划外交易，为什么当时允许自己做？
+这笔交易来自哪个周度市场复盘与下周计划、每日盘面追踪条目或预备交易计划？如果是计划外交易，为什么当时允许自己做？
 ```
 
 Map to:

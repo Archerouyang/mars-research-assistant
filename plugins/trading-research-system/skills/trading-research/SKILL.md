@@ -1,6 +1,6 @@
 ---
 name: trading-research
-description: Route trading research requests to the right Trading Research System workflow. Use when the user invokes trading-research generally, asks for trading help without naming a specific sub-skill, or needs coordination across weekly planning, daily tracking, intraday scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
+description: Route trading research requests to the right Trading Research System workflow. Use when the user invokes trading-research generally, asks for trading help without naming a specific sub-skill, or needs coordination across weekly market review and next-week planning, daily tracking, intraday scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
 ---
 
 # Trading Research Router
@@ -11,9 +11,9 @@ This is decision support, not automated trading. Do not present outputs as guara
 
 ## Routing
 
-- Weekly plan, next-week prep, initial trade ideas, priority watchlist:
+- Weekly market review, last-week trade review, next-week macro/policy/news/event preview, momentum update, setup discovery:
   use `weekly-trading-plan`.
-- Current market read, premarket/market-hours update, dynamic tracking:
+- Daily premarket/intraday quick market read, macro/policy/news/event update, momentum update, planned opportunity and level tracking:
   use `daily-market-tracking`.
 - Several active plans, multiple tickers/charts, setup status:
   use `intraday-setup-scan`.
@@ -28,13 +28,13 @@ This is decision support, not automated trading. Do not present outputs as guara
 
 If a request spans multiple workflows, run them in the natural order:
 
-1. `macro-equity-research`
-2. `weekly-trading-plan`
-3. `daily-market-tracking`
-4. `intraday-setup-scan`
-5. `portfolio-risk`
-6. `trade-review`
-7. `trading-stats`
+1. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
+2. `weekly-trading-plan` to synthesize the weekly review and next-week plan.
+3. `daily-market-tracking` to update the plan against today's market.
+4. `intraday-setup-scan` to classify prepared setups during the session.
+5. `portfolio-risk` before increasing or concentrating exposure.
+6. `trade-review` after orders/fills and after exits.
+7. `trading-stats` after enough closed-trade records exist.
 
 ## Shared Resources
 

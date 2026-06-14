@@ -11,7 +11,8 @@ It is designed for research, screening, risk review, and decision support. It do
 - Equity screening with thesis verification against primary sources.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
-- Weekly trading plan construction and daily market tracking.
+- Weekly market review and next-week trading plan construction.
+- Daily premarket and intraday tracking with level updates.
 - Plan-scoped intraday setup scanning for prepared trade plans.
 - Interactive post-order and post-exit actual-trade review intake and trade statistics.
 - Portfolio risk exposure checks.
@@ -28,8 +29,8 @@ $trading-research
 
 For more specific workflows, use the smaller skills directly:
 
-- `$weekly-trading-plan`: weekly plan and initial trade ideas.
-- `$daily-market-tracking`: current market read against the active plan.
+- `$weekly-trading-plan`: last-week review, current market/macro/policy/news analysis, next-week preview, momentum update, and setup discovery.
+- `$daily-market-tracking`: quick daily market/macro/policy/news update, momentum update, planned opportunity tracking, and level updates.
 - `$intraday-setup-scan`: plan-scoped intraday setup status.
 - `$trade-review`: post-order and post-exit actual trade review.
 - `$macro-equity-research`: macro/rates, research validation, and screening.
@@ -39,11 +40,11 @@ For more specific workflows, use the smaller skills directly:
 Example prompts:
 
 ```text
-$weekly-trading-plan Build my weekly trading plan.
+$weekly-trading-plan Build my weekly market review and next-week trading plan.
 ```
 
 ```text
-$daily-market-tracking Track today's market against my active trade plans.
+$daily-market-tracking Track today's market, update levels, and compare against my weekly review plan.
 ```
 
 ```text
@@ -64,7 +65,7 @@ This plugin does not:
 
 - place trades or automate order execution;
 - generate guaranteed buy/sell instructions;
-- scan the entire market for unplanned intraday trades outside the weekly plan, watchlist, or prepared plans in the initial scope;
+- scan the entire market for unplanned intraday trades outside the weekly review plan, watchlist, or prepared plans in the initial scope;
 - use Google Sheets as the canonical source of truth;
 - provide tax, legal, or regulated investment advice.
 
@@ -76,7 +77,7 @@ Use local daily folders as the first source of truth:
 data/daily/YYYY-MM-DD/
 ```
 
-The plugin includes templates for weekly plans, daily market tracking, holdings, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+The plugin includes templates for weekly market review plans, daily market tracking, holdings, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
 
 Google Sheets sync is planned as a later mirror/review layer.
 

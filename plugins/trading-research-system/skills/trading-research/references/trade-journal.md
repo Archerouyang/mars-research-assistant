@@ -34,7 +34,7 @@ Recommended files:
 - `research-notes.md`
 - `portfolio.csv`
 
-Weekly plans can use `assets/templates/weekly-plan.md` and should link to the daily folders that track execution during that week.
+Weekly market review plans can use `assets/templates/weekly-plan.md` and should link to the daily folders that track execution during that week.
 
 Create this structure with:
 

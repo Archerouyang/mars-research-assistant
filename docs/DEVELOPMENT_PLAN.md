@@ -8,7 +8,7 @@ Do not include private trade records, credentials, account details, unpublished 
 
 Phase: local trading research workflow MVP.
 
-Goal: make the plugin usable for the core local trading research loop before adding heavier external integrations: build weekly trading plans, parse the current market against those plans, scan planned setups, record actual trades, run two-stage trade reviews, and compute basic statistics.
+Goal: make the plugin usable for the core local trading research loop before adding heavier external integrations: build weekly market review and next-week trading plan packages, parse the current market against those plans, scan planned setups, record actual trades, run two-stage trade reviews, and compute basic statistics.
 
 ## Planning North Star
 
@@ -16,9 +16,9 @@ Daily development planning should prioritize product capability, not process wor
 
 The current product sequence is:
 
-1. weekly trading plan and local daily records;
-2. fixture data covering weekly plans, daily market tracking, prepared plans, IBKR-like trade facts, and two-stage reviews;
-3. daily market parsing and dynamic tracking against the weekly plan;
+1. weekly market review and next-week trading plan package plus local daily records;
+2. fixture data covering weekly review notes, next-week event previews, momentum leaderboard updates, daily market tracking, prepared plans, IBKR-like trade facts, and two-stage reviews;
+3. daily premarket/intraday market parsing, level updates, and dynamic tracking against the weekly review plan;
 4. plan-scoped intraday setup scan;
 5. post-order review to create or update open `trades.csv` rows;
 6. post-exit review to complete results, lessons, and `reviews.md`;
@@ -78,9 +78,9 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
-| P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly plan, daily tracking, and trade review prompts. |
-| P1 | in_progress | Add sample weekly/daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for weekly plans, daily market tracking, plans, intraday watchlist, holdings, IBKR-like trade facts, two-stage reviews, and expected scan outputs. |
-| P1 | done | Add weekly plan and daily market tracking templates | Supports the user's current hard need: build initial trade ideas and plans, then track them dynamically as the market changes. | Use these templates in the fixture package and later script flows. |
+| P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
+| P1 | in_progress | Add sample weekly/daily fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for weekly market review, next-week event preview, momentum leaderboard, daily quick update, plans, intraday watchlist, holdings, IBKR-like trade facts, two-stage reviews, and expected scan outputs. |
+| P1 | done | Add weekly review and daily market tracking templates | Supports the user's current hard need: build the weekly research package, discover setups, then track levels dynamically as the market changes. | Use these templates in the fixture package and later script flows. |
 | P1 | ready | Implement local intraday scan script | Turns documented scan states into executable status and attention-priority summaries. | Build with TDD from fixture CSVs. |
 | P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
@@ -92,10 +92,10 @@ Use these statuses:
 
 Date: 2026-06-14
 
-- Morning main task: define the fixture package as the next implementation slice for the weekly plan, daily tracking, intraday scan, and two-stage review workflow.
+- Morning main task: define the fixture package as the next implementation slice for the weekly market review, next-week plan, daily tracking, intraday scan, and two-stage review workflow.
 - Secondary task: none until the fixture package shape is accepted.
-- Definition of done: document or create fixture expectations for weekly plan notes, daily market tracking notes, `trade-plans.csv`, `intraday-watchlist.csv`, `holdings.csv`, IBKR-like trade facts, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option plans.
-- Verification: fixture package should be usable by later TDD work for weekly planning, daily tracking, `intraday_scan.py`, post-order review writing, post-exit review updates, stats, Google Sheets sync, and chart artifact generation without live IBKR or Google data.
+- Definition of done: document or create fixture expectations for weekly market review notes, next-week event previews, momentum leaderboard updates, daily market tracking notes, `trade-plans.csv`, `intraday-watchlist.csv`, `holdings.csv`, IBKR-like trade facts, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option plans.
+- Verification: fixture package should be usable by later TDD work for weekly review/planning, daily tracking, `intraday_scan.py`, post-order review writing, post-exit review updates, stats, Google Sheets sync, and chart artifact generation without live IBKR or Google data.
 - End-of-day result:
 
 ## Progress Log
@@ -107,9 +107,9 @@ Date: 2026-06-14
 - Completed: added `docs/DEVELOPMENT.md` as the lightweight development workflow, TDD, CI, worktree, and Codex/Claude handoff standard. Clarified that live IBKR connector behavior is outside this repo's test scope.
 - Verification: read both automation configs after update; confirmed they reference `docs/DEVELOPMENT_PLAN.md`; plugin validation passed after development workflow review.
 - Blockers: none.
-- Decision: confirmed the user's hard need is weekly trade-plan construction, daily market tracking, opportunity discovery within the plan/watchlist, and two-stage trade review based on actual trade facts.
-- Completed: added weekly plan and daily market tracking templates to the plugin and aligned review references around post-order and post-exit stages.
-- Completed: split the plugin into a lightweight `trading-research` router plus focused skills for weekly planning, daily tracking, intraday scan, trade review, macro/equity research, portfolio risk, and trading stats.
+- Decision: confirmed the user's hard need is a weekly market review and next-week plan package, daily premarket/intraday tracking with level updates, opportunity discovery within the plan/watchlist, and two-stage trade review based on actual trade facts.
+- Completed: added weekly review and daily market tracking templates to the plugin and aligned review references around post-order and post-exit stages.
+- Completed: split the plugin into a lightweight `trading-research` router plus focused skills for weekly market review/planning, daily tracking, intraday scan, trade review, macro/equity research, portfolio risk, and trading stats.
 - Decision: confirmed fixture data as the next product-capability implementation slice before `intraday_scan.py`.
 - Next: forward-test focused skill routing, then define the fixture package using the new weekly/daily templates, implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
 
