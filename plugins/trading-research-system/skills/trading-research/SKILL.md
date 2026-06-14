@@ -45,6 +45,7 @@ Detailed domain rules remain in:
 - `references/macro-policy-filter.md`
 - `references/equity-screening.md`
 - `references/active-market-plan.md`
+- `references/trading-profile.md`
 - `references/broker-data-contract.md`
 - `references/automation-contract.md`
 - `references/price-action-timing.md`

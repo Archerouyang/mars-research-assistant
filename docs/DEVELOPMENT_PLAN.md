@@ -16,8 +16,8 @@ Daily development planning should prioritize product capability, not process wor
 
 The current product sequence is:
 
-1. Active Market Plan schema, update trail, and local daily records;
-2. fixture data covering `market-plan.md`, append-only update notes, event previews, momentum leaderboard updates, setup pool, canonical broker CSV, and two-stage reviews;
+1. Active Market Plan schema, trading profile, update trail, and local daily records;
+2. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, momentum leaderboard updates, setup pool, canonical broker CSV, and two-stage reviews;
 3. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
 4. setup-scoped intraday scan;
 5. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
@@ -81,9 +81,11 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
+| P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for `market-plan.md`, update notes, event preview, momentum leaderboard, setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker data contracts | Aligns the workflow around one living market plan, setup-level tracking, read-only broker sources, and canonical local data. | Use these contracts in the fixture package and later script flows. |
+| P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
 | P1 | ready | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Build with TDD from Active Market Plan and fixture CSVs. |
 | P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
@@ -96,11 +98,11 @@ Use these statuses:
 
 Date: 2026-06-14
 
-- Morning main task: define the fixture package as the next implementation slice for Active Market Plan updates, setup scanning, broker reconciliation, and two-stage review workflow.
-- Secondary task: none until the fixture package shape is accepted.
-- Definition of done: document or create fixture expectations for `market-plan.md`, update notes, event previews, momentum leaderboard updates, setup pool, `trade-plans.csv`, `intraday-watchlist.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option setups.
+- Morning main task: define the fixture package as the next implementation slice for Active Market Plan updates, trading profile translation, setup scanning, broker reconciliation, and two-stage review workflow.
+- Secondary task: initialize next-week Active Market Plan outlook after basic plugin content planning is complete.
+- Definition of done: document or create fixture expectations for `market-plan.md`, `trading-profile.md`, update notes, event previews, momentum leaderboard updates, setup pool, `trade-plans.csv`, `intraday-watchlist.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option setups.
 - Verification: fixture package should be usable by later TDD work for Active Market Plan updates, `intraday_scan.py`, post-order review writing, post-exit review updates, portfolio risk, stats, Google Sheets sync, and chart artifact generation without live IBKR, Longbridge, or Google data.
-- End-of-day result:
+- End-of-day result: in progress. Added `docs/PLUGIN_CONTENT_PLAN.md` as the basic plugin content checklist and initialized `data/market-plan.md` plus `data/updates/2026-06-14.md` for the 2026-06-15 to 2026-06-19 market outlook.
 
 ## Progress Log
 
@@ -116,7 +118,11 @@ Date: 2026-06-14
 - Completed: split the plugin into a lightweight `trading-research` router plus focused skills for weekly market review/planning, daily tracking, intraday scan, trade review, macro/equity research, portfolio risk, and trading stats.
 - Decision: confirmed fixture data as the next product-capability implementation slice before `intraday_scan.py`.
 - Decision: refined the workflow around one overwriteable Active Market Plan plus append-only update notes. Weekly and daily work are update depths, not separate workflows. Setup is the smallest planning unit, and broker sources are read-only adapters mapped into canonical daily CSV.
-- Next: forward-test focused skill routing, then define the fixture package using `market-plan.md`, update notes, setup pool, and canonical broker CSV, implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
+- Decision: added a trading profile layer for style and instrument preferences without storing account allocation in the public repo.
+- Next: forward-test focused skill routing, then define the fixture package using `market-plan.md`, `trading-profile.md`, update notes, setup pool, and canonical broker CSV, implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
+- Completed: defined the basic plugin content plan across router/focused skills, shared references, templates, scripts, fixture package, priorities, and deferred scope.
+- Completed: initialized the 2026-06-15 to 2026-06-19 Active Market Plan outlook and append-only update note using current event/calendar and market sources.
+- Next: convert the new market plan into fixture package files for daily records, expected intraday scan output, and review-writing tests.
 
 ## Automation Contract
 
@@ -129,4 +135,4 @@ The morning automation should recommend one main product-capability task for the
 
 Automation outputs should be concise Chinese Markdown notes. They should ask before editing files and should not touch broker write actions, private trade data, or live external services.
 
-Trading operations automations are separate from development automations. They should use `data/market-plan.md` as current state and `data/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions.
+Trading operations automations are separate from development automations. They should use `data/market-plan.md` as current state, `data/trading-profile.md` as private trading style input when available, and `data/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions.

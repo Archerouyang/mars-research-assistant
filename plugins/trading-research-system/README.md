@@ -12,6 +12,7 @@ It is designed for research, screening, risk review, and decision support. It do
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
+- Trading profile template for personal style, instrument preference, and setup-to-instrument translation.
 - Automation-ready deep update, quick update, intraday monitor, and post-market review workflows.
 - Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
 - Quick updates for weekday premarket and intraday level/status changes.
@@ -79,11 +80,14 @@ Use local daily folders as the first source of truth:
 
 ```text
 data/market-plan.md
+data/trading-profile.md
 data/updates/YYYY-MM-DD.md
 data/daily/YYYY-MM-DD/
 ```
 
 The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+
+Use `data/trading-profile.md` for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
 
 Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into canonical local files before core risk or review workflows consume them.
 

@@ -13,6 +13,7 @@ This is decision support, not automated trading. Separate facts, assumptions, lo
 
 1. Read the shared references needed for the task:
    - Active plan model: `../trading-research/references/active-market-plan.md`.
+   - Trading profile and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro and rates: `../trading-research/references/macro-policy-filter.md`.
    - Equity screening and thesis validation: `../trading-research/references/equity-screening.md`.
    - Price action and timeframe rules: `../trading-research/references/price-action-timing.md`.
@@ -30,7 +31,7 @@ This is decision support, not automated trading. Separate facts, assumptions, lo
    - next-week preview: macro releases, Fed/Treasury events, auctions, earnings, expirations, and known policy deadlines;
    - momentum leaderboard update: strongest and weakest symbols/themes, plus what changed versus the prior week;
    - setup pool refresh: setup-level candidates grouped by theme, symbol, and instrument type;
-   - setup details: long/short thesis, setup type, instrument type, analysis timeframe, trigger timeframe, trigger zone, invalidation, and risk budget;
+   - setup details: long/short thesis, setup type, instrument type, analysis timeframe, trigger timeframe, trigger zone, invalidation, profile fit, and risk budget;
    - portfolio exposure impact.
 4. Prefer `../../assets/templates/market-plan.md` for current state and `../../assets/templates/weekly-plan.md` for a longer deep-update note.
 5. Convert only the highest-quality ideas into setup rows with status `active`; keep weaker ideas as `candidate`.
@@ -50,6 +51,7 @@ Write concise Chinese Markdown notes with:
 - `候选交易想法`
 - `Setup 挖掘`
 - `Setup Pool`
+- `交易风格匹配`
 - `失效条件`
 - `组合风险`
 - `下一次更新重点`

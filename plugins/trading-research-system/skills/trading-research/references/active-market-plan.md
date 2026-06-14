@@ -8,11 +8,13 @@ Use:
 
 ```text
 data/market-plan.md
+data/trading-profile.md
 data/updates/YYYY-MM-DD.md
 data/daily/YYYY-MM-DD/
 ```
 
 - `data/market-plan.md`: overwriteable living state. It should always show the current plan.
+- `data/trading-profile.md`: private trading style and instrument preference file. Use the public template at `assets/templates/trading-profile.md`.
 - `data/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
 - `data/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
 
@@ -52,6 +54,8 @@ Required setup fields:
 
 If the same market opportunity can be traded with multiple instruments, create multiple setups that share the same `theme_id` or `market_context_id`.
 
+Use `data/trading-profile.md` when choosing the expression. The setup pool should reflect the user's trading style and instrument preferences, not a generic default.
+
 Example:
 
 - `theme_id`: `qqq-risk-on-breakout`
@@ -78,6 +82,7 @@ Do not use `triggered` as a buy/sell instruction. `triggered` means `execution_c
 Before a triggered setup can become an actual trade, check:
 
 - portfolio exposure and correlated risk;
+- trading profile avoid rules and instrument fit;
 - day risk limit and emotional/operational constraints;
 - nearby macro, earnings, policy, or auction events;
 - liquidity, spread, IV, and product-specific costs;

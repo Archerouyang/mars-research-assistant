@@ -12,6 +12,7 @@ Use this skill for `quick_update` or light `trigger_update` work against the sam
 1. Load the active `market-plan.md`, or ask for the current plan state if it is unavailable.
 2. Read relevant shared references:
    - Active plan model: `../trading-research/references/active-market-plan.md`.
+   - Trading profile and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
    - Intraday statuses: `../trading-research/references/intraday-setup-scan.md`.
@@ -31,6 +32,7 @@ Use this skill for `quick_update` or light `trigger_update` work against the sam
    - stop concept;
    - target zones;
    - execution timeframe;
+   - instrument fit against trading profile;
    - risk/reward after the update.
 5. For each relevant setup, classify it as:
    - `candidate`
@@ -54,6 +56,7 @@ Use Chinese Markdown with:
 - `动量榜单更新`
 - `Active Plan 对照`
 - `点位更新`
+- `交易风格匹配`
 - `接近触发`
 - `已失效`
 - `需要复核`

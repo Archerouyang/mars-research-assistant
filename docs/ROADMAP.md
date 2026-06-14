@@ -15,6 +15,7 @@ The system supports:
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
+- trading profile support for personal style, instrument preferences, and setup-to-instrument translation without storing account allocation in the public repo;
 - automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, and post-market review prompts;
 - deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, momentum leaderboard rebuild, and setup discovery;
 - quick updates for weekday premarket/intraday changes in tape, macro/rates, policy/news, events, momentum, setup status, and key levels;
@@ -79,6 +80,7 @@ Project trajectory should be visible on GitHub through four public artifacts:
 - `docs/ROADMAP.md` for current plan, progress, milestones, and next implementation tasks;
 - `docs/DEVELOPMENT.md` for development workflow, testing, CI, and Codex/Claude handoff rules;
 - `docs/DEVELOPMENT_PLAN.md` for active development priorities, daily planning, and progress review;
+- `docs/PLUGIN_CONTENT_PLAN.md` for the minimum useful plugin content checklist and fixture package definition;
 - `docs/adr/` for hard-to-reverse architecture decisions.
 
 Update `docs/PROJECT_LOG.md` whenever a change materially affects capability boundaries, execution method, roadmap milestones, schemas, plugin behavior, or external integration decisions.
@@ -119,8 +121,10 @@ Rules:
 | Active Market Plan update loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md` |
 | Broker data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
 | Automation contract | Started | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md` |
+| Trading profile template | Started | `plugins/trading-research-system/assets/templates/trading-profile.md` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
+| Basic plugin content plan | Done | `docs/PLUGIN_CONTENT_PLAN.md` |
 | Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Google Sheets sync implementation | Planned | no script yet |
 | OHLCV-driven chart/scan artifacts | Planned | no artifact generator yet |
@@ -154,12 +158,13 @@ Status: started.
 Deliverables:
 
 - Active plan convention: `data/market-plan.md`.
+- Private trading profile convention: `data/trading-profile.md`.
 - Append-only update convention: `data/updates/YYYY-MM-DD.md`.
 - Daily directory convention: `data/daily/YYYY-MM-DD/`.
 - Deep update convention for last-week trade review, current market tape, macro/rates, policy/news, event preview, momentum leaderboard, themes, setup pool, and risk budget.
 - Quick update convention for current market read, fast macro/policy/news update, event preview, momentum changes, setup status changes, level updates, and attention priority.
 - Broker data convention for raw snapshots under `broker/<source>/YYYY-MM-DD/` and canonical daily CSV files.
-- Templates for `market-plan.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
+- Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
 - `init_daily.py` to create a daily folder from templates.
 - Local records remain the first source of truth.
 
@@ -236,6 +241,7 @@ Exit criteria:
 Target result:
 
 - Public roadmap, capability boundaries, execution method, task breakdown, and progress status are documented.
+- Minimum useful plugin content and fixture package requirements are documented.
 - Plugin validates and installs after documentation/reference updates.
 
 ### M2: Local Workflow MVP

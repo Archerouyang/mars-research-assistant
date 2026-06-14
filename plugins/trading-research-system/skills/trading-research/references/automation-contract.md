@@ -46,6 +46,7 @@ These support the Active Market Plan loop:
 Trading automations should read:
 
 - `data/market-plan.md` for current state;
+- `data/trading-profile.md` for private style and instrument preferences when available;
 - `data/updates/YYYY-MM-DD.md` for the update trail;
 - `data/daily/YYYY-MM-DD/trade-plans.csv`;
 - `data/daily/YYYY-MM-DD/intraday-watchlist.csv`;
@@ -56,6 +57,8 @@ Trading automations should read:
 - `data/daily/YYYY-MM-DD/reviews.md`.
 
 If a file is missing, the automation should report the gap and ask whether to initialize or import data. It should not invent current plan state.
+
+If `data/trading-profile.md` is missing, ask for the relevant style/instrument preferences before translating setups into products.
 
 ## Broker Safety
 

@@ -9,6 +9,7 @@
 - Risk budget:
 - Max concurrent risk:
 - Broker data source used:
+- Trading profile used:
 - Open questions:
 
 ## Current Market Read
@@ -55,6 +56,12 @@
 | setup_id | theme_id | Symbol | Direction | Instrument | Analysis TF | Trigger TF | Setup | Status | Trigger zone | Invalidation | Target zone | Risk budget | Next check |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  | candidate / active / approaching / triggered / invalidated / needs_review / completed |  |  |  |  |  |
+
+## Trading Profile Fit
+
+| setup_id | Preferred expression | Rejected expression | Reason | Profile risk note |
+| --- | --- | --- | --- | --- |
+|  |  |  |  |  |
 
 ## Triggered / Decision Needed
 
