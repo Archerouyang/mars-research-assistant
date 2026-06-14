@@ -4,6 +4,8 @@ This file records the public trajectory of the Trading Research System plugin. I
 
 Keep this log focused on user-visible plugin progress. Do not include private trade records, credentials, internal agent coordination, or non-public research material.
 
+This project is not using public release versioning yet. Until the initial complete workflow, production chain, and interaction model are settled, treat this log as a planning and implementation trajectory, not a changelog for shipped versions.
+
 ## How To Update
 
 Add an entry when one of these changes:
@@ -13,7 +15,6 @@ Add an entry when one of these changes:
 - plugin skill behavior;
 - local record schema;
 - external integration decision;
-- release/cachebuster version;
 - important deferred decision.
 
 Use this shape:
@@ -22,7 +23,7 @@ Use this shape:
 ## YYYY-MM-DD
 
 - Commit: <short-sha> <commit subject>
-- Scope: <planning | skill | script | template | sync | data | release>
+- Scope: <planning | skill | script | template | sync | data | decision>
 - What changed:
 - Why it matters:
 - Next step:

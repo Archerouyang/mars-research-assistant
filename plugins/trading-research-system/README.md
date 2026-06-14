@@ -45,7 +45,7 @@ This plugin does not:
 
 - place trades or automate order execution;
 - generate guaranteed buy/sell instructions;
-- scan the entire market for unplanned intraday trades in the first version;
+- scan the entire market for unplanned intraday trades in the initial scope;
 - use Google Sheets as the canonical source of truth;
 - provide tax, legal, or regulated investment advice.
 
