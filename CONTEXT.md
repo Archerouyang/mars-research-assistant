@@ -17,11 +17,11 @@ Trading Research System 作为一个 plugin 保持统一产品边界，但内部
 _Avoid_: 一个巨型提示词, 多个互不相干的 plugin
 
 **Active Market Plan**:
-当前有效市场计划，是系统的 living state。它保存在 `data/market-plan.md`，可以被覆盖更新，始终代表当前操作视图。周末、盘前、盘中和交易后都不是新建一套流程，而是对同一个 Active Market Plan 做不同深度的更新。
+当前有效市场计划，是系统的 living state。它保存在 `{runtime_dir}/market-plan.md`，可以被覆盖更新，始终代表当前操作视图。周末、盘前、盘中和交易后都不是新建一套流程，而是对同一个 Active Market Plan 做不同深度的更新。
 _Avoid_: 一次性周报, 每天从零开始
 
 **市场计划更新轨迹**:
-Active Market Plan 的 append-only 审计记录，保存在 `data/updates/YYYY-MM-DD.md`。它记录本次更新类型、哪些市场变量变了、哪些 setup 状态或点位变了、依据是什么、下一步看什么。
+Active Market Plan 的 append-only 审计记录，保存在 `{runtime_dir}/updates/YYYY-MM-DD.md`。它记录本次更新类型、哪些市场变量变了、哪些 setup 状态或点位变了、依据是什么、下一步看什么。
 _Avoid_: 覆盖后无历史, 聊天记录当日志
 
 **Setup Pool**:
@@ -145,7 +145,7 @@ _Avoid_: 把盈亏当成唯一质量判断
 _Avoid_: 随机追问
 
 **本地日分区记录**:
-按交易日期在本地保存 canonical broker data、观察清单、预备交易计划、实际交易记录和复盘材料。Active Market Plan 当前状态在 `data/market-plan.md`，每日变化轨迹在 `data/updates/YYYY-MM-DD.md`，日分区记录在 `data/daily/YYYY-MM-DD/`。
+按交易日期在本地保存 canonical broker data、观察清单、预备交易计划、实际交易记录和复盘材料。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/dailytrades-runtime`。
 _Avoid_: 临时聊天记录, 未归档输出
 
 **盘中分析**:

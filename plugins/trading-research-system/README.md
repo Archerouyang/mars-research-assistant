@@ -4,6 +4,8 @@ This plugin packages a trading research workflow for Codex.
 
 It is designed for research, screening, risk review, and decision support. It does not provide guaranteed returns, personalized financial advice, or trading instructions that ignore user constraints.
 
+It is AI-native: the agent should read broadly, verify current facts, compare conflicting signals, and tell the user only the compressed decision-useful result. User-facing output should prioritize conclusions, changed variables, invalidations, setup status, portfolio constraints, and next checks over raw article summaries or long narrative.
+
 ## Capabilities
 
 - Macro and policy filtering focused on market-moving variables.
@@ -22,6 +24,7 @@ It is designed for research, screening, risk review, and decision support. It do
 - Canonical broker data templates for read-only IBKR, Longbridge, or manual CSV sources.
 - Local daily trading records with CSV and Markdown templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
+- On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
 ## Skill
 
@@ -63,6 +66,8 @@ $trade-review Review my latest broker execution interactively.
 
 For current policy, market prices, rates, yields, financial statements, or news, Codex must verify against current sources. Paywalled sources such as Seeking Alpha can only be analyzed from publicly accessible content or user-provided excerpts.
 
+For large source sets, the plugin should not show every source detail by default. It should store or cite enough evidence to support confidence, then surface the few facts that change the plan.
+
 ## Capability Boundaries
 
 This plugin does not:
@@ -76,24 +81,34 @@ This plugin does not:
 
 ## Local Records
 
-Use local daily folders as the first source of truth:
+Use a private runtime directory as the first source of truth. By default:
 
 ```text
-data/market-plan.md
-data/trading-profile.md
-data/updates/YYYY-MM-DD.md
-data/daily/YYYY-MM-DD/
+~/Documents/dailytrades-runtime/
+```
+
+This can be overridden with `TRADING_RESEARCH_RUNTIME_DIR` or script-level
+`--runtime-dir`.
+
+The runtime directory should contain:
+
+```text
+market-plan.md
+trading-profile.md
+updates/YYYY-MM-DD.md
+daily/YYYY-MM-DD/
+charts/
 ```
 
 The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
 
-Use `data/trading-profile.md` for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
+Use `trading-profile.md` in the runtime directory for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
 
 Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into canonical local files before core risk or review workflows consume them.
 
 Codex automations can be used to schedule prompts around the Active Market Plan loop, but they should ask before editing local records and must not touch broker write actions.
 
-Google Sheets sync is planned as a later mirror/review layer.
+Google Sheets is a compact one-way mirror and review layer. Detailed working memory stays in the runtime directory.
 
 ## Project Plan
 
@@ -105,8 +120,9 @@ Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates 
 
 ```bash
 python3 plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
-python3 plugins/trading-research-system/scripts/portfolio_risk.py data/daily/2026-06-12/portfolio.csv
-python3 plugins/trading-research-system/scripts/watchlist_score.py data/daily/2026-06-12/watchlist.csv
-python3 plugins/trading-research-system/scripts/trade_stats.py data/daily/2026-06-12/trades.csv --group-by instrument_type
+python3 plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
+python3 plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv
+python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/2026-06-12/trades.csv --group-by instrument_type
 python3 plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
+python3 plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
 ```

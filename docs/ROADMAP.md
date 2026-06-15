@@ -6,10 +6,13 @@ Trading Research System is a plugin-first trading research and risk decision-sup
 
 The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
 
+The product is AI-native. Its core value is not producing long reports; it is making the agent read broadly, verify facts, filter noise, and return concise decision-useful notes to the user.
+
 ## Capability Boundaries
 
 The system supports:
 
+- agent-heavy research synthesis that compresses large source sets into conclusions, changed variables, invalidations, setup status, and next checks;
 - macro policy and rates filtering focused on market-moving variables;
 - research-note and market-view validation against primary/current sources;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
@@ -44,7 +47,7 @@ The default workflow is:
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
 5. **Setup analysis**: classify market state, trade type, higher-timeframe background, 20/50 EMA context, trigger, stop, and targets.
-6. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, momentum leaderboard, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `data/market-plan.md` and append the rationale to `data/updates/YYYY-MM-DD.md`.
+6. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, momentum leaderboard, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 7. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and momentum changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
 8. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
 9. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
@@ -115,6 +118,7 @@ Rules:
 | Plan-scoped intraday scan boundary | Done | `docs/adr/0003-intraday-scan-plan-scoped.md` |
 | One-way Google Sheets sync decision | Done | `docs/adr/0004-one-way-google-sheets-sync.md` |
 | Domain glossary | In progress | `CONTEXT.md` |
+| AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
 | Skill set architecture | Started | Router skill plus focused skills under `plugins/trading-research-system/skills/` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
@@ -127,7 +131,7 @@ Rules:
 | Basic plugin content plan | Done | `docs/PLUGIN_CONTENT_PLAN.md` |
 | Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Google Sheets sync implementation | Planned | no script yet |
-| OHLCV-driven chart/scan artifacts | Planned | no artifact generator yet |
+| OHLCV-driven chart/scan artifacts | Started | `plugins/trading-research-system/scripts/chart_artifact.py` |
 | Option-flow anomaly module | Planned | data vendor not selected |
 
 ## Task Breakdown
@@ -157,13 +161,14 @@ Status: started.
 
 Deliverables:
 
-- Active plan convention: `data/market-plan.md`.
-- Private trading profile convention: `data/trading-profile.md`.
-- Append-only update convention: `data/updates/YYYY-MM-DD.md`.
-- Daily directory convention: `data/daily/YYYY-MM-DD/`.
+- Runtime root convention: `{runtime_dir}`, defaulting to `~/Documents/dailytrades-runtime`.
+- Active plan convention: `{runtime_dir}/market-plan.md`.
+- Private trading profile convention: `{runtime_dir}/trading-profile.md`.
+- Append-only update convention: `{runtime_dir}/updates/YYYY-MM-DD.md`.
+- Daily directory convention: `{runtime_dir}/daily/YYYY-MM-DD/`.
 - Deep update convention for last-week trade review, current market tape, macro/rates, policy/news, event preview, momentum leaderboard, themes, setup pool, and risk budget.
 - Quick update convention for current market read, fast macro/policy/news update, event preview, momentum changes, setup status changes, level updates, and attention priority.
-- Broker data convention for raw snapshots under `broker/<source>/YYYY-MM-DD/` and canonical daily CSV files.
+- Broker data convention for raw snapshots under `{runtime_dir}/broker/<source>/YYYY-MM-DD/` and canonical daily CSV files.
 - Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
 - `init_daily.py` to create a daily folder from templates.
 - Local records remain the first source of truth.

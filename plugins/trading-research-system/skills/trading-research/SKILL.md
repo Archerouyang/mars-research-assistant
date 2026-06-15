@@ -9,6 +9,8 @@ Use this skill as the general entrypoint for the Trading Research System plugin.
 
 This is decision support, not automated trading. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
 
+This plugin is AI-native. The agent should absorb large volumes of market, macro, research, chart, broker, and journal information, then return a compact decision note. Do not dump raw readings, long source summaries, or every intermediate observation unless the user asks for audit detail.
+
 ## Routing
 
 - Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, momentum rebuild, and setup discovery:
@@ -63,6 +65,15 @@ Shared scripts and templates remain in the plugin root:
 ## Output Style
 
 Use Chinese unless the user asks otherwise. Prefer Markdown notes suitable for Obsidian.
+
+Default to compressed output:
+
+- conclusion first;
+- changed variables only;
+- setup status and next check;
+- invalidation and risk constraints;
+- evidence only when it changes confidence;
+- no long narrative source dumps.
 
 Use clear labels when applicable:
 

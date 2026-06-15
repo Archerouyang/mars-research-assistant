@@ -53,9 +53,9 @@
 
 ## Setup Pool
 
-| setup_id | theme_id | Symbol | Direction | Instrument | Analysis TF | Trigger TF | Setup | Status | Trigger zone | Invalidation | Target zone | Risk budget | Next check |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  | candidate / active / approaching / triggered / invalidated / needs_review / completed |  |  |  |  |  |
+| setup_id | theme_id | Symbol | Direction | Instrument | Background filter TF | Background condition | Execution trigger TF | Execution trigger | Setup | Status | Trigger zone | Invalidation | Target zone | Risk budget | Next check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |  | candidate / active / approaching / triggered / invalidated / needs_review / completed |  |  |  |  |  |
 
 ## Trading Profile Fit
 

@@ -4,6 +4,13 @@ Use this reference when connecting Codex automations to the Trading Research Sys
 
 Automations are orchestration. They should wake the agent, inspect local/project state, ask for missing inputs, and propose updates. They must not place trades, modify broker accounts, or silently rewrite discretionary trading records.
 
+Use separate thread boundaries:
+
+- plugin development automations belong in the plugin development chat/repo;
+- trading-operation reminders and assistant prompts belong in the fixed `交易研究 Daily Ops` chat and private runtime directory.
+
+These are not automated trading systems. They may remind, inspect, summarize, and ask for human decisions; they must not place, route, modify, cancel, or approve orders.
+
 ## Automation Types
 
 ### Development Automations
@@ -45,20 +52,22 @@ These support the Active Market Plan loop:
 
 Trading automations should read:
 
-- `data/market-plan.md` for current state;
-- `data/trading-profile.md` for private style and instrument preferences when available;
-- `data/updates/YYYY-MM-DD.md` for the update trail;
-- `data/daily/YYYY-MM-DD/trade-plans.csv`;
-- `data/daily/YYYY-MM-DD/intraday-watchlist.csv`;
-- `data/daily/YYYY-MM-DD/portfolio_snapshot.csv`;
-- `data/daily/YYYY-MM-DD/broker_executions.csv`;
-- `data/daily/YYYY-MM-DD/broker_orders.csv`;
-- `data/daily/YYYY-MM-DD/trades.csv`;
-- `data/daily/YYYY-MM-DD/reviews.md`.
+- `{runtime_dir}/market-plan.md` for current state;
+- `{runtime_dir}/trading-profile.md` for private style and instrument preferences when available;
+- `{runtime_dir}/updates/YYYY-MM-DD.md` for the update trail;
+- `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/broker_executions.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/broker_orders.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/trades.csv`;
+- `{runtime_dir}/daily/YYYY-MM-DD/reviews.md`.
+
+Default `runtime_dir` is `~/Documents/dailytrades-runtime`. The user or automation may override it with `TRADING_RESEARCH_RUNTIME_DIR`, script-level `--runtime-dir`, or the config template at `assets/templates/config.toml`.
 
 If a file is missing, the automation should report the gap and ask whether to initialize or import data. It should not invent current plan state.
 
-If `data/trading-profile.md` is missing, ask for the relevant style/instrument preferences before translating setups into products.
+If `{runtime_dir}/trading-profile.md` is missing, ask for the relevant style/instrument preferences before translating setups into products.
 
 ## Broker Safety
 

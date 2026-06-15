@@ -153,7 +153,10 @@ Weekly user-facing text should not use unexplained internal status jumps. If an 
 ## Price Action 择时
 - 市场状态：
 - 交易类型：
-- 入场触发：
+- 背景过滤时间框架：
+- 背景条件：
+- 执行触发时间框架：
+- 执行触发：
 - 失效/止损：
 - 目标：
 

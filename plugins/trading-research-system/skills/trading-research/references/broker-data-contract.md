@@ -51,12 +51,12 @@ Even if a connected agent has broker write capability, this plugin should not ca
 Store raw broker snapshots by broker and date when an adapter creates local files:
 
 ```text
-broker/ibkr/YYYY-MM-DD/positions.json
-broker/ibkr/YYYY-MM-DD/executions.json
-broker/ibkr/YYYY-MM-DD/orders.json
-broker/longbridge/YYYY-MM-DD/positions.json
-broker/longbridge/YYYY-MM-DD/executions.json
-broker/longbridge/YYYY-MM-DD/orders.json
+{runtime_dir}/broker/ibkr/YYYY-MM-DD/positions.json
+{runtime_dir}/broker/ibkr/YYYY-MM-DD/executions.json
+{runtime_dir}/broker/ibkr/YYYY-MM-DD/orders.json
+{runtime_dir}/broker/longbridge/YYYY-MM-DD/positions.json
+{runtime_dir}/broker/longbridge/YYYY-MM-DD/executions.json
+{runtime_dir}/broker/longbridge/YYYY-MM-DD/orders.json
 ```
 
 Raw snapshots keep source detail for debugging adapter mappings. They are not the canonical input for core analysis.
@@ -66,9 +66,9 @@ Raw snapshots keep source detail for debugging adapter mappings. They are not th
 Map broker data into:
 
 ```text
-data/daily/YYYY-MM-DD/portfolio_snapshot.csv
-data/daily/YYYY-MM-DD/broker_executions.csv
-data/daily/YYYY-MM-DD/broker_orders.csv
+{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv
+{runtime_dir}/daily/YYYY-MM-DD/broker_executions.csv
+{runtime_dir}/daily/YYYY-MM-DD/broker_orders.csv
 ```
 
 Core risk, review, and statistics workflows should read these canonical files instead of broker-specific raw structures.

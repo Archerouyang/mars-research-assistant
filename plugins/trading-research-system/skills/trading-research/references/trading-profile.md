@@ -9,12 +9,12 @@ The Trading Research System should not assume every user expresses the same mark
 Use:
 
 ```text
-data/trading-profile.md
+{runtime_dir}/trading-profile.md
 ```
 
 This is private user data and should not be committed to the public plugin repository. The public plugin only ships `assets/templates/trading-profile.md`.
 
-If `data/trading-profile.md` is unavailable, ask the user for the relevant preferences instead of inventing them.
+Default `runtime_dir` is `~/Documents/dailytrades-runtime`. If `{runtime_dir}/trading-profile.md` is unavailable, ask the user for the relevant preferences instead of inventing them.
 
 ## What Belongs Here
 

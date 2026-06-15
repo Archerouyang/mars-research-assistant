@@ -4,19 +4,30 @@ Use this reference for the core market planning loop. Weekly, daily, intraday, a
 
 ## Files
 
+Use `runtime_dir` as the private working-memory root. Default:
+
+```text
+~/Documents/dailytrades-runtime/
+```
+
+The user or automation may override it with `TRADING_RESEARCH_RUNTIME_DIR`,
+`--runtime-dir`, or the config template at `assets/templates/config.toml`.
+
 Use:
 
 ```text
-data/market-plan.md
-data/trading-profile.md
-data/updates/YYYY-MM-DD.md
-data/daily/YYYY-MM-DD/
+{runtime_dir}/market-plan.md
+{runtime_dir}/trading-profile.md
+{runtime_dir}/updates/YYYY-MM-DD.md
+{runtime_dir}/daily/YYYY-MM-DD/
 ```
 
-- `data/market-plan.md`: overwriteable living state. It should always show the current plan.
-- `data/trading-profile.md`: private trading style and instrument preference file. Use the public template at `assets/templates/trading-profile.md`.
-- `data/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
-- `data/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
+- `{runtime_dir}/market-plan.md`: overwriteable living state. It should always show the current plan.
+- `{runtime_dir}/trading-profile.md`: private trading style and instrument preference file. Use the public template at `assets/templates/trading-profile.md`.
+- `{runtime_dir}/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
+- `{runtime_dir}/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
+
+Google Sheets is only a compact one-way mirror for review, filtering, and cross-device visibility. It is not the canonical source of truth.
 
 ## Update Depths
 
@@ -52,9 +63,16 @@ Required setup fields:
 - `evidence_needed`
 - `last_updated`
 
+For user-facing notes and Sheets mirrors, label timeframes by role:
+
+- `analysis_timeframe` = `背景过滤时间框架`: decides whether the setup deserves attention.
+- `trigger_timeframe` = `执行触发时间框架`: decides whether the setup can move to `triggered`.
+
+Do not collapse them into one generic `条件/触发` field. For fast products such as 0DTE options, the background timeframe can qualify the setup while the execution timeframe supplies the actual signal bar.
+
 If the same market opportunity can be traded with multiple instruments, create multiple setups that share the same `theme_id` or `market_context_id`.
 
-Use `data/trading-profile.md` when choosing the expression. The setup pool should reflect the user's trading style and instrument preferences, not a generic default.
+Use `{runtime_dir}/trading-profile.md` when choosing the expression. The setup pool should reflect the user's trading style and instrument preferences, not a generic default.
 
 Example:
 
@@ -100,7 +118,7 @@ When updating `market-plan.md`:
 3. Mark stale assumptions explicitly.
 4. Move setup statuses forward or to `needs_review` when evidence is incomplete.
 5. Do not resurrect `invalidated` setups automatically; create a new setup or require human review.
-6. Append the update rationale to `data/updates/YYYY-MM-DD.md`.
+6. Append the update rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 
 When writing update notes, keep the audit trail compact:
 

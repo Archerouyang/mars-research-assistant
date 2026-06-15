@@ -5,13 +5,30 @@ from __future__ import annotations
 
 import argparse
 from datetime import date
+import os
 from pathlib import Path
+
+
+def default_runtime_dir() -> Path:
+    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
+    if configured:
+        return Path(configured).expanduser()
+    return Path.home() / "Documents" / "dailytrades-runtime"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Append a trade review to reviews.md")
     parser.add_argument("--date", default=date.today().isoformat(), help="Trading date, YYYY-MM-DD")
-    parser.add_argument("--root", default="data/daily", help="Daily data root")
+    parser.add_argument(
+        "--runtime-dir",
+        default=str(default_runtime_dir()),
+        help="Private runtime directory; defaults to TRADING_RESEARCH_RUNTIME_DIR or ~/Documents/dailytrades-runtime",
+    )
+    parser.add_argument(
+        "--root",
+        default=None,
+        help="Daily data root override. Defaults to <runtime-dir>/daily",
+    )
     parser.add_argument("--trade-id", required=True, help="Trade identifier")
     parser.add_argument("--symbol", required=True, help="Trade symbol")
     parser.add_argument("--review-file", required=True, help="Markdown file containing the review section")
@@ -20,7 +37,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    daily_dir = Path(args.root) / args.date
+    root = Path(args.root).expanduser() if args.root else Path(args.runtime_dir).expanduser() / "daily"
+    daily_dir = root / args.date
     reviews_path = daily_dir / "reviews.md"
     review_source = Path(args.review_file)
     if not review_source.is_file():

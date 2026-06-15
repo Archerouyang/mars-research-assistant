@@ -16,18 +16,19 @@ Daily development planning should prioritize product capability, not process wor
 
 The current product sequence is:
 
-1. Active Market Plan schema, trading profile, update trail, and local daily records;
-2. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, momentum leaderboard updates, setup pool, canonical broker CSV, and two-stage reviews;
-3. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-4. setup-scoped intraday scan;
-5. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
-6. post-exit review to complete results, lessons, and `reviews.md`;
-7. broker-agnostic portfolio reconciliation and risk view;
-8. basic stats and system review;
-9. one-way Google Sheets sync;
-10. user-confirmed Active Market Plan automations;
-11. OHLCV-backed chart artifacts;
-12. option-flow anomaly research.
+1. AI-native synthesis contract: agent reads broadly and returns concise decision-useful notes, not raw research dumps;
+2. Active Market Plan schema, trading profile, update trail, and local daily records;
+3. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, momentum leaderboard updates, setup pool, canonical broker CSV, and two-stage reviews;
+4. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+5. setup-scoped intraday scan;
+6. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
+7. post-exit review to complete results, lessons, and `reviews.md`;
+8. broker-agnostic portfolio reconciliation and risk view;
+9. basic stats and system review;
+10. one-way Google Sheets sync;
+11. user-confirmed Active Market Plan automations;
+12. OHLCV-backed chart artifacts;
+13. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -81,6 +82,7 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
+| P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for `market-plan.md`, update notes, event preview, momentum leaderboard, setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
@@ -91,7 +93,7 @@ Use these statuses:
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping from Active Market Plan, canonical broker CSV, and trade records first. |
 | P2 | planned | Add Active Market Plan automations | Turns deep update, quick update, intraday monitor, and post-market review into recurring Codex prompts after the user confirms cadence and broker data permissions. | Define automation prompts from `automation-contract.md`; create or update actual Codex automations only after cadence confirmation. |
-| P2 | planned | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Start with a pure data-to-chart artifact layer and fixture OHLCV; do not test live connector behavior in this repo. |
+| P2 | in_progress | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Forward-test `chart_artifact.py` with fixture and real authorized OHLCV exports; add screenshot/export workflow later. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
 ## Today
@@ -122,6 +124,7 @@ Date: 2026-06-14
 - Next: forward-test focused skill routing, then define the fixture package using `market-plan.md`, `trading-profile.md`, update notes, setup pool, and canonical broker CSV, implement `intraday_scan.py`, and connect post-order/post-exit review CSV writing.
 - Completed: defined the basic plugin content plan across router/focused skills, shared references, templates, scripts, fixture package, priorities, and deferred scope.
 - Completed: initialized the 2026-06-15 to 2026-06-19 Active Market Plan outlook and append-only update note using current event/calendar and market sources.
+- Decision: clarified the plugin is AI-native: agents should read, verify, compare, and synthesize broadly, but return concise decision notes rather than long source dumps.
 - Next: convert the new market plan into fixture package files for daily records, expected intraday scan output, and review-writing tests.
 
 ## Automation Contract
@@ -135,4 +138,6 @@ The morning automation should recommend one main product-capability task for the
 
 Automation outputs should be concise Chinese Markdown notes. They should ask before editing files and should not touch broker write actions, private trade data, or live external services.
 
-Trading operations automations are separate from development automations. They should use `data/market-plan.md` as current state, `data/trading-profile.md` as private trading style input when available, and `data/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions.
+Trading-operation reminders and assistant prompts are separate from development automations. They belong in the fixed `交易研究 Daily Ops` chat and should use `runtime_dir` as the private working-memory root. Default `runtime_dir` is `~/Documents/dailytrades-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` or script-level `--runtime-dir` overrides.
+
+Trading prompts should read `{runtime_dir}/market-plan.md` as current state, `{runtime_dir}/trading-profile.md` as private trading style input when available, and `{runtime_dir}/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions. They are not automated trading systems. Google Sheets remains a compact one-way mirror, not the canonical source of truth.

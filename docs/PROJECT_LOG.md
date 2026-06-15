@@ -31,6 +31,30 @@ Use this shape:
 
 ## 2026-06-14
 
+- Commit: pending
+- Scope: skill, template, fixture
+- What changed: improved the weekly macro/policy/news outlook contract so weekly plans must rank event importance, apply source-priority levels, explain market transmission, tie events to existing holdings and new-position plans, include the week's market-moving earnings, recommend an overall strategy posture, filter Trump/White House policy noise, and avoid unexplained internal setup-status language. Added an expected 2026-06-15 weekly outlook fixture and a verification script for the contract.
+- Why it matters: weekly planning now answers what matters for QQQ/VOO/DRAM/SOXX, what evidence is reliable enough to affect the plan, which earnings can move index/sector beta, whether the posture should be defensive, balanced, or high-beta momentum, what should be ignored, and what confirmation is needed before adding risk, instead of producing a generic macro calendar.
+- Next step: use the fixture to forward-test `$weekly-trading-plan` output in the Daily Ops thread.
+
+- Commit: pending
+- Scope: decision, script, skill, sync
+- What changed: split plugin development and trading operations into separate chat/workspace boundaries. Created a fixed `交易研究 Daily Ops` thread for weekly plans, daily tracking, and reviews. Added `runtime_dir` as the private working-memory root, defaulting to `~/Documents/dailytrades-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` and `--runtime-dir` overrides. Clarified that Google Sheets remains a compact one-way mirror while detailed records live locally.
+- Why it matters: keeps public plugin development, git history, and reusable skills separate from private trading plans, broker-derived records, chart artifacts, and reviews.
+- Next step: wire future trading-operation automations to the Daily Ops thread and implement the planned one-way Google Sheets sync against runtime records.
+
+- Commit: pending
+- Scope: script, template, skill
+- What changed: added a local TradingView `lightweight-charts` HTML artifact generator and a QQQ OHLCV fixture. Updated chart artifact and output guidance so agents can show concise annotated charts while keeping full source notes in local records.
+- Why it matters: gives price-action and multi-timeframe setup review a visual artifact path without building a persistent frontend dashboard.
+- Next step: forward-test the chart artifact on authorized OHLCV exports and add a screenshot/export workflow for chat display.
+
+- Commit: pending
+- Scope: planning, data
+- What changed: added `docs/PLUGIN_CONTENT_PLAN.md` to define the minimum useful plugin content set, fixture package requirements, product priorities, AI-native synthesis contract, and deferred scope. Initialized `data/market-plan.md` and `data/updates/2026-06-14.md` with a 2026-06-15 to 2026-06-19 Active Market Plan outlook.
+- Why it matters: turns the next development slice into a concrete checklist, clarifies that the agent should read broadly but show concise decision notes, and gives the weekly planning workflow a real local plan artifact to use as fixture seed material.
+- Next step: build daily fixture files and expected intraday scan output from the new Active Market Plan, then implement `intraday_scan.py`.
+
 - Commit: `1a40139` `Document automation planning contract`
 - Scope: planning, skill, decision
 - What changed: added an automation contract for development task planning and Active Market Plan operations. Updated the existing Codex weekday development brief and end-of-day progress review automations to recommend and review daily product-capability tasks from the current roadmap.

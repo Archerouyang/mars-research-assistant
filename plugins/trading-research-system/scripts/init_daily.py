@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import shutil
 from datetime import date
+import os
 from pathlib import Path
 
 
@@ -44,10 +45,26 @@ RESEARCH_NOTES = """# Research Notes
 """
 
 
+def default_runtime_dir() -> Path:
+    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
+    if configured:
+        return Path(configured).expanduser()
+    return Path.home() / "Documents" / "dailytrades-runtime"
+
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Initialize data/daily/YYYY-MM-DD files.")
+    parser = argparse.ArgumentParser(description="Initialize runtime daily trading research files.")
     parser.add_argument("--date", default=date.today().isoformat(), help="Trading date, YYYY-MM-DD")
-    parser.add_argument("--root", default="data/daily", help="Daily data root")
+    parser.add_argument(
+        "--runtime-dir",
+        default=str(default_runtime_dir()),
+        help="Private runtime directory; defaults to TRADING_RESEARCH_RUNTIME_DIR or ~/Documents/dailytrades-runtime",
+    )
+    parser.add_argument(
+        "--root",
+        default=None,
+        help="Daily data root override. Defaults to <runtime-dir>/daily",
+    )
     parser.add_argument(
         "--templates",
         default=None,
@@ -79,7 +96,8 @@ def write_text(path: Path, text: str, overwrite: bool) -> str:
 
 def main() -> None:
     args = parse_args()
-    target_dir = Path(args.root) / args.date
+    root = Path(args.root).expanduser() if args.root else Path(args.runtime_dir).expanduser() / "daily"
+    target_dir = root / args.date
     template_dir = Path(args.templates) if args.templates else template_dir_from_script()
     messages: list[str] = []
 

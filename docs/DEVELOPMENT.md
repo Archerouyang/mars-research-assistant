@@ -30,6 +30,14 @@ Default mode is Codex-managed Claude Code execution:
 
 Claude Code must not push branches, define product boundaries, create broker orders, or call live external services as part of this plugin workflow.
 
+When a task uses a repo skill, plugin skill, connector, or Claude Code worker, Codex must label it in the user-facing progress update. Use concise labels such as:
+
+- `使用 skills: trading-research-system:trading-research, google-drive:google-sheets`
+- `使用 Claude Code: yes, isolated worktree, task=<short task>`
+- `使用 Claude Code: no, reason=<small edit/read-only/connector-only>`
+
+If an obvious skill is not used, state the reason briefly. Do not imply Claude Code was used unless the `claude` CLI, a Claude Code worktree session, or an explicitly delegated Claude Code worker actually ran.
+
 ## Worktree Policy
 
 Use the current worktree for:

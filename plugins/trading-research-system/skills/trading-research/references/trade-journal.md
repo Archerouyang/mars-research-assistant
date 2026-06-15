@@ -20,7 +20,7 @@ The schema is informed by the user's Google Sheet `2026交易记录`.
 Use:
 
 ```text
-data/daily/YYYY-MM-DD/
+{runtime_dir}/daily/YYYY-MM-DD/
 ```
 
 Recommended files:
@@ -37,7 +37,9 @@ Recommended files:
 - `research-notes.md`
 - `portfolio.csv`
 
-The current Active Market Plan should live at `data/market-plan.md`. Append update trails to `data/updates/YYYY-MM-DD.md`. Deep update notes can use `assets/templates/weekly-plan.md`.
+The current Active Market Plan should live at `{runtime_dir}/market-plan.md`. Append update trails to `{runtime_dir}/updates/YYYY-MM-DD.md`. Deep update notes can use `assets/templates/weekly-plan.md`.
+
+Default `runtime_dir` is `~/Documents/dailytrades-runtime`. It can be overridden with `TRADING_RESEARCH_RUNTIME_DIR` or script-level `--runtime-dir`.
 
 Create this structure with:
 
@@ -242,6 +244,6 @@ Minimum useful statistics:
 Use:
 
 ```bash
-python3 plugins/trading-research-system/scripts/trade_stats.py data/daily/YYYY-MM-DD/trades.csv
-python3 plugins/trading-research-system/scripts/trade_stats.py data/daily/YYYY-MM-DD/trades.csv --group-by instrument_type
+python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv
+python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv --group-by instrument_type
 ```

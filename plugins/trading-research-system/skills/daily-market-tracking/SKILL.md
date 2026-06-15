@@ -7,6 +7,8 @@ description: Quick-update the Active Market Plan during weekday premarket or int
 
 Use this skill for `quick_update` or light `trigger_update` work against the same Active Market Plan. The goal is to answer what changed, which setup statuses or levels changed, and what the user should inspect next.
 
+This is an AI-native workflow. Read current tape, macro/rates, policy/news, event calendar, momentum, and existing setup files, then return only what changed, which setup statuses moved, and what the user should inspect next.
+
 ## Workflow
 
 1. Load the active `market-plan.md`, or ask for the current plan state if it is unavailable.
@@ -49,6 +51,8 @@ Use this skill for `quick_update` or light `trigger_update` work against the sam
 
 Use Chinese Markdown with:
 
+- `结论`
+- `重要变化`
 - `当前盘面`
 - `快速宏观/利率`
 - `政策/新闻`
@@ -63,4 +67,4 @@ Use Chinese Markdown with:
 - `新证据`
 - `下一步看盘顺序`
 
-Keep the note operational: what changed, what matters today, and what the user should inspect first.
+Keep the note operational: what changed, what matters today, and what the user should inspect first. Avoid long intraday commentary; collapse repeated headlines and price noise into changed variables, setup transitions, and explicit invalidations.
