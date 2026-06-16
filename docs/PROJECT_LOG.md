@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-06-16
+
+- Commit: pending
+- Scope: planning, skill, template, fixture
+- What changed: introduced Trade Plan Preparation as the bridge from macro/financial/policy/industry/company research into Active Market Plan. Added the five v1 input reads, Cross-Section Candidate Pool, promotion guidance into `candidate setup`, and a contract verifier. Reordered the roadmap so `intraday_scan.py` waits until setup pool fields are stable.
+- Why it matters: weekly and macro/equity research now serve plan preparation first, instead of producing generic macro notes or jumping directly into intraday scan logic.
+- Next step: forward-test weekly and macro/equity outputs against the new Trade Plan Preparation contract, then build fixture files for setup promotion.
+
 ## 2026-06-14
 
 - Commit: pending

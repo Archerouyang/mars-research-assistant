@@ -18,17 +18,18 @@ The current product sequence is:
 
 1. AI-native synthesis contract: agent reads broadly and returns concise decision-useful notes, not raw research dumps;
 2. Active Market Plan schema, trading profile, update trail, and local daily records;
-3. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, momentum leaderboard updates, setup pool, canonical broker CSV, and two-stage reviews;
-4. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-5. setup-scoped intraday scan;
-6. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
-7. post-exit review to complete results, lessons, and `reviews.md`;
-8. broker-agnostic portfolio reconciliation and risk view;
-9. basic stats and system review;
-10. one-way Google Sheets sync;
-11. user-confirmed Active Market Plan automations;
-12. OHLCV-backed chart artifacts;
-13. option-flow anomaly research.
+3. trade plan preparation: macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
+4. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, canonical broker CSV, and two-stage reviews;
+5. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+6. setup-scoped intraday scan;
+7. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
+8. post-exit review to complete results, lessons, and `reviews.md`;
+9. broker-agnostic portfolio reconciliation and risk view;
+10. basic stats and system review;
+11. one-way Google Sheets sync;
+12. user-confirmed Active Market Plan automations;
+13. OHLCV-backed chart artifacts;
+14. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -85,10 +86,11 @@ Use these statuses:
 | P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
-| P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Define the fixture package for `market-plan.md`, update notes, event preview, momentum leaderboard, setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
+| P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
+| P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker data contracts | Aligns the workflow around one living market plan, setup-level tracking, read-only broker sources, and canonical local data. | Use these contracts in the fixture package and later script flows. |
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
-| P1 | ready | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Build with TDD from Active Market Plan and fixture CSVs. |
+| P1 | deferred | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Resume after Trade Plan Preparation and setup pool promotion fields are stable. |
 | P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
 | P1 | ready | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Add only the tests needed for the next product task. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping from Active Market Plan, canonical broker CSV, and trade records first. |
@@ -98,15 +100,22 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-06-14
+Date: 2026-06-16
 
-- Morning main task: define the fixture package as the next implementation slice for Active Market Plan updates, trading profile translation, setup scanning, broker reconciliation, and two-stage review workflow.
-- Secondary task: initialize next-week Active Market Plan outlook after basic plugin content planning is complete.
-- Definition of done: document or create fixture expectations for `market-plan.md`, `trading-profile.md`, update notes, event previews, momentum leaderboard updates, setup pool, `trade-plans.csv`, `intraday-watchlist.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `trades.csv`, `reviews.md`, and expected scan outputs covering LEAP call/put, 2x ETF, ETF swing, and 0DTE QQQ option setups.
-- Verification: fixture package should be usable by later TDD work for Active Market Plan updates, `intraday_scan.py`, post-order review writing, post-exit review updates, portfolio risk, stats, Google Sheets sync, and chart artifact generation without live IBKR, Longbridge, or Google data.
-- End-of-day result: in progress. Added `docs/PLUGIN_CONTENT_PLAN.md` as the basic plugin content checklist and initialized `data/market-plan.md` plus `data/updates/2026-06-14.md` for the 2026-06-15 to 2026-06-19 market outlook.
+- Morning main task: define Trade Plan Preparation so weekly and macro/equity research compress macro, financial conditions, policy/event risk, industry strength, and company thesis checks into Active Market Plan input reads and a Cross-Section Candidate Pool.
+- Secondary task: defer `intraday_scan.py` until setup pool promotion fields are stable.
+- Definition of done: `CONTEXT.md`, Active Market Plan reference, weekly skill, macro/equity skill, templates, fixture, and verifier define how research enters Trade Plan Preparation, how Cross-Section Candidate Pool is formed, and what evidence supports promotion into `candidate setup`.
+- Verification: local contract checks prove weekly/macro outputs contain Trade Plan Preparation and support setup pool generation rather than generic macro reports.
+- End-of-day result: in progress.
 
 ## Progress Log
+
+### 2026-06-16
+
+- Planned: prioritize Trade Plan Preparation over `intraday_scan.py`.
+- Decision: v1 inputs are `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, and `Company Thesis Check`.
+- Decision: quantitative momentum candidate pool is a separate TODO and should not be treated as a v1 input until its data, factors, ranking, and validation are defined.
+- Decision: Active Market Plan needs a `Trade Plan Preparation` section with `Input Reads` and `Cross-Section Candidate Pool` before setup rows are promoted.
 
 ### 2026-06-14
 

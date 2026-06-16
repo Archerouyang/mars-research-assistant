@@ -42,6 +42,27 @@ Use one loop with different depth, not separate modes:
 
 The setup is the smallest planning unit. A setup is not just a ticker and not just a broad trade idea.
 
+Before a new setup enters the setup pool, route research through `Trade Plan Preparation`:
+
+1. Summarize the five input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, and `Company Thesis Check`.
+2. Convert those reads into a `Cross-Section Candidate Pool`.
+3. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.
+
+The setup pool should not receive raw macro views, plain watchlist names, unverified research claims, or momentum rankings without a prepared setup structure.
+
+Minimum promotion guidance from Cross-Section Candidate Pool to Setup Pool:
+
+- `higher_timeframe_regime`: 4H / 1D / 1W read as uptrend, range, or downtrend;
+- `strategy_bias`: long, short, neutral, or defensive bias allowed by the higher-timeframe regime;
+- `setup_type`: for example pullback long, breakout pullback, range boundary, failed breakout, or resistance short;
+- `price_structure`: the price-action structure that makes the candidate more than a watchlist name;
+- `trigger_zone`: the area to watch, not an automatic entry;
+- `invalidation`: what makes the candidate wrong or stale;
+- `risk_context`: preliminary portfolio, product, event, liquidity, or concentration risk that would affect later sizing;
+- `next_check`: the next inspection, usually 1H or lower execution observation or an event confirmation.
+
+If these are missing, keep the item in Cross-Section Candidate Pool instead of promoting it into Setup Pool.
+
 Required setup fields:
 
 - `setup_id`

@@ -5,7 +5,7 @@ description: Run macro-to-equity trading research covering market-moving policy,
 
 # Macro Equity Research
 
-Use this skill to convert current macro/rates information and research claims into verified candidate trade ideas.
+Use this skill to convert current macro/rates information and research claims into Trade Plan Preparation inputs and a Cross-Section Candidate Pool. It should prepare candidates for the Active Market Plan; it should not jump directly to intraday triggers.
 
 ## Workflow
 
@@ -17,8 +17,16 @@ Use this skill to convert current macro/rates information and research claims in
    - `../trading-research/references/portfolio-risk.md`
    - `../trading-research/references/output-templates.md`
 3. Treat Seeking Alpha-like articles as thesis inputs, not primary facts. Use short summaries only and verify claims against primary/current sources.
-4. Rank candidates by research priority, not as standalone trade recommendations.
-5. Convert only verified, timely, risk-bounded candidates into weekly-plan ideas or `trade-plans.csv` drafts.
+4. Build the five Trade Plan Preparation input reads:
+   - `Macro Regime`
+   - `Financial Conditions`
+   - `Policy/Event Risk`
+   - `Industry/Sector Strength`
+   - `Company Thesis Check`
+5. Each input read must return `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`.
+6. Convert the reads into a `Cross-Section Candidate Pool`: candidates worth searching for setup structure.
+7. Do not treat the 动量候选池 as implemented in v1. It is a TODO requiring a separate quantitative model, data source, factor definition, ranking rule, and validation process.
+8. Promote candidates toward the weekly plan only when the next step is clear: higher-timeframe environment check, price-structure check, setup type, trigger zone, invalidation, or additional thesis validation.
 
 ## Output
 
@@ -26,13 +34,17 @@ Use Chinese Markdown with:
 
 - `事实`
 - `假设`
-- `宏观/利率影响`
-- `标的筛选`
-- `多头逻辑`
-- `空头逻辑`
-- `需要校验`
-- `候选排序`
-- `可转化为计划的 setup`
+- `交易计划准备`
+- `Macro Regime`
+- `Financial Conditions`
+- `Policy/Event Risk`
+- `Industry/Sector Strength`
+- `Company Thesis Check`
+- `Cross-Section Candidate Pool`
+- `多头逻辑 / 空头逻辑`
+- `需要校验 / blocks`
+- `可转化为 candidate setup 的下一步`
+- `动量候选池 TODO`
 - `组合风险`
 
 Do not rely on stale facts or unsupported analyst claims.

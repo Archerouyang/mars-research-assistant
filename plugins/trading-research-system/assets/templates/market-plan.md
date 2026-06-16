@@ -33,6 +33,24 @@
 - Trump-related market-moving policy:
 - Other market-moving news:
 
+## Trade Plan Preparation
+
+### Input Reads
+
+| Module | Read | Supports | Pressures | Blocks | Evidence | Next check |
+| --- | --- | --- | --- | --- | --- | --- |
+| Macro Regime |  |  |  |  |  |  |
+| Financial Conditions |  |  |  |  |  |  |
+| Policy/Event Risk |  |  |  |  |  |  |
+| Industry/Sector Strength |  |  |  |  |  |  |
+| Company Thesis Check |  |  |  |  |  |  |
+
+### Cross-Section Candidate Pool
+
+| Rank | Symbol/theme | Drivers | Supported by | Pressured by | Blocked by | Price structure / risk context | Setup readiness | Next check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |
+
 ## Event Preview
 
 | Date | Event | Why it matters | Bullish if | Bearish if | Setups affected |

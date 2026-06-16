@@ -67,6 +67,23 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 ## 政策/新闻
 - 只写会通过 rates、USD、oil、sector、volatility、liquidity 或 earnings 传导到计划的政策/新闻。
 
+## 交易计划准备
+### Input Reads
+| 模块 | read | supports | pressures | blocks | evidence | next_check |
+| --- | --- | --- | --- | --- | --- | --- |
+| Macro Regime |  |  |  |  |  |  |
+| Financial Conditions |  |  |  |  |  |  |
+| Policy/Event Risk |  |  |  |  |  |  |
+| Industry/Sector Strength |  |  |  |  |  |  |
+| Company Thesis Check |  |  |  |  |  |  |
+
+### 截面候选池 / Cross-Section Candidate Pool
+| rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  | 4H/1D/1W 大周期环境 + price structure 待确认 |  |
+
+只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。动量候选池是独立量化模型 TODO，不作为 v1 必需输入。
+
 ## 对当前持仓的总体影响
 | 持仓 | 影响 | 本周动作 | 暂停/复核条件 |
 | --- | --- | --- | --- |

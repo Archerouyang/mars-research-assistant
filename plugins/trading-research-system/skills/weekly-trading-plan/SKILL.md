@@ -33,14 +33,15 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - macro/rates analysis: Treasury yields, Fed expectations, liquidity, dollar, oil, and factor impact;
    - policy analysis: market-moving fiscal, Treasury, tariff, regulatory, or Trump-related policy only when relevant;
    - news analysis: earnings, guidance, sector catalysts, credit/liquidity events, and verified high-impact headlines;
+   - trade plan preparation: reduce upstream research into the five input reads, then build the Cross-Section Candidate Pool before touching the Setup Pool;
    - current holding impact: how the week changes add, TP/rebalance, or pause-and-review conditions for existing long-term ETF holdings;
    - new-position impact: whether planned risk such as 0DTE, ETF/2x ETF, LEAP, or post-event continuation should wait for confirmation;
    - strategy posture: decide whether the plan should be defensive, balanced, or high-beta momentum, and explain which conditions would change that posture;
    - key earnings this week: only include earnings that can affect current holdings, index/sector beta, momentum themes, or planned setups;
    - event priority ranking: P0/P1/P2 events sorted by decision impact;
    - next-week preview: macro releases, Fed/Treasury events, auctions, earnings, expirations, known policy deadlines, and relevant White House / Trump public remarks;
-   - momentum leaderboard update: strongest and weakest symbols/themes, plus what changed versus the prior week;
-   - setup pool refresh: setup-level candidates grouped by theme, symbol, and instrument type;
+   - momentum candidate pool TODO: do not treat momentum ranking as a v1 input unless a separate quantitative model, data source, factor definition, ranking rule, and validation process have been defined;
+   - setup pool refresh: promote only prepared candidates with higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and next check into `candidate` or `active` setups;
    - setup details: long/short thesis, setup type, instrument type, analysis timeframe, trigger timeframe, trigger zone, invalidation, profile fit, and risk budget;
    - portfolio exposure impact.
 4. Prefer `../../assets/templates/market-plan.md` for current state and `../../assets/templates/weekly-plan.md` for a longer deep-update note.
@@ -72,6 +73,35 @@ Use the source priority vocabulary from `macro-policy-filter.md`:
 - `S4 social / rumor / unsourced commentary`: ignore unless confirmed by higher-priority sources.
 
 Weekly outputs must include a `信源优先级` section when macro, policy, or news events drive the plan.
+
+## Trade Plan Preparation
+
+Weekly outputs must include a `交易计划准备` section before setup discovery. This section is the bridge from research to Active Market Plan, and must not be skipped in favor of immediate setup rows.
+
+Use these five input reads:
+
+- `Macro Regime`: growth, inflation, Fed path, USD, oil, liquidity, and broad risk-on/risk-off state.
+- `Financial Conditions`: 2Y/10Y/30Y, real yields, credit spreads, VIX, USD, and liquidity pressure.
+- `Policy/Event Risk`: White House / Trump policy, Treasury/fiscal, tariffs, Fed independence, auctions, FOMC, earnings, holidays, and other event risk.
+- `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, and themes that deserve or lose attention.
+- `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings, guidance, and disconfirming facts.
+
+Each input read should use this shape: `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`. Keep it concise; this is not five separate reports.
+
+Then build `Cross-Section Candidate Pool` with candidates worth searching for setups. The pool is not a buy list and not the Setup Pool. Momentum leaderboard output is a separate future quantitative model and should not be treated as a required v1 input.
+
+Before promoting a cross-section candidate into the Setup Pool, check:
+
+- higher-timeframe regime from `4H`, `1D`, and `1W`: uptrend, range, or downtrend;
+- strategy bias allowed by that regime;
+- setup type;
+- price structure;
+- trigger zone;
+- invalidation;
+- preliminary risk context;
+- next check, usually `1H` or lower execution observation or event confirmation.
+
+Candidates missing those fields stay in the Cross-Section Candidate Pool instead of becoming setup rows.
 
 ## Strategy Posture
 
@@ -132,6 +162,7 @@ Write concise Chinese Markdown notes with:
 - `信源优先级`
 - `宏观/利率`
 - `政策/新闻`
+- `交易计划准备`
 - `对当前持仓的总体影响`
 - `策略姿态建议`
 - `当周重点财报`

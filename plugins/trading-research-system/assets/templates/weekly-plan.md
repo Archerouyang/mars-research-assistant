@@ -82,6 +82,24 @@ Only include earnings that can affect current holdings, index/sector beta, momen
 - Sector or company news:
 - Noise to ignore:
 
+## Trade Plan Preparation
+
+### Input Reads
+
+| Module | Read | Supports | Pressures | Blocks | Evidence | Next check |
+| --- | --- | --- | --- | --- | --- | --- |
+| Macro Regime |  |  |  |  |  |  |
+| Financial Conditions |  |  |  |  |  |  |
+| Policy/Event Risk |  |  |  |  |  |  |
+| Industry/Sector Strength |  |  |  |  |  |  |
+| Company Thesis Check |  |  |  |  |  |  |
+
+### Cross-Section Candidate Pool
+
+| Rank | Symbol/theme | Drivers | Supported by | Pressured by | Blocked by | Price structure / risk context | Setup readiness | Next check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  | 4H/1D/1W higher-timeframe regime + price structure pending |  |
+
 ## Event Importance Ranking
 
 Priority definitions:

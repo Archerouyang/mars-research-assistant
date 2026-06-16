@@ -35,6 +35,26 @@ This fixture defines the minimum acceptable user-facing shape for a weekly macro
 - 特朗普/白宫相关内容只保留 tariffs、Treasury/fiscal、Fed independence、energy、sector regulation 这些能传导到资产定价的政策线。
 - 伊朗/霍尔木兹和 oil 只在被 S0/S2 信源确认并传导到 VIX、inflation 或 growth multiple 后影响计划。
 
+## 交易计划准备
+
+### Input Reads
+
+| 模块 | read | supports | pressures | blocks | evidence | next_check |
+| --- | --- | --- | --- | --- | --- | --- |
+| Macro Regime | 事件压缩周，默认平衡，等待 FOMC/SEP 和油价风险确认 | 核心 ETF 保持计划内，不因单日数据重置 | 高 beta 动量、LEAP、半导体追高 | FOMC 前新增大风险 | FOMC/SEP、零售销售、oil/霍尔木兹 | FOMC 后看 10Y/VIX/QQQ 接受情况 |
+| Financial Conditions | 10Y/4.5% 是关键金融条件阈值 | 10Y 回落支持 QQQ/SOXX/DRAM 候选 | 10Y 上破压制 growth multiple 和 duration | 10Y 上破并维持时阻止新增高 beta | 10Y、VIX、USD | 4H/1D/1W 是否仍是上涨或转震荡 |
+| Policy/Event Risk | Fed、Treasury/fiscal、tariffs、Fed independence 和 energy 是本周政策线 | 政策落地后可恢复计划准备 | 标题噪音和未验证讲话 | 未验证政策标题不能进 setup pool | Fed calendar、White House/Treasury、S2 news | 只保留能传导到 rates、oil、volatility 的事件 |
+| Industry/Sector Strength | 半导体和 megacap leadership 需要 FOMC 后确认 | SOXX/DRAM 若承接强可进入截面候选池 | sell-the-news、breadth 不扩散 | 行业相对强度失效时不转 setup | SOXX/QQQ 相对表现、breadth | 财报后 gap hold 和相对强弱 |
+| Company Thesis Check | 个股 thesis 只能作为候选，需 primary/current 验证 | 指数权重科技、AI 链、强现金流大盘股 | 估值压缩、guidance 风险 | thesis 未验证或财报前 gap risk 太大 | 公司 IR/财报、Seeking Alpha 仅作观点输入 | thesis/counter-thesis 完成后再找 price structure |
+
+### 截面候选池 / Cross-Section Candidate Pool
+
+| rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | QQQ 核心 ETF / 0DTE 执行候选 | 核心趋势仍在，FOMC 后可能恢复 risk-on | Macro Regime、Financial Conditions | 10Y 上破、VIX 扩张 | FOMC 前不追高 | QQQ 有关键区域，0DTE 有短周期和事件风险 | 需要 4H/1D/1W 维持上涨或高位震荡，1H 以下只做执行观察；可转 candidate setup | FOMC 后看 724-726 接受或 715-711 reclaim |
+| 2 | SOXX / DRAM 半导体主题 | AI/半导体 leadership 可能延续 | Industry/Sector Strength、Company Thesis Check | 利率上行、财报 sell-the-news | 相对强度失效不进 Setup Pool | 需要 SOXX 相对 QQQ 承接，半导体 beta 集中 | 4H/1D/1W 必须确认非下跌，price structure 清楚后才转 candidate setup | 看 SOXX 相对 QQQ 是否扩散 |
+| 3 | TLT/IWM 类利率反应候选 | 若 10Y 回落可能受益 | Financial Conditions | 热数据、鹰派 FOMC | 10Y 维持 4.5% 上方 | 利率方向未确认，仍是事件驱动候选 | 暂留截面候选池，不是 candidate setup | 等 FOMC/SEP 后重新评估 |
+
 ## 对当前持仓的总体影响
 
 | 持仓 | 影响 | 本周动作 | 暂停/复核条件 |
