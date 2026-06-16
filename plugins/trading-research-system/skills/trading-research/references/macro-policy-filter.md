@@ -38,6 +38,25 @@ policy or data -> rates/liquidity/USD/sector -> earnings or valuation -> ticker 
 
 If that chain is weak, say so and downgrade confidence.
 
+## Trade Plan Preparation Output
+
+This reference feeds three Trade Plan Preparation input reads:
+
+- `Macro Regime`: growth, inflation, Fed path, USD, oil, liquidity, and broad risk-on/risk-off state.
+- `Financial Conditions`: 2Y, 10Y, 30Y, real yields, credit spreads, VIX, USD, funding stress, and liquidity pressure.
+- `Policy/Event Risk`: White House / Trump policy, Treasury/fiscal policy, tariffs, Fed independence, auctions, FOMC, energy shocks, and major event windows.
+
+For each read, output:
+
+- `read`
+- `supports`
+- `pressures`
+- `blocks`
+- `evidence`
+- `next_check`
+
+Do not produce a standalone macro report when the task is trade plan preparation. The output should explain which themes or symbols can enter the Cross-Section Candidate Pool and which are blocked.
+
 ## Output Rules
 
 - Ignore news that does not affect rates, liquidity, fiscal path, regulation, earnings expectations, or risk appetite.

@@ -12,6 +12,8 @@ FILES = {
     "weekly_skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",
     "macro_skill": ROOT / "skills" / "macro-equity-research" / "SKILL.md",
     "active_plan": ROOT / "skills" / "trading-research" / "references" / "active-market-plan.md",
+    "macro_filter": ROOT / "skills" / "trading-research" / "references" / "macro-policy-filter.md",
+    "equity_screening": ROOT / "skills" / "trading-research" / "references" / "equity-screening.md",
     "output_templates": ROOT
     / "skills"
     / "trading-research"
@@ -63,6 +65,31 @@ REQUIRED_TERMS = {
         "risk_context",
         "candidate",
         "active",
+    ],
+    "macro_filter": [
+        "Trade Plan Preparation Output",
+        "Macro Regime",
+        "Financial Conditions",
+        "Policy/Event Risk",
+        "read",
+        "supports",
+        "pressures",
+        "blocks",
+        "evidence",
+        "next_check",
+        "Cross-Section Candidate Pool",
+    ],
+    "equity_screening": [
+        "Trade Plan Preparation Output",
+        "Industry/Sector Strength",
+        "Company Thesis Check",
+        "read",
+        "supports",
+        "pressures",
+        "blocks",
+        "evidence",
+        "next_check",
+        "Cross-Section Candidate Pool",
     ],
     "output_templates": [
         "## 交易计划准备",

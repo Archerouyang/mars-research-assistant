@@ -52,6 +52,24 @@ Use confidence labels:
 - `Medium`: thesis is plausible but key validation remains.
 - `Low`: mostly watchlist or speculative.
 
+## Trade Plan Preparation Output
+
+This reference feeds two Trade Plan Preparation input reads:
+
+- `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, policy beneficiaries/losers, and industry-level risk.
+- `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings/guidance, balance sheet, and disconfirming facts.
+
+For each read, output:
+
+- `read`
+- `supports`
+- `pressures`
+- `blocks`
+- `evidence`
+- `next_check`
+
+The result should feed the Cross-Section Candidate Pool. Do not promote a ticker into the Setup Pool unless higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, risk context, and next check are clear.
+
 ## Rejection Criteria
 
 Reject or downgrade candidates when:
