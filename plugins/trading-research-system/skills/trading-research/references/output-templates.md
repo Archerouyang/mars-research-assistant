@@ -138,6 +138,42 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 
 Weekly user-facing text should not use unexplained internal status jumps. If an internal status is necessary, explain it in Chinese immediately.
 
+## Research Report Digest
+
+```markdown
+## 结论
+- 这份研报对计划的影响：
+- 置信度：
+- 暂时不能采用的原因：
+
+## Research Report Digest
+| 项目 | 内容 |
+| --- | --- |
+| source | 标题 / 作者或机构 / 日期 / access status |
+| target | 标的或主题 / 方向 / 时间跨度 |
+| thesis | 研报最强逻辑 |
+| counter_thesis | 最强反方逻辑 |
+| evidence_quality | strong / medium / weak |
+| current_relevance | current / partly stale / stale |
+| plan_impact | supports / pressures / blocks / watch only |
+| next_check | 下一步必须校验什么 |
+
+## Claim Ledger
+| claim | type | report evidence | verification source | status | plan impact |
+| --- | --- | --- | --- | --- | --- |
+|  | fact / estimate / opinion / assumption |  | S0/S1/S2/S3 | verified / needs_check / contradicted / stale | supports / pressures / blocks / none |
+
+## Verification Queue
+| 优先级 | 需要校验什么 | 首选信源 | 为什么会改变判断 |
+| --- | --- | --- | --- |
+| P0/P1/P2 |  | SEC / IR / transcript / official data / market data / counter-research |  |
+
+## Trade Plan Preparation Impact
+| 模块 | 影响 | 进入截面候选池的条件 | 不能升级为 setup 的原因 |
+| --- | --- | --- | --- |
+| Industry/Sector Strength / Company Thesis Check | supports / pressures / blocks |  |  |
+```
+
 ## Research Memo
 
 ```markdown
@@ -166,6 +202,8 @@ Weekly user-facing text should not use unexplained internal status jumps. If an 
 ## 研报观点与校验
 | 来源 | 观点 | 可验证事实 | 反方证据 | 结论 |
 |---|---|---|---|---|
+
+长研报或用户提供的 PDF/链接应先产出 `Research Report Digest`、`Claim Ledger` 和 `Verification Queue`，再把通过校验的结论放入本备忘录。不要把完整研报摘要粘贴进用户-facing 输出。
 
 ## Price Action 择时
 - 市场状态：

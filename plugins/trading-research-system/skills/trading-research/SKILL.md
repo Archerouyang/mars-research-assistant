@@ -21,6 +21,8 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
   use `intraday-setup-scan`.
 - Actual trade record, broker execution facts, post-order note, post-exit review:
   use `trade-review`.
+- Research report discovery, user-provided PDF/link/text digestion, report thesis extraction, claim ledger, and verification queue:
+  use `research-report-intake`.
 - Macro policy, rates/yields, research-note verification, stock screening:
   use `macro-equity-research`.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
@@ -32,19 +34,21 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 If a request spans multiple workflows, run them in the natural order:
 
-1. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
-2. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
-3. `daily-market-tracking` to quick-update the same plan against today's market.
-4. `intraday-setup-scan` to classify setup-level status during the session.
-5. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
-6. `trade-review` after orders/fills and after exits.
-7. `trading-stats` after enough closed-trade records exist.
+1. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
+2. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
+3. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
+4. `daily-market-tracking` to quick-update the same plan against today's market.
+5. `intraday-setup-scan` to classify setup-level status during the session.
+6. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
+7. `trade-review` after orders/fills and after exits.
+8. `trading-stats` after enough closed-trade records exist.
 
 ## Shared Resources
 
 Detailed domain rules remain in:
 
 - `references/macro-policy-filter.md`
+- `references/research-report-intake.md`
 - `references/equity-screening.md`
 - `references/active-market-plan.md`
 - `references/trading-profile.md`

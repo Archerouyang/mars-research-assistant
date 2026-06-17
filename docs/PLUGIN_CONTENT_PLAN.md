@@ -23,13 +23,14 @@ Make the plugin usable for the first local workflow:
 1. maintain one overwriteable Active Market Plan;
 2. append compact update notes;
 3. apply private trading profile rules for instrument selection;
-4. prepare trade plans from macro, financial conditions, policy/event risk, industry strength, and company thesis checks;
-5. initialize daily local records;
-6. plan setup-level trades;
-7. scan prepared setups intraday;
-8. reconcile read-only broker facts into canonical CSV;
-9. capture post-order and post-exit reviews;
-10. compute basic risk and statistics.
+4. find or ingest research reports and reduce them to claim ledgers, verification queues, and plan-preparation impact;
+5. prepare trade plans from macro, financial conditions, policy/event risk, industry strength, and company thesis checks;
+6. initialize daily local records;
+7. plan setup-level trades;
+8. scan prepared setups intraday;
+9. reconcile read-only broker facts into canonical CSV;
+10. capture post-order and post-exit reviews;
+11. compute basic risk and statistics.
 
 ## Required Content Map
 
@@ -40,6 +41,7 @@ Make the plugin usable for the first local workflow:
 | Daily tracking skill | quick market, macro, news, setup, profile-aware instrument fit, and level update | present | Convert daily noise into changed variables, setup status changes, and next checks. |
 | Intraday scan skill | setup-scoped `candidate/active/approaching/triggered/invalidated/needs_review/completed` classification | present | Drives `intraday_scan.py`; output should be attention priority, not full commentary. |
 | Trade review skill | post-order and post-exit interactive review | present | Ask only fields needed for `trades.csv` and `reviews.md`; summarize lessons tightly. |
+| Research report intake skill | public/authorized report discovery and user-provided report digestion | present | Produce `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and Trade Plan Preparation impact before macro/equity research consumes report views. |
 | Macro/equity skill | macro/rates filtering, thesis verification, screening | present | Read many sources, reject noise, and return Trade Plan Preparation inputs plus Cross-Section Candidate Pool candidates. |
 | Portfolio risk skill | exposure and sizing review | present | Needs canonical broker CSV fixture coverage; output should highlight only material concentration and constraint breaches. |
 | Trading stats skill | closed-trade stats and system review | present | Needs closed-trade fixture rows; output should focus on actionable system changes. |
@@ -82,6 +84,7 @@ Coverage requirements:
 | P0 | AI-native synthesis contract | Skills consistently read broadly, filter aggressively, and return concise decision notes instead of source dumps. |
 | P0 | Active Market Plan current state and update trail | A deep update can overwrite `data/market-plan.md` and append `data/updates/YYYY-MM-DD.md` with clear rationale. |
 | P1 | Trade plan preparation contract | Macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created. |
+| P1 | Research report intake contract | Report discovery and user-provided report digestion produce concise, source-prioritized, verifiable claim ledgers instead of long summaries or direct setup calls. |
 | P1 | Trading profile translation | Candidate setups can be translated into ETF, stock, 2x ETF, LEAP, or 0DTE expressions without assuming the same tool for every idea. |
 | P1 | Fixture package | The fixture files first cover trade plan preparation, then daily tracking, broker facts, review writing, and expected scan output. |
 | P1 | Intraday scan script | The script reads fixture plan/watchlist rows and emits stable status plus attention priority after setup pool fields are stable. |

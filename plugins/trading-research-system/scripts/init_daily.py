@@ -20,6 +20,7 @@ TEMPLATE_NAMES = {
     "broker_executions.csv": "broker_executions.csv",
     "broker_orders.csv": "broker_orders.csv",
     "research-note-log.csv": "research-note-log.csv",
+    "research-report-log.csv": "research-report-log.csv",
     "daily-macro-checklist.md": "daily-macro-checklist.md",
     "daily-market-tracking.md": "daily-market-tracking.md",
     "reviews.md": "reviews.md",

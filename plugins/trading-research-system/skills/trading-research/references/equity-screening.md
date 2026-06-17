@@ -16,6 +16,8 @@ Rank candidates using:
 
 ## Research-Note Handling
 
+For report-heavy tasks, first use `research-report-intake` and its `Research Report Digest`, `Claim Ledger`, and `Verification Queue`. Equity screening should consume those outputs instead of re-summarizing the full report.
+
 When using Seeking Alpha or similar sources:
 
 1. Identify author, date, stance, rating/target if available.

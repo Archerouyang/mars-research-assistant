@@ -32,6 +32,26 @@ _Avoid_: 股票清单, 一个想法塞多个工具
 收集会影响交易决策的原始信息，包括宏观政策、利率、债券收益率、研报、公司数据、价格行为、量化因子、异常期权信号和组合持仓。信息收集本身不等于交易结论。
 _Avoid_: 新闻流, 噪音收集
 
+**研报发现**:
+由 agent 主动寻找公开、授权或用户可访问的研报、研究文章、公司材料、财报电话会和反方观点，并按信源优先级、时效性、相关性和对计划的潜在影响排序。研报发现不能绕过付费墙，也不能把不可访问来源当作已读取来源。
+_Avoid_: 付费墙绕过, 只找确认偏误材料, 研报标题清单
+
+**研报摄取**:
+把用户提供的 PDF、链接、摘录、截图或文本，或研报发现阶段找到的可访问内容，压缩成可校验的 `Research Report Digest`、`Claim Ledger`、`Verification Queue` 和 `Trade Plan Preparation Impact`。研报摄取的目标不是长摘要，而是提炼 thesis/counter-thesis、关键假设、证据质量、过期数据、反方证据和下一步校验。
+_Avoid_: 长篇摘要, 原文摘抄, 未校验观点直接入计划
+
+**Claim Ledger**:
+研报摄取中的关键 claim 台账。它只记录会改变交易计划、候选池、置信度或风险判断的重要 claim，并标记 `fact`、`estimate`、`opinion` 或 `assumption`，同时记录需要用哪个 S0/S1/S2/S3 信源校验。
+_Avoid_: 每句话都记录, 不区分事实和观点
+
+**Verification Queue**:
+研报摄取后的校验队列。它列出采用研报观点前必须核验的 filings、IR、transcript、官方宏观数据、当前市场数据、估值数据、反方研究或事件日历。未完成 P0 校验的研报观点不能直接推动 setup。
+_Avoid_: 看完即采用, 只校验支持证据
+
+**Trade Plan Preparation Impact**:
+研报摄取对交易计划准备的映射结果。它说明研报观点是支持、压制、阻止还是仅观察某个主题/标的进入 `Industry/Sector Strength`、`Company Thesis Check` 或 `Cross-Section Candidate Pool`。它不能直接替代大周期环境、价格结构、触发区域、失效条件和风险预算。
+_Avoid_: 研报=交易信号, thesis 直接升级 setup
+
 **第一阶段数据源**:
 交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、IBKR 行情数据、read-only broker source、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
 _Avoid_: 全自动数据湖, 不可核验来源

@@ -11,6 +11,8 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Macro and policy filtering focused on market-moving variables.
 - Trump policy, Treasury policy, rates, yields, and liquidity monitoring.
 - Equity screening with thesis verification against primary sources.
+- Research report discovery from public or authorized sources, with source priority and access status.
+- User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
@@ -40,6 +42,7 @@ For more specific workflows, use the smaller skills directly:
 - `$daily-market-tracking`: quick-update the Active Market Plan with market/macro/policy/news changes, setup status changes, and level updates.
 - `$intraday-setup-scan`: plan-scoped intraday setup status.
 - `$trade-review`: post-order and post-exit actual trade review using broker facts when available.
+- `$research-report-intake`: find public/authorized reports, read user-provided research, extract claims, and produce verification queues.
 - `$macro-equity-research`: macro/rates, research validation, and screening.
 - `$portfolio-risk`: exposure and sizing review.
 - `$trading-stats`: win rate, R-multiple, setup performance, and system review.
@@ -56,6 +59,10 @@ $daily-market-tracking Quick-update today's market plan and setup levels.
 
 ```text
 $macro-equity-research Screen US stocks that benefit from lower long-end yields. My current holdings are...
+```
+
+```text
+$research-report-intake Read this NVDA report and tell me what changes in the plan.
 ```
 
 ```text
@@ -100,7 +107,7 @@ daily/YYYY-MM-DD/
 charts/
 ```
 
-The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, and macro checklists.
+The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, research-report logs, and macro checklists.
 
 Use `trading-profile.md` in the runtime directory for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
 

@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-06-17
+
+- Commit: pending
+- Scope: skill, reference, template
+- What changed: added a first-class `research-report-intake` capability for public/authorized report discovery and user-provided report digestion. The contract produces a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`, and wires the new skill into the router, macro/equity research, local templates, and contract verification.
+- Why it matters: the plugin can now treat research reports as structured, verifiable evidence instead of dumping long summaries or letting analyst opinions directly become trade setups.
+- Next step: add realistic report-digestion fixtures and forward-test the skill on a user-provided report plus a public-source discovery prompt.
+
 ## 2026-06-16
 
 - Commit: pending

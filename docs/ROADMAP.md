@@ -14,6 +14,7 @@ The system supports:
 
 - agent-heavy research synthesis that compresses large source sets into conclusions, changed variables, invalidations, setup status, and next checks;
 - macro policy and rates filtering focused on market-moving variables;
+- research report discovery from public/authorized sources plus user-provided report intake for PDFs, links, excerpts, screenshots, and copied text;
 - research-note and market-view validation against primary/current sources;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
@@ -42,19 +43,20 @@ The system does not support in the initial scope:
 
 The default workflow is:
 
-1. **Information collection**: gather macro policy, Treasury/rates/yield data, research-note claims, company facts, prices, watchlists, trade plans, and holdings.
+1. **Information collection**: gather macro policy, Treasury/rates/yield data, research-report leads, research-note claims, company facts, prices, watchlists, trade plans, and holdings.
 2. **Information processing**: filter noise, classify source reliability, normalize inputs into local daily records, and separate facts from assumptions.
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
-4. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
-5. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, and Company Thesis Check into input reads and a Cross-Section Candidate Pool before creating setup rows. Quant momentum candidate pools are a separate future model.
-6. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
-7. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
-8. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
-9. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
-10. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
-11. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
-12. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
-13. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
+4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
+5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
+6. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, and Company Thesis Check into input reads and a Cross-Section Candidate Pool before creating setup rows. Quant momentum candidate pools are a separate future model.
+7. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
+8. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
+9. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
+10. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
+11. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
+12. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
+13. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
+14. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
 
 ## Public Repo Boundary
 
@@ -121,6 +123,7 @@ Rules:
 | Domain glossary | In progress | `CONTEXT.md` |
 | AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
+| Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Skill set architecture | Started | Router skill plus focused skills under `plugins/trading-research-system/skills/` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
@@ -147,7 +150,7 @@ Deliverables:
 - Maintain canonical glossary in `CONTEXT.md`.
 - Maintain Active Market Plan, update note, research memo, and trade plan output templates.
 - Keep `trading-research` as the router skill.
-- Maintain focused skills for Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
+- Maintain focused skills for research report intake, Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
 - Keep active plan, broker data, macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
 - Keep automation rules aligned with the Active Market Plan loop and broker read-only boundary.
 - Keep the plugin installable from the personal marketplace.
@@ -155,7 +158,7 @@ Deliverables:
 Exit criteria:
 
 - A new agent can understand the core language from `CONTEXT.md`.
-- The router can send research, planning, intraday scan, review, risk, and statistics tasks to focused skills and shared references.
+- The router can send report intake, research, planning, intraday scan, review, risk, and statistics tasks to focused skills and shared references.
 
 ### P1: Local Data Structure
 
@@ -171,7 +174,7 @@ Deliverables:
 - Deep update convention for last-week trade review, current market tape, macro/rates, policy/news, event preview, Trade Plan Preparation, themes, setup pool, and risk budget.
 - Quick update convention for current market read, fast macro/policy/news update, event preview, momentum changes, setup status changes, level updates, and attention priority.
 - Broker data convention for raw snapshots under `{runtime_dir}/broker/<source>/YYYY-MM-DD/` and canonical daily CSV files.
-- Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, and `daily-macro-checklist.md`.
+- Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, `research-report-log.csv`, and `daily-macro-checklist.md`.
 - `init_daily.py` to create a daily folder from templates.
 - Local records remain the first source of truth.
 
@@ -190,6 +193,7 @@ Deliverables:
 - `watchlist_score.py` for candidate prioritization.
 - `trade_stats.py` for closed-trade statistics.
 - Macro/rates filter reference.
+- Research report intake and verification reference.
 - Research-note verification reference.
 - Price action timing reference.
 - Intraday setup scan reference.

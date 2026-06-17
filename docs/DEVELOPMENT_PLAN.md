@@ -19,17 +19,18 @@ The current product sequence is:
 1. AI-native synthesis contract: agent reads broadly and returns concise decision-useful notes, not raw research dumps;
 2. Active Market Plan schema, trading profile, update trail, and local daily records;
 3. trade plan preparation: macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
-4. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, canonical broker CSV, and two-stage reviews;
-5. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-6. setup-scoped intraday scan;
-7. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
-8. post-exit review to complete results, lessons, and `reviews.md`;
-9. broker-agnostic portfolio reconciliation and risk view;
-10. basic stats and system review;
-11. one-way Google Sheets sync;
-12. user-confirmed Active Market Plan automations;
-13. OHLCV-backed chart artifacts;
-14. option-flow anomaly research.
+4. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
+5. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, canonical broker CSV, and two-stage reviews;
+6. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+7. setup-scoped intraday scan;
+8. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
+9. post-exit review to complete results, lessons, and `reviews.md`;
+10. broker-agnostic portfolio reconciliation and risk view;
+11. basic stats and system review;
+12. one-way Google Sheets sync;
+13. user-confirmed Active Market Plan automations;
+14. OHLCV-backed chart artifacts;
+15. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -87,6 +88,7 @@ Use these statuses:
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
 | P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
+| P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker data contracts | Aligns the workflow around one living market plan, setup-level tracking, read-only broker sources, and canonical local data. | Use these contracts in the fixture package and later script flows. |
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
@@ -100,15 +102,22 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-06-16
+Date: 2026-06-17
 
-- Morning main task: define Trade Plan Preparation so weekly and macro/equity research compress macro, financial conditions, policy/event risk, industry strength, and company thesis checks into Active Market Plan input reads and a Cross-Section Candidate Pool.
-- Secondary task: defer `intraday_scan.py` until setup pool promotion fields are stable.
-- Definition of done: `CONTEXT.md`, Active Market Plan reference, weekly skill, macro/equity skill, templates, fixture, and verifier define how research enters Trade Plan Preparation, how Cross-Section Candidate Pool is formed, and what evidence supports promotion into `candidate setup`.
-- Verification: local contract checks prove weekly/macro outputs contain Trade Plan Preparation and support setup pool generation rather than generic macro reports.
-- End-of-day result: in progress.
+- Morning main task: define `research-report-intake` so report discovery and user-provided report digestion produce a concise digest, claim ledger, verification queue, and Trade Plan Preparation impact.
+- Secondary task: keep report views feeding macro/equity research without directly creating setup signals.
+- Definition of done: focused skill, shared reference, output template, local log template, router, docs, expected fixture, and verifier are wired around the same public contract.
+- Verification: report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, Python compile, daily initialization smoke test, and whitespace diff check.
+- End-of-day result: completed; deeper report fixtures and forward-testing remain next.
 
 ## Progress Log
+
+### 2026-06-17
+
+- Completed: defined the `research-report-intake` capability as the first-class path for report discovery and user-provided report digestion.
+- Completed: added `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact` as the required shape before report views can affect macro/equity research or setup promotion.
+- Verification: added and ran the report-intake contract verifier; kept weekly outlook and Trade Plan Preparation contract checks passing.
+- Next: forward-test on a user-provided research report and a public-source discovery prompt, then add report-digestion fixtures.
 
 ### 2026-06-16
 
@@ -116,6 +125,7 @@ Date: 2026-06-16
 - Decision: v1 inputs are `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, and `Company Thesis Check`.
 - Decision: quantitative momentum candidate pool is a separate TODO and should not be treated as a v1 input until its data, factors, ranking, and validation are defined.
 - Decision: Active Market Plan needs a `Trade Plan Preparation` section with `Input Reads` and `Cross-Section Candidate Pool` before setup rows are promoted.
+- Decision: research reports need a dedicated `research-report-intake` path before macro/equity research consumes them. Report discovery is limited to public/authorized sources, user-provided reports are reduced to `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`, and paywall bypass remains out of scope.
 
 ### 2026-06-14
 

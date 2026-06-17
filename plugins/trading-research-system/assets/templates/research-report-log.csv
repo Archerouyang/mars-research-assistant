@@ -1,0 +1,2 @@
+report_id,source_priority,source_type,title,ticker_or_theme,author,publication_date,access_status,stance,horizon,thesis,verification_status,next_check,counter_thesis,evidence_quality,current_relevance,plan_impact
+YYYYMMDD-NVDA-001,S3 research / opinion,Seeking Alpha,title,NVDA,author,YYYY-MM-DD,public/user-provided,in-line/bullish/bearish,1-6 months,core thesis,needs_check,verify filing/transcript/current price action,best counter-thesis,strong/medium/weak,current/partly stale/stale,supports Company Thesis Check

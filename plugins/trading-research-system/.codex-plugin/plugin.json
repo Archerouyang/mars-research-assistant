@@ -1,7 +1,7 @@
 {
   "name": "trading-research-system",
   "version": "0.1.0+codex.20260614122019",
-  "description": "Focused trading research skills for Active Market Plan updates, setup scans, trade review, broker reconciliation, and risk checks.",
+  "description": "Focused trading research skills for report intake, Active Market Plan updates, setup scans, trade review, broker reconciliation, and risk checks.",
   "author": {
     "name": "Archer"
   },
@@ -16,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Trading Research System",
-    "shortDescription": "Active plans, setup scans, trade review, and broker-risk workflows.",
-    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: maintain an overwriteable Active Market Plan, append update notes, review prior trades during deep updates, analyze current market tape, macro, policy, news, and upcoming events, update momentum rankings, manage setup-level opportunities, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews from read-only broker facts, reconcile portfolio exposure across brokers, and review trading statistics.",
+    "shortDescription": "Report intake, active plans, setup scans, trade review, and broker-risk workflows.",
+    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: find and digest public or user-provided research reports, maintain an overwriteable Active Market Plan, append update notes, review prior trades during deep updates, analyze current market tape, macro, policy, news, and upcoming events, update momentum rankings, manage setup-level opportunities, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews from read-only broker facts, reconcile portfolio exposure across brokers, and review trading statistics.",
     "developerName": "Archer",
     "category": "Productivity",
     "capabilities": [
@@ -26,6 +26,7 @@
     ],
     "defaultPrompt": [
       "Deep-update my Active Market Plan for next week.",
+      "Read this research report and extract the plan impact.",
       "Quick-update today's market plan and setup levels.",
       "Screen stocks for a falling-rate environment.",
       "Review my latest broker execution interactively."
