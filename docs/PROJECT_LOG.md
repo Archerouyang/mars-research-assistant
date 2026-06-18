@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-06-18
+
+- Commit: pending
+- Scope: script, test
+- What changed: added a shared `contract_verifier.py` module and a small self-test, then rewired weekly outlook, Trade Plan Preparation, and research report intake contract checks to use it. The report-intake verifier now also checks the research report log CSV header exactly.
+- Why it matters: future product contracts can add acceptance checks without copying verifier loops, and record templates have a stronger guard against header/content drift.
+- Next step: use the shared verifier for the next fixture-backed contract slice, then consider wiring these local checks into CI after the public workflow stabilizes.
+
 ## 2026-06-17
 
 - Commit: pending

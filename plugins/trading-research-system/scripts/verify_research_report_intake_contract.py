@@ -4,6 +4,8 @@
 from pathlib import Path
 import sys
 
+from contract_verifier import ContractSpec, FileContract, run_contract
+
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
@@ -39,6 +41,26 @@ FILES = {
     "context": REPO / "CONTEXT.md",
     "roadmap": REPO / "docs" / "DEVELOPMENT_PLAN.md",
 }
+
+REPORT_LOG_HEADER = (
+    "report_id",
+    "source_priority",
+    "source_type",
+    "title",
+    "ticker_or_theme",
+    "author",
+    "publication_date",
+    "access_status",
+    "stance",
+    "horizon",
+    "thesis",
+    "verification_status",
+    "next_check",
+    "counter_thesis",
+    "evidence_quality",
+    "current_relevance",
+    "plan_impact",
+)
 
 
 REQUIRED = {
@@ -130,28 +152,25 @@ FORBIDDEN = {
 }
 
 
+SPEC = ContractSpec(
+    name="research report intake",
+    success_message="Research report intake contract verification passed.",
+    failure_header="Research report intake contract verification failed:",
+    files={
+        key: FileContract(
+            path=path,
+            required_terms=REQUIRED[key],
+            forbidden_terms=FORBIDDEN.get(key, ()),
+            forbidden_label="forbidden stale term",
+            csv_header=REPORT_LOG_HEADER if key == "report_log" else None,
+        )
+        for key, path in FILES.items()
+    },
+)
+
+
 def main() -> int:
-    errors: list[str] = []
-    for key, path in FILES.items():
-        if not path.exists():
-            errors.append(f"{key}: missing {path}")
-            continue
-        text = path.read_text(encoding="utf-8")
-        for needle in REQUIRED[key]:
-            if needle not in text:
-                errors.append(f"{key}: missing {needle!r} in {path}")
-        for needle in FORBIDDEN.get(key, []):
-            if needle in text:
-                errors.append(f"{key}: forbidden stale term {needle!r} in {path}")
-
-    if errors:
-        print("Research report intake contract verification failed:")
-        for error in errors:
-            print(f"- {error}")
-        return 1
-
-    print("Research report intake contract verification passed.")
-    return 0
+    return run_contract(SPEC)
 
 
 if __name__ == "__main__":

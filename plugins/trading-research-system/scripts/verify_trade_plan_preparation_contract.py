@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
+
+from contract_verifier import ContractSpec, FileContract, run_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -149,26 +152,24 @@ FORBIDDEN_TERMS = {
 }
 
 
-def main() -> None:
-    failures: list[str] = []
+SPEC = ContractSpec(
+    name="trade plan preparation",
+    success_message="trade plan preparation contract ok",
+    files={
+        name: FileContract(
+            path=path,
+            required_terms=REQUIRED_TERMS[name],
+            forbidden_terms=FORBIDDEN_TERMS.get(name, ()),
+            forbidden_label="forbidden stale wording",
+        )
+        for name, path in FILES.items()
+    },
+)
 
-    for name, path in FILES.items():
-        if not path.exists():
-            failures.append(f"{path}: missing expected file")
-            continue
-        text = path.read_text(encoding="utf-8")
-        for term in REQUIRED_TERMS[name]:
-            if term not in text:
-                failures.append(f"{path}: missing {term!r}")
-        for term in FORBIDDEN_TERMS.get(name, []):
-            if term in text:
-                failures.append(f"{path}: forbidden stale wording {term!r}")
 
-    if failures:
-        raise SystemExit("\n".join(failures))
-
-    print("trade plan preparation contract ok")
+def main() -> int:
+    return run_contract(SPEC)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
