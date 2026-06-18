@@ -9,22 +9,7 @@ from datetime import date
 import os
 from pathlib import Path
 
-
-TEMPLATE_NAMES = {
-    "watchlist.csv": "watchlist.csv",
-    "trade-plans.csv": "trade-plans.csv",
-    "intraday-watchlist.csv": "intraday-watchlist.csv",
-    "trades.csv": "trades.csv",
-    "holdings.csv": "portfolio.csv",
-    "portfolio_snapshot.csv": "portfolio_snapshot.csv",
-    "broker_executions.csv": "broker_executions.csv",
-    "broker_orders.csv": "broker_orders.csv",
-    "research-note-log.csv": "research-note-log.csv",
-    "research-report-log.csv": "research-report-log.csv",
-    "daily-macro-checklist.md": "daily-macro-checklist.md",
-    "daily-market-tracking.md": "daily-market-tracking.md",
-    "reviews.md": "reviews.md",
-}
+from record_schemas import DAILY_TEMPLATE_TARGETS, template_dir_from_script as schema_template_dir
 
 RESEARCH_NOTES = """# Research Notes
 
@@ -76,7 +61,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def template_dir_from_script() -> Path:
-    return Path(__file__).resolve().parents[1] / "assets" / "templates"
+    return schema_template_dir(__file__)
 
 
 def copy_template(source: Path, target: Path, overwrite: bool) -> str:
@@ -102,7 +87,7 @@ def main() -> None:
     template_dir = Path(args.templates) if args.templates else template_dir_from_script()
     messages: list[str] = []
 
-    for template_name, target_name in TEMPLATE_NAMES.items():
+    for template_name, target_name in DAILY_TEMPLATE_TARGETS.items():
         source = template_dir / template_name
         if not source.is_file():
             raise SystemExit(f"missing template: {source}")

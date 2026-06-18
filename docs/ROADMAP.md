@@ -125,6 +125,7 @@ Rules:
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
+| Canonical record schema module | Started | `plugins/trading-research-system/scripts/record_schemas.py`; `plugins/trading-research-system/scripts/verify_record_templates_contract.py` |
 | Skill set architecture | Started | Router skill plus focused skills under `plugins/trading-research-system/skills/` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |

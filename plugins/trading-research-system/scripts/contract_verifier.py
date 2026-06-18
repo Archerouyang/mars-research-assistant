@@ -20,6 +20,7 @@ class FileContract:
     forbidden_terms: Sequence[str] = field(default_factory=tuple)
     forbidden_label: str = "forbidden term"
     csv_header: Sequence[str] | None = None
+    csv_rows_match_header: bool = False
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,8 @@ def verify_contract(spec: ContractSpec) -> list[str]:
         )
         if contract.csv_header is not None:
             failures.extend(_verify_csv_header(key, path, text, tuple(contract.csv_header)))
+        if contract.csv_rows_match_header:
+            failures.extend(_verify_csv_row_widths(key, path, text))
 
     return failures
 
@@ -135,3 +138,21 @@ def _verify_csv_header(
             f"expected {list(expected_header)!r}; actual {list(actual_header)!r}"
         )
     ]
+
+
+def _verify_csv_row_widths(key: str, path: Path, text: str) -> list[str]:
+    rows = list(csv.reader(StringIO(text)))
+    if not rows:
+        return [f"{key}: CSV file is empty in {path}"]
+
+    header_width = len(rows[0])
+    failures: list[str] = []
+    for row_number, row in enumerate(rows[1:], start=2):
+        if len(row) != header_width:
+            failures.append(
+                (
+                    f"{key}: CSV row {row_number} has {len(row)} fields in {path}; "
+                    f"expected {header_width}"
+                )
+            )
+    return failures

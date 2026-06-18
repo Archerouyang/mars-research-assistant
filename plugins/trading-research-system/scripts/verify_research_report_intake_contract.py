@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from contract_verifier import ContractSpec, FileContract, run_contract
+from record_schemas import CSV_SCHEMAS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,30 +39,10 @@ FILES = {
     "readme": ROOT / "README.md",
     "manifest": ROOT / ".codex-plugin" / "plugin.json",
     "init_daily": ROOT / "scripts" / "init_daily.py",
+    "record_schemas": ROOT / "scripts" / "record_schemas.py",
     "context": REPO / "CONTEXT.md",
     "roadmap": REPO / "docs" / "DEVELOPMENT_PLAN.md",
 }
-
-REPORT_LOG_HEADER = (
-    "report_id",
-    "source_priority",
-    "source_type",
-    "title",
-    "ticker_or_theme",
-    "author",
-    "publication_date",
-    "access_status",
-    "stance",
-    "horizon",
-    "thesis",
-    "verification_status",
-    "next_check",
-    "counter_thesis",
-    "evidence_quality",
-    "current_relevance",
-    "plan_impact",
-)
-
 
 REQUIRED = {
     "skill": [
@@ -128,6 +109,10 @@ REQUIRED = {
         "Read this research report and extract the plan impact.",
     ],
     "init_daily": [
+        "DAILY_TEMPLATE_TARGETS",
+    ],
+    "record_schemas": [
+        "CSV_SCHEMAS",
         '"research-report-log.csv": "research-report-log.csv"',
     ],
     "context": [
@@ -162,7 +147,8 @@ SPEC = ContractSpec(
             required_terms=REQUIRED[key],
             forbidden_terms=FORBIDDEN.get(key, ()),
             forbidden_label="forbidden stale term",
-            csv_header=REPORT_LOG_HEADER if key == "report_log" else None,
+            csv_header=CSV_SCHEMAS["research-report-log.csv"] if key == "report_log" else None,
+            csv_rows_match_header=key == "report_log",
         )
         for key, path in FILES.items()
     },

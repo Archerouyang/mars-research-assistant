@@ -63,6 +63,14 @@ def main() -> int:
         )
         _assert_contains(verify_contract(bad_header), "CSV header mismatch")
 
+        bad_row_width = _write(tmp / "bad_rows.csv", "id,name\n1,QQQ,extra\n")
+        row_width_contract = ContractSpec(
+            name="bad row width",
+            success_message="ok",
+            files={"csv": FileContract(path=bad_row_width, csv_rows_match_header=True)},
+        )
+        _assert_contains(verify_contract(row_width_contract), "CSV row 2 has 3 fields")
+
     print("contract verifier selftest ok")
     return 0
 

@@ -33,9 +33,9 @@ Use this shape:
 
 - Commit: pending
 - Scope: script, test
-- What changed: added a shared `contract_verifier.py` module and a small self-test, then rewired weekly outlook, Trade Plan Preparation, and research report intake contract checks to use it. The report-intake verifier now also checks the research report log CSV header exactly.
-- Why it matters: future product contracts can add acceptance checks without copying verifier loops, and record templates have a stronger guard against header/content drift.
-- Next step: use the shared verifier for the next fixture-backed contract slice, then consider wiring these local checks into CI after the public workflow stabilizes.
+- What changed: added a shared `contract_verifier.py` module and a small self-test, then rewired weekly outlook, Trade Plan Preparation, and research report intake contract checks to use it. Added `record_schemas.py` as the canonical local CSV schema registry, wired daily initialization to it, added record template verification for exact headers and row widths, and fixed a misaligned `trades.csv` sample row.
+- Why it matters: future product contracts can add acceptance checks without copying verifier loops, and local records now have a single schema source before broker adapters, trade review updates, statistics, and Google Sheets sync start writing rows.
+- Next step: use the shared verifier and record schema registry for the next fixture-backed contract slice, then consider wiring these local checks into CI after the public workflow stabilizes.
 
 ## 2026-06-17
 

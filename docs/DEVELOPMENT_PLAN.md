@@ -91,6 +91,7 @@ Use these statuses:
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker data contracts | Aligns the workflow around one living market plan, setup-level tracking, read-only broker sources, and canonical local data. | Use these contracts in the fixture package and later script flows. |
+| P1 | done | Add canonical record schema registry | Gives init, broker mapping, trade review updates, statistics, and future Google Sheets sync one source of truth for local CSV headers. | Reuse `record_schemas.py` before adding any CSV writer or sync script. |
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
 | P1 | deferred | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Resume after Trade Plan Preparation and setup pool promotion fields are stable. |
 | P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
@@ -104,10 +105,10 @@ Use these statuses:
 
 Date: 2026-06-18
 
-- Morning main task: deepen the contract verification architecture before adding more product behavior.
-- Secondary task: keep existing weekly outlook, Trade Plan Preparation, and research report intake verification commands stable.
-- Definition of done: shared verifier module, one self-test, existing verifier adapters, exact CSV header check for report logs, and passing local contract checks.
-- Verification: shared verifier self-test, report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, Python compile, and whitespace diff check.
+- Morning main task: deepen the contract verification and canonical record architecture before adding more product behavior.
+- Secondary task: keep existing weekly outlook, Trade Plan Preparation, research report intake, and daily initialization commands stable.
+- Definition of done: shared verifier module, one self-test, existing verifier adapters, canonical record schema registry, exact CSV header/row-width checks, fixed template rows, and passing local contract checks.
+- Verification: shared verifier self-test, record template contract check, report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, init-daily smoke test, Python compile, and whitespace diff check.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -117,8 +118,10 @@ Date: 2026-06-18
 - Completed: added a shared `contract_verifier.py` module for product contract checks.
 - Completed: converted weekly outlook, Trade Plan Preparation, and research report intake verifier scripts into thin adapters over the shared verifier.
 - Completed: added exact CSV header validation for the research report log template.
+- Completed: added `record_schemas.py` as the canonical local CSV schema registry and wired `init_daily.py` to it.
+- Completed: added record template verification for headers and row widths, which caught and fixed a misaligned `trades.csv` sample row.
 - Verification: shared verifier self-test plus all existing contract checks pass locally.
-- Next: use the shared verifier for the next fixture-backed product contract instead of adding another one-off script loop.
+- Next: reuse the shared verifier and record schema registry for the next fixture-backed product contract instead of adding another one-off script loop.
 
 ### 2026-06-17
 
