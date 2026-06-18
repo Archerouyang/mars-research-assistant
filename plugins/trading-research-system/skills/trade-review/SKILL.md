@@ -26,6 +26,10 @@ Use this skill to turn actual trades into structured `trades.csv` records and re
    - `post_order`: newly entered, open, or partially filled.
    - `post_exit`: closed, expired, stopped, scratched, or invalidated.
 8. Do not write records until key fields are resolved and the user confirms.
+9. After confirmation, write the record with `../../scripts/update_trade_record.py`:
+   - pass `--stage post-order` or `--stage post-exit`;
+   - pass a fields JSON file through `--fields-json` containing only valid `trades.csv` fields;
+   - pass `--review-file` for the reviewed Markdown text when available.
 
 ## Post-Order Focus
 
@@ -60,5 +64,6 @@ Produce:
 2. a `reviews.md` section draft;
 3. missing fields;
 4. suggested `outcome`, `mistake_tag`, and confidence calibration.
+5. after user confirmation, the exact `update_trade_record.py` command or a short note that it was written.
 
 Use Chinese and keep the interaction strict enough for later statistics.

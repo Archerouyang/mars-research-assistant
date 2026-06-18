@@ -37,6 +37,12 @@ Use this shape:
 - Why it matters: future product contracts can add acceptance checks without copying verifier loops, and local records now have a single schema source before broker adapters, trade review updates, statistics, and Google Sheets sync start writing rows.
 - Next step: use the shared verifier and record schema registry for the next fixture-backed contract slice, then consider wiring these local checks into CI after the public workflow stabilizes.
 
+- Commit: pending
+- Scope: script, skill, reference, test
+- What changed: added the Actual trade record module with `trade_records.py` and `update_trade_record.py`. Post-order review can create or update an `open` `trades.csv` row and append `reviews.md`; post-exit review updates the same trade with outcome, PnL/R, exit review, mistake tag, and lesson. Added a CLI self-test and contract check, and wired `$trade-review` guidance to use the script after user confirmation.
+- Why it matters: interactive trade review now has a repo-owned write path for local records, so the workflow can preserve fresh entry rationale and later complete closed-trade statistics without hand-editing CSV.
+- Next step: forward-test with one real confirmed post-order review and one post-exit review, then reuse the same schema path for one-way Google Sheets sync.
+
 ## 2026-06-17
 
 - Commit: pending

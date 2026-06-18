@@ -94,7 +94,7 @@ Use these statuses:
 | P1 | done | Add canonical record schema registry | Gives init, broker mapping, trade review updates, statistics, and future Google Sheets sync one source of truth for local CSV headers. | Reuse `record_schemas.py` before adding any CSV writer or sync script. |
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
 | P1 | deferred | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Resume after Trade Plan Preparation and setup pool promotion fields are stable. |
-| P1 | ready | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Extend current review append flow with CSV row create/update support. |
+| P1 | done | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Forward-test with one real confirmed post-order review and one post-exit review before adding Google Sheets sync. |
 | P1 | done | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Extend the shared contract verifier as new product contracts gain executable checks. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping from Active Market Plan, canonical broker CSV, and trade records first. |
 | P2 | planned | Add Active Market Plan automations | Turns deep update, quick update, intraday monitor, and post-market review into recurring Codex prompts after the user confirms cadence and broker data permissions. | Define automation prompts from `automation-contract.md`; create or update actual Codex automations only after cadence confirmation. |
@@ -105,10 +105,10 @@ Use these statuses:
 
 Date: 2026-06-18
 
-- Morning main task: deepen the contract verification and canonical record architecture before adding more product behavior.
-- Secondary task: keep existing weekly outlook, Trade Plan Preparation, research report intake, and daily initialization commands stable.
-- Definition of done: shared verifier module, one self-test, existing verifier adapters, canonical record schema registry, exact CSV header/row-width checks, fixed template rows, and passing local contract checks.
-- Verification: shared verifier self-test, record template contract check, report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, init-daily smoke test, Python compile, and whitespace diff check.
+- Morning main task: deepen the contract verification, canonical record, and actual-trade record architecture before adding more product behavior.
+- Secondary task: keep existing weekly outlook, Trade Plan Preparation, research report intake, daily initialization, and trade-stat commands stable.
+- Definition of done: shared verifier module, canonical record schema registry, exact CSV header/row-width checks, post-order/post-exit trade record updater, fixed template rows, and passing local contract checks.
+- Verification: shared verifier self-test, record template contract check, actual trade record self-test, actual trade record contract check, report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, init-daily smoke test, Python compile, and whitespace diff check.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -120,8 +120,10 @@ Date: 2026-06-18
 - Completed: added exact CSV header validation for the research report log template.
 - Completed: added `record_schemas.py` as the canonical local CSV schema registry and wired `init_daily.py` to it.
 - Completed: added record template verification for headers and row widths, which caught and fixed a misaligned `trades.csv` sample row.
+- Completed: added the Actual trade record module with `trade_records.py` and `update_trade_record.py` for post-order row creation and post-exit row completion.
+- Completed: wired `$trade-review` documentation to use the update script after user confirmation.
 - Verification: shared verifier self-test plus all existing contract checks pass locally.
-- Next: reuse the shared verifier and record schema registry for the next fixture-backed product contract instead of adding another one-off script loop.
+- Next: forward-test the trade review flow with one real confirmed post-order review and one post-exit review, then use the same schema path for one-way Google Sheets sync.
 
 ### 2026-06-17
 

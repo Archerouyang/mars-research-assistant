@@ -297,7 +297,18 @@ After the questions, produce:
 3. Any missing fields.
 4. Suggested `mistake_tag`, `outcome`, and confidence calibration.
 
-Then ask the user whether to write it into the local daily folder.
+Then ask the user whether to write it into the local daily folder. After the user confirms, write through `scripts/update_trade_record.py`, not by hand-editing CSV rows:
+
+```bash
+python3 plugins/trading-research-system/scripts/update_trade_record.py \
+  --date YYYY-MM-DD \
+  --stage post-order \
+  --trade-id TRADE_ID \
+  --fields-json /path/to/fields.json \
+  --review-file /path/to/review.md
+```
+
+The fields JSON must contain only valid `trades.csv` columns. Use `post-order` to create or update the open row and `post-exit` to complete the same row after the trade ends.
 
 ## Review Section Template
 

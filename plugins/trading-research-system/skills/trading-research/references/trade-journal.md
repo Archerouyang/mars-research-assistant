@@ -126,6 +126,19 @@ Required execution fields:
 
 Actual trade records should normally be filled through interactive trade review intake, not from memory in one freeform paragraph. Use `references/interactive-trade-review.md` when asking the user to complete missing fields.
 
+After the user confirms a completed post-order or post-exit review, write the structured row and narrative review with:
+
+```bash
+python3 plugins/trading-research-system/scripts/update_trade_record.py \
+  --date YYYY-MM-DD \
+  --stage post-order \
+  --trade-id TRADE_ID \
+  --fields-json /path/to/fields.json \
+  --review-file /path/to/review.md
+```
+
+Use `--stage post-exit` to update the same `trade_id` after close. The `fields-json` object must use canonical `trades.csv` column names.
+
 Post-order intake should fill the fields known at entry time:
 
 - `status`
@@ -246,4 +259,5 @@ Use:
 ```bash
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv --group-by instrument_type
+python3 plugins/trading-research-system/scripts/update_trade_record.py --date YYYY-MM-DD --stage post-order --trade-id TRADE_ID --fields-json /path/to/fields.json --review-file /path/to/review.md
 ```
