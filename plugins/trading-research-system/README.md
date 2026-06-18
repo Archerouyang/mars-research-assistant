@@ -131,6 +131,7 @@ python3 plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/da
 python3 plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/2026-06-12/trades.csv --group-by instrument_type
 python3 plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/fields.json --review-file /path/to/review.md
+python3 plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-LEGACY --fields-json /path/to/legacy-fields.json --review-file /path/to/review.md --allow-unknown-execution-fields
 python3 plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
 python3 plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
 ```

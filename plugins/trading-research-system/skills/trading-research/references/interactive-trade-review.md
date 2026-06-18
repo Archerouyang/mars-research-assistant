@@ -310,6 +310,8 @@ python3 plugins/trading-research-system/scripts/update_trade_record.py \
 
 The fields JSON must contain only valid `trades.csv` columns. Use `post-order` to create or update the open row and `post-exit` to complete the same row after the trade ends.
 
+For legacy imports from an older Google Sheet row that lacks `quantity`, `fees`, or `risk_amount`, add `--allow-unknown-execution-fields` so the script writes those specific fields as `unknown`. For fresh interactive review, keep asking until those execution facts are resolved or the user explicitly confirms they are unknown.
+
 ## Review Section Template
 
 ```markdown

@@ -43,6 +43,12 @@ Use this shape:
 - Why it matters: interactive trade review now has a repo-owned write path for local records, so the workflow can preserve fresh entry rationale and later complete closed-trade statistics without hand-editing CSV.
 - Next step: forward-test with one real confirmed post-order review and one post-exit review, then reuse the same schema path for one-way Google Sheets sync.
 
+- Commit: pending
+- Scope: script, reference, test
+- What changed: fixed legacy `active` Sheet imports for older rows that do not contain `quantity`, `fees`, or `risk_amount`. The `update_trade_record.py` CLI now supports an explicit `--allow-unknown-execution-fields` flag that writes only those missing execution fields as `unknown`, while normal post-order review still requires resolved execution fields.
+- Why it matters: existing Google Sheet trade history can be migrated and forward-tested without weakening the quality gate for fresh trade reviews.
+- Next step: use the same explicit legacy mode when importing older sheet rows, and keep real-time trade review strict by default.
+
 ## 2026-06-17
 
 - Commit: pending

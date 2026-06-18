@@ -139,6 +139,8 @@ python3 plugins/trading-research-system/scripts/update_trade_record.py \
 
 Use `--stage post-exit` to update the same `trade_id` after close. The `fields-json` object must use canonical `trades.csv` column names.
 
+For legacy imports from older Sheets such as an `active` tab that lacks `quantity`, `fees`, or `risk_amount`, pass `--allow-unknown-execution-fields` so those missing execution fields are written as `unknown`. Do not use this flag for fresh post-order review when the user can still provide or confirm the execution facts.
+
 Post-order intake should fill the fields known at entry time:
 
 - `status`

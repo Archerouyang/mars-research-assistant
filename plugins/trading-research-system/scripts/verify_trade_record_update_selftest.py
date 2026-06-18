@@ -20,14 +20,20 @@ def _write_trades_header(path: Path) -> None:
     path.write_text(",".join(CSV_SCHEMAS["trades.csv"]) + "\n", encoding="utf-8")
 
 
-def _run_update(daily_dir: Path, stage: str, trade_id: str, fields: dict[str, str], review: str) -> None:
+def _run_update(
+    daily_dir: Path,
+    stage: str,
+    trade_id: str,
+    fields: dict[str, str],
+    review: str,
+    extra_args: list[str] | None = None,
+) -> None:
     fields_path = daily_dir / f"{stage}.json"
     review_path = daily_dir / f"{stage}.md"
     fields_path.write_text(json.dumps(fields), encoding="utf-8")
     review_path.write_text(review, encoding="utf-8")
 
-    result = subprocess.run(
-        [
+    command = [
             sys.executable,
             str(SCRIPT),
             "--daily-dir",
@@ -40,7 +46,12 @@ def _run_update(daily_dir: Path, stage: str, trade_id: str, fields: dict[str, st
             str(fields_path),
             "--review-file",
             str(review_path),
-        ],
+    ]
+    if extra_args:
+        command.extend(extra_args)
+
+    result = subprocess.run(
+        command,
         check=False,
         capture_output=True,
         text=True,
@@ -202,6 +213,66 @@ def main() -> int:
         )
         if result.returncode == 0 or "requires an existing trade_id" not in result.stderr:
             raise AssertionError(f"expected missing-open-trade failure, got: {result!r}")
+
+        legacy_fields = {
+            "symbol": "QQQ call",
+            "underlying": "QQQ",
+            "direction": "long",
+            "trade_type": "daytrade",
+            "product": "call",
+            "instrument_type": "qqq_0dte_call",
+            "analysis_timeframe": "5min",
+            "trigger_timeframe": "5min",
+            "setup_tag": "pullback_signal_bar",
+            "signal_quality": "strong",
+            "confidence": "medium",
+            "entry_date": "2025-06-08",
+            "entry_price": "717,715",
+            "stop_price": "713",
+            "target_price": "725",
+            "cost": "4200",
+            "planned_R": "2",
+            "setup_review": "高开突破关键压力后回撤",
+            "entry_review": "50%支撑和三推后出现信号K",
+            "review_raw": "Legacy active tab row without quantity, fees, or risk_amount.",
+            "currency": "usd",
+            "broker": "manual",
+        }
+        legacy_fields_path = daily_dir / "legacy-fields.json"
+        legacy_fields_path.write_text(json.dumps(legacy_fields), encoding="utf-8")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--daily-dir",
+                str(daily_dir),
+                "--stage",
+                "post-order",
+                "--trade-id",
+                "20250608-QQQ-001",
+                "--fields-json",
+                str(legacy_fields_path),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0 or "missing required fields: quantity, fees, risk_amount" not in result.stderr:
+            raise AssertionError(f"expected strict missing-field failure, got: {result!r}")
+
+        _run_update(
+            daily_dir,
+            "post-order",
+            "20250608-QQQ-001",
+            legacy_fields,
+            "Legacy active row import should preserve row while marking missing execution facts.",
+            ["--allow-unknown-execution-fields"],
+        )
+        rows = _load_trade_rows(trades_path)
+        legacy = next(row for row in rows if row["trade_id"] == "20250608-QQQ-001")
+        for field in ("quantity", "fees", "risk_amount"):
+            if legacy[field] != "unknown":
+                raise AssertionError(f"expected {field}=unknown for legacy import, got {legacy[field]!r}")
 
     print("trade record update selftest ok")
     return 0

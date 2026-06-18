@@ -39,6 +39,7 @@ REQUIRED = {
         "post-order",
         "post-exit",
         "fields JSON",
+        "--allow-unknown-execution-fields",
     ],
     "interactive_review": [
         "update_trade_record.py",
@@ -51,6 +52,7 @@ REQUIRED = {
         "post-order",
         "post-exit",
         "fields-json",
+        "--allow-unknown-execution-fields",
     ],
     "records_module": [
         "TradeRecordUpdate",
@@ -58,12 +60,14 @@ REQUIRED = {
         "post-order",
         "post-exit",
         "unknown trades.csv fields",
+        "UNKNOWNABLE_EXECUTION_FIELDS",
     ],
     "update_script": [
         "--stage",
         "--trade-id",
         "--fields-json",
         "--review-file",
+        "--allow-unknown-execution-fields",
         "apply_trade_update",
     ],
     "selftest": [
@@ -71,6 +75,7 @@ REQUIRED = {
         "post-order",
         "post-exit",
         "unknown-field failure",
+        "--allow-unknown-execution-fields",
     ],
     "record_schemas": [
         '"trades.csv"',

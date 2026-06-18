@@ -122,6 +122,7 @@ Date: 2026-06-18
 - Completed: added record template verification for headers and row widths, which caught and fixed a misaligned `trades.csv` sample row.
 - Completed: added the Actual trade record module with `trade_records.py` and `update_trade_record.py` for post-order row creation and post-exit row completion.
 - Completed: wired `$trade-review` documentation to use the update script after user confirmation.
+- Completed: fixed legacy `active` Sheet import by adding an explicit `--allow-unknown-execution-fields` mode for older rows missing `quantity`, `fees`, or `risk_amount`.
 - Verification: shared verifier self-test plus all existing contract checks pass locally.
 - Next: forward-test the trade review flow with one real confirmed post-order review and one post-exit review, then use the same schema path for one-way Google Sheets sync.
 

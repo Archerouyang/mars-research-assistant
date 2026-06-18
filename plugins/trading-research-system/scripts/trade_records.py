@@ -14,6 +14,7 @@ from record_schemas import CSV_SCHEMAS
 TRADE_FIELDS = CSV_SCHEMAS["trades.csv"]
 TRADE_FIELD_SET = set(TRADE_FIELDS)
 VALID_STAGES = {"post-order", "post-exit"}
+UNKNOWNABLE_EXECUTION_FIELDS = ("quantity", "fees", "risk_amount")
 POST_ORDER_REQUIRED_FIELDS = (
     "entry_date",
     "symbol",
@@ -57,6 +58,7 @@ class TradeRecordUpdate:
     trade_id: str
     fields: Mapping[str, str]
     review_text: str = ""
+    allow_unknown_execution_fields: bool = False
 
 
 def apply_trade_update(
@@ -67,7 +69,12 @@ def apply_trade_update(
     """Create or update one trade row and append the corresponding review."""
 
     stage = _normalize_stage(update.stage)
-    fields = _normalized_fields(update.trade_id, stage, update.fields)
+    fields = _normalized_fields(
+        update.trade_id,
+        stage,
+        update.fields,
+        update.allow_unknown_execution_fields,
+    )
     rows = load_trade_rows(trades_path)
     row, created = _upsert_trade_row(rows, update.trade_id, stage, fields)
     write_trade_rows(trades_path, rows)
@@ -162,7 +169,12 @@ def _upsert_trade_row(
     return row, True
 
 
-def _normalized_fields(trade_id: str, stage: str, fields: Mapping[str, str]) -> dict[str, str]:
+def _normalized_fields(
+    trade_id: str,
+    stage: str,
+    fields: Mapping[str, str],
+    allow_unknown_execution_fields: bool,
+) -> dict[str, str]:
     unknown = sorted(set(fields) - TRADE_FIELD_SET)
     if unknown:
         raise ValueError(f"unknown trades.csv fields for {trade_id}: {', '.join(unknown)}")
@@ -172,6 +184,10 @@ def _normalized_fields(trade_id: str, stage: str, fields: Mapping[str, str]) -> 
     if stage == "post-order":
         normalized.setdefault("status", "open")
         normalized.setdefault("outcome", "open")
+        if allow_unknown_execution_fields:
+            for field in UNKNOWNABLE_EXECUTION_FIELDS:
+                if not normalized.get(field):
+                    normalized[field] = "unknown"
         _require_fields(trade_id, stage, normalized, POST_ORDER_REQUIRED_FIELDS)
     elif stage == "post-exit":
         normalized.setdefault("status", "closed")

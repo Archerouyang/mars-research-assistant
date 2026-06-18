@@ -30,6 +30,7 @@ Use this skill to turn actual trades into structured `trades.csv` records and re
    - pass `--stage post-order` or `--stage post-exit`;
    - pass a fields JSON file through `--fields-json` containing only valid `trades.csv` fields;
    - pass `--review-file` for the reviewed Markdown text when available.
+   - use `--allow-unknown-execution-fields` only for legacy sheet imports that lack `quantity`, `fees`, or `risk_amount`; do not use it to skip fresh post-order questions.
 
 ## Post-Order Focus
 

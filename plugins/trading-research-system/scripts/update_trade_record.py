@@ -44,6 +44,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--trades-csv", default=None, help="trades.csv override")
     parser.add_argument("--reviews-md", default=None, help="reviews.md override")
+    parser.add_argument(
+        "--allow-unknown-execution-fields",
+        action="store_true",
+        help="For legacy imports only: fill missing quantity, fees, and risk_amount with unknown.",
+    )
     return parser.parse_args()
 
 
@@ -85,6 +90,7 @@ def main() -> int:
                 trade_id=args.trade_id,
                 fields=load_fields(Path(args.fields_json)),
                 review_text=load_review_text(args.review_file),
+                allow_unknown_execution_fields=args.allow_unknown_execution_fields,
             ),
         )
     except (OSError, ValueError, json.JSONDecodeError) as error:
