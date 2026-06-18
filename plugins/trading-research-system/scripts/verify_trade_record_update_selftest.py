@@ -226,14 +226,14 @@ def main() -> int:
             "setup_tag": "pullback_signal_bar",
             "signal_quality": "strong",
             "confidence": "medium",
-            "entry_date": "2025-06-08",
-            "entry_price": "717,715",
-            "stop_price": "713",
-            "target_price": "725",
-            "cost": "4200",
+            "entry_date": "2026-01-15",
+            "entry_price": "100,101",
+            "stop_price": "95",
+            "target_price": "110",
+            "cost": "1000",
             "planned_R": "2",
-            "setup_review": "高开突破关键压力后回撤",
-            "entry_review": "50%支撑和三推后出现信号K",
+            "setup_review": "合成测试：高开突破关键压力后回撤",
+            "entry_review": "合成测试：50%支撑和三推后出现信号K",
             "review_raw": "Legacy active tab row without quantity, fees, or risk_amount.",
             "currency": "usd",
             "broker": "manual",
@@ -249,7 +249,7 @@ def main() -> int:
                 "--stage",
                 "post-order",
                 "--trade-id",
-                "20250608-QQQ-001",
+                "20260115-QQQ-001",
                 "--fields-json",
                 str(legacy_fields_path),
             ],
@@ -263,13 +263,13 @@ def main() -> int:
         _run_update(
             daily_dir,
             "post-order",
-            "20250608-QQQ-001",
+            "20260115-QQQ-001",
             legacy_fields,
             "Legacy active row import should preserve row while marking missing execution facts.",
             ["--allow-unknown-execution-fields"],
         )
         rows = _load_trade_rows(trades_path)
-        legacy = next(row for row in rows if row["trade_id"] == "20250608-QQQ-001")
+        legacy = next(row for row in rows if row["trade_id"] == "20260115-QQQ-001")
         for field in ("quantity", "fees", "risk_amount"):
             if legacy[field] != "unknown":
                 raise AssertionError(f"expected {field}=unknown for legacy import, got {legacy[field]!r}")

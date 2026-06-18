@@ -49,6 +49,12 @@ Use this shape:
 - Why it matters: existing Google Sheet trade history can be migrated and forward-tested without weakening the quality gate for fresh trade reviews.
 - Next step: use the same explicit legacy mode when importing older sheet rows, and keep real-time trade review strict by default.
 
+- Commit: pending
+- Scope: script, fixture, reference, test
+- What changed: added `import_legacy_active_csv.py` plus a fixture-backed self-test for legacy `active` tab CSV exports. The importer maps old Sheet columns into canonical `trades.csv`, writes staged `review_raw`, appends `reviews.md`, preserves rows with review text but blank `盈亏` as `not_counted`, and uses the explicit legacy unknown-execution-field mode for missing `quantity`, `fees`, or `risk_amount`.
+- Why it matters: old Google Sheet trade history can now be moved into local canonical records before stats, setup review, or one-way Sheet sync work continues.
+- Next step: run the importer on a broader private `active` export, inspect the local stats output, and then build one-way Google Sheets sync from local records.
+
 ## 2026-06-17
 
 - Commit: pending

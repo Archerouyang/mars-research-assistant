@@ -141,6 +141,10 @@ Use `--stage post-exit` to update the same `trade_id` after close. The `fields-j
 
 For legacy imports from older Sheets such as an `active` tab that lacks `quantity`, `fees`, or `risk_amount`, pass `--allow-unknown-execution-fields` so those missing execution fields are written as `unknown`. Do not use this flag for fresh post-order review when the user can still provide or confirm the execution facts.
 
+To migrate a CSV export of a legacy `active` tab, use `import_legacy_active_csv.py`. It reads the old `active` headers, writes canonical `trades.csv` rows, appends `reviews.md`, and uses the legacy unknown-execution-field mode only for rows missing `quantity`, `fees`, or `risk_amount`.
+
+If a legacy row has review text but no `盈亏`, treat it as settled but not counted: write `status=not_counted` and `outcome=not_counted` so it is preserved in local records but excluded from `trade_stats.py` closed-trade statistics.
+
 Post-order intake should fill the fields known at entry time:
 
 - `status`
@@ -262,4 +266,5 @@ Use:
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv --group-by instrument_type
 python3 plugins/trading-research-system/scripts/update_trade_record.py --date YYYY-MM-DD --stage post-order --trade-id TRADE_ID --fields-json /path/to/fields.json --review-file /path/to/review.md
+python3 plugins/trading-research-system/scripts/import_legacy_active_csv.py /path/to/active.csv --runtime-dir ~/Documents/dailytrades-runtime
 ```

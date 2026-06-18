@@ -95,6 +95,7 @@ Use these statuses:
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
 | P1 | deferred | Implement local intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Resume after Trade Plan Preparation and setup pool promotion fields are stable. |
 | P1 | done | Connect two-stage interactive review output to local trade records | Makes post-order and post-exit reviews produce structured `trades.csv` updates plus `reviews.md` sections. | Forward-test with one real confirmed post-order review and one post-exit review before adding Google Sheets sync. |
+| P1 | done | Add legacy active Sheet CSV importer | Brings existing `active` tab history into local canonical records without making Google Sheets the source of truth. | Use it for old Sheet exports, then compute stats from local `trades.csv`. |
 | P1 | done | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Extend the shared contract verifier as new product contracts gain executable checks. |
 | P2 | planned | Add one-way Google Sheets sync | Mirrors local records to Sheets without making Sheets the source of truth. | Define row mapping from Active Market Plan, canonical broker CSV, and trade records first. |
 | P2 | planned | Add Active Market Plan automations | Turns deep update, quick update, intraday monitor, and post-market review into recurring Codex prompts after the user confirms cadence and broker data permissions. | Define automation prompts from `automation-contract.md`; create or update actual Codex automations only after cadence confirmation. |
@@ -123,8 +124,9 @@ Date: 2026-06-18
 - Completed: added the Actual trade record module with `trade_records.py` and `update_trade_record.py` for post-order row creation and post-exit row completion.
 - Completed: wired `$trade-review` documentation to use the update script after user confirmation.
 - Completed: fixed legacy `active` Sheet import by adding an explicit `--allow-unknown-execution-fields` mode for older rows missing `quantity`, `fees`, or `risk_amount`.
+- Completed: added `import_legacy_active_csv.py` to migrate legacy `active` tab CSV exports into canonical local `trades.csv` and append-only `reviews.md`.
 - Verification: shared verifier self-test plus all existing contract checks pass locally.
-- Next: forward-test the trade review flow with one real confirmed post-order review and one post-exit review, then use the same schema path for one-way Google Sheets sync.
+- Next: import a broader legacy active CSV export into the private runtime, inspect the stats output, then use the same schema path for one-way Google Sheets sync.
 
 ### 2026-06-17
 
