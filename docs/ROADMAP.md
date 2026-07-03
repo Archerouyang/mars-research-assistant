@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into a daily KVN momentum leaderboard, an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, actual trade records, review notes, broker-aware portfolio snapshots, and statistics for improving a discretionary trading system.
+Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into a daily KVN momentum leaderboard, an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, broker-live position daily reports, review context, visualization snapshots, and statistics for improving a discretionary trading system.
 
 The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
 
@@ -21,14 +21,14 @@ The system supports:
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
 - trading profile support for personal style, instrument preferences, and setup-to-instrument translation without storing account allocation in the public repo;
-- automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, and post-market review prompts;
+- automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, post-market review prompts, and position daily reports;
 - deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, momentum leaderboard rebuild, and setup discovery;
 - quick updates for weekday premarket/intraday changes in tape, macro/rates, policy/news, events, momentum, setup status, and key levels;
 - setup-scoped intraday scanning for `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, and `completed` states;
-- local trade planning, read-only broker fact capture when available, two-stage interactive trade review, and statistics;
-- portfolio risk exposure checks before and after trades, using canonical broker data when available;
+- local trade planning, broker-live fact reads when available, two-stage interactive review-context capture, and statistics snapshots;
+- portfolio risk exposure checks before and after trades, using live read-only broker sources when available;
 - broker-agnostic read-only adapter contract for IBKR, Longbridge, and manual CSV sources;
-- one-way local-to-Google-Sheets sync as a later mirror/review layer.
+- optional non-sensitive summary or visualization mirrors when explicitly requested.
 
 The system does not support in the initial scope:
 
@@ -36,6 +36,8 @@ The system does not support in the initial scope:
 - guaranteed buy/sell instructions;
 - unbounded whole-market real-time intraday scanning without an Active Market Plan theme, watchlist, or prepared setup;
 - two-way Google Sheets sync;
+- Google Sheets as a trade-record layer;
+- durable local storage of full broker trade facts as the default source of truth;
 - a persistent dashboard/frontend;
 - unverified paywalled research extraction;
 - tax, legal, or regulated investment advice.
@@ -45,7 +47,7 @@ The system does not support in the initial scope:
 The default workflow is:
 
 1. **Information collection**: gather macro policy, Treasury/rates/yield data, research-report leads, research-note claims, company facts, prices, watchlists, trade plans, and holdings.
-2. **Information processing**: filter noise, classify source reliability, normalize inputs into local daily records, and separate facts from assumptions.
+2. **Information processing**: filter noise, classify source reliability, normalize inputs into analysis views, and separate facts from assumptions.
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
 5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
@@ -56,9 +58,10 @@ The default workflow is:
 10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
 11. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
 12. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
-13. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
-14. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
-15. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
+13. **Position daily report**: on a confirmed schedule, read authorized Longbridge, IBKR, or manual data and generate a concise holdings/risk summary with visualization-ready exposure snapshots and user decisions needed today.
+14. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; save review context only after user confirmation.
+15. **Post-exit review**: after the trade is closed, read objective result from broker-live sources when available and capture exit quality, mistake tags, lessons, and optional statistics snapshot.
+16. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration when enough broker history or user-approved snapshots are available.
 
 ## Public Repo Boundary
 
@@ -121,28 +124,30 @@ Rules:
 | Plugin-first architecture | Done | `docs/adr/0001-plugin-first-interface.md` |
 | Chart artifacts instead of dashboard | Done | `docs/adr/0002-chart-artifacts-not-dashboard.md` |
 | Plan-scoped intraday scan boundary | Done | `docs/adr/0003-intraday-scan-plan-scoped.md` |
-| One-way Google Sheets sync decision | Done | `docs/adr/0004-one-way-google-sheets-sync.md` |
+| One-way Google Sheets sync decision | Superseded for trade records | `docs/adr/0004-one-way-google-sheets-sync.md`; `docs/adr/0005-broker-live-position-reporting.md` |
+| Broker-live position reporting decision | Done | `docs/adr/0005-broker-live-position-reporting.md` |
 | Domain glossary | In progress | `CONTEXT.md` |
 | AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
 | KVN momentum leaderboard contract | Planned | `CONTEXT.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
-| Canonical record schema module | Started | `plugins/trading-research-system/scripts/record_schemas.py`; `plugins/trading-research-system/scripts/verify_record_templates_contract.py` |
-| Actual trade record module | Started | `plugins/trading-research-system/scripts/trade_records.py`; `plugins/trading-research-system/scripts/update_trade_record.py`; `plugins/trading-research-system/scripts/verify_trade_record_update_selftest.py` |
-| Legacy active import module | Started | `plugins/trading-research-system/scripts/import_legacy_active_csv.py`; `plugins/trading-research-system/scripts/verify_legacy_active_import_selftest.py` |
+| Canonical record schema module | Compatibility | `plugins/trading-research-system/scripts/record_schemas.py`; `plugins/trading-research-system/scripts/verify_record_templates_contract.py` |
+| Actual trade record module | Compatibility | `plugins/trading-research-system/scripts/trade_records.py`; `plugins/trading-research-system/scripts/update_trade_record.py`; `plugins/trading-research-system/scripts/verify_trade_record_update_selftest.py` |
+| Legacy active import module | Deferred compatibility | `plugins/trading-research-system/scripts/import_legacy_active_csv.py`; `plugins/trading-research-system/scripts/verify_legacy_active_import_selftest.py` |
 | Skill set architecture | Started | Router skill plus focused skills under `plugins/trading-research-system/skills/` |
 | Local templates | Started | `plugins/trading-research-system/assets/templates/` |
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Active Market Plan update loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md` |
-| Broker data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
+| Broker-live data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
 | Automation contract | Started | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md` |
 | Trading profile template | Started | `plugins/trading-research-system/assets/templates/trading-profile.md` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
 | Basic plugin content plan | Done | `docs/PLUGIN_CONTENT_PLAN.md` |
 | Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
-| Google Sheets sync implementation | Planned | no script yet |
+| Position daily report automation | Planned | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md` |
+| Google Sheets summary display | Deferred | no script yet |
 | OHLCV-driven chart/scan artifacts | Started | `plugins/trading-research-system/scripts/chart_artifact.py` |
 | Option-flow anomaly module | Planned | data vendor not selected |
 
@@ -180,15 +185,15 @@ Deliverables:
 - Daily directory convention: `{runtime_dir}/daily/YYYY-MM-DD/`.
 - Deep update convention for last-week trade review, current market tape, macro/rates, policy/news, event preview, Trade Plan Preparation, themes, setup pool, and risk budget.
 - Quick update convention for current market read, fast macro/policy/news update, event preview, momentum changes, setup status changes, level updates, and attention priority.
-- Broker data convention for raw snapshots under `{runtime_dir}/broker/<source>/YYYY-MM-DD/` and canonical daily CSV files.
-- Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `trades.csv`, `holdings.csv`, `portfolio_snapshot.csv`, `broker_executions.csv`, `broker_orders.csv`, `reviews.md`, `research-note-log.csv`, `research-report-log.csv`, and `daily-macro-checklist.md`.
+- Broker-live data convention for authorized read-only runtime views, with optional raw snapshots only when the user asks or a fixture/debug run needs local files.
+- Templates for `market-plan.md`, `trading-profile.md`, `weekly-plan.md`, `daily-market-tracking.md`, `watchlist.csv`, `trade-plans.csv`, `intraday-watchlist.csv`, `holdings.csv`, broker-live fixture views, position daily report snapshots, `reviews.md`, `research-note-log.csv`, `research-report-log.csv`, and `daily-macro-checklist.md`.
 - `init_daily.py` to create a daily folder from templates.
-- Local records remain the first source of truth.
+- Local plan and review artifacts remain the source of truth for discretionary context; broker facts are read live from authorized sources.
 
 Exit criteria:
 
 - A trading day can be initialized locally.
-- Active Market Plan, update notes, planned setups, intraday watch state, broker canonical data, actual trades, and review notes can be stored without Google Sheets.
+- Active Market Plan, update notes, planned setups, intraday watch state, position daily reports, visualization snapshots, and review notes can be stored without Google Sheets.
 
 ### P2: Analysis Modules
 
@@ -238,7 +243,7 @@ Status: planned.
 
 Deliverables:
 
-- One-way Google Sheets sync from local daily records.
+- Optional non-sensitive Google Sheets summary display if explicitly requested.
 - Google Drive research archive support.
 - External connector or broker skill-provided read-only market/account data use for market state, holdings, executions, order status, and chart artifacts.
 - Option data API integration after vendor research.
@@ -253,7 +258,7 @@ Exit criteria:
 - Local daily records can mirror to Google Sheets without treating Sheets as source of truth.
 - Intraday scans can use current market data instead of manual chart descriptions.
 - Daily and post-market workflows can be scheduled or triggered reliably.
-- Automations ask before editing local plan/trade records and never touch broker write actions.
+- Automations ask before editing local plan/review artifacts and never touch broker write actions.
 
 ## Milestone Plan
 
@@ -269,7 +274,7 @@ Target result:
 
 Target result:
 
-- User can maintain an Active Market Plan, initialize a trading day, parse current market state against that plan, create setup-level trade plans, update levels, track intraday state manually, reconcile read-only broker facts, record actual trades, append two-stage reviews, and run basic stats locally.
+- User can maintain an Active Market Plan, initialize a trading day, parse current market state against that plan, create setup-level trade plans, update levels, track intraday state manually, generate broker-live position daily reports, capture two-stage review context, and run basic stats from broker history or approved snapshots.
 - User can attach Codex automations to deep update, quick update, intraday monitor, post-market review, and development progress workflows without changing the broker read-only boundary.
 - Weekday development automations can recommend and review daily project tasks from the current roadmap without duplicating trading-operation automations.
 
@@ -283,8 +288,8 @@ Target result:
 
 Target result:
 
-- Local records sync one-way to Google Sheets.
-- Interactive trade review produces post-order and post-exit updates to structured `trades.csv` rows plus daily `reviews.md`.
+- Google Sheets trade-record sync is out of the main path; optional summary display can be reconsidered later.
+- Interactive trade review captures post-order and post-exit context, with objective facts read from broker-live sources when available.
 
 ### M5: Intraday Monitor MVP
 
@@ -298,12 +303,12 @@ Target result:
 1. Define the `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture data, and verification script.
 2. Forward-test router behavior and each priority skill on realistic Active Market Plan prompts.
 3. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
-4. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, canonical broker CSV, post-order review, post-exit review, and expected scan outputs.
+4. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
 5. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-6. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, holdings data, and compact KVN Top10 summaries after local row mapping is stable.
+6. Define the position daily report fixture, visualization fields, and automation prompt.
 7. Add chart artifact generation from fixture-backed authorized OHLCV data.
 8. Research option-flow data vendors and define the minimum anomaly schema.
-9. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, and post-market review after cadence and data-source permissions are confirmed.
+9. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 

@@ -4,7 +4,7 @@ Every new trade should be evaluated against the full book.
 
 ## Required Inputs
 
-If the user provides holdings or canonical broker data, use them. If not, ask for:
+If the user provides holdings or broker-live data, use them. If authorized broker sources are available, prefer a live read-only view for current exposure. If not, ask for:
 
 - broker/account when relevant
 - ticker
@@ -36,7 +36,7 @@ Review:
 - liquidity and gap risk
 - max drawdown scenarios
 
-When canonical broker files exist, prefer `portfolio_snapshot.csv` for current exposure and keep `broker` and `account_id` visible in the output. The default view should be total portfolio exposure, then broker/account breakdown.
+When broker-live data or fixture broker files exist, prefer the current position view for exposure and keep `broker` and `account_id` visible in the output when that does not expose private details unnecessarily. The default view should be total portfolio exposure, then broker/account breakdown.
 
 ## Scenario Tests
 

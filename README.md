@@ -1,6 +1,6 @@
 # Dailytrades / Trading Research System
 
-这是一个给 Codex 使用的 AI-native 交易研究 plugin。它帮助使用者把宏观、政策、利率、研报、盘面、持仓和实际交易记录压缩成可执行、可复盘、可更新的交易研究笔记。
+这是一个给 Codex 使用的 AI-native 交易研究 plugin。它帮助使用者把宏观、政策、利率、研报、盘面、持仓和 broker-live 数据压缩成可执行、可复盘、可更新的交易研究笔记。
 
 它不是自动交易系统，不下单，不保证收益，也不会绕过付费研报或 broker 权限。
 
@@ -10,8 +10,8 @@
 研报 / 宏观 / 政策 / 利率 / 盘面
 -> Active Market Plan
 -> 盘前和盘中 setup 追踪
--> 实际交易记录和复盘
--> 胜率、R 倍数、setup 表现和系统优化
+-> broker-live 持仓日报和复盘上下文
+-> 风险暴露、setup 表现和系统优化
 ```
 
 这个项目的重点不是生成长报告，而是让 agent 读得多、校验得严、展示得少，只把会改变计划、风险、setup 状态或下一步决策的信息告诉使用者。
@@ -55,7 +55,8 @@ $trade-review 根据最新成交记录，带我完成入场后复盘或出场后
 | 盘中 setup 扫描 | `$intraday-setup-scan` | `candidate` / `active` / `approaching` / `triggered` / `invalidated` / `needs_review` |
 | 研报摄取 | `$research-report-intake` | `Research Report Digest`、`Claim Ledger`、`Verification Queue`、计划影响 |
 | 宏观和标的研究 | `$macro-equity-research` | 宏观、金融条件、政策事件、行业强弱、个股 thesis 校验 |
-| 交易复盘 | `$trade-review` | 下单后入场复盘、出场后结果复盘、错误标签、经验沉淀 |
+| 持仓日报 | Codex automation / `$portfolio-risk` | broker-live 持仓摘要、暴露可视化、风险提示、今日决策事项 |
+| 交易复盘 | `$trade-review` | 基于 broker-live 成交事实的入场/出场复盘上下文、错误标签、经验沉淀 |
 | 组合风险 | `$portfolio-risk` | 持仓集中度、方向暴露、工具风险、新交易对组合的影响 |
 | 交易统计 | `$trading-stats` | 胜率、R 倍数、expectancy、setup 表现、系统优化线索 |
 
@@ -77,14 +78,14 @@ daily/YYYY-MM-DD/
 charts/
 ```
 
-Google Sheets 后续只作为单向镜像和查看层，不作为 canonical source。详细记录、复盘、计划变化和 agent working memory 以本地 runtime 为准。
+Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏感摘要、持仓日报索引或可视化结果，不保存逐笔 broker facts。
 
 ## 数据和连接边界
 
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
-- IBKR、Longbridge 和手动 CSV 都应先映射到 canonical local files，再进入核心分析。
+- IBKR、Longbridge 和手动 CSV 应映射成 broker-live runtime view；本地文件只用于 fixture、调试或用户确认后的派生快照。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
-- Google Sheets 是 compact mirror，不做双向同步。
+- Google Sheets 是可选摘要展示层，不做双向同步，也不维护交易记录。
 - 研报只能来自公开、授权或用户提供内容；不可访问内容只能标记为 inaccessible。
 
 ## 安全边界
@@ -103,8 +104,8 @@ Google Sheets 后续只作为单向镜像和查看层，不作为 canonical sour
 | 状态 | 内容 |
 | --- | --- |
 | 已可用 | focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
-| 开发中 | fixture package、盘中 scan script、两阶段 trade review 写入本地 CSV |
-| 后续 | Google Sheets 单向同步、自动化 prompts、动量量化模型、异常期权数据源 |
+| 开发中 | fixture package、broker-live 持仓日报契约、盘中 scan script |
+| 后续 | Codex 持仓日报 automation、动量量化模型、异常期权数据源、可视化快照 |
 
 ## 更多文档
 

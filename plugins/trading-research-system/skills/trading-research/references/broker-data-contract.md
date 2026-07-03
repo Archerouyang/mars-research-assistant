@@ -1,8 +1,8 @@
 # Broker Data Contract
 
-Use this reference when importing positions, executions, or order status from broker connectors, broker skills, or user-provided CSV files.
+Use this reference when reading positions, executions, or order status from broker connectors, broker skills, or user-provided CSV files.
 
-The Trading Research System is broker-agnostic. Broker sources provide read-only data and map it into canonical local files. The trading plugin does not place orders, modify accounts, cancel orders, or rebalance positions.
+The Trading Research System is broker-agnostic. Broker sources provide read-only data and map it into a standard runtime view for analysis. The trading plugin does not place orders, modify accounts, cancel orders, or rebalance positions.
 
 ## Broker Sources
 
@@ -48,7 +48,7 @@ Even if a connected agent has broker write capability, this plugin should not ca
 
 ## Raw Snapshots
 
-Store raw broker snapshots by broker and date when an adapter creates local files:
+Raw broker snapshots are optional. Store them by broker and date only when the user explicitly asks for a snapshot or when a fixture/debug run needs local files:
 
 ```text
 {runtime_dir}/broker/ibkr/YYYY-MM-DD/positions.json
@@ -59,11 +59,11 @@ Store raw broker snapshots by broker and date when an adapter creates local file
 {runtime_dir}/broker/longbridge/YYYY-MM-DD/orders.json
 ```
 
-Raw snapshots keep source detail for debugging adapter mappings. They are not the canonical input for core analysis.
+Raw snapshots keep source detail for debugging adapter mappings. They are not required for normal broker-live reporting and should not be treated as the durable source of truth.
 
-## Canonical Daily Files
+## Standard Runtime View
 
-Map broker data into:
+When scripts or fixtures need files, map broker data into:
 
 ```text
 {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv
@@ -71,7 +71,7 @@ Map broker data into:
 {runtime_dir}/daily/YYYY-MM-DD/broker_orders.csv
 ```
 
-Core risk, review, and statistics workflows should read these canonical files instead of broker-specific raw structures.
+Core risk, review, and statistics workflows should consume these fields from the broker-live runtime view. File materialization is an implementation detail for tests, fixtures, or user-approved snapshots.
 
 ## Portfolio Snapshot Schema
 

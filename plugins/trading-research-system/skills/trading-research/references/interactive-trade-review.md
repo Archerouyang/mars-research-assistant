@@ -1,8 +1,8 @@
 # Interactive Trade Review Intake
 
-Use this mode when the user wants to record an actual trade, review today's trades, fill in a trade journal, or says they need help writing the review.
+Use this mode when the user wants to review an actual trade, capture post-order or post-exit context, fill a review note, or connect broker-live facts to discretionary reasoning.
 
-The interaction should feel like a disciplined `grill-me` session: ask one question at a time, give a recommended answer when the existing plan/chart/trade record provides enough evidence, and keep going until the trade can be written into local daily records.
+The interaction should feel like a disciplined `grill-me` session: ask one question at a time, give a recommended answer when the existing plan, chart, broker-live fact, or review context provides enough evidence, and keep going until the trade review can be summarized cleanly.
 
 ## Purpose
 
@@ -11,10 +11,12 @@ Support two review stages:
 1. **Post-order review**: immediately after an order or fill, capture the entry facts and decision context while the memory is fresh.
 2. **Post-exit review**: after the trade is closed, complete result, exit quality, realized R, mistake tags, lessons, and next rules.
 
-Each stage should produce or update two outputs:
+Each stage should produce two default outputs:
 
-1. A structured `trades.csv` row or row update.
-2. A readable `reviews.md` section.
+1. A structured review-context draft.
+2. A readable review section.
+
+Compatibility path: if the user explicitly asks to save a local trade-record snapshot, the review can also produce a `trades.csv` row draft or row update.
 
 Do not accept vague answers when the field matters for statistics. If the user says "felt strong", ask what made it strong: trend, gap, support/resistance, EMA, signal bar, follow-through, volume, option flow, or macro context.
 
@@ -22,9 +24,9 @@ Do not accept vague answers when the field matters for statistics. If the user s
 
 - Ask one question at a time.
 - Prefer concrete facts: time, price, timeframe, signal bar, stop, target, quantity, cost, PnL.
-- Use read-only broker order/trade facts when available for objective fields such as symbol, side, quantity, price, fees, order time, fill time, and PnL. Ask the user to confirm before writing.
+- Use read-only broker order/trade facts when available for objective fields such as symbol, side, quantity, price, fees, order time, fill time, and PnL. Ask the user to confirm before saving any local artifact.
 - If the user already has a setup in `market-plan.md` or a planned trade in `trade-plans.csv`, compare the actual trade to that setup/plan.
-- Keep a running draft of mapped fields internally and write the final result only after the key fields are resolved.
+- Keep a running draft of mapped fields internally and save the final result only after the key fields are resolved and the user confirms.
 - If exact numeric data is missing, mark it as `unknown` or leave the field blank; do not fabricate.
 - Preserve the user's original review wording in `review_raw` when useful.
 - Extract structured review fields from the raw text.
@@ -292,12 +294,12 @@ Post-exit output should update:
 
 After the questions, produce:
 
-1. A `trades.csv` row draft or row update.
-2. A `reviews.md` post-order or post-exit section draft.
+1. A review-context draft.
+2. A post-order or post-exit review section draft.
 3. Any missing fields.
 4. Suggested `mistake_tag`, `outcome`, and confidence calibration.
 
-Then ask the user whether to write it into the local daily folder. After the user confirms, write through `scripts/update_trade_record.py`, not by hand-editing CSV rows:
+Then ask the user whether to save it as a local review artifact or only keep it in the conversation. Compatibility path: if the user explicitly wants a local trade-record snapshot, write through `scripts/update_trade_record.py`, not by hand-editing CSV rows:
 
 ```bash
 python3 plugins/trading-research-system/scripts/update_trade_record.py \

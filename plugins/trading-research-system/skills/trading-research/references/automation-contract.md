@@ -47,6 +47,7 @@ These support the Active Market Plan loop:
 - `intraday_trigger_monitor`: market-hours check for active/approaching/triggered setups.
 - `post_market_review_prompt`: end-of-day prompt for setup status cleanup and trade review needs.
 - `broker_reconciliation_prompt`: read-only broker data alignment prompt when the user opts into a broker source.
+- `position_daily_report`: scheduled read-only holdings and portfolio-risk summary, modeled after broker-native position reminders but broker-agnostic.
 
 ## Source Of Truth
 
@@ -57,11 +58,9 @@ Trading automations should read:
 - `{runtime_dir}/updates/YYYY-MM-DD.md` for the update trail;
 - `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`;
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`;
-- `{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv`;
-- `{runtime_dir}/daily/YYYY-MM-DD/broker_executions.csv`;
-- `{runtime_dir}/daily/YYYY-MM-DD/broker_orders.csv`;
-- `{runtime_dir}/daily/YYYY-MM-DD/trades.csv`;
-- `{runtime_dir}/daily/YYYY-MM-DD/reviews.md`.
+- saved report or review artifacts when they exist.
+
+Broker facts should be read live from authorized read-only broker sources when the run requires current positions, account risk, executions, or order status. Do not require a local `trades.csv`, Google Sheet, or durable broker CSV as the source of truth for objective broker facts.
 
 Default `runtime_dir` is `~/Documents/dailytrades-runtime`. The user or automation may override it with `TRADING_RESEARCH_RUNTIME_DIR`, script-level `--runtime-dir`, or the config template at `assets/templates/config.toml`.
 
@@ -146,6 +145,39 @@ Output:
 - unresolved broker/trade facts;
 - proposed update note.
 
+### Position Daily Report
+
+Purpose:
+
+- read current positions and account-risk fields from authorized broker sources;
+- summarize portfolio exposure, concentration, cash/margin pressure, PnL drivers, option/leveraged-product risk, and notable changes;
+- connect current holdings to the Active Market Plan and list only decision-useful attention items.
+
+Preferred source order:
+
+1. Longbridge skill/plugin when installed and authorized by the user.
+2. IBKR connector when installed and authorized by the user.
+3. Manual user export for a single run.
+4. Run without broker facts and report the gap.
+
+Output:
+
+- concise Chinese Markdown;
+- source and read-time disclosure;
+- broker/account coverage and missing fields;
+- top exposures by symbol, theme, instrument type, sector when available, and currency when relevant;
+- key changes versus the prior saved report snapshot when available;
+- risk flags such as concentration, margin, cash drag, 2x/3x path risk, option expiry, correlated technology beta, or event risk;
+- visual artifact requests or links when charts are generated;
+- user decisions needed today.
+
+Do not:
+
+- place, modify, cancel, or imply approval of orders;
+- save full raw broker exports by default;
+- publish private account details to public repo files;
+- require Google Sheets or local trade-record tables.
+
 ## Scheduling Guidance
 
 Use schedules only after the user confirms cadence and timezone.
@@ -156,6 +188,7 @@ Recommended defaults for a US-market workflow:
 - quick update: weekday premarket;
 - intraday trigger monitor: market-hours interval only when active setups exist;
 - post-market review: after US market close;
+- position daily report: after US market close or the user's local morning, using the user's confirmed timezone;
 - development brief: local weekday morning;
 - development progress review: local weekday evening.
 

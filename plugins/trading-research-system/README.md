@@ -17,14 +17,15 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - High-level Al Brooks price action timing framework.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
 - Trading profile template for personal style, instrument preference, and setup-to-instrument translation.
-- Automation-ready deep update, quick update, intraday monitor, and post-market review workflows.
+- Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
 - Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
 - Quick updates for weekday premarket and intraday level/status changes.
 - Setup-scoped intraday scanning for prepared setup plans.
-- Interactive post-order and post-exit actual-trade review intake from read-only broker facts and user context.
+- Broker-live position daily reports with concise risk summaries and visualization-ready outputs.
+- Interactive post-order and post-exit review context intake from read-only broker facts and user context.
 - Broker-agnostic portfolio risk exposure checks.
-- Canonical broker data templates for read-only IBKR, Longbridge, or manual CSV sources.
-- Local daily trading records with CSV and Markdown templates.
+- Broker-live runtime view templates for read-only IBKR, Longbridge, or manual CSV sources.
+- Local planning, report snapshot, and review-context templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
 - On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
@@ -44,7 +45,7 @@ For more specific workflows, use the smaller skills directly:
 - `$trade-review`: post-order and post-exit actual trade review using broker facts when available.
 - `$research-report-intake`: find public/authorized reports, read user-provided research, extract claims, and produce verification queues.
 - `$macro-equity-research`: macro/rates, research validation, and screening.
-- `$portfolio-risk`: exposure and sizing review.
+- `$portfolio-risk`: exposure, sizing, and position daily report review.
 - `$trading-stats`: win rate, R-multiple, setup performance, and system review.
 
 Example prompts:
@@ -107,15 +108,15 @@ daily/YYYY-MM-DD/
 charts/
 ```
 
-The plugin includes templates for Active Market Plans, update notes, holdings, canonical broker snapshots, watchlists, trade plans, actual trades, reviews, research-note logs, research-report logs, and macro checklists.
+The plugin includes templates for Active Market Plans, update notes, holdings, broker-live runtime views, watchlists, trade plans, report snapshots, reviews, research-note logs, research-report logs, and macro checklists.
 
 Use `trading-profile.md` in the runtime directory for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
 
-Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into canonical local files before core risk or review workflows consume them.
+Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into a standard broker-live runtime view before core risk or review workflows consume them. Local files are fixtures, debug artifacts, or user-confirmed derived snapshots, not the default broker fact source of truth.
 
-Codex automations can be used to schedule prompts around the Active Market Plan loop, but they should ask before editing local records and must not touch broker write actions.
+Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
 
-Google Sheets is a compact one-way mirror and review layer. Detailed working memory stays in the runtime directory.
+Google Sheets is optional summary display only. It should not be used as a trade-record layer.
 
 ## Project Plan
 

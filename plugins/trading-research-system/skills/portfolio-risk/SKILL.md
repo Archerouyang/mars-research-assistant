@@ -10,11 +10,12 @@ Use this skill to keep trade ideas and actual trades inside portfolio constraint
 ## Workflow
 
 1. Read `../trading-research/references/portfolio-risk.md`.
-2. Read `../trading-research/references/broker-data-contract.md` when broker, account, or position reconciliation is involved.
-3. Read `../trading-research/references/trade-journal.md` if planned or actual trades are involved.
-4. Use `../../scripts/portfolio_risk.py` when a holdings, portfolio, or canonical portfolio snapshot CSV is available.
-5. Use live account/position data only when an authorized connector is available and the user asks for current exposure.
-5. Check:
+2. Read `../trading-research/references/position-daily-report.md` when the user asks for a holdings daily report, scheduled position report, or broker-native style position reminder.
+3. Read `../trading-research/references/broker-data-contract.md` when broker, account, or position reconciliation is involved.
+4. Read `../trading-research/references/trade-journal.md` if planned or actual trades are involved.
+5. Use `../../scripts/portfolio_risk.py` when a holdings, portfolio, or broker-live fixture snapshot CSV is available.
+6. Use live account/position data only when an authorized connector is available and the user asks for current exposure.
+7. Check:
    - directional exposure;
    - total exposure across brokers;
    - broker/account breakdown;

@@ -1,6 +1,6 @@
 # Trading Research System
 
-这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、实际交易记录和交易系统统计。
+这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、broker-live 持仓日报、复盘上下文和交易系统可视化。
 
 ## Language
 
@@ -9,7 +9,7 @@
 _Avoid_: 自动交易系统, 荐股系统
 
 **投研流水线**:
-交易投研系统的核心流程：信息收集、信息处理、交易想法形成、信息验证、K 线 setup 分析、交易计划、交易记录、复盘统计。每个阶段都应产出可追踪的输入、判断和结论。
+交易投研系统的核心流程：信息收集、信息处理、交易想法形成、信息验证、K 线 setup 分析、交易计划、broker-live 持仓/成交读取、复盘上下文采集和可视化统计。每个阶段都应产出可追踪的输入、判断和结论。
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
@@ -57,20 +57,20 @@ _Avoid_: 研报=交易信号, thesis 直接升级 setup
 _Avoid_: 全自动数据湖, 不可核验来源
 
 **Broker Source**:
-提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill/plugin 或手动 CSV。Broker Source 是可插拔 adapter，不是 Trading Research System 的核心逻辑。
+提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill/plugin 或手动 CSV。Broker Source 是可插拔 adapter，不是 Trading Research System 的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
 _Avoid_: 单一券商绑定, 券商即系统
 
 **Read-only Broker Adapter**:
-把 broker 原始数据转换成 canonical broker data 的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。
+把 broker 原始数据转换成标准运行时视图的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。适配层可以为一次分析返回内存数据、临时文件或派生快照，但不应要求长期保存券商逐笔事实。
 _Avoid_: 自动下单插件, 账户控制层
 
 **Longbridge Broker Source**:
 Longbridge 作为可选 broker source，第一阶段只提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
-**Canonical Broker Data**:
-券商数据统一后的本地 CSV 层，包括 `portfolio_snapshot.csv`、`broker_executions.csv` 和 `broker_orders.csv`。核心分析只读 canonical 文件，不直接依赖 IBKR、Longbridge 或其它券商的原始结构。
-_Avoid_: 直接读各券商私有结构
+**Broker-Live Data View**:
+券商只读数据在一次分析运行中的标准视图，包括当前持仓、账户风险、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成可视化或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。
+_Avoid_: 直接读各券商私有结构, 本地交易明细作为唯一事实来源
 
 **IBKR 行情数据**:
 通过 Interactive Brokers 提供的行情、历史价格和账户数据。它是优先行情来源，但不负责替代研报校验、宏观来源核验或交易系统统计。
@@ -204,16 +204,24 @@ _Avoid_: 事后解释, 记忆中的交易
 来自 IBKR、Longbridge 或其它 broker source 的真实成交、订单或账户记录，例如标的、方向、数量、价格、手续费、时间和盈亏。它用于减少手工录入错误，但不能替代用户对盘面背景、入场理由和执行质量的复盘。
 _Avoid_: 自动复盘结论, 经纪商即完整日志
 
+**持仓日报**:
+交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 plugin 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
+_Avoid_: 自动调仓, 账户日报流水账, 手工交易表
+
+**持仓日报快照**:
+持仓日报生成的派生展示产物，例如权重条形图、主题/行业暴露图、PnL 贡献图、期权到期风险提示和需要用户决策的事项。快照可以保存到 runtime 作为复盘材料，但不能包含不必要的逐笔成交明细或账户凭证。
+_Avoid_: 原始券商导出, 私密账户备份
+
 **交互式交易复盘采集**:
 一种一问一答的复盘填写流程，用于把实际交易补全成结构化记录和可读复盘。它会追问入场理由、盘面背景、信号 K、辅助信号、信心、执行偏差、离场质量、错误标签和经验。
 _Avoid_: 自由聊天复盘, 只记录盈亏
 
 **下单后交易记录**:
-交易刚下单或刚成交后进行的第一阶段记录。重点是锁定当时事实和入场依据：交易来自哪个计划、看到什么盘面背景、什么信号 K、触发时间框架、信心、止损、目标、仓位和风险。它通常写入 `trades.csv` 的 `open` 行和 `reviews.md` 的 entry review 部分。
+交易刚下单或刚成交后进行的第一阶段复盘上下文采集。重点是锁定当时事实和入场依据：交易来自哪个计划、看到什么盘面背景、什么信号 K、触发时间框架、信心、止损、目标、仓位和风险。客观成交事实默认从 broker-live source 读取；本地只保存用户确认后的复盘摘要或可视化快照。
 _Avoid_: 等交易结束后再回忆入场理由
 
 **结束后交易复盘**:
-交易平仓或失效后进行的第二阶段复盘。重点是出场理由、执行偏差、盈亏、R 倍数、是否遵守计划、错误标签、经验和下次规则。它更新同一笔交易的 `trades.csv` 行，并补全 `reviews.md` 的 exit review 部分。
+交易平仓或失效后进行的第二阶段复盘。重点是出场理由、执行偏差、盈亏、R 倍数、是否遵守计划、错误标签、经验和下次规则。客观结果优先从 broker-live source 读取；本地只保存结构化复盘摘要、图表或统计快照。
 _Avoid_: 把盈亏当成唯一质量判断
 
 **复盘追问序列**:
@@ -221,7 +229,7 @@ _Avoid_: 把盈亏当成唯一质量判断
 _Avoid_: 随机追问
 
 **本地日分区记录**:
-按交易日期在本地保存 canonical broker data、观察清单、预备交易计划、实际交易记录和复盘材料。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/dailytrades-runtime`。
+按交易日期在本地保存观察清单、预备交易计划、复盘摘要、持仓日报快照和图表产物。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/dailytrades-runtime`。本地日分区记录不应成为 broker 逐笔交易事实的长期 source of truth。
 _Avoid_: 临时聊天记录, 未归档输出
 
 **盘中分析**:
@@ -269,8 +277,8 @@ _Avoid_: 交易推荐排名, 自动下单优先级
 _Avoid_: 普通观察清单
 
 **Google Sheets 同步**:
-把本地日分区记录单向同步到 Google Drive 中的 Google Sheets，方便跨设备查看、筛选和长期维护。它是同步与展示层，不替代本地日分区记录，也不作为自动回写来源。
-_Avoid_: 唯一数据源, 双向同步, 手动复制粘贴
+可选展示层，用于同步精炼摘要、持仓日报快照索引或非敏感统计结果。Google Sheets 不再承担交易记录维护职责，也不保存逐笔 broker facts；如后续启用，只能是用户确认后的只读摘要镜像。
+_Avoid_: 唯一数据源, 双向同步, 手动交易记录表
 
 **交易复盘**:
 对实际交易记录进行结构化评估，区分判断质量、执行质量、运气、仓位和系统问题。

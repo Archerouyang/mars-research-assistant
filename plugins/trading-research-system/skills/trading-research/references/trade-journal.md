@@ -1,17 +1,17 @@
 # Trade Journal Schema
 
-Use this reference for trade plans, actual trade records, reviews, and system statistics.
+Use this reference for trade plans, review context, compatibility trade-record files, and system statistics.
 
-The schema is informed by the user's Google Sheet `2026交易记录`.
+The schema is informed by the user's historical Google Sheet `2026交易记录`. Current product direction is broker-live for objective broker facts; `trades.csv` and legacy Sheet import remain compatibility tools, fixtures, or user-approved snapshot paths rather than the default source of truth.
 
 ## Principles
 
-- Local daily records are the first source of truth.
-- Google Sheets is a one-way sync and review layer, not the only data source.
-- Do not silently merge Google Sheets edits back into local records.
+- Active Market Plan, review context, and derived snapshots are local artifacts.
+- Objective broker facts should come from authorized broker-live reads when available.
+- Google Sheets is not a trade-record layer; do not silently merge Google Sheets edits back into local records.
 - One row equals one smallest statistically measurable unit.
 - Split partial fills into multiple rows and link them with `trade_id`.
-- A trade can be reviewed in two stages: post-order creates or updates an `open` row, and post-exit completes the same row with outcome, exit review, realized R, and lesson.
+- A trade can be reviewed in two stages: post-order captures entry context, and post-exit captures outcome quality, exit review, realized R when available, and lesson.
 - Broker order/trade facts may prefill objective execution fields, but discretionary fields still require interactive review.
 - Preserve raw review text, but extract structured fields for statistics.
 
@@ -124,9 +124,9 @@ Required execution fields:
 - `account_id`
 - `execution_id`
 
-Actual trade records should normally be filled through interactive trade review intake, not from memory in one freeform paragraph. Use `references/interactive-trade-review.md` when asking the user to complete missing fields.
+Review context should normally be filled through interactive trade review intake, not from memory in one freeform paragraph. Use `references/interactive-trade-review.md` when asking the user to complete missing fields.
 
-After the user confirms a completed post-order or post-exit review, write the structured row and narrative review with:
+Compatibility path: after the user explicitly asks to write a local trade-record snapshot, write the structured row and narrative review with:
 
 ```bash
 python3 plugins/trading-research-system/scripts/update_trade_record.py \

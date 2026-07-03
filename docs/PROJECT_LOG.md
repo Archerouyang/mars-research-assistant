@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-03
 
 - Commit: pending
+- Scope: decision, automation, data
+- What changed: re-scoped broker data handling around broker-live reads instead of spreadsheet or durable local trade-record tables. Added the `position_daily_report` automation concept, documented broker-live position reporting as ADR 0005, updated the glossary, roadmap, development plan, README files, and automation/broker contracts.
+- Why it matters: the plugin now matches the preferred product shape: no Google Sheets trade-record maintenance, no default local copy of full broker trade facts, and a first-class scheduled holdings/risk report that can use Longbridge or IBKR read-only data.
+- Next step: define a fixture and output contract for the position daily report, then create the real Codex automation after cadence, timezone, broker source order, and snapshot policy are confirmed.
+
+- Commit: pending
 - Scope: planning, skill, data
 - What changed: re-scoped the next product slice around analysis-first development. Added KVN momentum leaderboard terminology and planning: a dedicated `momentum-leaderboard` skill, daily local calculation, `{runtime_dir}/momentum/kvn.sqlite` storage, Top10 default display, all-symbol lookup, S&P500-benchmarked rank, 60D `KVN P`, and Top10 entry-memory fields.
 - Why it matters: the plugin's immediate value should be finding and validating trade candidates before perfecting records or sync details. The KVN leaderboard becomes the quantitative candidate source that macro/rates regime filters and industry/company research can consume.

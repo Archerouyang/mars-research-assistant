@@ -1,5 +1,7 @@
 # One-way Google Sheets sync
 
+Status: superseded for trade records by [0005 Broker-live position reporting](0005-broker-live-position-reporting.md). Google Sheets may still be considered later for non-sensitive summaries or report indexes, but it is no longer the trade-record layer.
+
 Google Sheets sync will be one-way from local daily records to Google Sheets. Local `data/daily/YYYY-MM-DD/` records remain the first source of truth; Google Sheets is a mirror, review, filtering, and cross-device viewing layer.
 
 **Considered Options**
