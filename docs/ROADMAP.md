@@ -20,7 +20,7 @@ The system supports:
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
-- trading profile support for personal style, instrument preferences, and setup-to-instrument translation without storing account allocation in the public repo;
+- trading profile support for personal strategy models, instrument preferences, pool definitions, scoring thresholds, timeframe rules, and setup-to-instrument translation without storing account allocation in the public repo;
 - automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, post-market review prompts, and position daily reports;
 - deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, momentum leaderboard rebuild, and setup discovery;
 - quick updates for weekday premarket/intraday changes in tape, macro/rates, policy/news, events, momentum, setup status, and key levels;
@@ -41,6 +41,7 @@ The system does not support in the initial scope:
 - a persistent dashboard/frontend;
 - unverified paywalled research extraction;
 - tax, legal, or regulated investment advice.
+- hard-coded personal strategy models as public defaults.
 
 ## Execution Method
 
@@ -52,7 +53,7 @@ The default workflow is:
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
 5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
 6. **KVN Momentum Leaderboard**: compute a daily, S&P500-benchmarked, all-searchable momentum leaderboard from local market data; show Top10 by default and preserve Top10 entry memory for later research triage.
-7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, and the latest KVN leaderboard into input reads and a Cross-Section Candidate Pool before creating setup rows.
+7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, the latest KVN leaderboard, and profile-defined pool/scoring rules into input reads and a Cross-Section Candidate Pool before creating setup rows.
 8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
 9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
@@ -181,6 +182,7 @@ Deliverables:
 - Runtime root convention: `{runtime_dir}`, defaulting to `~/Documents/dailytrades-runtime`.
 - Active plan convention: `{runtime_dir}/market-plan.md`.
 - Private trading profile convention: `{runtime_dir}/trading-profile.md`.
+- Profile-configured strategy posture scores, trading pools, ETF groups, crowding model, and timeframe rules.
 - Append-only update convention: `{runtime_dir}/updates/YYYY-MM-DD.md`.
 - Daily directory convention: `{runtime_dir}/daily/YYYY-MM-DD/`.
 - Deep update convention for last-week trade review, current market tape, macro/rates, policy/news, event preview, Trade Plan Preparation, themes, setup pool, and risk budget.

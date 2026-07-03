@@ -17,7 +17,7 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
 
 1. Read the shared references needed for the task:
    - Active plan model: `../trading-research/references/active-market-plan.md`.
-   - Trading profile and instrument preferences: `../trading-research/references/trading-profile.md`.
+   - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro and rates: `../trading-research/references/macro-policy-filter.md`.
    - Equity screening and thesis validation: `../trading-research/references/equity-screening.md`.
    - Price action and timeframe rules: `../trading-research/references/price-action-timing.md`.

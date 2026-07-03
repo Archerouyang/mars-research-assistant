@@ -22,7 +22,7 @@ Make the plugin usable for the first local workflow:
 
 1. maintain one overwriteable Active Market Plan;
 2. append compact update notes;
-3. apply private trading profile rules for instrument selection;
+3. apply private trading profile rules for strategy posture scoring, pool selection, instrument selection, timeframe selection, and crowding adjustments;
 4. find or ingest research reports and reduce them to claim ledgers, verification queues, and plan-preparation impact;
 5. compute or read a daily KVN momentum leaderboard that defaults to Top10 display while keeping all liquid symbols searchable;
 6. prepare trade plans from macro, financial conditions, policy/event risk, KVN momentum, industry strength, and company thesis checks;
@@ -90,7 +90,7 @@ Coverage requirements:
 | P1 | Trade plan preparation contract | Macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created. |
 | P1 | KVN momentum leaderboard contract | A daily local script can store all liquid universe KVN scores and the skill can show Top10, query any ticker, and expose Top10 entry memory without turning the list into buy/sell advice. |
 | P1 | Research report intake contract | Report discovery and user-provided report digestion produce concise, source-prioritized, verifiable claim ledgers instead of long summaries or direct setup calls. |
-| P1 | Trading profile translation | Candidate setups can be translated into ETF, stock, 2x ETF, LEAP, or 0DTE expressions without assuming the same tool for every idea. |
+| P1 | Trading profile translation | Candidate setups can be translated into profile-defined pools, ETF groups, instruments, timeframes, and risk rules without assuming the same model for every user. |
 | P1 | Fixture package | The fixture files first cover trade plan preparation, then daily tracking, broker-live facts, position daily report output, review context, and expected scan output. |
 | P1 | Intraday scan script | The script reads fixture plan/watchlist rows and emits stable status plus attention priority after setup pool fields are stable. |
 | P1 | Broker-live position daily report | Authorized broker facts can produce a concise holdings/risk report and visualization fields without touching broker write actions. |

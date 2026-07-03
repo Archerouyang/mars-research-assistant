@@ -14,7 +14,7 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
 1. Load the active `market-plan.md`, or ask for the current plan state if it is unavailable.
 2. Read relevant shared references:
    - Active plan model: `../trading-research/references/active-market-plan.md`.
-   - Trading profile and instrument preferences: `../trading-research/references/trading-profile.md`.
+   - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
    - Intraday statuses: `../trading-research/references/intraday-setup-scan.md`.

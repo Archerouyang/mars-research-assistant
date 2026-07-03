@@ -54,7 +54,7 @@ These support the Active Market Plan loop:
 Trading automations should read:
 
 - `{runtime_dir}/market-plan.md` for current state;
-- `{runtime_dir}/trading-profile.md` for private style and instrument preferences when available;
+- `{runtime_dir}/trading-profile.md` for private strategy scoring, pools, ETF groups, instrument preferences, timeframe rules, and avoid rules when available;
 - `{runtime_dir}/updates/YYYY-MM-DD.md` for the update trail;
 - `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`;
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`;
@@ -66,7 +66,7 @@ Default `runtime_dir` is `~/Documents/dailytrades-runtime`. The user or automati
 
 If a file is missing, the automation should report the gap and ask whether to initialize or import data. It should not invent current plan state.
 
-If `{runtime_dir}/trading-profile.md` is missing, ask for the relevant style/instrument preferences before translating setups into products.
+If `{runtime_dir}/trading-profile.md` is missing, ask for the relevant strategy posture, pool, instrument, timeframe, and avoid-rule preferences before translating setups into products.
 
 ## Broker Safety
 

@@ -17,7 +17,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
-- Trading profile template for personal style, instrument preference, and setup-to-instrument translation.
+- Trading profile template for personal strategy scoring, pool definitions, ETF groups, instrument preference, timeframe rules, crowding model, and setup-to-instrument translation.
 - Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
 - Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
 - Quick updates for weekday premarket and intraday level/status changes.
@@ -111,7 +111,7 @@ charts/
 
 The plugin includes templates for Active Market Plans, update notes, holdings, broker-live runtime views, watchlists, trade plans, report snapshots, reviews, research-note logs, research-report logs, and macro checklists.
 
-Use `trading-profile.md` in the runtime directory for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
+Use `trading-profile.md` in the runtime directory for private strategy scoring, pool definitions, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. The public repo only ships a blank template and does not store personal account allocation or a hard-coded personal strategy model.
 
 Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into a standard broker-live runtime view before core risk or review workflows consume them. Local files are fixtures, debug artifacts, or user-confirmed derived snapshots, not the default broker fact source of truth. Longbridge `macrodata` is a separate macro-data source, not an account source.
 

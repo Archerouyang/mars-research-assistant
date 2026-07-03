@@ -23,7 +23,7 @@ Use:
 ```
 
 - `{runtime_dir}/market-plan.md`: overwriteable living state. It should always show the current plan.
-- `{runtime_dir}/trading-profile.md`: private trading style and instrument preference file. Use the public template at `assets/templates/trading-profile.md`.
+- `{runtime_dir}/trading-profile.md`: private strategy profile for scoring rules, pools, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. Use the public template at `assets/templates/trading-profile.md`.
 - `{runtime_dir}/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
 - `{runtime_dir}/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
 
@@ -45,8 +45,9 @@ The setup is the smallest planning unit. A setup is not just a ticker and not ju
 Before a new setup enters the setup pool, route research through `Trade Plan Preparation`:
 
 1. Summarize the five input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, and `Company Thesis Check`.
-2. Convert those reads into a `Cross-Section Candidate Pool`.
-3. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.
+2. Apply profile-defined strategy posture, pool, instrument, timeframe, and crowding rules.
+3. Convert those reads into a `Cross-Section Candidate Pool`.
+4. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.
 
 The setup pool should not receive raw macro views, plain watchlist names, unverified research claims, or momentum rankings without a prepared setup structure.
 
@@ -93,7 +94,7 @@ Do not collapse them into one generic `条件/触发` field. For fast products s
 
 If the same market opportunity can be traded with multiple instruments, create multiple setups that share the same `theme_id` or `market_context_id`.
 
-Use `{runtime_dir}/trading-profile.md` when choosing the expression. The setup pool should reflect the user's trading style and instrument preferences, not a generic default.
+Use `{runtime_dir}/trading-profile.md` when choosing strategy expression, pool membership, instrument, timeframe, and risk framing. The setup pool should reflect the user's private strategy profile, not a generic default.
 
 Example:
 

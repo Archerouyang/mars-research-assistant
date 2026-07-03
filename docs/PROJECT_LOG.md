@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-03
 
 - Commit: pending
+- Scope: decision, template, glossary
+- What changed: clarified that strategy models, trading pools, ETF groups, timeframe rules, and crowding weights belong in private `trading-profile.md`, not as hard-coded public plugin defaults. Generalized the glossary language and expanded the trading profile template to capture strategy posture scoring, active trading pools, long-term ETF groups, and crowding model inputs.
+- Why it matters: the plugin remains reusable for other users while still supporting the user's specific trading framework through runtime profile configuration.
+- Next step: continue interviewing the user's trading system and map the confirmed rules into a private profile artifact before implementation work.
+
+- Commit: pending
 - Scope: data, skill, reference
 - What changed: documented Longbridge `macrodata` as an optional macro and financial-conditions source. It can feed `Macro Regime` and `Financial Conditions`, while policy facts, official speeches, legal/regulatory status, and release status still require S0 official confirmation.
 - Why it matters: Longbridge is no longer modeled only as a broker/account source; the plugin can use its macro data command for faster macro reads without weakening source-priority rules.

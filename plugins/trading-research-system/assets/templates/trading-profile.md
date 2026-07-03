@@ -10,6 +10,53 @@
 - Max single-setup risk:
 - Notes:
 
+## Strategy Posture Scoring
+
+| Score | Enabled | Inputs | Weights | Thresholds | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Risk Budget Score | yes/no |  |  |  |  |
+| Trend Fit Score | yes/no |  |  |  |  |
+| Mean Reversion Fit Score | yes/no |  |  |  |  |
+
+Manual override rules:
+
+- Allow user override: yes/no
+- Override must record:
+- Hard risk stops:
+
+## Active Trading Pools
+
+| Pool | Role | Priority | Symbols/themes | Trend-mode behavior | Mean-reversion behavior | Avoid if |
+| --- | --- | --- | --- | --- | --- | --- |
+| Momentum pool | discovery / trading / confirmation |  |  |  |  |  |
+| Large-cap liquidity leaders | trading / confirmation |  |  |  |  |  |
+| Theme core pool | concentrated trading |  |  |  |  |  |
+| Confirmation pool | confirmation only / trading allowed |  |  |  |  |  |
+
+## Long-Term ETF Portfolio
+
+| ETF group | Role | Symbols | Add rules | TP/rebalance rules | Pause/review rules |
+| --- | --- | --- | --- | --- | --- |
+| Core beta | long-term core |  |  |  |  |
+| Theme ETF | long-term theme |  |  |  |  |
+| Defensive rebalance | risk-off rebalance |  |  |  |  |
+| Macro allocation | macro setup |  |  |  |  |
+
+## Crowding Model
+
+| Scope | Enabled | Data sources | Inputs | Weighting | Action when crowded |
+| --- | --- | --- | --- | --- | --- |
+| Theme / sector | yes/no |  |  |  |  |
+| Ticker | yes/no |  |  |  |  |
+
+Crowding examples to track:
+
+- Weighting data:
+- Flow-driven factors:
+- Institution / hedge-fund net exposure:
+- Index weight / return contribution:
+- Options crowding:
+
 ## Instrument Preference Rules
 
 ### ETF-Only Expression
