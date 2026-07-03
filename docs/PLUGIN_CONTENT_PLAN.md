@@ -24,13 +24,14 @@ Make the plugin usable for the first local workflow:
 2. append compact update notes;
 3. apply private trading profile rules for instrument selection;
 4. find or ingest research reports and reduce them to claim ledgers, verification queues, and plan-preparation impact;
-5. prepare trade plans from macro, financial conditions, policy/event risk, industry strength, and company thesis checks;
-6. initialize daily local records;
-7. plan setup-level trades;
-8. scan prepared setups intraday;
-9. reconcile read-only broker facts into canonical CSV;
-10. capture post-order and post-exit reviews;
-11. compute basic risk and statistics.
+5. compute or read a daily KVN momentum leaderboard that defaults to Top10 display while keeping all liquid symbols searchable;
+6. prepare trade plans from macro, financial conditions, policy/event risk, KVN momentum, industry strength, and company thesis checks;
+7. initialize daily local records;
+8. plan setup-level trades;
+9. scan prepared setups intraday;
+10. reconcile read-only broker facts into canonical CSV;
+11. capture post-order and post-exit reviews;
+12. compute basic risk and statistics.
 
 ## Required Content Map
 
@@ -43,11 +44,12 @@ Make the plugin usable for the first local workflow:
 | Trade review skill | post-order and post-exit interactive review | present | Ask only fields needed for `trades.csv` and `reviews.md`; summarize lessons tightly. |
 | Research report intake skill | public/authorized report discovery and user-provided report digestion | present | Produce `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and Trade Plan Preparation impact before macro/equity research consumes report views. |
 | Macro/equity skill | macro/rates filtering, thesis verification, screening | present | Read many sources, reject noise, and return Trade Plan Preparation inputs plus Cross-Section Candidate Pool candidates. |
+| Momentum leaderboard skill | daily KVN momentum leaderboard display and query | missing | Add a focused `momentum-leaderboard` skill that reads `{runtime_dir}/momentum/kvn.sqlite`, shows Top10 by default, queries any ticker, and summarizes Top10 changes. |
 | Portfolio risk skill | exposure and sizing review | present | Needs canonical broker CSV fixture coverage; output should highlight only material concentration and constraint breaches. |
 | Trading stats skill | closed-trade stats and system review | present | Needs closed-trade fixture rows; output should focus on actionable system changes. |
 | Shared references | active plan, trading profile, broker contract, intraday scan, trade journal, risk, output rules, automation contract | present | Treat as product contract for scripts and fixtures. |
 | Templates | market plan, trading profile, weekly plan, daily tracking, watchlist, trade plans, intraday watchlist, broker CSV, trades, reviews | present | Make plan-preparation output executable before building scan fixtures. |
-| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review | present | Add contract checks for plan preparation, then build intraday scan after setup fields stabilize. |
+| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review | present | Add `kvn_leaderboard.py` and contract checks before building heavier intraday scan logic. |
 
 ## Minimum Fixture Package
 
@@ -66,6 +68,7 @@ Required files:
 - `data/daily/YYYY-MM-DD/trades.csv`: post-order and post-exit rows.
 - `data/daily/YYYY-MM-DD/reviews.md`: matching narrative entry and exit reviews.
 - `data/fixtures/expected/trade-plan-preparation.md`: expected plan-preparation output showing input reads, cross-section candidates, and which candidates can become `candidate setup`.
+- `data/fixtures/expected/kvn-leaderboard.md`: expected Top10 display plus one ticker lookup using a fixture SQLite or CSV snapshot.
 - `data/fixtures/expected/intraday-scan.md`: expected scanner output, including `approaching`, `triggered`, `invalidated`, and `needs_review`.
 
 Coverage requirements:
@@ -84,6 +87,7 @@ Coverage requirements:
 | P0 | AI-native synthesis contract | Skills consistently read broadly, filter aggressively, and return concise decision notes instead of source dumps. |
 | P0 | Active Market Plan current state and update trail | A deep update can overwrite `data/market-plan.md` and append `data/updates/YYYY-MM-DD.md` with clear rationale. |
 | P1 | Trade plan preparation contract | Macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created. |
+| P1 | KVN momentum leaderboard contract | A daily local script can store all liquid universe KVN scores and the skill can show Top10, query any ticker, and expose Top10 entry memory without turning the list into buy/sell advice. |
 | P1 | Research report intake contract | Report discovery and user-provided report digestion produce concise, source-prioritized, verifiable claim ledgers instead of long summaries or direct setup calls. |
 | P1 | Trading profile translation | Candidate setups can be translated into ETF, stock, 2x ETF, LEAP, or 0DTE expressions without assuming the same tool for every idea. |
 | P1 | Fixture package | The fixture files first cover trade plan preparation, then daily tracking, broker facts, review writing, and expected scan output. |
@@ -105,4 +109,4 @@ Coverage requirements:
 
 ## Next Slice
 
-Stabilize Trade Plan Preparation first: input reads, Cross-Section Candidate Pool, promotion guidance into `candidate setup`, and expected fixture output. Implement `intraday_scan.py` only after setup pool fields are stable. Review CSV writing should follow after the scan contract is executable.
+Stabilize the analysis-first path before more record/sync work: define the `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture output, and verification script. Then update Trade Plan Preparation fixtures so macro/rates, policy, KVN momentum, industry strength, and company thesis checks jointly feed the Cross-Section Candidate Pool. Implement `intraday_scan.py` only after setup pool fields are stable.

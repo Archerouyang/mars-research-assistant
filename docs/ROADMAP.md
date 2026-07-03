@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, actual trade records, review notes, broker-aware portfolio snapshots, and statistics for improving a discretionary trading system.
+Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into a daily KVN momentum leaderboard, an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, actual trade records, review notes, broker-aware portfolio snapshots, and statistics for improving a discretionary trading system.
 
 The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
 
@@ -16,6 +16,7 @@ The system supports:
 - macro policy and rates filtering focused on market-moving variables;
 - research report discovery from public/authorized sources plus user-provided report intake for PDFs, links, excerpts, screenshots, and copied text;
 - research-note and market-view validation against primary/current sources;
+- a daily KVN momentum leaderboard that computes all liquid universe candidates locally, displays Top10 by default, and keeps all symbols searchable from a local SQLite store;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
@@ -48,15 +49,16 @@ The default workflow is:
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
 5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
-6. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, and Company Thesis Check into input reads and a Cross-Section Candidate Pool before creating setup rows. Quant momentum candidate pools are a separate future model.
-7. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
-8. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
-9. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
-10. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
-11. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
-12. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
-13. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
-14. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
+6. **KVN Momentum Leaderboard**: compute a daily, S&P500-benchmarked, all-searchable momentum leaderboard from local market data; show Top10 by default and preserve Top10 entry memory for later research triage.
+7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, and the latest KVN leaderboard into input reads and a Cross-Section Candidate Pool before creating setup rows.
+8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
+9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
+10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
+11. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
+12. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
+13. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; write or update an `open` row in `trades.csv`.
+14. **Post-exit review**: after the trade is closed, update result, exit quality, realized R, mistake tags, and lessons in `trades.csv` plus narrative notes in `reviews.md`.
+15. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration.
 
 ## Public Repo Boundary
 
@@ -122,6 +124,7 @@ Rules:
 | One-way Google Sheets sync decision | Done | `docs/adr/0004-one-way-google-sheets-sync.md` |
 | Domain glossary | In progress | `CONTEXT.md` |
 | AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
+| KVN momentum leaderboard contract | Planned | `CONTEXT.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
@@ -154,7 +157,7 @@ Deliverables:
 - Maintain canonical glossary in `CONTEXT.md`.
 - Maintain Active Market Plan, update note, research memo, and trade plan output templates.
 - Keep `trading-research` as the router skill.
-- Maintain focused skills for research report intake, Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
+- Maintain focused skills for momentum leaderboard, research report intake, Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
 - Keep active plan, broker data, macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
 - Keep automation rules aligned with the Active Market Plan loop and broker read-only boundary.
 - Keep the plugin installable from the personal marketplace.
@@ -162,7 +165,7 @@ Deliverables:
 Exit criteria:
 
 - A new agent can understand the core language from `CONTEXT.md`.
-- The router can send report intake, research, planning, intraday scan, review, risk, and statistics tasks to focused skills and shared references.
+- The router can send momentum leaderboard, report intake, research, planning, intraday scan, review, risk, and statistics tasks to focused skills and shared references.
 
 ### P1: Local Data Structure
 
@@ -193,6 +196,8 @@ Status: started.
 
 Deliverables:
 
+- `momentum-leaderboard` skill and a local KVN calculation script backed by `{runtime_dir}/momentum/kvn.sqlite`.
+- KVN fields: `Rank vs S&P500`, `Ticker`, `KVN 分数`, `KVN P`, `当前是否 S&P500`, `连续入选Top10天数`, `近20日入选Top10次数`, and `上次入选Top10时间`.
 - `portfolio_risk.py` for portfolio exposure summaries.
 - `watchlist_score.py` for candidate prioritization.
 - `trade_stats.py` for closed-trade statistics.
@@ -205,6 +210,7 @@ Deliverables:
 
 Exit criteria:
 
+- The plugin can compute or read the latest KVN leaderboard, display Top10, query any symbol, and summarize Top10 changes without treating the leaderboard as a buy list.
 - The plugin can produce Trade Plan Preparation input reads and a Cross-Section Candidate Pool from structured inputs and current-source verification.
 - The plugin can rank watchlist candidates from CSV input.
 - The plugin can evaluate whether a prepared setup is candidate, active, approaching, triggered, invalidated, needs review, or completed.
@@ -271,7 +277,7 @@ Target result:
 
 Target result:
 
-- User can run macro/rates, research validation, watchlist ranking, price action timing, and portfolio risk review in one repeatable note template.
+- User can run KVN momentum ranking, macro/rates regime filtering, research validation, price action timing, and portfolio risk review in one repeatable note template.
 
 ### M4: Sync And Review MVP
 
@@ -289,12 +295,12 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Forward-test router behavior and each priority skill on realistic Active Market Plan prompts.
-2. Add Trade Plan Preparation fixture data that covers input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
-3. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, canonical broker CSV, post-order review, post-exit review, and expected scan outputs.
-4. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-5. Connect interactive review intake to post-order and post-exit `trades.csv` updates.
-6. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, and holdings data.
+1. Define the `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture data, and verification script.
+2. Forward-test router behavior and each priority skill on realistic Active Market Plan prompts.
+3. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
+4. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, canonical broker CSV, post-order review, post-exit review, and expected scan outputs.
+5. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
+6. Add a Google Sheets one-way sync script for local `trades.csv`, `trade-plans.csv`, holdings data, and compact KVN Top10 summaries after local row mapping is stable.
 7. Add chart artifact generation from fixture-backed authorized OHLCV data.
 8. Research option-flow data vendors and define the minimum anomaly schema.
 9. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, and post-market review after cadence and data-source permissions are confirmed.
@@ -305,7 +311,7 @@ MVP 1 is complete when:
 
 1. The plugin contains the research workflow skill and references.
 2. Local CSV/Markdown templates exist for watchlist, trade plans, intraday plans, trades, reviews, research-note logs, and portfolio holdings.
-3. Scripts can initialize a trading day, summarize portfolio exposure, rank watchlist candidates, append reviews, and compute basic trade statistics.
+3. Scripts can initialize a trading day, summarize portfolio exposure, read or compute KVN momentum candidates, rank watchlist candidates, append reviews, and compute basic trade statistics.
 4. The trade journal schema can represent the current `2026交易记录` fields plus missing statistics fields.
 5. Intraday scan statuses and attention priority are documented.
 6. The plugin validates and can be installed from the personal marketplace.

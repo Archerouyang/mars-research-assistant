@@ -18,19 +18,20 @@ The current product sequence is:
 
 1. AI-native synthesis contract: agent reads broadly and returns concise decision-useful notes, not raw research dumps;
 2. Active Market Plan schema, trading profile, update trail, and local daily records;
-3. trade plan preparation: macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
-4. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
-5. fixture data covering `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, canonical broker CSV, and two-stage reviews;
-6. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-7. setup-scoped intraday scan;
-8. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
-9. post-exit review to complete results, lessons, and `reviews.md`;
-10. broker-agnostic portfolio reconciliation and risk view;
-11. basic stats and system review;
-12. one-way Google Sheets sync;
-13. user-confirmed Active Market Plan automations;
-14. OHLCV-backed chart artifacts;
-15. option-flow anomaly research.
+3. KVN momentum leaderboard: a daily local script writes all liquid universe KVN scores into SQLite, while the skill displays Top10 and ticker lookups;
+4. trade plan preparation: macro, financial conditions, policy/event risk, KVN momentum, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
+5. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
+6. fixture data covering KVN leaderboard snapshots, `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, canonical broker CSV, and two-stage reviews;
+7. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+8. setup-scoped intraday scan;
+9. post-order review to create or update open `trades.csv` rows from read-only broker facts plus user context;
+10. post-exit review to complete results, lessons, and `reviews.md`;
+11. broker-agnostic portfolio reconciliation and risk view;
+12. basic stats and system review;
+13. one-way Google Sheets sync;
+14. user-confirmed Active Market Plan automations;
+15. OHLCV-backed chart artifacts;
+16. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -88,6 +89,7 @@ Use these statuses:
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
 | P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
+| P1 | ready | Define KVN momentum leaderboard contract | Makes the user's daily momentum-stock ranking a first-class analysis module instead of a vague watchlist score or manual table. | Add `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture output, and verifier. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, canonical broker CSV, two-stage reviews, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker data contracts | Aligns the workflow around one living market plan, setup-level tracking, read-only broker sources, and canonical local data. | Use these contracts in the fixture package and later script flows. |
@@ -104,15 +106,23 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-06-18
+Date: 2026-07-03
 
-- Morning main task: deepen the contract verification, canonical record, and actual-trade record architecture before adding more product behavior.
-- Secondary task: keep existing weekly outlook, Trade Plan Preparation, research report intake, daily initialization, and trade-stat commands stable.
-- Definition of done: shared verifier module, canonical record schema registry, exact CSV header/row-width checks, post-order/post-exit trade record updater, fixed template rows, and passing local contract checks.
-- Verification: shared verifier self-test, record template contract check, actual trade record self-test, actual trade record contract check, report-intake contract check, Trade Plan Preparation contract check, weekly outlook contract check, init-daily smoke test, Python compile, and whitespace diff check.
+- Morning main task: re-scope the plugin around analysis-first development, with `momentum-leaderboard` as the next concrete product slice.
+- Secondary task: keep existing record-writing, legacy import, and Google Sheets mirror work as support infrastructure, not the near-term main line.
+- Definition of done: `CONTEXT.md`, `docs/ROADMAP.md`, `docs/PLUGIN_CONTENT_PLAN.md`, `docs/DEVELOPMENT_PLAN.md`, and `docs/PROJECT_LOG.md` reflect the KVN leaderboard scope, storage boundary, and next implementation task.
+- Verification: documentation terms are internally consistent, roadmap next tasks put KVN before heavier intraday/record/sync work, and git diff is clean after commit.
 - End-of-day result: pending.
 
 ## Progress Log
+
+### 2026-07-03
+
+- Planned: use `grill-with-docs` to re-evaluate plugin scope and development priorities against current docs.
+- Decision: the record module is useful but hard to perfect upfront; near-term development should prioritize analysis, especially the KVN momentum leaderboard, macro/rates regime filtering, and industry/company research flow.
+- Decision: `momentum-leaderboard` should be a focused skill backed by a daily local script and `{runtime_dir}/momentum/kvn.sqlite`, not a sub-section of `macro-equity-research`.
+- Decision: default user-facing KVN output is Top10 with screenshot-like fields, while all liquid universe symbols remain queryable from local storage.
+- Next: implement the `momentum-leaderboard` contract, fixture, verifier, and storage schema before returning to one-way Sheets sync or deeper review-record polishing.
 
 ### 2026-06-18
 
