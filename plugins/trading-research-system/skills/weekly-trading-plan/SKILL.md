@@ -67,7 +67,7 @@ Transmission paths should be explicit, for example: `rates`, `10Y/yields`, `USD`
 Use the source priority vocabulary from `macro-policy-filter.md`:
 
 - `S0 official / primary`: confirms policy, macro releases, exchange calendars, filings, and official remarks.
-- `S1 market data / broker / calendar`: confirms live market transmission through prices, yields, volatility, flows, and event timing.
+- `S1 market data / broker / macrodata / calendar`: confirms live macro values and market transmission through prices, yields, volatility, flows, and event timing.
 - `S2 reputable financial media`: leads that need confirmation when they affect risk budget or policy interpretation.
 - `S3 research / opinion`: thesis input and counterargument source, not proof of policy or macro facts.
 - `S4 social / rumor / unsourced commentary`: ignore unless confirmed by higher-priority sources.

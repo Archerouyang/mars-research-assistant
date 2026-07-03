@@ -56,7 +56,7 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 | 等级 | 当前使用方式 | 可以影响什么 | 限制 |
 | --- | --- | --- | --- |
 | S0 official / primary |  | 政策事实、经济数据、交易所日历、公司事实 |  |
-| S1 market data / broker / calendar |  | 价格、收益率、VIX、事件时间、市场传导 |  |
+| S1 market data / broker / macrodata / calendar |  | 宏观数值、金融条件、价格、收益率、VIX、事件时间、市场传导 | 政策事实仍需 S0 确认 |
 | S2 reputable financial media |  | 新闻线索和政策解读 | 需要 S0/S1 确认后才改变风险预算 |
 | S3 research / opinion |  | 研报观点、反方论证、个股 thesis | 不能单独证明政策或宏观事实 |
 | S4 social / rumor / unsourced commentary |  | 默认忽略 | 除非被更高等级信源确认 |

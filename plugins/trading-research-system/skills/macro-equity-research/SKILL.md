@@ -9,7 +9,7 @@ Use this skill to convert current macro/rates information and research claims in
 
 ## Workflow
 
-1. Use current sources for policy, Treasury/rates/yields, prices, filings, earnings, and market state.
+1. Use current sources for policy, Treasury/rates/yields, prices, filings, earnings, and market state. When available and authorized, Longbridge `macrodata` can be used for macro and financial-condition reads, while official policy facts still need S0 confirmation.
 2. Read shared references as needed:
    - `../trading-research/references/macro-policy-filter.md`
    - `../trading-research/references/research-report-intake.md` when the input is a report, PDF, link, excerpt, Seeking Alpha-style article, or report-discovery request.

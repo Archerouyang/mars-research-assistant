@@ -20,7 +20,7 @@ This fixture defines the minimum acceptable user-facing shape for a weekly macro
 | 等级 | 当前使用方式 | 可以影响什么 | 限制 |
 | --- | --- | --- | --- |
 | S0 official / primary | Fed、Treasury、White House、BLS/BEA、NYSE/Fed calendars | FOMC/SEP、官方讲话、宏观数据、Juneteenth 休市事实 | 可直接进入事件表 |
-| S1 market data / broker / calendar | 10Y、VIX、QQQ/SOXX/VOO/DRAM 价格结构、IBKR 行情 | 判断 rates、oil、volatility、sector 传导是否已经被市场确认 | 必须和价格反应一起看 |
+| S1 market data / broker / macrodata / calendar | 10Y、VIX、QQQ/SOXX/VOO/DRAM 价格结构、IBKR 行情、Longbridge macrodata（如可用） | 判断 macro values、rates、oil、volatility、sector 传导是否已经被市场确认 | 政策事实仍需 S0；必须和价格反应一起看 |
 | S2 reputable financial media | Reuters/AP/Bloomberg/WSJ/FT 等对伊朗、霍尔木兹、tariffs、Treasury/fiscal 的报道 | 作为政策和地缘事件线索 | 改变风险预算前需要 S0/S1 确认 |
 | S3 research / opinion | Seeking Alpha、卖方研报、独立研究 | 个股 thesis、反方证据、动量主题解释 | 不能单独证明政策事实 |
 | S4 social / rumor / unsourced commentary | 社媒、论坛、未署名截图 | 默认忽略 | 除非被 S0/S1/S2 确认 |

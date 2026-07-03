@@ -35,7 +35,7 @@
 | Level | Current use | Can affect | Limit |
 | --- | --- | --- | --- |
 | S0 official / primary |  | policy facts, macro releases, exchange calendars, filings, official remarks |  |
-| S1 market data / broker / calendar |  | prices, yields, volatility, event timing, market transmission |  |
+| S1 market data / broker / macrodata / calendar |  | macro values, prices, yields, volatility, event timing, market transmission |  |
 | S2 reputable financial media |  | news leads and policy interpretation | needs S0/S1 confirmation before changing risk budget |
 | S3 research / opinion |  | thesis generation and counterarguments | not proof of macro or policy facts |
 | S4 social / rumor / unsourced commentary |  | ignored by default | only relevant after higher-priority confirmation |

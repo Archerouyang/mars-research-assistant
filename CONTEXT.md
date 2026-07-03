@@ -53,7 +53,7 @@ _Avoid_: 看完即采用, 只校验支持证据
 _Avoid_: 研报=交易信号, thesis 直接升级 setup
 
 **第一阶段数据源**:
-交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、IBKR 行情数据、read-only broker source、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
+交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、Longbridge macrodata、IBKR 行情数据、read-only broker source、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
 _Avoid_: 全自动数据湖, 不可核验来源
 
 **Broker Source**:
@@ -65,8 +65,12 @@ _Avoid_: 单一券商绑定, 券商即系统
 _Avoid_: 自动下单插件, 账户控制层
 
 **Longbridge Broker Source**:
-Longbridge 作为可选 broker source，第一阶段只提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
+Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
 _Avoid_: 内置 Longbridge 依赖, 自动安装
+
+**Longbridge Macrodata Source**:
+Longbridge skill/plugin 中的 `macrodata` 能力，用于读取宏观数据、利率/收益率、经济指标或金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
 **Broker-Live Data View**:
 券商只读数据在一次分析运行中的标准视图，包括当前持仓、账户风险、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成可视化或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。

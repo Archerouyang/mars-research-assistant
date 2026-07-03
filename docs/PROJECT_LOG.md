@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-03
 
 - Commit: pending
+- Scope: data, skill, reference
+- What changed: documented Longbridge `macrodata` as an optional macro and financial-conditions source. It can feed `Macro Regime` and `Financial Conditions`, while policy facts, official speeches, legal/regulatory status, and release status still require S0 official confirmation.
+- Why it matters: Longbridge is no longer modeled only as a broker/account source; the plugin can use its macro data command for faster macro reads without weakening source-priority rules.
+- Next step: when implementing macro-data adapters, keep `macrodata` separate from broker account reconciliation and add fixture coverage for one macro/rates read.
+
+- Commit: pending
 - Scope: decision, automation, data
 - What changed: re-scoped broker data handling around broker-live reads instead of spreadsheet or durable local trade-record tables. Added the `position_daily_report` automation concept, documented broker-live position reporting as ADR 0005, updated the glossary, roadmap, development plan, README files, and automation/broker contracts.
 - Why it matters: the plugin now matches the preferred product shape: no Google Sheets trade-record maintenance, no default local copy of full broker trade facts, and a first-class scheduled holdings/risk report that can use Longbridge or IBKR read-only data.

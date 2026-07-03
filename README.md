@@ -84,6 +84,7 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
 - IBKR、Longbridge 和手动 CSV 应映射成 broker-live runtime view；本地文件只用于 fixture、调试或用户确认后的派生快照。
+- Longbridge `macrodata` 可作为宏观数据和金融条件读取源；政策事实和官方讲话仍需优先用 S0 官方来源确认。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
 - Google Sheets 是可选摘要展示层，不做双向同步，也不维护交易记录。
 - 研报只能来自公开、授权或用户提供内容；不可访问内容只能标记为 inaccessible。

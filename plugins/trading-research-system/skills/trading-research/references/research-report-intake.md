@@ -11,7 +11,7 @@ Use source priority before accepting a claim:
 | Level | Examples | Best Use | Limitation |
 | --- | --- | --- | --- |
 | S0 official / primary | SEC filings, earnings releases, company IR decks, conference call transcripts, official macro data | company facts, guidance, segment data, official policy or macro facts | may still require interpretation |
-| S1 market data / broker / calendar | authorized prices, yields, volume, options data, earnings calendars | current market confirmation and event timing | not a thesis by itself |
+| S1 market data / broker / macrodata / calendar | authorized prices, yields, macrodata, volume, options data, earnings calendars | current macro/market confirmation and event timing | not a thesis by itself; policy facts still need S0 |
 | S2 reputable financial media | Reuters, AP, Bloomberg, WSJ, FT, CNBC, MarketWatch | news leads, reported context, management or policy quotes | verify market-moving claims with S0/S1 when possible |
 | S3 research / opinion | Seeking Alpha, sell-side notes, independent research, Substack, newsletters | thesis generation, counterarguments, valuation framing | not proof of policy, company facts, or current data |
 | S4 social / rumor | X, Reddit, forums, unsourced commentary | usually ignored | only useful if confirmed by stronger sources |

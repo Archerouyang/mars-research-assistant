@@ -10,6 +10,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 
 - Macro and policy filtering focused on market-moving variables.
 - Trump policy, Treasury policy, rates, yields, and liquidity monitoring.
+- Longbridge `macrodata` as an optional macro and financial-conditions source when installed and authorized.
 - Equity screening with thesis verification against primary sources.
 - Research report discovery from public or authorized sources, with source priority and access status.
 - User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
@@ -112,7 +113,7 @@ The plugin includes templates for Active Market Plans, update notes, holdings, b
 
 Use `trading-profile.md` in the runtime directory for private trading style and instrument preferences. The public repo only ships a blank template and does not store personal account allocation.
 
-Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into a standard broker-live runtime view before core risk or review workflows consume them. Local files are fixtures, debug artifacts, or user-confirmed derived snapshots, not the default broker fact source of truth.
+Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into a standard broker-live runtime view before core risk or review workflows consume them. Local files are fixtures, debug artifacts, or user-confirmed derived snapshots, not the default broker fact source of truth. Longbridge `macrodata` is a separate macro-data source, not an account source.
 
 Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
 

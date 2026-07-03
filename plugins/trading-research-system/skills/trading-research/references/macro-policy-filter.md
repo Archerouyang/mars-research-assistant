@@ -15,7 +15,7 @@ The user's macro focus is narrow: ignore political noise unless it changes asset
 Rank every macro/policy/news input by evidence quality before it can affect the plan:
 
 - `S0 official / primary`: White House, U.S. Treasury, Federal Reserve, BLS, BEA, CBO, FRED, TreasuryDirect, SEC filings, company IR, exchange calendars. Use these to confirm facts, releases, policy status, holidays, and company-specific claims.
-- `S1 market data / broker / calendar`: IBKR or other authorized broker feeds, exchange data, Treasury auction calendars, futures/ETF prices, yield curves, volatility indexes, earnings calendars. Use these to confirm current market transmission.
+- `S1 market data / broker / macrodata / calendar`: Longbridge `macrodata`, IBKR or other authorized broker feeds, exchange data, Treasury auction calendars, futures/ETF prices, yield curves, volatility indexes, earnings calendars. Use these to confirm current macro values, financial conditions, and market transmission.
 - `S2 reputable financial media`: Reuters, AP, Bloomberg, WSJ, FT, MarketWatch, CNBC, and similar outlets. Treat these as leads unless the report cites or links primary evidence.
 - `S3 research / opinion`: Seeking Alpha, sell-side notes, independent research, newsletters, Substack, podcasts, and analyst commentary. Use for thesis generation and counterarguments, not as proof of policy facts.
 - `S4 social / rumor / unsourced commentary`: X posts, forum claims, viral clips, and unsourced summaries. Ignore unless confirmed by `S0` or strong `S1/S2` evidence.
@@ -27,6 +27,8 @@ Use media and research reports as leads only. Verify policy status:
 - proposed
 - campaign rhetoric
 - media speculation
+
+Longbridge `macrodata` can speed up macro and financial-condition reads, but it should not replace S0 sources for policy facts, official speech text, release status, or legal/regulatory changes.
 
 ## Transmission Path
 

@@ -13,7 +13,7 @@ The product is AI-native. Its core value is not producing long reports; it is ma
 The system supports:
 
 - agent-heavy research synthesis that compresses large source sets into conclusions, changed variables, invalidations, setup status, and next checks;
-- macro policy and rates filtering focused on market-moving variables;
+- macro policy and rates filtering focused on market-moving variables, with Longbridge `macrodata` available as an optional macro/financial-conditions source;
 - research report discovery from public/authorized sources plus user-provided report intake for PDFs, links, excerpts, screenshots, and copied text;
 - research-note and market-view validation against primary/current sources;
 - a daily KVN momentum leaderboard that computes all liquid universe candidates locally, displays Top10 by default, and keeps all symbols searchable from a local SQLite store;
@@ -46,7 +46,7 @@ The system does not support in the initial scope:
 
 The default workflow is:
 
-1. **Information collection**: gather macro policy, Treasury/rates/yield data, research-report leads, research-note claims, company facts, prices, watchlists, trade plans, and holdings.
+1. **Information collection**: gather macro policy, Treasury/rates/yield data, Longbridge `macrodata` when available, research-report leads, research-note claims, company facts, prices, watchlists, trade plans, and holdings.
 2. **Information processing**: filter noise, classify source reliability, normalize inputs into analysis views, and separate facts from assumptions.
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
