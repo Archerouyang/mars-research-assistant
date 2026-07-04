@@ -33,6 +33,21 @@ Manual override rules:
 | Theme core pool | concentrated trading |  |  |  |  |  |
 | Confirmation pool | confirmation only / trading allowed |  |  |  |  |  |
 
+Multi-pool symbol rules:
+
+- Symbols allowed in multiple pools: yes/no
+- Tool selection is determined by:
+- If multiple expressions are valid:
+- User decision required when:
+
+Promotion / demotion rules:
+
+- Momentum Additions can become Watch when:
+- Watch can be suggested for Core review when:
+- Watch can become Core only after explicit user confirmation: yes/no
+- Core can be demoted when:
+- Dormant can be restored when:
+
 ## Long-Term ETF Portfolio
 
 | ETF group | Role | Symbols | Add rules | TP/rebalance rules | Pause/review rules |
