@@ -132,6 +132,7 @@ Rules:
 | AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
 | Plugin design contract | Done | `docs/PLUGIN_DESIGN.md` |
 | AI-native task UX and router fixtures | Done | `README.md`; `plugins/trading-research-system/README.md`; `plugins/trading-research-system/assets/fixtures/input/router-intents.json`; `plugins/trading-research-system/scripts/verify_router_contract.py` |
+| Runtime health contract | Done | `plugins/trading-research-system/skills/trading-research/references/runtime-health.md`; `plugins/trading-research-system/scripts/runtime_health.py`; `plugins/trading-research-system/scripts/verify_runtime_health_contract.py`; `plugins/trading-research-system/scripts/verify_runtime_health_selftest.py` |
 | KVN snapshot leaderboard contract | Planned | `CONTEXT.md`; `docs/PLUGIN_DESIGN.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
@@ -305,15 +306,14 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Define the runtime health contract and implement a script that reports available, missing, stale, and unauthorized state without copying private runtime content into public repo files.
-2. Define the KVN snapshot storage/import contract, fixture data, and verification script.
-3. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
-4. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
-5. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
-6. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-7. Add chart artifact generation from fixture-backed authorized OHLCV data.
-8. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-9. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
+1. Define the KVN snapshot storage/import contract, fixture data, and verification script.
+2. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
+3. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
+4. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
+5. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
+6. Add chart artifact generation from fixture-backed authorized OHLCV data.
+7. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+8. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 

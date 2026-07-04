@@ -32,6 +32,11 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 - Automation design, recurring brief, scheduled Active Market Plan update, or monitor:
   read `references/automation-contract.md` and use the Codex automation tool when creating or updating actual automations.
 
+Before workflows that depend on private runtime state, use
+`references/runtime-health.md` and `../../scripts/runtime_health.py` to check
+whether required state is available, missing, stale, or unauthorized. Do not read
+private file contents just to perform the health check.
+
 If a request spans multiple workflows, run them in the natural order:
 
 1. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
@@ -51,6 +56,7 @@ Detailed domain rules remain in:
 - `references/research-report-intake.md`
 - `references/equity-screening.md`
 - `references/active-market-plan.md`
+- `references/runtime-health.md`
 - `references/trading-profile.md`
 - `references/broker-data-contract.md`
 - `references/automation-contract.md`
@@ -65,6 +71,12 @@ Shared scripts and templates remain in the plugin root:
 
 - `../../scripts/`
 - `../../assets/templates/`
+
+Runtime health:
+
+```bash
+python3 ../../scripts/runtime_health.py --format json
+```
 
 ## Output Style
 

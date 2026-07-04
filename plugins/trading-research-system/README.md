@@ -130,6 +130,7 @@ Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates 
 ## Scripts
 
 ```bash
+python3 plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
 python3 plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
 python3 plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
 python3 plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv

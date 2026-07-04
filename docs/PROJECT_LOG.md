@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-04
 
 - Commit: pending
+- Scope: script, skill, reference, test
+- What changed: added a private-safe runtime health contract and `runtime_health.py` script. The script reports runtime files, daily directories, KVN storage, and broker-source authorization as `available`, `missing`, `stale`, or `unauthorized` without reading private file contents. Added selftest and contract verifier coverage, plus router and automation guidance to run runtime health before runtime-dependent work.
+- Why it matters: daily planning, automations, and broker-aware workflows can now check whether required private runtime state exists without leaking market plans, trade plans, or account context into public plugin files.
+- Next step: define the KVN snapshot import/storage contract, fixture data, and verifier.
+
+- Commit: pending
 - Scope: docs, fixture, test
 - What changed: aligned root and plugin README with the accepted AI-native natural-language task UX. Added router intent fixtures for weekly plan, premarket update, intraday setup scan, research report intake, post-order review, post-exit review, position daily report, and portfolio risk. Added `verify_router_contract.py` to check fixture schema, allowed workflows, required output labels, and avoidance of focused-skill prompts as the default UX.
 - Why it matters: the plugin now has an executable first gate for agent-autonomous routing. User docs no longer present focused skill names as the primary interface, while focused skills remain internal/power-user tools.

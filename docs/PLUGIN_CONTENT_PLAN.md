@@ -87,6 +87,7 @@ Coverage requirements:
 | --- | --- | --- |
 | P0 | AI-native synthesis contract | Skills consistently read broadly, filter aggressively, and return concise decision notes instead of source dumps. |
 | P0 | Active Market Plan current state and update trail | A deep update can overwrite `data/market-plan.md` and append `data/updates/YYYY-MM-DD.md` with clear rationale. |
+| P0 | Runtime health contract | A local health check reports runtime paths and broker authorization as `available`, `missing`, `stale`, or `unauthorized` without reading or copying private runtime content. |
 | P1 | Trade plan preparation contract | Macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created. |
 | P1 | KVN momentum leaderboard contract | A local script can import or read upstream/user-provided KVN snapshots, store searchable scores, show Top10, query any ticker, and expose Top10 entry memory without turning the list into buy/sell advice. |
 | P1 | Research report intake contract | Report discovery and user-provided report digestion produce concise, source-prioritized, verifiable claim ledgers instead of long summaries or direct setup calls. |
@@ -111,4 +112,4 @@ Coverage requirements:
 
 ## Next Slice
 
-Stabilize the AI-native task UX before more record/sync work: align README examples around natural-language tasks, add router intent fixtures, and add a router contract verifier. Then define the runtime health contract and KVN snapshot import/storage contract before updating Trade Plan Preparation fixtures. Implement `intraday_scan.py` only after setup pool fields are stable.
+Next, define the KVN snapshot import/storage contract, fixture data, and verifier. After KVN snapshots are readable from local runtime storage, update Trade Plan Preparation fixtures so macro/financial/policy reads and KVN candidates can feed the Cross-Section Candidate Pool. Implement `intraday_scan.py` only after setup pool fields are stable.

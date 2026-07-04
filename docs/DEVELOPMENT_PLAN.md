@@ -96,7 +96,7 @@ Use these statuses:
 | P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
 | P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
 | P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
-| P1 | ready | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Define available/missing/stale/unauthorized status output and implement a private-safe health script. |
+| P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | ready | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Add `momentum-leaderboard` workflow, KVN snapshot import schema, SQLite storage contract, fixture output, and verifier. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, broker-live runtime views, position daily report output, review context, and expected scan outputs. |
@@ -117,10 +117,10 @@ Use these statuses:
 
 Date: 2026-07-04
 
-- Main task: execute the first accepted development slice by aligning README UX and adding router intent fixtures plus verifier.
-- Secondary task: keep runtime health, KVN import, broker integration, and automations out of this slice.
-- Definition of done: root/plugin README use natural-language task UX; router intent fixtures cover weekly plan, premarket update, setup scan, report intake, trade review, position daily report, and portfolio risk; router verifier passes with the existing contract checks.
-- Verification: `verify_router_contract.py`, existing contract verifiers, `py_compile`, and `git diff --check` pass.
+- Main task: define the runtime health contract and private-safe script after the router UX slice.
+- Secondary task: keep KVN import, broker integration, and automations out of this slice.
+- Definition of done: `runtime_health.py` reports `available`, `missing`, `stale`, and `unauthorized` without reading private file contents; router and automation references know to use the health check before runtime-dependent work; local selftest and contract verifier pass.
+- Verification: `verify_runtime_health_selftest.py`, `verify_runtime_health_contract.py`, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -133,7 +133,9 @@ Date: 2026-07-04
 - Completed: aligned root/plugin README around natural-language task prompts and moved focused skill names into advanced/internal wording.
 - Completed: added router intent fixtures for weekly plan, premarket update, intraday setup scan, research report intake, post-order review, post-exit review, position daily report, and portfolio risk.
 - Completed: added `verify_router_contract.py` as a local acceptance gate for router fixture shape, allowed workflows, required output labels, and AI-native prompt wording.
-- Next: define the runtime health contract and script, then proceed to KVN snapshot import/storage.
+- Completed: added a private-safe runtime health contract and script that reports runtime availability, stale state, and broker authorization status without copying private runtime content into the public repo.
+- Completed: added runtime health selftest and contract verifier coverage, and wired the router/automation docs to run the health check before runtime-dependent work.
+- Next: define the KVN snapshot import/storage contract, fixture data, and verifier.
 
 ### 2026-07-03
 

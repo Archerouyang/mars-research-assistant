@@ -60,6 +60,11 @@ Trading automations should read:
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`;
 - saved report or review artifacts when they exist.
 
+Before reading private runtime content, run `runtime_health.py` or perform the
+same checks described in `runtime-health.md`. Runtime health should report only
+`available`, `missing`, `stale`, or `unauthorized` status. It must not copy
+private file contents into public repo files.
+
 Broker facts should be read live from authorized read-only broker sources when the run requires current positions, account risk, executions, or order status. Do not require a local `trades.csv`, Google Sheet, or durable broker CSV as the source of truth for objective broker facts.
 
 Default `runtime_dir` is `~/Documents/dailytrades-runtime`. The user or automation may override it with `TRADING_RESEARCH_RUNTIME_DIR`, script-level `--runtime-dir`, or the config template at `assets/templates/config.toml`.
