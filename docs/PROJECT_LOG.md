@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-04
+
+- Commit: pending
+- Scope: design, planning, decision
+- What changed: accepted the plugin design contract in `docs/PLUGIN_DESIGN.md`. The design locks the product shape around natural-language task UX, internal/power-user focused skills, private runtime boundaries, draft-mode trading automations, read-only broker access, configurable broker source onboarding for Longbridge skill/plugin and IBKR connector, KVN snapshot consumption rather than model construction, and on-demand chart artifacts with opt-in auto-generation for high-priority setup/review contexts.
+- Why it matters: the project now has a concrete AI-native plugin shape and development queue before implementation continues. Fuzzy boundaries around user interaction, runtime writes, broker data, KVN, charts, and automations are resolved enough to create implementation issues.
+- Next step: implement the accepted development queue: align README with natural-language task UX, add router intent fixtures, add a router verifier, define runtime health, then add KVN snapshot import/storage.
+
 ## 2026-07-03
 
 - Commit: pending
@@ -51,7 +59,7 @@ Use this shape:
 
 - Commit: pending
 - Scope: planning, skill, data
-- What changed: re-scoped the next product slice around analysis-first development. Added KVN momentum leaderboard terminology and planning: a dedicated `momentum-leaderboard` skill, daily local calculation, `{runtime_dir}/momentum/kvn.sqlite` storage, Top10 default display, all-symbol lookup, S&P500-benchmarked rank, 60D `KVN P`, and Top10 entry-memory fields.
+- What changed: re-scoped the next product slice around analysis-first development. Added KVN momentum leaderboard terminology and planning: a dedicated `momentum-leaderboard` skill, KVN snapshot import/storage, `{runtime_dir}/momentum/kvn.sqlite` storage, Top10 default display, all-symbol lookup, S&P500-benchmarked rank, 60D `KVN P`, and Top10 entry-memory fields.
 - Why it matters: the plugin's immediate value should be finding and validating trade candidates before perfecting records or sync details. The KVN leaderboard becomes the quantitative candidate source that macro/rates regime filters and industry/company research can consume.
 - Next step: implement the KVN contract, fixture, verifier, and storage schema before returning to Google Sheets sync or deeper record-module refinement.
 

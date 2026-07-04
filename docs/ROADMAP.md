@@ -16,7 +16,7 @@ The system supports:
 - macro policy and rates filtering focused on market-moving variables, with Longbridge `macrodata` available as an optional macro/financial-conditions source;
 - research report discovery from public/authorized sources plus user-provided report intake for PDFs, links, excerpts, screenshots, and copied text;
 - research-note and market-view validation against primary/current sources;
-- a daily KVN momentum leaderboard that computes all liquid universe candidates locally, displays Top10 by default, and keeps all symbols searchable from a local SQLite store;
+- a daily KVN momentum leaderboard that imports or reads user-provided/upstream KVN snapshots, displays Top10 by default, and keeps all symbols searchable from a local SQLite store;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
@@ -27,7 +27,7 @@ The system supports:
 - setup-scoped intraday scanning for `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, and `completed` states;
 - local trade planning, broker-live fact reads when available, two-stage interactive review-context capture, and statistics snapshots;
 - portfolio risk exposure checks before and after trades, using live read-only broker sources when available;
-- broker-agnostic read-only adapter contract for IBKR, Longbridge, and manual CSV sources;
+- broker-source configuration for Longbridge skill/plugin and IBKR connector as the first supported read-only sources, with manual CSV kept as a reduced fallback for one-off runs or fixtures;
 - optional non-sensitive summary or visualization mirrors when explicitly requested.
 
 The system does not support in the initial scope:
@@ -42,6 +42,7 @@ The system does not support in the initial scope:
 - unverified paywalled research extraction;
 - tax, legal, or regulated investment advice.
 - hard-coded personal strategy models as public defaults.
+- KVN quantitative model construction, vendor selection, signal research, and backtesting.
 
 ## Execution Method
 
@@ -52,14 +53,14 @@ The default workflow is:
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
 5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
-6. **KVN Momentum Leaderboard**: compute a daily, S&P500-benchmarked, all-searchable momentum leaderboard from local market data; show Top10 by default and preserve Top10 entry memory for later research triage.
+6. **KVN Momentum Leaderboard**: import or read daily, S&P500-benchmarked KVN snapshots from a user-provided or upstream model output; show Top10 by default and preserve Top10 entry memory for later research triage.
 7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, the latest KVN leaderboard, and profile-defined pool/scoring rules into input reads and a Cross-Section Candidate Pool before creating setup rows.
 8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
 9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
 11. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
 12. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
-13. **Position daily report**: on a confirmed schedule, read authorized Longbridge, IBKR, or manual data and generate a concise holdings/risk summary with visualization-ready exposure snapshots and user decisions needed today.
+13. **Position daily report**: on a confirmed schedule, read authorized Longbridge or IBKR data, with manual CSV as a reduced fallback when needed, and generate a concise holdings/risk summary with visualization-ready exposure snapshots and user decisions needed today.
 14. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; save review context only after user confirmation.
 15. **Post-exit review**: after the trade is closed, read objective result from broker-live sources when available and capture exit quality, mistake tags, lessons, and optional statistics snapshot.
 16. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration when enough broker history or user-approved snapshots are available.
@@ -129,7 +130,8 @@ Rules:
 | Broker-live position reporting decision | Done | `docs/adr/0005-broker-live-position-reporting.md` |
 | Domain glossary | In progress | `CONTEXT.md` |
 | AI-native synthesis contract | Done | `docs/PLUGIN_CONTENT_PLAN.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md` |
-| KVN momentum leaderboard contract | Planned | `CONTEXT.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
+| Plugin design contract | Done | `docs/PLUGIN_DESIGN.md` |
+| KVN snapshot leaderboard contract | Planned | `CONTEXT.md`; `docs/PLUGIN_DESIGN.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
@@ -203,7 +205,7 @@ Status: started.
 
 Deliverables:
 
-- `momentum-leaderboard` skill and a local KVN calculation script backed by `{runtime_dir}/momentum/kvn.sqlite`.
+- `momentum-leaderboard` skill and a KVN snapshot import/storage script backed by `{runtime_dir}/momentum/kvn.sqlite`.
 - KVN fields: `Rank vs S&P500`, `Ticker`, `KVN 分数`, `KVN P`, `当前是否 S&P500`, `连续入选Top10天数`, `近20日入选Top10次数`, and `上次入选Top10时间`.
 - `portfolio_risk.py` for portfolio exposure summaries.
 - `watchlist_score.py` for candidate prioritization.
@@ -217,7 +219,7 @@ Deliverables:
 
 Exit criteria:
 
-- The plugin can compute or read the latest KVN leaderboard, display Top10, query any symbol, and summarize Top10 changes without treating the leaderboard as a buy list.
+- The plugin can import or read the latest KVN leaderboard snapshot, display Top10, query any symbol, and summarize Top10 changes without treating the leaderboard as a buy list.
 - The plugin can produce Trade Plan Preparation input reads and a Cross-Section Candidate Pool from structured inputs and current-source verification.
 - The plugin can rank watchlist candidates from CSV input.
 - The plugin can evaluate whether a prepared setup is candidate, active, approaching, triggered, invalidated, needs review, or completed.
@@ -302,15 +304,18 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Define the `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture data, and verification script.
-2. Forward-test router behavior and each priority skill on realistic Active Market Plan prompts.
-3. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
-4. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
-5. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-6. Define the position daily report fixture, visualization fields, and automation prompt.
-7. Add chart artifact generation from fixture-backed authorized OHLCV data.
-8. Research option-flow data vendors and define the minimum anomaly schema.
-9. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
+1. Align root/plugin README examples with the AI-native natural-language task UX and move focused skill names to an advanced/internal section.
+2. Add router intent fixtures for weekly plan, premarket update, setup scan, report intake, trade review, and position daily report prompts.
+3. Add a router contract verifier that checks realistic prompts map to expected workflows and output labels.
+4. Define the runtime health contract and implement a script that reports available, missing, stale, and unauthorized state without copying private runtime content into public repo files.
+5. Define the KVN snapshot storage/import contract, fixture data, and verification script.
+6. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
+7. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
+8. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
+9. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
+10. Add chart artifact generation from fixture-backed authorized OHLCV data.
+11. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+12. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 
@@ -318,7 +323,7 @@ MVP 1 is complete when:
 
 1. The plugin contains the research workflow skill and references.
 2. Local CSV/Markdown templates exist for watchlist, trade plans, intraday plans, trades, reviews, research-note logs, and portfolio holdings.
-3. Scripts can initialize a trading day, summarize portfolio exposure, read or compute KVN momentum candidates, rank watchlist candidates, append reviews, and compute basic trade statistics.
+3. Scripts can initialize a trading day, summarize portfolio exposure, import/read KVN momentum snapshots, rank watchlist candidates, append reviews, and compute basic trade statistics.
 4. The trade journal schema can represent the current `2026交易记录` fields plus missing statistics fields.
 5. Intraday scan statuses and attention priority are documented.
 6. The plugin validates and can be installed from the personal marketplace.

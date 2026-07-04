@@ -24,7 +24,7 @@ Make the plugin usable for the first local workflow:
 2. append compact update notes;
 3. apply private trading profile rules for strategy posture scoring, pool selection, instrument selection, timeframe selection, and crowding adjustments;
 4. find or ingest research reports and reduce them to claim ledgers, verification queues, and plan-preparation impact;
-5. compute or read a daily KVN momentum leaderboard that defaults to Top10 display while keeping all liquid symbols searchable;
+5. import or read a daily KVN momentum leaderboard snapshot that defaults to Top10 display while keeping all liquid symbols searchable;
 6. prepare trade plans from macro, financial conditions, policy/event risk, KVN momentum, industry strength, and company thesis checks;
 7. initialize daily local records;
 8. plan setup-level trades;
@@ -88,7 +88,7 @@ Coverage requirements:
 | P0 | AI-native synthesis contract | Skills consistently read broadly, filter aggressively, and return concise decision notes instead of source dumps. |
 | P0 | Active Market Plan current state and update trail | A deep update can overwrite `data/market-plan.md` and append `data/updates/YYYY-MM-DD.md` with clear rationale. |
 | P1 | Trade plan preparation contract | Macro, financial conditions, policy/event risk, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created. |
-| P1 | KVN momentum leaderboard contract | A daily local script can store all liquid universe KVN scores and the skill can show Top10, query any ticker, and expose Top10 entry memory without turning the list into buy/sell advice. |
+| P1 | KVN momentum leaderboard contract | A local script can import or read upstream/user-provided KVN snapshots, store searchable scores, show Top10, query any ticker, and expose Top10 entry memory without turning the list into buy/sell advice. |
 | P1 | Research report intake contract | Report discovery and user-provided report digestion produce concise, source-prioritized, verifiable claim ledgers instead of long summaries or direct setup calls. |
 | P1 | Trading profile translation | Candidate setups can be translated into profile-defined pools, ETF groups, instruments, timeframes, and risk rules without assuming the same model for every user. |
 | P1 | Fixture package | The fixture files first cover trade plan preparation, then daily tracking, broker-live facts, position daily report output, review context, and expected scan output. |
@@ -106,8 +106,9 @@ Coverage requirements:
 - two-way Google Sheets sync;
 - persistent dashboard/frontend;
 - unbounded whole-market real-time scan;
+- KVN quantitative model construction, vendor selection, signal research, and backtesting;
 - option-flow anomaly implementation before vendor and schema are selected.
 
 ## Next Slice
 
-Stabilize the analysis-first path before more record/sync work: define the `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture output, and verification script. Then update Trade Plan Preparation fixtures so macro/rates, policy, KVN momentum, industry strength, and company thesis checks jointly feed the Cross-Section Candidate Pool. Implement `intraday_scan.py` only after setup pool fields are stable.
+Stabilize the AI-native task UX before more record/sync work: align README examples around natural-language tasks, add router intent fixtures, and add a router contract verifier. Then define the runtime health contract and KVN snapshot import/storage contract before updating Trade Plan Preparation fixtures. Implement `intraday_scan.py` only after setup pool fields are stable.

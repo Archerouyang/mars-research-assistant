@@ -17,21 +17,25 @@ Daily development planning should prioritize product capability, not process wor
 The current product sequence is:
 
 1. AI-native synthesis contract: agent reads broadly and returns concise decision-useful notes, not raw research dumps;
-2. Active Market Plan schema, trading profile, update trail, and local report/review artifacts;
-3. KVN momentum leaderboard: a daily local script writes all liquid universe KVN scores into SQLite, while the skill displays Top10 and ticker lookups;
-4. trade plan preparation: macro, financial conditions, policy/event risk, KVN momentum, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
-5. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
-6. fixture data covering KVN leaderboard snapshots, `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, broker-live runtime views, position daily report output, and two-stage review context;
-7. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-8. setup-scoped intraday scan;
-9. broker-live position daily report automation and visualization snapshots;
-10. post-order review to capture user context from read-only broker facts;
-11. post-exit review to capture results, lessons, and optional statistics snapshots;
-12. broker-agnostic portfolio reconciliation and risk view;
-13. basic stats and system review;
-14. user-confirmed Active Market Plan automations;
-15. OHLCV-backed chart artifacts;
-16. option-flow anomaly research.
+2. accepted plugin design contract: natural-language task UX, router contract, runtime write boundary, broker source configuration, KVN snapshot boundary, and chart artifact boundary;
+3. README and plugin docs aligned to natural-language task UX instead of user-facing focused-skill menus;
+4. router intent fixtures and a router contract verifier;
+5. runtime health contract and script for available/missing/stale/unauthorized state;
+6. Active Market Plan schema, trading profile, update trail, and local report/review artifacts;
+7. KVN momentum leaderboard: import/read upstream or user-provided snapshots into SQLite, while the workflow displays Top10 and ticker lookups;
+8. trade plan preparation: macro, financial conditions, policy/event risk, KVN snapshot, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
+9. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
+10. fixture data covering KVN leaderboard snapshots, `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, broker-live runtime views, position daily report output, and two-stage review context;
+11. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+12. setup-scoped intraday scan;
+13. broker-live position daily report automation and visualization snapshots;
+14. post-order review to capture user context from read-only broker facts;
+15. post-exit review to capture results, lessons, and optional statistics snapshots;
+16. broker-agnostic portfolio reconciliation and risk view;
+17. basic stats and system review;
+18. user-confirmed Active Market Plan automations;
+19. OHLCV-backed chart artifacts;
+20. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -87,9 +91,13 @@ Use these statuses:
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
 | P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
-| P0 | review | Split plugin into focused skills | Keeps the plugin usable as an agent toolbox instead of one oversized workflow prompt. | Forward-test the router and priority skills on realistic weekly review, daily tracking, and trade review prompts. |
+| P0 | done | Accept plugin design contract | Locks the product shape around natural-language task UX, internal focused skills, private runtime boundaries, draft-mode automations, broker source configuration, KVN snapshot consumption, and chart artifact behavior. | Use `docs/PLUGIN_DESIGN.md` as the source for the next implementation issues. |
+| P0 | ready | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Rewrite root/plugin README examples around natural-language tasks and move focused skill names to advanced/internal notes. |
+| P0 | ready | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Add fixture prompts for weekly plan, premarket update, setup scan, report intake, trade review, and position daily report. |
+| P0 | ready | Add router contract verifier | Gives the router a local acceptance gate. | Verify realistic prompts map to expected workflows and output labels. |
 | P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
-| P1 | ready | Define KVN momentum leaderboard contract | Makes the user's daily momentum-stock ranking a first-class analysis module instead of a vague watchlist score or manual table. | Add `momentum-leaderboard` skill contract, KVN field schema, SQLite storage contract, fixture output, and verifier. |
+| P1 | ready | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Define available/missing/stale/unauthorized status output and implement a private-safe health script. |
+| P1 | ready | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Add `momentum-leaderboard` workflow, KVN snapshot import schema, SQLite storage contract, fixture output, and verifier. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, broker-live runtime views, position daily report output, review context, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
@@ -107,15 +115,21 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-07-03
+Date: 2026-07-04
 
-- Morning main task: re-scope the plugin around analysis-first development, with `momentum-leaderboard` as the next concrete product slice.
-- Secondary task: keep existing record-writing, legacy import, and Google Sheets mirror work as support infrastructure, not the near-term main line.
-- Definition of done: `CONTEXT.md`, `docs/ROADMAP.md`, `docs/PLUGIN_CONTENT_PLAN.md`, `docs/DEVELOPMENT_PLAN.md`, and `docs/PROJECT_LOG.md` reflect the KVN leaderboard scope, storage boundary, and next implementation task.
-- Verification: documentation terms are internally consistent, roadmap next tasks put KVN before heavier intraday/record/sync work, and git diff is clean after commit.
+- Main task: finish the plugin design contract and arrange the development queue.
+- Secondary task: keep implementation work paused until fuzzy product boundaries are settled.
+- Definition of done: `docs/PLUGIN_DESIGN.md`, `docs/ROADMAP.md`, `docs/PLUGIN_CONTENT_PLAN.md`, `docs/DEVELOPMENT_PLAN.md`, and `docs/PROJECT_LOG.md` reflect accepted decisions and the next implementation order.
+- Verification: documentation terms are internally consistent, KVN model construction is out of plugin scope, and git diff is clean after commit.
 - End-of-day result: pending.
 
 ## Progress Log
+
+### 2026-07-04
+
+- Completed: accepted the plugin design contract in `docs/PLUGIN_DESIGN.md`.
+- Decisions: default UX is natural-language tasks; focused skills are internal/power-user tools; trading-judgment runtime writes are draft-only; trading-operation automations default to draft mode; broker facts are read live from authorized sources; derived broker summaries may be saved privately; v1 broker sources are Longbridge skill/plugin and IBKR connector; KVN model construction is outside plugin scope; chart artifacts are on-demand with opt-in auto-generation for high-priority setup/review contexts.
+- Next: implement the development queue from the design: README UX alignment, router intent fixtures, router verifier, runtime health contract/script, then KVN snapshot import/storage.
 
 ### 2026-07-03
 
@@ -123,7 +137,7 @@ Date: 2026-07-03
 - Decision: the record module is useful but hard to perfect upfront; near-term development should prioritize analysis, especially the KVN momentum leaderboard, macro/rates regime filtering, and industry/company research flow.
 - Decision: objective broker facts should be read live from Longbridge/IBKR when authorized; Google Sheets and local `trades.csv` should not be treated as the main trade-record layer.
 - Decision: add a scheduled position daily report capability that summarizes broker-live holdings, risk exposure, notable changes, and visualization-ready snapshots without placing or implying orders.
-- Decision: `momentum-leaderboard` should be a focused skill backed by a daily local script and `{runtime_dir}/momentum/kvn.sqlite`, not a sub-section of `macro-equity-research`.
+- Decision: `momentum-leaderboard` should be a focused skill backed by KVN snapshot import/storage in `{runtime_dir}/momentum/kvn.sqlite`, not a sub-section of `macro-equity-research`; the quantitative model itself stays outside plugin scope.
 - Decision: default user-facing KVN output is Top10 with screenshot-like fields, while all liquid universe symbols remain queryable from local storage.
 - Next: implement the `momentum-leaderboard` contract, fixture, verifier, and storage schema; then define the broker-live position daily report fixture and automation prompt.
 
