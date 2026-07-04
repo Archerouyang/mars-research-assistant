@@ -100,7 +100,9 @@ REQUIRED = {
         "不能直接升级为 setup",
     ],
     "readme": [
-        "$research-report-intake",
+        "读这篇 NVDA 研报",
+        "Advanced Skill Surface",
+        "research-report-intake",
         "Research report discovery",
         "User-provided report intake",
     ],

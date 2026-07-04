@@ -1,0 +1,68 @@
+{
+  "router_intents": [
+    {
+      "id": "weekly-plan",
+      "prompt": "帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。",
+      "expected_public_route_label": "周度深度计划更新",
+      "expected_workflows": ["runtime_health", "deep_active_market_plan_update", "portfolio_risk"],
+      "required_reads": ["market-plan.md", "trading-profile.md", "macro/rates sources", "policy/news sources", "KVN snapshot", "broker source availability"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "premarket-update",
+      "prompt": "盘前更新一下今天需要盯的 setup，告诉我哪些接近触发。",
+      "expected_public_route_label": "盘前 quick update",
+      "expected_workflows": ["runtime_health", "quick_active_market_plan_update"],
+      "required_reads": ["market-plan.md", "trading-profile.md", "updates/YYYY-MM-DD.md", "current market tape", "macro/news delta"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "intraday-setup-scan",
+      "prompt": "现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？",
+      "expected_public_route_label": "盘中 setup 扫描",
+      "expected_workflows": ["runtime_health", "intraday_setup_scan"],
+      "required_reads": ["market-plan.md", "daily/YYYY-MM-DD/trade-plans.csv", "daily/YYYY-MM-DD/intraday-watchlist.csv", "current price/chart data"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "research-report-intake",
+      "prompt": "读这篇 NVDA 研报，提炼 thesis 和 counter-thesis，并告诉我是否影响 Active Market Plan。",
+      "expected_public_route_label": "研报摄取 + 计划影响",
+      "expected_workflows": ["research_report_intake", "macro_equity_research"],
+      "required_reads": ["user-provided report or authorized source", "source access status", "market-plan.md", "trading-profile.md"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "post-order-review",
+      "prompt": "我刚买了 MU，带我做入场后复盘，记录当时的背景、信号 K 和信心。",
+      "expected_public_route_label": "入场后交易复盘",
+      "expected_workflows": ["runtime_health", "post_order_trade_review", "portfolio_risk"],
+      "required_reads": ["broker execution facts when authorized", "market-plan.md", "trading-profile.md", "setup context"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "post-exit-review",
+      "prompt": "这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。",
+      "expected_public_route_label": "出场后交易复盘",
+      "expected_workflows": ["runtime_health", "post_exit_trade_review", "trading_stats"],
+      "required_reads": ["broker result facts when authorized", "post-order review context", "market-plan.md", "review notes"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "position-daily-report",
+      "prompt": "生成今天的持仓日报，只告诉我风险暴露和需要决策的事项。",
+      "expected_public_route_label": "持仓日报草稿",
+      "expected_workflows": ["runtime_health", "broker_source_configuration", "position_daily_report", "portfolio_risk"],
+      "required_reads": ["enabled broker source", "market-plan.md", "trading-profile.md", "previous position snapshot when available"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "portfolio-risk-question",
+      "prompt": "如果我给半导体再加仓，会不会让组合风险太集中？",
+      "expected_public_route_label": "组合风险检查",
+      "expected_workflows": ["runtime_health", "broker_source_configuration", "portfolio_risk"],
+      "required_reads": ["enabled broker source", "trading-profile.md", "market-plan.md", "candidate trade context"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "影响", "需要你决定", "下一步"]
+    }
+  ]
+}

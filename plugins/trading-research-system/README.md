@@ -25,51 +25,48 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Broker-live position daily reports with concise risk summaries and visualization-ready outputs.
 - Interactive post-order and post-exit review context intake from read-only broker facts and user context.
 - Broker-agnostic portfolio risk exposure checks.
-- Broker-live runtime view templates for read-only IBKR, Longbridge, or manual CSV sources.
+- Broker-live runtime view templates for read-only Longbridge skill/plugin and IBKR connector sources, with manual CSV as a reduced one-off fallback.
 - Local planning, report snapshot, and review-context templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
 - On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
-## Skill
+## User Interaction
 
-Invoke the router skill with:
-
-```text
-$trading-research
-```
-
-For more specific workflows, use the smaller skills directly:
-
-- `$weekly-trading-plan`: deep-update the Active Market Plan with prior trade review, market/macro/policy/news analysis, event preview, momentum update, and setup discovery.
-- `$daily-market-tracking`: quick-update the Active Market Plan with market/macro/policy/news changes, setup status changes, and level updates.
-- `$intraday-setup-scan`: plan-scoped intraday setup status.
-- `$trade-review`: post-order and post-exit actual trade review using broker facts when available.
-- `$research-report-intake`: find public/authorized reports, read user-provided research, extract claims, and produce verification queues.
-- `$macro-equity-research`: macro/rates, research validation, and screening.
-- `$portfolio-risk`: exposure, sizing, and position daily report review.
-- `$trading-stats`: win rate, R-multiple, setup performance, and system review.
-
-Example prompts:
+Use natural-language trading research tasks in Codex. The agent should route the
+task to the right internal workflow.
 
 ```text
-$weekly-trading-plan Deep-update my Active Market Plan for next week.
+帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。
 ```
 
 ```text
-$daily-market-tracking Quick-update today's market plan and setup levels.
+盘前更新一下今天需要盯的 setup，告诉我哪些接近触发。
 ```
 
 ```text
-$macro-equity-research Screen US stocks that benefit from lower long-end yields. My current holdings are...
+现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？
 ```
 
 ```text
-$research-report-intake Read this NVDA report and tell me what changes in the plan.
+读这篇 NVDA 研报，提炼 thesis 和 counter-thesis，并告诉我是否影响 Active Market Plan。
 ```
 
 ```text
-$trade-review Review my latest broker execution interactively.
+生成今天的持仓日报，只告诉我风险暴露和需要决策的事项。
 ```
+
+```text
+这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
+```
+
+## Advanced Skill Surface
+
+The conceptual router is `trading-research`. Focused skills such as
+`weekly-trading-plan`, `daily-market-tracking`, `intraday-setup-scan`,
+`trade-review`, `research-report-intake`, `macro-equity-research`,
+`portfolio-risk`, and `trading-stats` remain available as internal agent
+workflows, power-user shortcuts, and development/test boundaries. They should
+not be presented as the default user-facing menu.
 
 ## Data Boundaries
 
@@ -113,7 +110,12 @@ The plugin includes templates for Active Market Plans, update notes, holdings, b
 
 Use `trading-profile.md` in the runtime directory for private strategy scoring, pool definitions, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. The public repo only ships a blank template and does not store personal account allocation or a hard-coded personal strategy model.
 
-Broker adapters are read-only sources. IBKR, Longbridge, and manual CSV should map positions, executions, and order status into a standard broker-live runtime view before core risk or review workflows consume them. Local files are fixtures, debug artifacts, or user-confirmed derived snapshots, not the default broker fact source of truth. Longbridge `macrodata` is a separate macro-data source, not an account source.
+Broker adapters are read-only sources. During onboarding or runtime
+initialization, ask which broker sources to enable. V1 formally supports the
+Longbridge skill/plugin and IBKR connector. Manual CSV remains a reduced fallback
+for one-off runs or fixtures. Local files are fixtures, debug artifacts, or
+user-confirmed derived snapshots, not the default broker fact source of truth.
+Longbridge `macrodata` is a separate macro-data source, not an account source.
 
 Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
 

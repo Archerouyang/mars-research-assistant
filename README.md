@@ -18,47 +18,53 @@
 
 ## 快速开始
 
-在 Codex 里优先从总入口开始：
+在 Codex 里直接说你要完成的交易研究任务。普通使用者不需要记住
+focused skill 名称；agent 会根据任务自动选择内部工作流。
 
 ```text
-$trading-research
-```
-
-常用入口：
-
-```text
-$weekly-trading-plan 帮我做下周交易计划，先从宏观、利率、政策、新闻和当前持仓影响开始。
+帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。
 ```
 
 ```text
-$research-report-intake 阅读这份研报，提炼 thesis、counter-thesis、Claim Ledger 和对 Active Market Plan 的影响。
+盘前更新一下今天需要盯的 setup，告诉我哪些接近触发。
 ```
 
 ```text
-$daily-market-tracking 根据当前 market-plan.md，更新今天盘前/盘中需要关注的 setup 和风险变化。
+现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？
 ```
 
 ```text
-$intraday-setup-scan 检查当前 Active Market Plan 里的 setup，告诉我哪些接近触发、哪些失效、哪些需要我注意。
+读这篇 NVDA 研报，提炼 thesis 和 counter-thesis，并告诉我是否影响 Active Market Plan。
 ```
 
 ```text
-$trade-review 根据最新成交记录，带我完成入场后复盘或出场后复盘。
+生成今天的持仓日报，只告诉我风险暴露和需要决策的事项。
+```
+
+```text
+这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
 ```
 
 ## 主要能力
 
-| 能力 | 入口 | 输出 |
+| 能力 | 用户任务 | 输出 |
 | --- | --- | --- |
-| 周度深度计划 | `$weekly-trading-plan` | 上周复盘、宏观/政策/利率/新闻展望、重点事件、持仓影响、setup 候选 |
-| 每日盘面追踪 | `$daily-market-tracking` | 当天变化、关键点位、setup 状态、风险变化、下一步检查 |
-| 盘中 setup 扫描 | `$intraday-setup-scan` | `candidate` / `active` / `approaching` / `triggered` / `invalidated` / `needs_review` |
-| 研报摄取 | `$research-report-intake` | `Research Report Digest`、`Claim Ledger`、`Verification Queue`、计划影响 |
-| 宏观和标的研究 | `$macro-equity-research` | 宏观、金融条件、政策事件、行业强弱、个股 thesis 校验 |
-| 持仓日报 | Codex automation / `$portfolio-risk` | broker-live 持仓摘要、暴露可视化、风险提示、今日决策事项 |
-| 交易复盘 | `$trade-review` | 基于 broker-live 成交事实的入场/出场复盘上下文、错误标签、经验沉淀 |
-| 组合风险 | `$portfolio-risk` | 持仓集中度、方向暴露、工具风险、新交易对组合的影响 |
-| 交易统计 | `$trading-stats` | 胜率、R 倍数、expectancy、setup 表现、系统优化线索 |
+| 周度深度计划 | “帮我做下周交易计划” | 上周复盘、宏观/政策/利率/新闻展望、重点事件、持仓影响、setup 候选 |
+| 每日盘面追踪 | “盘前更新一下” / “盘中看一下变化” | 当天变化、关键点位、setup 状态、风险变化、下一步检查 |
+| 盘中 setup 扫描 | “检查今天计划里的 setup” | `candidate` / `active` / `approaching` / `triggered` / `invalidated` / `needs_review` |
+| 研报摄取 | “读这篇研报，看是否影响计划” | `Research Report Digest`、`Claim Ledger`、`Verification Queue`、计划影响 |
+| 宏观和标的研究 | “筛一下受益于利率下行的股票” | 宏观、金融条件、政策事件、行业强弱、个股 thesis 校验 |
+| 持仓日报 | “生成今天的持仓日报” | broker-live 持仓摘要、暴露可视化、风险提示、今日决策事项 |
+| 交易复盘 | “我刚下单了，带我复盘” / “这笔交易结束了” | 基于 broker-live 成交事实的入场/出场复盘上下文、错误标签、经验沉淀 |
+| 组合风险 | “这笔加仓会不会让组合太集中” | 持仓集中度、方向暴露、工具风险、新交易对组合的影响 |
+| 交易统计 | “看一下我的 setup 表现和胜率” | 胜率、R 倍数、expectancy、setup 表现、系统优化线索 |
+
+## 高级入口
+
+`trading-research` 是概念上的总入口。`weekly-trading-plan`、
+`daily-market-tracking`、`intraday-setup-scan`、`research-report-intake`、
+`trade-review`、`portfolio-risk` 等 focused skills 是 agent 内部工作流、
+开发测试边界和高级调试入口，不是普通使用者默认要记的命令菜单。
 
 ## 本地记录
 
@@ -85,7 +91,7 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 ## 数据和连接边界
 
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
-- IBKR、Longbridge 和手动 CSV 应映射成 broker-live runtime view；本地文件只用于 fixture、调试或用户确认后的派生快照。
+- 安装或初始化时询问启用哪些 broker 来源；v1 正式支持 Longbridge skill/plugin 和 IBKR connector。手动 CSV 只作为单次运行或 fixture 的降级 fallback。
 - Longbridge `macrodata` 可作为宏观数据和金融条件读取源；政策事实和官方讲话仍需优先用 S0 官方来源确认。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
 - Google Sheets 是可选摘要展示层，不做双向同步，也不维护交易记录。
@@ -106,13 +112,14 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 | 状态 | 内容 |
 | --- | --- |
-| 已可用 | focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
+| 已可用 | AI-native 设计契约、router intent fixtures/verifier、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
 | 开发中 | fixture package、broker-live 持仓日报契约、盘中 scan script |
-| 后续 | Codex 持仓日报 automation、动量量化模型、异常期权数据源、可视化快照 |
+| 后续 | Codex 持仓日报 automation、KVN snapshot import、异常期权数据源、可视化快照 |
 
 ## 更多文档
 
 - [Plugin README](plugins/trading-research-system/README.md): plugin 包内详细说明、脚本和模板。
+- [Plugin Design](docs/PLUGIN_DESIGN.md): 已接受的 AI-native UX、runtime、broker、KVN、chart 和开发队列设计。
 - [Roadmap](docs/ROADMAP.md): 产品边界、执行方法、当前进度和任务拆分。
 - [Development Plan](docs/DEVELOPMENT_PLAN.md): 当前开发优先级和每日开发规划。
 - [Project Log](docs/PROJECT_LOG.md): GitHub trajectory 和重要变更记录。

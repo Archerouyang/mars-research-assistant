@@ -92,9 +92,9 @@ Use these statuses:
 | P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | done | Accept plugin design contract | Locks the product shape around natural-language task UX, internal focused skills, private runtime boundaries, draft-mode automations, broker source configuration, KVN snapshot consumption, and chart artifact behavior. | Use `docs/PLUGIN_DESIGN.md` as the source for the next implementation issues. |
-| P0 | ready | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Rewrite root/plugin README examples around natural-language tasks and move focused skill names to advanced/internal notes. |
-| P0 | ready | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Add fixture prompts for weekly plan, premarket update, setup scan, report intake, trade review, and position daily report. |
-| P0 | ready | Add router contract verifier | Gives the router a local acceptance gate. | Verify realistic prompts map to expected workflows and output labels. |
+| P0 | done | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Maintain root/plugin README examples around natural-language tasks as the default UX. |
+| P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
+| P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
 | P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
 | P1 | ready | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Define available/missing/stale/unauthorized status output and implement a private-safe health script. |
 | P1 | ready | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Add `momentum-leaderboard` workflow, KVN snapshot import schema, SQLite storage contract, fixture output, and verifier. |
@@ -117,10 +117,10 @@ Use these statuses:
 
 Date: 2026-07-04
 
-- Main task: finish the plugin design contract and arrange the development queue.
-- Secondary task: keep implementation work paused until fuzzy product boundaries are settled.
-- Definition of done: `docs/PLUGIN_DESIGN.md`, `docs/ROADMAP.md`, `docs/PLUGIN_CONTENT_PLAN.md`, `docs/DEVELOPMENT_PLAN.md`, and `docs/PROJECT_LOG.md` reflect accepted decisions and the next implementation order.
-- Verification: documentation terms are internally consistent, KVN model construction is out of plugin scope, and git diff is clean after commit.
+- Main task: execute the first accepted development slice by aligning README UX and adding router intent fixtures plus verifier.
+- Secondary task: keep runtime health, KVN import, broker integration, and automations out of this slice.
+- Definition of done: root/plugin README use natural-language task UX; router intent fixtures cover weekly plan, premarket update, setup scan, report intake, trade review, position daily report, and portfolio risk; router verifier passes with the existing contract checks.
+- Verification: `verify_router_contract.py`, existing contract verifiers, `py_compile`, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -130,6 +130,10 @@ Date: 2026-07-04
 - Completed: accepted the plugin design contract in `docs/PLUGIN_DESIGN.md`.
 - Decisions: default UX is natural-language tasks; focused skills are internal/power-user tools; trading-judgment runtime writes are draft-only; trading-operation automations default to draft mode; broker facts are read live from authorized sources; derived broker summaries may be saved privately; v1 broker sources are Longbridge skill/plugin and IBKR connector; KVN model construction is outside plugin scope; chart artifacts are on-demand with opt-in auto-generation for high-priority setup/review contexts.
 - Next: implement the development queue from the design: README UX alignment, router intent fixtures, router verifier, runtime health contract/script, then KVN snapshot import/storage.
+- Completed: aligned root/plugin README around natural-language task prompts and moved focused skill names into advanced/internal wording.
+- Completed: added router intent fixtures for weekly plan, premarket update, intraday setup scan, research report intake, post-order review, post-exit review, position daily report, and portfolio risk.
+- Completed: added `verify_router_contract.py` as a local acceptance gate for router fixture shape, allowed workflows, required output labels, and AI-native prompt wording.
+- Next: define the runtime health contract and script, then proceed to KVN snapshot import/storage.
 
 ### 2026-07-03
 

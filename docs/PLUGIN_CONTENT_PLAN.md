@@ -38,7 +38,7 @@ Make the plugin usable for the first local workflow:
 
 | Area | Required content | Current state | Next implementation use |
 | --- | --- | --- | --- |
-| Router skill | `trading-research` routes broad requests to focused skills | present | Keep thin; forward-test on realistic prompts. |
+| Router skill | `trading-research` routes natural-language tasks to focused workflows | present with fixtures/verifier | Keep thin; extend router intent fixtures as new task types appear. |
 | Weekly plan skill | deep Active Market Plan update and next-week plan | present | Read broad sources, then emit compact regime, events, trade plan preparation, cross-section candidates, themes, and setup deltas. |
 | Daily tracking skill | quick market, macro, news, setup, profile-aware instrument fit, and level update | present | Convert daily noise into changed variables, setup status changes, and next checks. |
 | Intraday scan skill | setup-scoped `candidate/active/approaching/triggered/invalidated/needs_review/completed` classification | present | Drives `intraday_scan.py`; output should be attention priority, not full commentary. |
