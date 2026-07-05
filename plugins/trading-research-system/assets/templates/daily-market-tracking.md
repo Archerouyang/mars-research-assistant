@@ -10,7 +10,9 @@
 - Macro / policy events:
 - News catalysts:
 - Event preview:
+- KVN source status: imported snapshot / missing / stale
 - Momentum leaderboard change:
+- If missing or stale: Do not rebuild KVN; ask whether to import a snapshot or continue without KVN.
 - Portfolio exposure concern:
 
 ## Current Market Read

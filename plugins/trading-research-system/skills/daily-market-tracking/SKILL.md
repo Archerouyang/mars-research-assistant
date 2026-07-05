@@ -14,8 +14,10 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
 1. Load the active `market-plan.md`, or ask for the current plan state if it is unavailable.
 2. Read relevant shared references:
    - Active plan model: `../trading-research/references/active-market-plan.md`.
+   - Runtime health: `../trading-research/references/runtime-health.md`.
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
+   - KVN imported snapshots: `../trading-research/references/momentum-leaderboard.md`.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
    - Intraday statuses: `../trading-research/references/intraday-setup-scan.md`.
    - Portfolio risk: `../trading-research/references/portfolio-risk.md`.
@@ -26,8 +28,13 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - fiscal/Treasury/Fed/policy headlines;
    - high-impact news and earnings;
    - major events in the current week and next-week preview window;
-   - momentum leaderboard changes;
+   - KVN Momentum Leaderboard changes from imported snapshots only;
    - prices, key levels, and chart context.
+   Use `../../scripts/kvn_leaderboard.py` only when runtime health shows the
+   KVN store is available. If the KVN store is missing or stale, report that KVN
+   is unavailable and ask whether to import a snapshot or continue without KVN.
+   Do not rebuild KVN from public market data inside daily tracking. Do not label public market data as KVN; public market data can support tape,
+   sector breadth, and relative-strength notes only.
 4. Update setup-level fields:
    - trigger zone;
    - invalidation;

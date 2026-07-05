@@ -132,6 +132,7 @@ Date: 2026-07-05
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.
 - Completed: added the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py` and updated the router to use it for KVN import/show/query/change tasks.
 - Completed: added the Active Market Plan fixture package under `assets/fixtures/runtime/active-market-plan-2026-06-24/`, covering plan state, trading profile, update note, setup pool, intraday watchlist, broker-live fixture views, position daily report, review context, and expected intraday scan output.
+- Completed: hardened daily tracking KVN source discipline after local validation showed a `KVN-like` rebuild risk. `daily-market-tracking` now must report missing/stale KVN and ask whether to import or continue without KVN; it must not rebuild or relabel public market data as KVN.
 - Next: define the position daily report contract/script or implement the first `intraday_scan.py` against the fixture package.
 
 ### 2026-07-04

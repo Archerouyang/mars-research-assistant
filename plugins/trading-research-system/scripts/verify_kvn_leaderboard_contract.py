@@ -67,6 +67,28 @@ def build_spec() -> ContractSpec:
                     "Cross-Section Candidate Pool",
                 ),
             ),
+            "daily skill": FileContract(
+                ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
+                required_terms=(
+                    "KVN Momentum Leaderboard",
+                    "runtime-health.md",
+                    "momentum-leaderboard.md",
+                    "kvn_leaderboard.py",
+                    "missing or stale",
+                    "Do not rebuild KVN",
+                    "Do not label public market data as KVN",
+                    "continue without KVN",
+                ),
+            ),
+            "daily template": FileContract(
+                ROOT / "assets" / "templates" / "daily-market-tracking.md",
+                required_terms=(
+                    "KVN source status",
+                    "imported snapshot / missing / stale",
+                    "Do not rebuild KVN",
+                    "continue without KVN",
+                ),
+            ),
             "script": FileContract(
                 ROOT / "scripts" / "kvn_leaderboard.py",
                 required_terms=(

@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: skill, template, test
+- What changed: hardened KVN source discipline for `daily-market-tracking`. Daily updates now must use imported KVN snapshots through runtime health and `kvn_leaderboard.py`; if the KVN store is missing or stale, they report the gap and ask whether to import a snapshot or continue without KVN. Public market data can still support tape and sector breadth, but must not be labeled as KVN or used to rebuild a KVN-like leaderboard.
+- Why it matters: local validation showed the agent could invent a KVN-like ranking when no official local KVN snapshot existed. This fix preserves the plugin boundary that KVN is consumed from imported/user-provided snapshots only.
+- Next step: rerun local fixture validation in a fresh chat after refreshing the plugin cache.
+
+- Commit: pending
 - Scope: fixture, test, docs
 - What changed: added the synthetic Active Market Plan fixture package under `assets/fixtures/runtime/active-market-plan-2026-06-24/`. The package includes `market-plan.md`, `trading-profile.md`, an update note, setup-level trade plans, intraday watchlist, broker-live fixture views, a position daily report output, review context, and expected intraday scan output. Added `verify_active_market_plan_fixture_contract.py` to keep the package complete and schema-aligned.
 - Why it matters: upcoming position daily report and intraday scan scripts now have stable non-private inputs and expected outputs. This keeps development offline and reproducible without live broker data.
