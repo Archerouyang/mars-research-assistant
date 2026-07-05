@@ -33,9 +33,9 @@ Use this shape:
 
 - Commit: pending
 - Scope: planning, automation, research
-- What changed: added a planned scheduled macro/industry/news research monitor to the development plan. The monitor starts from weekly P0/P1 focus variables, searches public/authorized sources on a confirmed cadence, and returns concise deltas, report leads, verification queue, and Active Market Plan impact.
-- Why it matters: after a weekly plan identifies variables like Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing, the plugin needs focused monitoring instead of forcing a full weekly refresh every time.
-- Next step: define the monitor prompt template, source-priority contract, query generation, and no-paywall behavior before creating any real Codex automation.
+- What changed: added the scheduled macro/industry/news research monitor prompt, fixture input, expected output, and contract verifier. The monitor starts from weekly P0/P1 focus variables, searches public/authorized sources on a confirmed cadence, and returns concise deltas, report leads, verification queue, and Active Market Plan impact.
+- Why it matters: after a weekly plan identifies variables like Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing, the plugin can monitor those variables directly instead of forcing a full weekly refresh every time.
+- Next step: create the real Codex automation only after the user confirms cadence, timezone, Daily Ops thread, runtime directory, and allowed sources.
 
 - Commit: pending
 - Scope: script, skill, reference, test

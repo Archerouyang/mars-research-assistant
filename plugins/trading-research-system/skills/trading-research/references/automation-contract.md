@@ -48,7 +48,7 @@ These support the Active Market Plan loop:
 - `post_market_review_prompt`: end-of-day prompt for setup status cleanup and trade review needs.
 - `broker_reconciliation_prompt`: read-only broker data alignment prompt when the user opts into a broker source.
 - `position_daily_report`: scheduled read-only holdings and portfolio-risk summary, modeled after broker-native position reminders but broker-agnostic.
-- `macro_industry_research_monitor`: planned recurring search prompt after a weekly plan identifies P0/P1 macro, rates, policy, industry, company-confirmation, or research-report focus variables. It should search only public/authorized sources, summarize deltas and report leads, create a verification queue, and state Active Market Plan impact without bypassing paywalls or promoting reports directly into setups.
+- `macro_industry_research_monitor`: recurring search prompt after a weekly plan identifies weekly P0/P1 focus variables across macro, rates, policy, industry, company confirmation, or research-report leads. It should search only public/authorized sources, summarize deltas and report leads, create a verification queue, and state Active Market Plan impact without bypassing paywalls or promoting reports directly into setups.
 
 ## Source Of Truth
 
@@ -210,6 +210,37 @@ Do not:
 - publish private account details to public repo files;
 - require Google Sheets or local trade-record tables.
 
+### Macro / Industry Research Monitor
+
+Purpose:
+
+- monitor weekly P0/P1 focus variables after the weekly plan is set;
+- search public/authorized sources for macro, rates, policy, industry,
+  company-confirmation, and research-report changes;
+- return only deltas, report leads, verification queue, and Active Market Plan
+  impact.
+
+Output:
+
+- concise Chinese Markdown;
+- changed P0/P1 variables;
+- source priority and access status;
+- research/report leads for Research Report Intake;
+- Verification Queue;
+- Active Market Plan impact;
+- user decisions needed before runtime writes or recurring automation.
+
+Prompt template:
+
+- `../../assets/templates/automation-macro-industry-research-monitor.md`
+
+Do not:
+
+- bypass paywalls;
+- imply inaccessible research was read;
+- promote research reports directly into setups;
+- turn the monitor into a full weekly plan rerun.
+
 ## Scheduling Guidance
 
 Use schedules only after the user confirms cadence and timezone.
@@ -221,6 +252,7 @@ Recommended defaults for a US-market workflow:
 - intraday trigger monitor: market-hours interval only when active setups exist;
 - post-market review: after US market close;
 - position daily report: after US market close or the user's local morning, using the user's confirmed timezone;
+- macro/industry research monitor: user-confirmed cadence after weekly P0/P1 focus variables are set, usually premarket and around P0 event windows;
 - development brief: local weekday morning;
 - development progress review: local weekday evening.
 
