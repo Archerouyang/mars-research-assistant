@@ -241,6 +241,47 @@ Do not:
 - promote research reports directly into setups;
 - turn the monitor into a full weekly plan rerun.
 
+### Automation Setup Checklist
+
+Purpose:
+
+- collect the confirmations required before creating real Codex automations;
+- keep trading-operation automations tied to the Daily Ops thread and private
+  `runtime_dir`;
+- prevent cadence, source access, broker authorization, runtime writes, or
+  paywalled research access from being silently assumed.
+
+Required confirmations:
+
+- Daily Ops thread name or id;
+- timezone and market-calendar assumption;
+- `runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless the
+  user overrides it;
+- enabled automations and cadence for each automation;
+- allowed sources, including public web search, official/primary sources,
+  Longbridge macrodata, IBKR connector, Longbridge read-only broker source,
+  manual CSV for a single run, and user-provided Seeking Alpha artifacts;
+- runtime write policy, including draft-only mode and ask-before-writing rules;
+- read-only broker policy and explicit broker authorization;
+- no paywall bypass for research reports or paid sites.
+
+Output:
+
+- Automation Setup Summary;
+- Confirmed Configuration;
+- Missing Decisions;
+- Draft Automation Plan;
+- Safety Boundaries;
+- Next Action.
+
+Prompt template:
+
+- `../../assets/templates/automation-setup-checklist.md`
+
+Do not create real Codex automations until every required confirmation is
+present. If any confirmation is missing, ask the user instead of creating,
+updating, or enabling schedules.
+
 ## Scheduling Guidance
 
 Use schedules only after the user confirms cadence and timezone.
