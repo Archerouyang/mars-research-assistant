@@ -95,13 +95,42 @@ def build_spec() -> ContractSpec:
                     "数据缺口",
                 ),
             ),
+            "automation template": FileContract(
+                ROOT / "assets" / "templates" / "automation-position-daily-report.md",
+                required_terms=(
+                    "# Position Daily Report Automation Prompt",
+                    "Longbridge skill/plugin",
+                    "IBKR connector",
+                    "portfolio_snapshot.csv",
+                    "position_daily_report.py",
+                    "Do not place, modify, cancel, close, or approve orders",
+                    "Ask before writing runtime files",
+                ),
+            ),
+            "automation contract": FileContract(
+                ROOT / "skills" / "trading-research" / "references" / "automation-contract.md",
+                required_terms=(
+                    "automation-position-daily-report.md",
+                    "position_daily_report.py",
+                    "portfolio_snapshot.csv",
+                    "If broker data is unavailable",
+                ),
+            ),
             "roadmap": FileContract(
                 ROOT.parents[1] / "docs" / "ROADMAP.md",
-                required_terms=("Broker-live position daily report script", "position_daily_report.py"),
+                required_terms=(
+                    "Broker-live position daily report script",
+                    "position_daily_report.py",
+                    "automation-position-daily-report.md",
+                ),
             ),
             "development plan": FileContract(
                 ROOT.parents[1] / "docs" / "DEVELOPMENT_PLAN.md",
-                required_terms=("Add broker-live position daily report", "position_daily_report.py"),
+                required_terms=(
+                    "Add broker-live position daily report",
+                    "position_daily_report.py",
+                    "automation-position-daily-report.md",
+                ),
             ),
         },
     )

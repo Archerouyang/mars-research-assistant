@@ -176,6 +176,16 @@ Output:
 - visual artifact requests or links when charts are generated;
 - user decisions needed today.
 
+Prompt template:
+
+- `../../assets/templates/automation-position-daily-report.md`
+
+The automation should first check runtime health, then read authorized
+read-only broker facts, map them into the standard `portfolio_snapshot.csv`
+runtime view, and call `position_daily_report.py` when a snapshot is available.
+If broker data is unavailable, it should report the gap instead of inventing
+positions.
+
 Do not:
 
 - place, modify, cancel, or imply approval of orders;

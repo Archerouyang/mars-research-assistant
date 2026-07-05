@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: automation, template, test
+- What changed: added `automation-position-daily-report.md` and extended the position daily report contract so Daily Ops automations follow the same read-only broker-source order, standard `portfolio_snapshot.csv` mapping, and `position_daily_report.py` rendering path.
+- Why it matters: the scheduled holdings report now has a concrete prompt contract before any real Longbridge or IBKR adapter work starts.
+- Next step: connect real read-only broker source adapters to the standard snapshot view when authorized.
+
+- Commit: pending
 - Scope: script, fixture, test
 - What changed: added `position_daily_report.py` and `verify_position_daily_report_selftest.py`. The first slice renders a concise Chinese broker-live style holdings/risk report from the standard `portfolio_snapshot.csv` fixture and updates the fixture expected report.
 - Why it matters: this starts the broker-live position daily report path without touching real broker connectors, raw exports, or order actions.
