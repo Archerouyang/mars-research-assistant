@@ -1,6 +1,6 @@
 ---
 name: weekly-trading-plan
-description: Initialize or deep-update the Active Market Plan with last week's trade summary review, current market tape, macro/rates, policy, news, future event preview, momentum leaderboard rebuild, setup-level opportunity discovery, and portfolio risk refresh. Use when the user asks for a weekly review, weekend prep, next-week outlook, deep plan update, macro/policy preview, momentum ranking update, or setup/opportunity discovery.
+description: Initialize or deep-update the Active Market Plan with last week's trade summary review, current market tape, macro/rates, policy, news, future event preview, KVN snapshot read/change summary, setup-level opportunity discovery, and portfolio risk refresh. Use when the user asks for a weekly review, weekend prep, next-week outlook, deep plan update, macro/policy preview, momentum ranking update, or setup/opportunity discovery.
 ---
 
 # Weekly Market Review And Trading Plan
@@ -41,7 +41,7 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - key earnings this week: only include earnings that can affect current holdings, index/sector beta, momentum themes, or planned setups;
    - event priority ranking: P0/P1/P2 events sorted by decision impact;
    - next-week preview: macro releases, Fed/Treasury events, auctions, earnings, expirations, known policy deadlines, and relevant White House / Trump public remarks;
-   - KVN Momentum Leaderboard: consume the latest imported snapshot when runtime health shows it is available; if missing or stale, say KVN is unavailable instead of rebuilding the quantitative model during the weekly plan;
+   - KVN Momentum Leaderboard: consume the latest imported snapshot when runtime health shows it is available; preserve the ticker-only script-computed order from the scheduled or upstream script; if missing or stale, say KVN is unavailable instead of rebuilding the quantitative model during the weekly plan;
    - setup pool refresh: promote only prepared candidates with higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and next check into `candidate` or `active` setups;
    - setup details: long/short thesis, setup type, instrument type, analysis timeframe, trigger timeframe, trigger zone, invalidation, profile fit, and risk budget;
    - portfolio exposure impact.
@@ -86,7 +86,7 @@ Use these six input reads:
 - `Policy/Event Risk`: White House / Trump policy, Treasury/fiscal, tariffs, Fed independence, auctions, FOMC, earnings, holidays, and other event risk.
 - `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, and themes that deserve or lose attention.
 - `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings, guidance, and disconfirming facts.
-- `KVN Momentum Leaderboard`: imported snapshot of KVN rankings, Top10 changes, ticker lookup, and Top10 memory. It is research priority only, not a buy list.
+- `KVN Momentum Leaderboard`: imported snapshot of KVN rankings, Top10 changes, ticker lookup, and Top10 memory. It is ticker-only, script-computed, and research priority only, not a buy list. Do not re-rank, re-score, or mix sector/theme rotation into KVN rows.
 
 Each input read should use this shape: `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`. Keep it concise; this is not five separate reports.
 

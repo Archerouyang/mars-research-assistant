@@ -22,7 +22,7 @@ The system supports:
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
 - trading profile support for personal strategy models, instrument preferences, pool definitions, scoring thresholds, timeframe rules, and setup-to-instrument translation without storing account allocation in the public repo;
 - automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, post-market review prompts, and position daily reports;
-- deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, momentum leaderboard rebuild, and setup discovery;
+- deep updates that include prior-week trade review, current market tape, macro/rates context, policy/news filtering, major event preview, KVN snapshot read/change summary, and setup discovery;
 - quick updates for weekday premarket/intraday changes in tape, macro/rates, policy/news, events, momentum, setup status, and key levels;
 - setup-scoped intraday scanning for `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, and `completed` states;
 - local trade planning, broker-live fact reads when available, two-stage interactive review-context capture, and statistics snapshots;
@@ -53,7 +53,7 @@ The default workflow is:
 3. **Trade idea formation**: state long/short thesis, catalyst, counter-thesis, invalidation, and risk.
 4. **Research Report Intake**: find public/authorized reports or digest user-provided PDFs, links, excerpts, screenshots, and text into a `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and `Trade Plan Preparation Impact`.
 5. **Information verification**: cross-check research claims against primary sources, current data, price behavior, and counter-evidence.
-6. **KVN Momentum Leaderboard**: import or read daily, S&P500-benchmarked KVN snapshots from a user-provided or upstream model output; show Top10 by default and preserve Top10 entry memory for later research triage.
+6. **KVN Momentum Leaderboard**: import or read daily, S&P500-benchmarked KVN ticker snapshots from a user-provided or upstream scheduled script/model output; show Top10 by script-computed order by default and preserve Top10 entry memory for later research triage. Agents may read, query, and explain changes, but must not re-rank or re-score KVN.
 7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, the latest KVN leaderboard, and profile-defined pool/scoring rules into input reads and a Cross-Section Candidate Pool before creating setup rows.
 8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
 9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.

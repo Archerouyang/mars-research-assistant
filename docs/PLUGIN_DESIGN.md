@@ -299,8 +299,9 @@ Accepted detail:
 - AI-native synthesis and concise decision notes.
 - Macro, policy, rates, liquidity, volatility, credit, and event-risk filtering.
 - Longbridge `macrodata` as an optional macro/financial data source.
-- KVN momentum leaderboard backed by imported/user-provided snapshots and
-  searchable local history.
+- KVN momentum leaderboard backed by imported/user-provided ticker snapshots and
+  searchable local history. Agents read the scheduled or upstream script output;
+  they do not re-rank, re-score, or replace ticker rows with themes/sectors.
 - Cross-sectional candidate pool formation from momentum, industry strength,
   thesis checks, and trading profile rules.
 - Authorized research report discovery and user-provided report digestion.
@@ -498,6 +499,7 @@ Done when:
 
 - KVN can feed Cross-Section Candidate Pool without becoming a buy list.
 - The plugin can consume KVN snapshots without owning the scoring formula.
+- KVN output rows are ticker-only and preserve script-computed order.
 
 Suggested issue slices:
 

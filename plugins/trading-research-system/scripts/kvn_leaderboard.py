@@ -350,7 +350,7 @@ def render_show(connection: sqlite3.Connection, snapshot_date: str, top: int) ->
         "",
         f"- Snapshot date: `{snapshot_date}`",
         f"- Source: `{snapshot_source(connection, snapshot_date)}`",
-        "- Note: research priority only, not a buy list.",
+        "- Note: ticker-only, script-computed order; research priority only, not a buy list.",
         "",
         "| Rank vs S&P500 | Ticker | KVN 分数 | KVN P | 当前是否 S&P500 | 连续入选Top10天数 | 近20日入选Top10次数 | 上次入选Top10时间 |",
         "| ---: | --- | ---: | ---: | --- | ---: | ---: | --- |",
@@ -400,6 +400,7 @@ def render_query(connection: sqlite3.Connection, snapshot_date: str, ticker: str
         f"- 连续入选Top10天数: `{consecutive}`",
         f"- 近20日入选Top10次数: `{recent_count}`",
         f"- 上次入选Top10时间: `{last_top10}`",
+        "- Ticker-only, script-computed order.",
         "- Research priority only, not a buy list.",
     ]
     return "\n".join(lines)
@@ -428,6 +429,7 @@ def render_changes(connection: sqlite3.Connection, snapshot_date: str, top: int)
         f"- New Top10: {format_tickers(new)}",
         f"- Dropped from Top10: {format_tickers(dropped)}",
         f"- Continued Top10: {format_tickers(continued)}",
+        "- Ticker-only, script-computed order.",
         "- Research priority only, not a buy list.",
     ]
     return "\n".join(lines)

@@ -93,7 +93,7 @@ Only include earnings that can affect current holdings, index/sector beta, momen
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| KVN Momentum Leaderboard | imported snapshot / missing / stale |  |  |  | Top10 / query / changes |  |
+| KVN Momentum Leaderboard | imported snapshot / missing / stale | ticker-only script-computed order |  |  | Top10 / query / changes |  |
 
 ### Cross-Section Candidate Pool
 
@@ -156,9 +156,17 @@ Use this only for forward-looking events that need preparation but are not alrea
 | ETF / 2x ETF | yes / wait |  | leveraged beta |
 | LEAP | yes / wait |  | rate-sensitive duration |
 
-## Momentum Leaderboard
+## KVN Momentum Leaderboard
 
-| Rank | Ticker/theme | Direction | Momentum read | What changed | Setup relevance |
+KVN ticker-only Top10. Preserve script-computed order from the scheduled or upstream script. Do not re-rank, re-score, or mix in sectors/themes.
+
+| Rank | Ticker | Rank vs S&P500 | KVN 分数 | KVN P | What changed | Setup relevance |
+| --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |
+
+## Sector/theme Momentum Context
+
+| Rank | Theme / sector / asset class | Direction | Momentum read | What changed | Setup relevance |
 | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |
 

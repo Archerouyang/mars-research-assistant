@@ -33,7 +33,7 @@ Google Sheets is only a compact one-way mirror for review, filtering, and cross-
 
 Use one loop with different depth, not separate modes:
 
-- `deep_update`: weekend or major reset. Includes prior-week trade summary, market state, macro/rates, policy/news, event preview, momentum leaderboard rebuild, setup pool refresh, and risk budget review.
+- `deep_update`: weekend or major reset. Includes prior-week trade summary, market state, macro/rates, policy/news, event preview, KVN snapshot read/change summary, setup pool refresh, and risk budget review.
 - `quick_update`: weekday premarket or market-hours update. Focuses on what changed since the current plan and which setups move status or priority.
 - `trigger_update`: intraday update focused on setup status, trigger zone, invalidation, execution checklist, and exposure constraints.
 - `review_update`: post-order or post-exit update linking actual trade facts and review notes back to the setup.

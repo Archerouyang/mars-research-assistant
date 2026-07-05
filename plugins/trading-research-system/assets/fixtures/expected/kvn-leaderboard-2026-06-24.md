@@ -2,7 +2,7 @@
 
 - Snapshot date: `2026-06-24`
 - Source: `fixture`
-- Note: research priority only, not a buy list.
+- Note: ticker-only, script-computed order; research priority only, not a buy list.
 
 | Rank vs S&P500 | Ticker | KVN 分数 | KVN P | 当前是否 S&P500 | 连续入选Top10天数 | 近20日入选Top10次数 | 上次入选Top10时间 |
 | ---: | --- | ---: | ---: | --- | ---: | ---: | --- |

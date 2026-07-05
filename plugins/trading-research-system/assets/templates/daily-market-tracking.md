@@ -11,8 +11,10 @@
 - News catalysts:
 - Event preview:
 - KVN source status: imported snapshot / missing / stale
-- Momentum leaderboard change:
+- KVN ticker-only Top10:
+- KVN change summary:
 - If missing or stale: Do not rebuild KVN; ask whether to import a snapshot or continue without KVN.
+- Do not re-rank or re-score KVN; preserve the script-computed ticker order.
 - Portfolio exposure concern:
 
 ## Current Market Read
@@ -34,9 +36,15 @@
 - News:
 - Next major event:
 
-## Momentum Leaderboard Update
+## KVN Momentum Leaderboard Update
 
-| Ticker/theme | Direction | Change since Active Market Plan | Setup impact |
+| Ticker | Rank vs S&P500 | KVN 分数 | KVN P | 当前是否 S&P500 | Top10 memory | Plan impact |
+| --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |
+
+## Sector/theme rotation
+
+| Theme / sector / asset class | Direction | Evidence | Setup impact |
 | --- | --- | --- | --- |
 |  |  |  |  |
 

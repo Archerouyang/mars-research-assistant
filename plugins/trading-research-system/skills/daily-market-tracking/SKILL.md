@@ -33,8 +33,12 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    Use `../../scripts/kvn_leaderboard.py` only when runtime health shows the
    KVN store is available. If the KVN store is missing or stale, report that KVN
    is unavailable and ask whether to import a snapshot or continue without KVN.
-   Do not rebuild KVN from public market data inside daily tracking. Do not label public market data as KVN; public market data can support tape,
-   sector breadth, and relative-strength notes only.
+   KVN output is ticker-only. Preserve the imported script order and do not
+   re-rank, re-score, or reorder KVN rows. Do not rebuild KVN from public market
+   data inside daily tracking. Do not label public market data as KVN; public
+   market data can support tape, sector breadth, and relative-strength notes
+   only. Any sector/theme rotation belongs in market breadth, not in the KVN
+   table. Daily tracking must not re-rank, re-score, or reorder KVN rows.
 4. Update setup-level fields:
    - trigger zone;
    - invalidation;

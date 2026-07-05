@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: skill, script, template, docs, test
+- What changed: tightened KVN leaderboard semantics across the script output, focused skill, daily/weekly/market templates, shared references, and contract verifier. KVN rows are now explicitly ticker-only, preserve the script-computed order from the scheduled/upstream model output, and cannot be re-ranked, re-scored, or replaced with sector/theme/narrative buckets by the agent. Sector/theme rotation must live in separate market breadth or theme sections.
+- Why it matters: KVN is a quantitative leaderboard artifact, not an agent-authored market narrative. This prevents daily tracking from turning broad rotation notes into fake KVN rankings.
+- Next step: validate the refreshed plugin in a new chat against both missing-KVN runtime state and fixture-backed Top10 output.
+
+- Commit: pending
 - Scope: skill, template, test
 - What changed: hardened KVN source discipline for `daily-market-tracking`. Daily updates now must use imported KVN snapshots through runtime health and `kvn_leaderboard.py`; if the KVN store is missing or stale, they report the gap and ask whether to import a snapshot or continue without KVN. Public market data can still support tape and sector breadth, but must not be labeled as KVN or used to rebuild a KVN-like leaderboard.
 - Why it matters: local validation showed the agent could invent a KVN-like ranking when no official local KVN snapshot existed. This fix preserves the plugin boundary that KVN is consumed from imported/user-provided snapshots only.

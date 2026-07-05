@@ -29,7 +29,7 @@ Use this skill to convert current macro/rates information and research claims in
    - `KVN Momentum Leaderboard`
 6. Each input read must return `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`.
 7. Convert the reads into a `Cross-Section Candidate Pool`: candidates worth searching for setup structure.
-8. Use the 动量候选池 only from an imported KVN snapshot or another user-authorized snapshot. The plugin consumes KVN output; it does not calculate the model inside this research step.
+8. Use the 动量候选池 only from an imported KVN snapshot or another user-authorized snapshot. The plugin consumes KVN output; it does not calculate the model inside this research step. KVN rows remain ticker-only and in script-computed order; do not re-rank, re-score, or replace ticker rows with themes/sectors.
 9. Promote candidates toward the weekly plan only when the next step is clear: higher-timeframe environment check, price-structure check, setup type, trigger zone, invalidation, additional thesis validation, or portfolio-risk review.
 
 ## Output

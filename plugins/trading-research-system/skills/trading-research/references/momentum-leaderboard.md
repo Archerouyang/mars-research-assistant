@@ -8,6 +8,11 @@ KVN is an imported snapshot. The plugin consumes upstream or user-provided KVN
 outputs; it does not construct the quantitative model, choose vendors, backtest
 factors, or turn the leaderboard into a buy list.
 
+KVN ranking order is script-computed. A scheduled or upstream script/model
+writes scores into the runtime store; the agent reads and explains those rows.
+The agent must not re-rank, re-score, or reorder KVN rows based on narrative,
+chart opinions, news, or public market data.
+
 ## Runtime Store
 
 Default store:
@@ -49,6 +54,13 @@ Field meaning:
 Top10 means the first 10 rows after sorting by `kvn_score` descending. It does
 not mean `rank_vs_sp500 <= 10`.
 
+KVN rows are ticker-level rows only. The displayed row key is the imported
+`ticker` field. Do not output sectors, themes, asset classes, or narrative
+buckets as KVN rows. Put sector/theme rotation in a separate market breadth or
+theme section, then use it only as context for Trade Plan Preparation.
+Do not output sectors, themes, asset classes, or narrative buckets as KVN rows.
+Put sector/theme rotation in a separate market breadth or theme section.
+
 ## Script
 
 Use the bundled script:
@@ -73,6 +85,8 @@ Commands:
 ## Output Rules
 
 - State that the leaderboard is research priority only, not a buy list.
+- Preserve the script-computed order; do not let the agent sort by preference,
+  theme conviction, chart quality, or perceived setup readiness.
 - Preserve Top10 entry memory fields for triage.
 - Do not infer a trade setup from KVN alone.
 - Feed KVN names into Trade Plan Preparation only after macro/financial

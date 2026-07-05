@@ -11,6 +11,12 @@ This is decision support, not a buy list. KVN is research priority only, not a
 trade signal by itself. This skill consumes imported snapshots; it does not construct the quantitative model, choose vendors, backtest factors, or infer
 orders.
 
+KVN output is ticker-only. Rows must come from the imported `ticker` field in
+the scheduled or upstream script output; no sectors, themes, or narrative
+buckets can appear as KVN rows. The agent must not re-rank, re-score, or reorder
+the script-computed leaderboard.
+KVN has no sectors, themes, or narrative buckets in its displayed rows.
+
 ## Workflow
 
 1. Read `../trading-research/references/runtime-health.md` before relying on
@@ -75,3 +81,5 @@ Use concise Chinese Markdown:
   Trade Plan Preparation.
 
 Always state: KVN is research priority only, not a buy list.
+Also state that KVN rows are ticker-only and preserve the script-computed order
+when the user asks about source, ranking logic, or missing data.
