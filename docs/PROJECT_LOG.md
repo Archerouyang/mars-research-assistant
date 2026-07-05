@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: template, reference, test
+- What changed: added Active Plan automation prompt templates for deep update, quick update, intraday trigger monitor, post-market review, and position daily report, plus a contract verifier that keeps the prompts tied to runtime health, draft updates, and broker read-only safety.
+- Why it matters: the recurring Daily Ops loop can be enabled later from stable prompts without silently editing runtime files or creating automated trading behavior.
+- Next step: ask the user to confirm cadence, timezone, thread, runtime directory, and broker-source permissions before creating real Codex automations.
+
+- Commit: pending
 - Scope: script, skill, reference, test
 - What changed: added the two-stage review-context path. `trade-review` now defaults to saving post-order/post-exit review context through `write_trade_review_context.py`, while `update_trade_record.py` stays as a compatibility path for explicit local `trades.csv` snapshots.
 - Why it matters: objective broker facts can remain broker-live, while the plugin preserves the user's entry rationale, signal bar, confidence, exit quality, mistake tags, and lessons as review artifacts.

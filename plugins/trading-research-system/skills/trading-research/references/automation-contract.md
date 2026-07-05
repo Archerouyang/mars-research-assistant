@@ -104,6 +104,10 @@ Output:
 
 Do not edit files without user confirmation.
 
+Prompt template:
+
+- `../../assets/templates/automation-active-plan-deep-update.md`
+
 ### Quick Update Prompt
 
 Purpose:
@@ -120,6 +124,10 @@ Output:
 - next inspection order;
 - questions for missing user inputs.
 
+Prompt template:
+
+- `../../assets/templates/automation-active-plan-quick-update.md`
+
 ### Intraday Trigger Monitor
 
 Purpose:
@@ -135,6 +143,10 @@ Output:
 - `execution_check_required` when triggered;
 - explicit risk or data gaps.
 
+Prompt template:
+
+- `../../assets/templates/automation-intraday-trigger-monitor.md`
+
 ### Post-Market Review Prompt
 
 Purpose:
@@ -149,6 +161,10 @@ Output:
 - what needs review;
 - unresolved broker/trade facts;
 - proposed update note.
+
+Prompt template:
+
+- `../../assets/templates/automation-post-market-review.md`
 
 ### Position Daily Report
 

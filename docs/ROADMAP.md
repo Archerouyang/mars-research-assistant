@@ -149,13 +149,14 @@ Rules:
 | Local utility scripts | Started | `plugins/trading-research-system/scripts/` |
 | Active Market Plan update loop | Started | `docs/ROADMAP.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md` |
 | Broker-live data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
-| Automation contract | Started | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md` |
+| Automation contract | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md`; `plugins/trading-research-system/scripts/verify_active_plan_automation_contract.py` |
+| Active Plan automation prompts | Done | `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
 | Trading profile template | Started | `plugins/trading-research-system/assets/templates/trading-profile.md` |
 | Intraday status model | Started | `references/intraday-setup-scan.md` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
 | Basic plugin content plan | Done | `docs/PLUGIN_CONTENT_PLAN.md` |
 | Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
-| Position daily report automation | Started | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
+| Position daily report automation | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
 | Google Sheets summary display | Deferred | no script yet |
 | OHLCV-driven chart/scan artifacts | Started | `plugins/trading-research-system/scripts/chart_artifact.py` |
 | Option-flow anomaly module | Planned | data vendor not selected |
