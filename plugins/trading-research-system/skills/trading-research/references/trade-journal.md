@@ -32,7 +32,7 @@ Recommended files:
 - `watchlist.csv`
 - `trade-plans.csv`
 - `intraday-watchlist.csv`
-- `trades.csv`
+- `trades.csv` only for compatibility snapshots or user-approved local statistics inputs
 - `reviews.md`
 - `research-notes.md`
 - `portfolio.csv`
@@ -79,9 +79,29 @@ Required planning fields:
 - `time_stop`
 - `notes`
 
-## Actual Trades
+## Review Context
 
-Required execution fields:
+The default post-order and post-exit artifact is a readable review section in
+`reviews.md`, written only after user confirmation. It can include broker-live
+fact IDs, plan linkage, entry context, signal bar, confidence, exit result,
+mistake tag, lesson, and next rule without creating `trades.csv`.
+
+Use:
+
+```bash
+python3 plugins/trading-research-system/scripts/write_trade_review_context.py \
+  --date YYYY-MM-DD \
+  --stage post-order \
+  --trade-id TRADE_ID \
+  --fields-json /path/to/review-context-fields.json \
+  --review-file /path/to/review.md
+```
+
+Use `--stage post-exit` after the trade closes.
+
+## Compatibility Actual Trades
+
+Compatibility execution fields:
 
 - `trade_id`
 - `parent_trade_id`
@@ -260,11 +280,13 @@ Minimum useful statistics:
 - mistake-tag frequency
 - confidence calibration
 
-Use:
+Compatibility statistics can still use a user-approved local `trades.csv`
+snapshot or a broker-history-derived export. Use:
 
 ```bash
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv
 python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/YYYY-MM-DD/trades.csv --group-by instrument_type
+python3 plugins/trading-research-system/scripts/write_trade_review_context.py --date YYYY-MM-DD --stage post-order --trade-id TRADE_ID --fields-json /path/to/review-context-fields.json --review-file /path/to/review.md
 python3 plugins/trading-research-system/scripts/update_trade_record.py --date YYYY-MM-DD --stage post-order --trade-id TRADE_ID --fields-json /path/to/fields.json --review-file /path/to/review.md
 python3 plugins/trading-research-system/scripts/import_legacy_active_csv.py /path/to/active.csv --runtime-dir ~/Documents/dailytrades-runtime
 ```

@@ -11,10 +11,11 @@ Support two review stages:
 1. **Post-order review**: immediately after an order or fill, capture the entry facts and decision context while the memory is fresh.
 2. **Post-exit review**: after the trade is closed, complete result, exit quality, realized R, mistake tags, lessons, and next rules.
 
-Each stage should produce two default outputs:
+Each stage should produce these default outputs:
 
 1. A structured review-context draft.
 2. A readable review section.
+3. A `write_trade_review_context.py` command or saved-artifact note after user confirmation.
 
 Compatibility path: if the user explicitly asks to save a local trade-record snapshot, the review can also produce a `trades.csv` row draft or row update.
 
@@ -299,7 +300,20 @@ After the questions, produce:
 3. Any missing fields.
 4. Suggested `mistake_tag`, `outcome`, and confidence calibration.
 
-Then ask the user whether to save it as a local review artifact or only keep it in the conversation. Compatibility path: if the user explicitly wants a local trade-record snapshot, write through `scripts/update_trade_record.py`, not by hand-editing CSV rows:
+Then ask the user whether to save it as a local review artifact or only keep it in the conversation. The default save path is a review-context artifact:
+
+```bash
+python3 plugins/trading-research-system/scripts/write_trade_review_context.py \
+  --date YYYY-MM-DD \
+  --stage post-order \
+  --trade-id TRADE_ID \
+  --fields-json /path/to/review-context-fields.json \
+  --review-file /path/to/review.md
+```
+
+The fields JSON can contain review-context fields such as `symbol`, `setup_id`, `broker`, `execution_id`, `analysis_timeframe`, `trigger_timeframe`, `market_background`, `entry_reason`, `signal_bar`, `confidence`, `risk_plan`, `exit_result`, `realized_R`, `mistake_tag`, `lesson`, and `next_rule`.
+
+Compatibility path: if the user explicitly wants a local trade-record snapshot, write through `scripts/update_trade_record.py`, not by hand-editing CSV rows:
 
 ```bash
 python3 plugins/trading-research-system/scripts/update_trade_record.py \
@@ -310,7 +324,7 @@ python3 plugins/trading-research-system/scripts/update_trade_record.py \
   --review-file /path/to/review.md
 ```
 
-The fields JSON must contain only valid `trades.csv` columns. Use `post-order` to create or update the open row and `post-exit` to complete the same row after the trade ends.
+The compatibility fields JSON must contain only valid `trades.csv` columns. Use `post-order` to create or update the open row and `post-exit` to complete the same row after the trade ends.
 
 For legacy imports from an older Google Sheet row that lacks `quantity`, `fees`, or `risk_amount`, add `--allow-unknown-execution-fields` so the script writes those specific fields as `unknown`. For fresh interactive review, keep asking until those execution facts are resolved or the user explicitly confirms they are unknown.
 

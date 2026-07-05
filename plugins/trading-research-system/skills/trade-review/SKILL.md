@@ -5,7 +5,10 @@ description: Run interactive trade review for actual trades, including post-orde
 
 # Trade Review
 
-Use this skill to turn actual trades into structured `trades.csv` records and readable `reviews.md` notes.
+Use this skill to capture two-stage trade review context from actual trades.
+Objective execution/result facts come from read-only broker-live facts when
+available. The default artifact is a structured review-context section in
+`reviews.md`, not a durable local trade-record table.
 
 ## Workflow
 
@@ -25,11 +28,15 @@ Use this skill to turn actual trades into structured `trades.csv` records and re
 7. Determine the stage:
    - `post_order`: newly entered, open, or partially filled.
    - `post_exit`: closed, expired, stopped, scratched, or invalidated.
-8. Do not write records until key fields are resolved and the user confirms.
-9. After confirmation, write the record with `../../scripts/update_trade_record.py`:
+8. Do not write local artifacts until key fields are resolved and the user confirms.
+9. After confirmation, write the review context with `../../scripts/write_trade_review_context.py`:
+   - pass `--stage post-order` or `--stage post-exit`;
+   - pass a fields JSON file through `--fields-json` containing review-context fields;
+   - pass `--review-file` for the user's preserved Markdown review text when available.
+10. Compatibility path: if the user explicitly asks for a local trade-record snapshot, write it with `../../scripts/update_trade_record.py`:
    - pass `--stage post-order` or `--stage post-exit`;
    - pass a fields JSON file through `--fields-json` containing only valid `trades.csv` fields;
-   - pass `--review-file` for the reviewed Markdown text when available.
+   - pass `--review-file` for the reviewed Markdown text when available;
    - use `--allow-unknown-execution-fields` only for legacy sheet imports that lack `quantity`, `fees`, or `risk_amount`; do not use it to skip fresh post-order questions.
 
 ## Post-Order Focus
@@ -61,10 +68,11 @@ Complete the trade:
 
 Produce:
 
-1. a `trades.csv` row draft or update;
+1. a review-context draft;
 2. a `reviews.md` section draft;
 3. missing fields;
-4. suggested `outcome`, `mistake_tag`, and confidence calibration.
-5. after user confirmation, the exact `update_trade_record.py` command or a short note that it was written.
+4. suggested `outcome`, `mistake_tag`, and confidence calibration;
+5. after user confirmation, the exact `write_trade_review_context.py` command or a short note that it was written.
+6. Compatibility path only when requested: the exact `update_trade_record.py` command for a local `trades.csv` snapshot.
 
 Use Chinese and keep the interaction strict enough for later statistics.

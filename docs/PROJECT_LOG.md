@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: script, skill, reference, test
+- What changed: added the two-stage review-context path. `trade-review` now defaults to saving post-order/post-exit review context through `write_trade_review_context.py`, while `update_trade_record.py` stays as a compatibility path for explicit local `trades.csv` snapshots.
+- Why it matters: objective broker facts can remain broker-live, while the plugin preserves the user's entry rationale, signal bar, confidence, exit quality, mistake tags, and lessons as review artifacts.
+- Next step: connect broker execution/result adapters to the review context fields and keep local CSV statistics as an optional snapshot path.
+
+- Commit: pending
 - Scope: fixture, test, docs
 - What changed: added safe realistic `research-report-intake` fixtures for a user-provided AI infrastructure report and a public-source discovery/access-boundary prompt. The verifier now requires source priority, access status, inaccessible S3 handling, Claim Ledger, Verification Queue, and Trade Plan Preparation impact.
 - Why it matters: report intake can be forward-tested without storing paywalled or copyrighted research text, and report opinions still cannot directly become setups.
