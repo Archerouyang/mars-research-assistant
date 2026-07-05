@@ -36,6 +36,26 @@ FILES = {
     / "fixtures"
     / "expected"
     / "research-report-digest-sample.md",
+    "input_user_report": ROOT
+    / "assets"
+    / "fixtures"
+    / "input"
+    / "research-report-user-provided-ai-infra.md",
+    "input_discovery": ROOT
+    / "assets"
+    / "fixtures"
+    / "input"
+    / "research-report-discovery-ai-infra.md",
+    "expected_user_report": ROOT
+    / "assets"
+    / "fixtures"
+    / "expected"
+    / "research-report-intake-ai-infra.md",
+    "expected_discovery": ROOT
+    / "assets"
+    / "fixtures"
+    / "expected"
+    / "research-report-discovery-ai-infra.md",
     "readme": ROOT / "README.md",
     "manifest": ROOT / ".codex-plugin" / "plugin.json",
     "init_daily": ROOT / "scripts" / "init_daily.py",
@@ -99,6 +119,50 @@ REQUIRED = {
         "needs_check",
         "不能直接升级为 setup",
     ],
+    "input_user_report": [
+        "synthetic fixture",
+        "Source Metadata",
+        "access_status",
+        "source_priority",
+        "user-provided",
+        "Material Claims To Extract",
+        "Do not promote the idea directly to `candidate setup`",
+    ],
+    "input_discovery": [
+        "Report Discovery Fixture",
+        "User Request",
+        "Candidate Source States",
+        "access_status",
+        "inaccessible",
+        "do not bypass any paywall",
+        "Output what each source could change in Trade Plan Preparation",
+    ],
+    "expected_user_report": [
+        "## 结论",
+        "## Research Report Digest",
+        "## Claim Ledger",
+        "## Verification Queue",
+        "## Trade Plan Preparation Impact",
+        "## 不可访问来源处理",
+        "S3 research/opinion",
+        "needs_check",
+        "Cross-Section Candidate Pool",
+        "不能直接升级为 `candidate setup`",
+        "must not bypass paywalls",
+    ],
+    "expected_discovery": [
+        "## 结论",
+        "## Discovery Sources",
+        "## Verification Queue",
+        "## Trade Plan Preparation Impact",
+        "## Access Boundary",
+        "S0 official / primary",
+        "S1 market data / broker / macrodata / calendar",
+        "S3 research / opinion",
+        "inaccessible",
+        "Do not bypass paywalls",
+        "Do not imply the inaccessible report was read",
+    ],
     "readme": [
         "读这篇 NVDA 研报",
         "Advanced Skill Surface",
@@ -136,6 +200,10 @@ FORBIDDEN = {
     "skill": ["`Report Digest`"],
     "macro_skill": ["`Report Digest`"],
     "expected_digest": ["## Report Digest", "next_action"],
+    "input_user_report": ["guaranteed return"],
+    "input_discovery": ["summarize inaccessible content"],
+    "expected_user_report": ["## Report Digest", "next_action", "guaranteed"],
+    "expected_discovery": ["## Report Digest", "next_action", "summarized inaccessible"],
 }
 
 

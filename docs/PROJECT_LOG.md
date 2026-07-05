@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: fixture, test, docs
+- What changed: added safe realistic `research-report-intake` fixtures for a user-provided AI infrastructure report and a public-source discovery/access-boundary prompt. The verifier now requires source priority, access status, inaccessible S3 handling, Claim Ledger, Verification Queue, and Trade Plan Preparation impact.
+- Why it matters: report intake can be forward-tested without storing paywalled or copyrighted research text, and report opinions still cannot directly become setups.
+- Next step: use the same fixture-backed contract when integrating report intake into trade plan preparation and setup-pool promotion.
+
+- Commit: pending
 - Scope: automation, template, test
 - What changed: added `automation-position-daily-report.md` and extended the position daily report contract so Daily Ops automations follow the same read-only broker-source order, standard `portfolio_snapshot.csv` mapping, and `position_daily_report.py` rendering path.
 - Why it matters: the scheduled holdings report now has a concrete prompt contract before any real Longbridge or IBKR adapter work starts.

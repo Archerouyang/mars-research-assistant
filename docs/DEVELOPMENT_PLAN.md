@@ -100,7 +100,7 @@ Use these statuses:
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
 | P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Use `momentum-leaderboard` for user-facing KVN tasks and run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
-| P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
+| P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Keep the fixture-backed user-provided report and discovery/access-boundary examples current as the workflow changes. |
 | P1 | done | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Use `verify_active_market_plan_fixture_contract.py` before building position daily report or intraday scan scripts. |
 | P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
 | P1 | review | Re-scope canonical record schema registry | Existing CSV schemas are useful for fixtures and compatibility, but broker-live reads are now the default source for objective broker facts. | Decide which schemas stay as fixture/debug artifacts and which scripts should be deprecated or converted to snapshot tools. |
@@ -120,10 +120,10 @@ Use these statuses:
 Date: 2026-07-05
 
 - Main task: execute the local MVP sequence in small verified stages.
-- Current stage: define the KVN Model module planning contract without implementing model code inside this plugin.
-- Secondary task: prepare the next stage around broker-live position daily report fixture/script work.
-- Definition of done: `docs/KVN_MODEL_PLAN.md`, ADR, roadmap, development plan, and project log clearly separate KVN model construction from plugin snapshot consumption.
-- Verification: markdown references resolve through `rg`; `git diff --check` passes.
+- Current stage: forward-test `research-report-intake` with safe realistic fixtures after completing the KVN model contract and position daily report slices.
+- Secondary task: prepare the next stage around two-stage trade review re-scoping.
+- Definition of done: user-provided report and public-source discovery fixtures lock source priority, inaccessible-source handling, Claim Ledger, Verification Queue, and Trade Plan Preparation impact.
+- Verification: `verify_research_report_intake_contract.py`, focused script compilation, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -133,6 +133,7 @@ Date: 2026-07-05
 - Completed: defined the KVN Model module planning contract in `docs/KVN_MODEL_PLAN.md` and `docs/adr/0006-kvn-model-module-boundary.md`. The future model owns universe, data ingestion, factor computation, validation, versioning, and daily snapshots; the plugin only consumes standardized outputs.
 - Completed: added the first `position_daily_report.py` slice. It renders a concise Chinese position daily report from the standard `portfolio_snapshot.csv` fixture, keeps broker reads out of the script, and locks output with `verify_position_daily_report_selftest.py`.
 - Completed: added `automation-position-daily-report.md` and wired the automation contract to the standard runtime snapshot -> `position_daily_report.py` path. The prompt asks before runtime writes and forbids broker write actions.
+- Completed: forward-tested `research-report-intake` with safe realistic fixtures: one user-provided AI infrastructure report artifact and one public-source discovery/access-boundary prompt. The contract now locks source priority, inaccessible S3 handling, Claim Ledger, Verification Queue, and Trade Plan Preparation impact without storing real paywalled report text.
 - Completed: extended Trade Plan Preparation from five input reads to six by adding `KVN Momentum Leaderboard` as an imported snapshot input.
 - Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.
