@@ -16,6 +16,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
+- KVN snapshot import, Top10 display, ticker lookup, and Top10 change summary from local SQLite.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
 - Trading profile template for personal strategy scoring, pool definitions, ETF groups, instrument preference, timeframe rules, crowding model, and setup-to-instrument translation.
 - Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
@@ -131,6 +132,10 @@ Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates 
 
 ```bash
 python3 plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
+python3 plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
+python3 plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
+python3 plugins/trading-research-system/scripts/kvn_leaderboard.py query SOXX --date 2026-06-24
+python3 plugins/trading-research-system/scripts/kvn_leaderboard.py changes --date 2026-06-24
 python3 plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
 python3 plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
 python3 plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv

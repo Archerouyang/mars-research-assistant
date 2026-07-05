@@ -17,6 +17,14 @@
       "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
     },
     {
+      "id": "kvn-leaderboard",
+      "prompt": "看一下最新 KVN 动量榜 Top10，再查一下 SOXX 有没有进入榜单。",
+      "expected_public_route_label": "KVN 动量榜读取",
+      "expected_workflows": ["runtime_health", "kvn_snapshot_lookup"],
+      "required_reads": ["momentum/kvn.sqlite", "latest KVN snapshot", "ticker lookup"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
       "id": "intraday-setup-scan",
       "prompt": "现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？",
       "expected_public_route_label": "盘中 setup 扫描",

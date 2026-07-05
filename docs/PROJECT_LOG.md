@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-04
 
 - Commit: pending
+- Scope: script, fixture, reference, test
+- What changed: added `kvn_leaderboard.py` for importing externally generated KVN snapshot CSV files into `{runtime_dir}/momentum/kvn.sqlite`, showing Top10 by `KVN 分数`, querying any imported ticker, and summarizing Top10 changes. Added fixture snapshots, expected Top10 output, `momentum-leaderboard.md`, selftest, contract verifier, and router fixture coverage for natural-language KVN lookup.
+- Why it matters: the plugin can now consume the user's KVN momentum leaderboard as a first-class research input without owning the quantitative model or treating the leaderboard as a buy list.
+- Next step: wire imported KVN candidates into Trade Plan Preparation fixture output and Cross-Section Candidate Pool rules.
+
+- Commit: pending
 - Scope: script, skill, reference, test
 - What changed: added a private-safe runtime health contract and `runtime_health.py` script. The script reports runtime files, daily directories, KVN storage, and broker-source authorization as `available`, `missing`, `stale`, or `unauthorized` without reading private file contents. Added selftest and contract verifier coverage, plus router and automation guidance to run runtime health before runtime-dependent work.
 - Why it matters: daily planning, automations, and broker-aware workflows can now check whether required private runtime state exists without leaking market plans, trade plans, or account context into public plugin files.

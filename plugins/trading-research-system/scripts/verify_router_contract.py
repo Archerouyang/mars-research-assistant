@@ -142,6 +142,7 @@ def verify_router_contract(path: Path) -> list[str]:
         "post_exit_trade_review",
         "position_daily_report",
         "portfolio_risk",
+        "kvn_snapshot_lookup",
     }
     missing_coverage = required_coverage - covered_workflows
     if missing_coverage:

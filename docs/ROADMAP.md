@@ -133,7 +133,7 @@ Rules:
 | Plugin design contract | Done | `docs/PLUGIN_DESIGN.md` |
 | AI-native task UX and router fixtures | Done | `README.md`; `plugins/trading-research-system/README.md`; `plugins/trading-research-system/assets/fixtures/input/router-intents.json`; `plugins/trading-research-system/scripts/verify_router_contract.py` |
 | Runtime health contract | Done | `plugins/trading-research-system/skills/trading-research/references/runtime-health.md`; `plugins/trading-research-system/scripts/runtime_health.py`; `plugins/trading-research-system/scripts/verify_runtime_health_contract.py`; `plugins/trading-research-system/scripts/verify_runtime_health_selftest.py` |
-| KVN snapshot leaderboard contract | Planned | `CONTEXT.md`; `docs/PLUGIN_DESIGN.md`; `docs/ROADMAP.md`; `docs/PLUGIN_CONTENT_PLAN.md`; `docs/DEVELOPMENT_PLAN.md` |
+| KVN snapshot leaderboard contract | Done | `plugins/trading-research-system/skills/trading-research/references/momentum-leaderboard.md`; `plugins/trading-research-system/scripts/kvn_leaderboard.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_contract.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_selftest.py`; `plugins/trading-research-system/assets/fixtures/expected/kvn-leaderboard-2026-06-24.md` |
 | Trade Plan Preparation contract | Started | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
@@ -306,8 +306,8 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Define the KVN snapshot storage/import contract, fixture data, and verification script.
-2. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
+1. Add Trade Plan Preparation fixture data that consumes a KVN leaderboard snapshot plus input reads, Cross-Section Candidate Pool, and promotion into `candidate setup`.
+2. Add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`.
 3. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
 4. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
 5. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.

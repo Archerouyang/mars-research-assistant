@@ -25,6 +25,8 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
   use `research-report-intake`.
 - Macro policy, rates/yields, research-note verification, stock screening:
   use `macro-equity-research`.
+- KVN snapshot import, Top10 display, ticker lookup, or Top10 changes:
+  read `references/momentum-leaderboard.md` and use `../../scripts/kvn_leaderboard.py`.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:
@@ -57,6 +59,7 @@ Detailed domain rules remain in:
 - `references/equity-screening.md`
 - `references/active-market-plan.md`
 - `references/runtime-health.md`
+- `references/momentum-leaderboard.md`
 - `references/trading-profile.md`
 - `references/broker-data-contract.md`
 - `references/automation-contract.md`
@@ -76,6 +79,12 @@ Runtime health:
 
 ```bash
 python3 ../../scripts/runtime_health.py --format json
+```
+
+KVN snapshot:
+
+```bash
+python3 ../../scripts/kvn_leaderboard.py show --top 10
 ```
 
 ## Output Style
