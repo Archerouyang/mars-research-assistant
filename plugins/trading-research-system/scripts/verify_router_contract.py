@@ -14,6 +14,7 @@ FIXTURE = ROOT / "assets" / "fixtures" / "input" / "router-intents.json"
 
 ALLOWED_WORKFLOWS = {
     "broker_source_configuration",
+    "daily_ops_orchestrator",
     "deep_active_market_plan_update",
     "intraday_setup_scan",
     "kvn_snapshot_lookup",
@@ -134,6 +135,7 @@ def verify_router_contract(path: Path) -> list[str]:
         _required_str_list(fixture, "required_reads", failures, fixture_id)
 
     required_coverage = {
+        "daily_ops_orchestrator",
         "deep_active_market_plan_update",
         "quick_active_market_plan_update",
         "intraday_setup_scan",

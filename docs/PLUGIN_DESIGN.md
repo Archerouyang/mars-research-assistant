@@ -15,6 +15,7 @@ current facts, and returns a concise decision-useful note.
 
 - The plugin is decision support, not an automated trading system.
 - The user should not need to memorize focused skill names.
+- The user should not need to manually call out every module in order; Daily Ops Orchestrator provides 主动流程引导 before focused workflows run.
 - Focused skills remain as agent-internal tools, test boundaries, and development
   units.
 - The public plugin must stay general. Personal strategy details belong in the
@@ -37,6 +38,7 @@ confirmed in the design discussion.
 | Area | Recommended decision | Status | Why |
 | --- | --- | --- | --- |
 | Default UX | Natural language tasks are the default user interface | accepted | Keeps the product AI-native and avoids making users memorize skill names |
+| Daily Ops Orchestrator | Add an active process guide backed by `ops-state.md` and `ticker + trade_horizon + instrument` confirmations | accepted | Lets the user say "start today" or "continue the flow" while the agent decides the next workflow |
 | Focused skills | Keep as internal agent workflows, power-user shortcuts, and test boundaries | accepted | Preserves modularity without making the UX tool-menu driven |
 | Public docs | README should show task prompts first and move focused skill names to an advanced section | accepted | Aligns documentation with the desired user interaction model |
 | Runtime source of truth | Private runtime files own discretionary context; broker facts are read live when authorized; derived broker summaries may be saved for comparison | accepted | Avoids leaking private data and avoids stale local broker records |

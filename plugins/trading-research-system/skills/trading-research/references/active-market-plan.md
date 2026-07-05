@@ -17,12 +17,14 @@ Use:
 
 ```text
 {runtime_dir}/market-plan.md
+{runtime_dir}/ops-state.md
 {runtime_dir}/trading-profile.md
 {runtime_dir}/updates/YYYY-MM-DD.md
 {runtime_dir}/daily/YYYY-MM-DD/
 ```
 
 - `{runtime_dir}/market-plan.md`: overwriteable living state. It should always show the current plan.
+- `{runtime_dir}/ops-state.md`: compact Daily Ops Orchestrator state. It records current stage, pending confirmations, active setup summary, and next recommended action.
 - `{runtime_dir}/trading-profile.md`: private strategy profile for scoring rules, pools, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. Use the public template at `assets/templates/trading-profile.md`.
 - `{runtime_dir}/updates/YYYY-MM-DD.md`: append-only update trail. It records what changed, why, and what to inspect next.
 - `{runtime_dir}/daily/YYYY-MM-DD/`: daily records for trade plans, broker data, reviews, and statistics inputs.
@@ -72,6 +74,7 @@ Required setup fields:
 - `symbol`
 - `underlying`
 - `direction`
+- `trade_horizon`
 - `instrument_type`
 - `analysis_timeframe`
 - `trigger_timeframe`
@@ -91,6 +94,24 @@ For user-facing notes and Sheets mirrors, label timeframes by role:
 - `trigger_timeframe` = `执行触发时间框架`: decides whether the setup can move to `triggered`.
 
 Do not collapse them into one generic `条件/触发` field. For fast products such as 0DTE options, the background timeframe can qualify the setup while the execution timeframe supplies the actual signal bar.
+
+### Ticker Trade Horizon Confirmation
+
+Before promoting a ticker into a setup, confirm the intended
+`ticker + trade_horizon + instrument` grouping. The same ticker can have several
+separate setups if the user trades it differently, for example:
+
+- `QQQ + long-term holding + ETF`;
+- `QQQ + 0DTE + option`;
+- `MU + medium-term swing + equity`;
+- `TSM + LEAP + call`;
+- `GLW + watch only + equity`.
+
+If trade horizon is missing, do not generate concrete entry or exit triggers.
+Keep the item in Cross-Section Candidate Pool or `blocked_setup` and ask the
+user to confirm whether it is a long-term holding, medium-term swing,
+short-term swing, intraday, 0DTE, LEAP, 2x ETF, macro allocation, or watch only
+idea.
 
 If the same market opportunity can be traded with multiple instruments, create multiple setups that share the same `theme_id` or `market_context_id`.
 

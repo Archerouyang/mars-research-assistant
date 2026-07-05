@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: router, template, fixture, test, planning
+- What changed: added the Daily Ops Orchestrator contract, `ops-state.md` runtime template, start-today fixture, router fixture, and verifier. The Orchestrator detects the current workflow stage, reads runtime availability, asks for missing confirmations, and requires setup ideas to be grouped by `ticker + trade_horizon + instrument` before concrete trigger analysis.
+- Why it matters: the plugin now has an active process guide instead of requiring the user to manually call out every module such as weekly plan, KVN, macro, setup scan, risk, and review.
+- Next step: forward-test the Orchestrator in an isolated Daily Ops dry-run, then wire trading-operation automations to wake the Orchestrator instead of individual prompt fragments.
+
+- Commit: pending
 - Scope: automation, template, fixture, test
 - What changed: added `automation-setup-checklist.md`, fixture request, expected setup output, and contract verifier. The Daily Ops automation setup checklist confirms thread, timezone, cadence, runtime directory, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries before creating real Codex automations.
 - Why it matters: scheduled trading-operation prompts should not be created from implicit assumptions. This keeps Daily Ops automation setup explicit, reviewable, and separate from automated trading.
