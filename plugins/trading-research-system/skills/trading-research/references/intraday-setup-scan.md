@@ -16,6 +16,18 @@ Use the current day's local records:
 - current price/chart data from IBKR or another authorized source
 - current macro/news context when a plan may be affected by events
 
+When `intraday-watchlist.csv` already contains prepared setup rows, render the
+baseline scan with:
+
+```bash
+python3 plugins/trading-research-system/scripts/intraday_scan.py \
+  {runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv \
+  --date YYYY-MM-DD
+```
+
+Then layer current chart/price interpretation on top only when authorized data
+is available.
+
 Every scanned setup should include:
 
 - `setup_id`

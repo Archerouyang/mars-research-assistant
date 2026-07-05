@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: script, skill, reference, test
+- What changed: added `intraday_scan.py` for plan-scoped setup scanning from `intraday-watchlist.csv`, with a fixture-backed self-test and contract verifier. The scan sorts by status urgency and instrument urgency, and keeps `triggered` as human `execution_check_required`, not a buy/sell instruction.
+- Why it matters: daily and intraday monitoring now has an executable baseline that only reads prepared Active Market Plan setups instead of scanning the whole market.
+- Next step: layer authorized real-time price/chart data on top of this status renderer.
+
+- Commit: pending
 - Scope: template, reference, test
 - What changed: added Active Plan automation prompt templates for deep update, quick update, intraday trigger monitor, post-market review, and position daily report, plus a contract verifier that keeps the prompts tied to runtime health, draft updates, and broker read-only safety.
 - Why it matters: the recurring Daily Ops loop can be enabled later from stable prompts without silently editing runtime files or creating automated trading behavior.

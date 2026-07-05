@@ -22,7 +22,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
 - Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
 - Quick updates for weekday premarket and intraday level/status changes.
-- Setup-scoped intraday scanning for prepared setup plans.
+- setup-scoped intraday scanning for prepared setup plans.
 - Broker-live position daily reports with concise risk summaries and visualization-ready outputs.
 - Interactive post-order and post-exit review context intake from read-only broker facts and user context.
 - Broker-agnostic portfolio risk exposure checks.
@@ -146,4 +146,5 @@ python3 plugins/trading-research-system/scripts/update_trade_record.py --date 20
 python3 plugins/trading-research-system/scripts/import_legacy_active_csv.py plugins/trading-research-system/assets/fixtures/input/legacy-active-trades.csv --runtime-dir ~/Documents/dailytrades-runtime
 python3 plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
 python3 plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
+python3 plugins/trading-research-system/scripts/intraday_scan.py ~/Documents/dailytrades-runtime/daily/2026-06-12/intraday-watchlist.csv --date 2026-06-12
 ```
