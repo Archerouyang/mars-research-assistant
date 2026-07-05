@@ -133,7 +133,7 @@ Rules:
 | Plugin design contract | Done | `docs/PLUGIN_DESIGN.md` |
 | AI-native task UX and router fixtures | Done | `README.md`; `plugins/trading-research-system/README.md`; `plugins/trading-research-system/assets/fixtures/input/router-intents.json`; `plugins/trading-research-system/scripts/verify_router_contract.py` |
 | Runtime health contract | Done | `plugins/trading-research-system/skills/trading-research/references/runtime-health.md`; `plugins/trading-research-system/scripts/runtime_health.py`; `plugins/trading-research-system/scripts/verify_runtime_health_contract.py`; `plugins/trading-research-system/scripts/verify_runtime_health_selftest.py` |
-| KVN snapshot leaderboard contract | Done | `plugins/trading-research-system/skills/trading-research/references/momentum-leaderboard.md`; `plugins/trading-research-system/scripts/kvn_leaderboard.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_contract.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_selftest.py`; `plugins/trading-research-system/assets/fixtures/expected/kvn-leaderboard-2026-06-24.md` |
+| KVN snapshot leaderboard contract | Done | `plugins/trading-research-system/skills/momentum-leaderboard/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/momentum-leaderboard.md`; `plugins/trading-research-system/scripts/kvn_leaderboard.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_contract.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_selftest.py`; `plugins/trading-research-system/assets/fixtures/expected/kvn-leaderboard-2026-06-24.md` |
 | Trade Plan Preparation contract | Done | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/assets/fixtures/expected/trade-plan-preparation-with-kvn-2026-06-24.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
 | Research report intake contract | Started | `plugins/trading-research-system/skills/research-report-intake/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/research-report-intake.md`; `plugins/trading-research-system/scripts/verify_research_report_intake_contract.py` |
 | Contract verification module | Started | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py` |
@@ -306,13 +306,12 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`.
-2. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
-3. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
-4. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-5. Add chart artifact generation from fixture-backed authorized OHLCV data.
-6. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-7. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
+1. Add sample Active Market Plan fixture data that covers `market-plan.md`, update notes, event previews, setup pool, broker-live fixture views, position daily report output, post-order/post-exit review context, and expected scan outputs.
+2. Define the position daily report fixture, visualization fields, broker-source configuration prompt, and automation draft behavior.
+3. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
+4. Add chart artifact generation from fixture-backed authorized OHLCV data.
+5. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+6. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 

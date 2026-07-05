@@ -64,7 +64,7 @@ task to the right internal workflow.
 
 The conceptual router is `trading-research`. Focused skills such as
 `weekly-trading-plan`, `daily-market-tracking`, `intraday-setup-scan`,
-`trade-review`, `research-report-intake`, `macro-equity-research`,
+`momentum-leaderboard`, `trade-review`, `research-report-intake`, `macro-equity-research`,
 `portfolio-risk`, and `trading-stats` remain available as internal agent
 workflows, power-user shortcuts, and development/test boundaries. They should
 not be presented as the default user-facing menu.

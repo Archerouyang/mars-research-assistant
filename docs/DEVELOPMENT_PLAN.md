@@ -97,7 +97,7 @@ Use these statuses:
 | P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
-| P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
+| P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Use `momentum-leaderboard` for user-facing KVN tasks and run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
 | P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, broker-live runtime views, position daily report output, review context, and expected scan outputs. |
 | P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
@@ -117,10 +117,10 @@ Use these statuses:
 
 Date: 2026-07-05
 
-- Main task: wire imported KVN snapshots into Trade Plan Preparation fixture output and Cross-Section Candidate Pool rules.
+- Main task: add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`.
 - Secondary task: keep KVN quantitative model construction, broker integration, and automations out of this slice.
-- Definition of done: weekly/macro/references/templates treat `KVN Momentum Leaderboard` as an imported snapshot input read; expected fixture shows KVN names entering Cross-Section Candidate Pool without becoming a buy list or automatic setup.
-- Verification: `verify_trade_plan_preparation_contract.py`, KVN contract/selftest, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
+- Definition of done: router delegates KVN import/show/query/change tasks to `momentum-leaderboard`; the focused skill uses runtime health, `momentum-leaderboard.md`, and `kvn_leaderboard.py`; it states KVN is research priority only and feeds Trade Plan Preparation rather than direct setup rows.
+- Verification: KVN contract/selftest, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -130,7 +130,8 @@ Date: 2026-07-05
 - Completed: extended Trade Plan Preparation from five input reads to six by adding `KVN Momentum Leaderboard` as an imported snapshot input.
 - Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.
-- Next: add the focused `momentum-leaderboard` skill wrapper or build the fuller Active Market Plan fixture package.
+- Completed: added the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py` and updated the router to use it for KVN import/show/query/change tasks.
+- Next: build the fuller Active Market Plan fixture package or position daily report fixture.
 
 ### 2026-07-04
 

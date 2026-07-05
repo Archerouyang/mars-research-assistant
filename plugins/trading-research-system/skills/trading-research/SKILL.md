@@ -26,7 +26,7 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 - Macro policy, rates/yields, research-note verification, stock screening:
   use `macro-equity-research`.
 - KVN snapshot import, Top10 display, ticker lookup, or Top10 changes:
-  read `references/momentum-leaderboard.md` and use `../../scripts/kvn_leaderboard.py`.
+  use `momentum-leaderboard`.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:

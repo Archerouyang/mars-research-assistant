@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: skill, router, docs, test
+- What changed: added the focused `momentum-leaderboard` skill wrapper. The general router now delegates KVN import, Top10 display, ticker lookup, and Top10 changes to this skill, which uses runtime health, `momentum-leaderboard.md`, and `kvn_leaderboard.py` while preserving the rule that KVN is research priority only.
+- Why it matters: users can ask natural-language momentum leaderboard questions without invoking scripts or knowing internal references, while the implementation stays AI-native and model-agnostic.
+- Next step: build the fuller Active Market Plan fixture package or position daily report fixture.
+
+- Commit: pending
 - Scope: skill, template, fixture, test
 - What changed: wired imported KVN snapshots into Trade Plan Preparation. Weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates now treat `KVN Momentum Leaderboard` as an input read. Added `trade-plan-preparation-with-kvn-2026-06-24.md` showing how KVN names enter the Cross-Section Candidate Pool while still requiring macro/financial support, thesis checks, price structure, and portfolio risk before `candidate setup` promotion.
 - Why it matters: KVN is no longer just a standalone leaderboard. It now participates in the actual planning contract without becoming a buy list or bypassing setup discipline.

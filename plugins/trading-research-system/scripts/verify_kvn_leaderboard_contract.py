@@ -45,9 +45,26 @@ def build_spec() -> ContractSpec:
             "router skill": FileContract(
                 ROOT / "skills" / "trading-research" / "SKILL.md",
                 required_terms=(
+                    "use `momentum-leaderboard`",
                     "references/momentum-leaderboard.md",
                     "kvn_leaderboard.py",
                     "KVN snapshot",
+                ),
+            ),
+            "focused skill": FileContract(
+                ROOT / "skills" / "momentum-leaderboard" / "SKILL.md",
+                required_terms=(
+                    "name: momentum-leaderboard",
+                    "KVN Momentum Leaderboard",
+                    "references/momentum-leaderboard.md",
+                    "kvn_leaderboard.py",
+                    "runtime-health.md",
+                    "Top10",
+                    "query",
+                    "changes",
+                    "research priority only, not a buy list",
+                    "does not construct the quantitative model",
+                    "Cross-Section Candidate Pool",
                 ),
             ),
             "script": FileContract(

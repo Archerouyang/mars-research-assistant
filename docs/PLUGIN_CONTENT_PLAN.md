@@ -45,12 +45,12 @@ Make the plugin usable for the first local workflow:
 | Trade review skill | post-order and post-exit interactive review | present | Ask only fields needed for review context; objective facts should come from broker-live sources when authorized. |
 | Research report intake skill | public/authorized report discovery and user-provided report digestion | present | Produce `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and Trade Plan Preparation impact before macro/equity research consumes report views. |
 | Macro/equity skill | macro/rates filtering, thesis verification, screening | present with KVN input-read contract | Read many sources, including Longbridge `macrodata` and imported KVN snapshots when available, reject noise, and return Trade Plan Preparation inputs plus Cross-Section Candidate Pool candidates. |
-| Momentum leaderboard skill | daily KVN momentum leaderboard display and query | script/reference present; focused skill missing | Add a focused `momentum-leaderboard` skill that wraps `kvn_leaderboard.py` after the storage/import contract is stable. |
+| Momentum leaderboard skill | daily KVN momentum leaderboard display and query | present | Keep it thin: route to runtime health, `momentum-leaderboard.md`, and `kvn_leaderboard.py`; use outputs as research priority only. |
 | Portfolio risk skill | exposure, sizing, and position daily report review | present | Needs broker-live fixture coverage; output should highlight only material concentration and constraint breaches. |
 | Trading stats skill | closed-trade stats and system review | present | Needs closed-trade fixture rows; output should focus on actionable system changes. |
 | Shared references | active plan, trading profile, broker-live contract, intraday scan, trade review context, risk, output rules, automation contract | present | Treat as product contract for scripts and fixtures. |
 | Templates | market plan, trading profile, weekly plan, daily tracking, watchlist, trade plans, intraday watchlist, broker views, report snapshots, reviews | present with KVN input-read fields | Make position daily report output executable before building scan fixtures. |
-| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review, KVN snapshot import/query | present | Add the focused `momentum-leaderboard` wrapper and then use fixture-backed setup fields before building heavier intraday scan logic. |
+| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review, KVN snapshot import/query | present | Use fixture-backed setup fields before building heavier intraday scan logic. |
 
 ## Minimum Fixture Package
 
@@ -112,4 +112,4 @@ Coverage requirements:
 
 ## Next Slice
 
-Next, add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`, then build the fuller Active Market Plan fixture package and position daily report fixture. Implement `intraday_scan.py` only after setup pool fields are stable.
+Next, build the fuller Active Market Plan fixture package and position daily report fixture. Implement `intraday_scan.py` only after setup pool fields are stable.
