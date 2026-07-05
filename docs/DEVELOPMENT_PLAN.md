@@ -35,8 +35,9 @@ The current product sequence is:
 17. broker-agnostic portfolio reconciliation and risk view;
 18. basic stats and system review;
 19. user-confirmed Active Market Plan automations;
-20. OHLCV-backed chart artifacts;
-21. option-flow anomaly research.
+20. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
+21. OHLCV-backed chart artifacts;
+22. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -112,6 +113,7 @@ Use these statuses:
 | P1 | in_progress | Add broker-live position daily report | Gives the user a scheduled holdings/risk summary similar to broker-native reminders while preserving the no-trade-record-spreadsheet boundary. | Next: connect real read-only Longbridge/IBKR source adapters after `position_daily_report.py` and `automation-position-daily-report.md` fixture paths are stable. |
 | P2 | deferred | Google Sheets summary display | Sheets is no longer a trade-record layer; only non-sensitive summaries or report indexes may be mirrored later. | Reconsider after position daily reports and visualization snapshots are stable. |
 | P2 | done | Add Active Plan automation prompts | Turns deep update, quick update, intraday monitor, post-market review, and position daily report into recurring Codex prompts after the user confirms cadence and broker data permissions. | Actual Codex automations remain user-confirmed; use `automation-active-plan-deep-update.md`, the sibling prompt templates, and `verify_active_plan_automation_contract.py` before enabling cadence. |
+| P2 | planned | Add scheduled macro/industry research monitor | After the weekly plan locks the week's P0/P1 macro, rates, policy, industry, and company-confirmation variables, the plugin should be able to schedule focused searches and return concise analysis/report leads instead of re-running a full plan. | Define prompt template, source-priority rules, search cadence, query generation from `market-plan.md`, no-paywall behavior, and a contract verifier. |
 | P2 | in_progress | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Forward-test `chart_artifact.py` with fixture and real authorized OHLCV exports; add screenshot/export workflow later. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
@@ -137,6 +139,7 @@ Date: 2026-07-05
 - Completed: re-scoped trade review around a default review-context artifact path. Added `write_trade_review_context.py`, self-test, and contract verifier so post-order/post-exit reviews can append `reviews.md` without creating `trades.csv`.
 - Completed: added Active Plan automation prompt templates for deep update, quick update, intraday trigger monitor, post-market review, and position daily report. Added `verify_active_plan_automation_contract.py`; actual Codex automations still require user-confirmed cadence and data-source permissions.
 - Completed: added the first Plan-scoped intraday scan script. `intraday_scan.py` renders `intraday-watchlist.csv` into a priority-ordered Chinese setup status note, and `verify_intraday_scan_selftest.py` locks the fixture behavior.
+- Planned: add a scheduled macro/industry/news research monitor. The monitor should start from weekly P0/P1 focus variables such as Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing; it should search public/authorized sources on a confirmed cadence, produce concise deltas and report leads, and feed `Research Report Intake` / `Trade Plan Preparation` without becoming a full-plan rerun or automated trading signal.
 - Completed: extended Trade Plan Preparation from five input reads to six by adding `KVN Momentum Leaderboard` as an imported snapshot input.
 - Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.

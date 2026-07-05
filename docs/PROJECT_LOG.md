@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: planning, automation, research
+- What changed: added a planned scheduled macro/industry/news research monitor to the development plan. The monitor starts from weekly P0/P1 focus variables, searches public/authorized sources on a confirmed cadence, and returns concise deltas, report leads, verification queue, and Active Market Plan impact.
+- Why it matters: after a weekly plan identifies variables like Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing, the plugin needs focused monitoring instead of forcing a full weekly refresh every time.
+- Next step: define the monitor prompt template, source-priority contract, query generation, and no-paywall behavior before creating any real Codex automation.
+
+- Commit: pending
 - Scope: script, skill, reference, test
 - What changed: added `intraday_scan.py` for plan-scoped setup scanning from `intraday-watchlist.csv`, with a fixture-backed self-test and contract verifier. The scan sorts by status urgency and instrument urgency, and keeps `triggered` as human `execution_check_required`, not a buy/sell instruction.
 - Why it matters: daily and intraday monitoring now has an executable baseline that only reads prepared Active Market Plan setups instead of scanning the whole market.

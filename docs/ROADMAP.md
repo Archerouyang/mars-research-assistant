@@ -58,12 +58,13 @@ The default workflow is:
 8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
 9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
-11. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
-12. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
-13. **Position daily report**: on a confirmed schedule, read authorized Longbridge or IBKR data, with manual CSV as a reduced fallback when needed, and generate a concise holdings/risk summary with visualization-ready exposure snapshots and user decisions needed today.
-14. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; save review context only after user confirmation.
-15. **Post-exit review**: after the trade is closed, read objective result from broker-live sources when available and capture exit quality, mistake tags, lessons, and optional statistics snapshot.
-16. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration when enough broker history or user-approved snapshots are available.
+11. **Scheduled macro/industry/news research monitor**: after the weekly plan locks the week's P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources for macro, rates, policy, industry, company confirmation, and research leads. Output only deltas, source-priority notes, verification queue, report leads, and Active Market Plan impact; do not bypass paywalls or turn reports into setups directly.
+12. **Setup planning**: write structured setup-level rows to `trade-plans.csv` and, when needed, `intraday-watchlist.csv`.
+13. **Intraday scan**: monitor prepared setups and high-priority watchlist ideas; classify setups as `candidate`, `active`, `approaching`, `triggered`, `invalidated`, `needs_review`, or `completed`.
+14. **Position daily report**: on a confirmed schedule, read authorized Longbridge or IBKR data, with manual CSV as a reduced fallback when needed, and generate a concise holdings/risk summary with visualization-ready exposure snapshots and user decisions needed today.
+15. **Post-order review**: after an order or fill appears, use read-only broker facts when available and ask interactively for entry background, signal bar, confidence, and risk plan; save review context only after user confirmation.
+16. **Post-exit review**: after the trade is closed, read objective result from broker-live sources when available and capture exit quality, mistake tags, lessons, and optional statistics snapshot.
+17. **Statistics and optimization**: measure win rate, R-multiple, expectancy, drawdown, setup performance, instrument performance, timeframe performance, mistake tags, and confidence calibration when enough broker history or user-approved snapshots are available.
 
 ## Public Repo Boundary
 
@@ -152,6 +153,7 @@ Rules:
 | Broker-live data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
 | Automation contract | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md`; `plugins/trading-research-system/scripts/verify_active_plan_automation_contract.py` |
 | Active Plan automation prompts | Done | `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
+| Scheduled macro/industry research monitor | Planned | derive search queries from weekly P0/P1 focus variables; use public/authorized sources; feed `Research Report Intake` and `Trade Plan Preparation`; no template yet |
 | Trading profile template | Started | `plugins/trading-research-system/assets/templates/trading-profile.md` |
 | Intraday status model | Script-backed | `plugins/trading-research-system/skills/trading-research/references/intraday-setup-scan.md`; `plugins/trading-research-system/scripts/intraday_scan.py` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
@@ -316,7 +318,8 @@ Target result:
 2. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
 3. Add chart artifact generation from fixture-backed authorized OHLCV data.
 4. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-5. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, and position daily report after cadence and data-source permissions are confirmed.
+5. Define the scheduled macro/industry/news research monitor prompt, source-priority contract, query generation from weekly P0/P1 focus variables, and no-paywall behavior.
+6. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
 
 ## MVP 1 Acceptance Criteria
 

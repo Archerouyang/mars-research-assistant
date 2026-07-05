@@ -48,6 +48,7 @@ These support the Active Market Plan loop:
 - `post_market_review_prompt`: end-of-day prompt for setup status cleanup and trade review needs.
 - `broker_reconciliation_prompt`: read-only broker data alignment prompt when the user opts into a broker source.
 - `position_daily_report`: scheduled read-only holdings and portfolio-risk summary, modeled after broker-native position reminders but broker-agnostic.
+- `macro_industry_research_monitor`: planned recurring search prompt after a weekly plan identifies P0/P1 macro, rates, policy, industry, company-confirmation, or research-report focus variables. It should search only public/authorized sources, summarize deltas and report leads, create a verification queue, and state Active Market Plan impact without bypassing paywalls or promoting reports directly into setups.
 
 ## Source Of Truth
 
