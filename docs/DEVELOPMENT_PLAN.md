@@ -95,7 +95,7 @@ Use these statuses:
 | P0 | done | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Maintain root/plugin README examples around natural-language tasks as the default UX. |
 | P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
 | P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
-| P1 | in_progress | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, and company thesis checks from turning into loose reports or premature intraday setup calls. | Update skills, references, templates, and fixtures so research first produces input reads and a Cross-Section Candidate Pool. |
+| P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
@@ -115,15 +115,22 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-07-04
+Date: 2026-07-05
 
-- Main task: define the KVN snapshot import/storage contract after runtime health.
+- Main task: wire imported KVN snapshots into Trade Plan Preparation fixture output and Cross-Section Candidate Pool rules.
 - Secondary task: keep KVN quantitative model construction, broker integration, and automations out of this slice.
-- Definition of done: `kvn_leaderboard.py` imports one CSV snapshot into SQLite, displays Top10, queries any ticker, summarizes Top10 changes, and preserves Top10 memory fields without treating the leaderboard as a buy list.
-- Verification: `verify_kvn_leaderboard_selftest.py`, `verify_kvn_leaderboard_contract.py`, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
+- Definition of done: weekly/macro/references/templates treat `KVN Momentum Leaderboard` as an imported snapshot input read; expected fixture shows KVN names entering Cross-Section Candidate Pool without becoming a buy list or automatic setup.
+- Verification: `verify_trade_plan_preparation_contract.py`, KVN contract/selftest, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
+
+### 2026-07-05
+
+- Completed: extended Trade Plan Preparation from five input reads to six by adding `KVN Momentum Leaderboard` as an imported snapshot input.
+- Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
+- Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.
+- Next: add the focused `momentum-leaderboard` skill wrapper or build the fuller Active Market Plan fixture package.
 
 ### 2026-07-04
 

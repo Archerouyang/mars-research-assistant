@@ -44,6 +44,7 @@
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
+| KVN Momentum Leaderboard | imported snapshot / missing / stale |  |  |  | Top10 / query / changes |  |
 
 ### Cross-Section Candidate Pool
 

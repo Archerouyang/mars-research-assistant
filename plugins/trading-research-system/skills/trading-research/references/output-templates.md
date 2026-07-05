@@ -76,13 +76,14 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
+| KVN Momentum Leaderboard | imported snapshot / missing / stale |  |  |  | Top10 / query / changes |  |
 
 ### 截面候选池 / Cross-Section Candidate Pool
 | rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  | 4H/1D/1W 大周期环境 + price structure 待确认 |  |
 
-只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。动量候选池是独立量化模型 TODO，不作为 v1 必需输入。
+只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。KVN Momentum Leaderboard 是 imported snapshot，只能改变研究优先级；它不是买入名单，也不能单独生成 setup。
 
 ## 对当前持仓的总体影响
 | 持仓 | 影响 | 本周动作 | 暂停/复核条件 |

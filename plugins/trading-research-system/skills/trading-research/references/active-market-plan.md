@@ -44,12 +44,12 @@ The setup is the smallest planning unit. A setup is not just a ticker and not ju
 
 Before a new setup enters the setup pool, route research through `Trade Plan Preparation`:
 
-1. Summarize the five input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, and `Company Thesis Check`.
+1. Summarize the six input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, `Company Thesis Check`, and `KVN Momentum Leaderboard` when an imported snapshot is available.
 2. Apply profile-defined strategy posture, pool, instrument, timeframe, and crowding rules.
 3. Convert those reads into a `Cross-Section Candidate Pool`.
 4. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.
 
-The setup pool should not receive raw macro views, plain watchlist names, unverified research claims, or momentum rankings without a prepared setup structure.
+The setup pool should not receive raw macro views, plain watchlist names, unverified research claims, or momentum rankings without a prepared setup structure. KVN Momentum Leaderboard output can raise research priority, but it cannot bypass higher-timeframe regime, price_structure, risk_context, or portfolio checks.
 
 Minimum promotion guidance from Cross-Section Candidate Pool to Setup Pool:
 

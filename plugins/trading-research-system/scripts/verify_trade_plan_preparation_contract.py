@@ -17,6 +17,11 @@ FILES = {
     "active_plan": ROOT / "skills" / "trading-research" / "references" / "active-market-plan.md",
     "macro_filter": ROOT / "skills" / "trading-research" / "references" / "macro-policy-filter.md",
     "equity_screening": ROOT / "skills" / "trading-research" / "references" / "equity-screening.md",
+    "momentum_leaderboard": ROOT
+    / "skills"
+    / "trading-research"
+    / "references"
+    / "momentum-leaderboard.md",
     "output_templates": ROOT
     / "skills"
     / "trading-research"
@@ -25,6 +30,11 @@ FILES = {
     "market_template": ROOT / "assets" / "templates" / "market-plan.md",
     "weekly_template": ROOT / "assets" / "templates" / "weekly-plan.md",
     "fixture": ROOT / "assets" / "fixtures" / "expected" / "weekly-outlook-2026-06-15.md",
+    "kvn_fixture": ROOT
+    / "assets"
+    / "fixtures"
+    / "expected"
+    / "trade-plan-preparation-with-kvn-2026-06-24.md",
 }
 
 REQUIRED_TERMS = {
@@ -36,6 +46,8 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
+        "KVN Momentum Leaderboard",
+        "imported snapshot",
         "4H",
         "1D",
         "1W",
@@ -53,7 +65,7 @@ REQUIRED_TERMS = {
         "Industry/Sector Strength",
         "Company Thesis Check",
         "动量候选池",
-        "TODO",
+        "imported KVN snapshot",
     ],
     "active_plan": [
         "Trade Plan Preparation",
@@ -63,6 +75,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
+        "KVN Momentum Leaderboard",
         "higher-timeframe regime",
         "price_structure",
         "risk_context",
@@ -81,6 +94,16 @@ REQUIRED_TERMS = {
         "evidence",
         "next_check",
         "Cross-Section Candidate Pool",
+    ],
+    "momentum_leaderboard": [
+        "KVN is an imported snapshot",
+        "research priority only, not a buy list",
+        "Feed KVN names into Trade Plan Preparation",
+        "macro/financial",
+        "industry strength",
+        "company thesis",
+        "price structure",
+        "portfolio risk",
     ],
     "equity_screening": [
         "Trade Plan Preparation Output",
@@ -101,6 +124,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
+        "KVN Momentum Leaderboard",
         "Cross-Section Candidate Pool",
         "截面候选池",
         "price_structure / risk_context",
@@ -114,6 +138,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
+        "KVN Momentum Leaderboard",
         "Price structure / risk context",
     ],
     "weekly_template": [
@@ -125,6 +150,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
+        "KVN Momentum Leaderboard",
         "Price structure / risk context",
     ],
     "fixture": [
@@ -139,12 +165,32 @@ REQUIRED_TERMS = {
         "4H/1D/1W",
         "candidate setup",
     ],
+    "kvn_fixture": [
+        "## 交易计划准备",
+        "KVN Momentum Leaderboard",
+        "SNDK",
+        "CRDO",
+        "SOXX",
+        "Cross-Section Candidate Pool",
+        "截面候选池",
+        "Macro Regime",
+        "Financial Conditions",
+        "Policy/Event Risk",
+        "Industry/Sector Strength",
+        "Company Thesis Check",
+        "不是买入名单",
+        "candidate setup",
+        "price_structure / risk_context",
+        "4H/1D/1W",
+    ],
 }
 
 FORBIDDEN_TERMS = {
     "weekly_skill": [
         "momentum leaderboard update: strongest and weakest symbols/themes",
         "Momentum Leaderboard update: strongest and weakest symbols/themes",
+        "Momentum leaderboard output is a separate future quantitative model",
+        "momentum candidate pool TODO",
     ],
     "macro_skill": [
         "Rank candidates by research priority, not as standalone trade recommendations.",

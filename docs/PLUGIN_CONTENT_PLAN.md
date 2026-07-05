@@ -39,18 +39,18 @@ Make the plugin usable for the first local workflow:
 | Area | Required content | Current state | Next implementation use |
 | --- | --- | --- | --- |
 | Router skill | `trading-research` routes natural-language tasks to focused workflows | present with fixtures/verifier | Keep thin; extend router intent fixtures as new task types appear. |
-| Weekly plan skill | deep Active Market Plan update and next-week plan | present | Read broad sources, then emit compact regime, events, trade plan preparation, cross-section candidates, themes, and setup deltas. |
+| Weekly plan skill | deep Active Market Plan update and next-week plan | present with KVN input-read contract | Read broad sources, imported KVN snapshots, then emit compact regime, events, trade plan preparation, cross-section candidates, themes, and setup deltas. |
 | Daily tracking skill | quick market, macro, news, setup, profile-aware instrument fit, and level update | present | Convert daily noise into changed variables, setup status changes, and next checks. |
 | Intraday scan skill | setup-scoped `candidate/active/approaching/triggered/invalidated/needs_review/completed` classification | present | Drives `intraday_scan.py`; output should be attention priority, not full commentary. |
 | Trade review skill | post-order and post-exit interactive review | present | Ask only fields needed for review context; objective facts should come from broker-live sources when authorized. |
 | Research report intake skill | public/authorized report discovery and user-provided report digestion | present | Produce `Research Report Digest`, `Claim Ledger`, `Verification Queue`, and Trade Plan Preparation impact before macro/equity research consumes report views. |
-| Macro/equity skill | macro/rates filtering, thesis verification, screening | present | Read many sources, including Longbridge `macrodata` when available, reject noise, and return Trade Plan Preparation inputs plus Cross-Section Candidate Pool candidates. |
+| Macro/equity skill | macro/rates filtering, thesis verification, screening | present with KVN input-read contract | Read many sources, including Longbridge `macrodata` and imported KVN snapshots when available, reject noise, and return Trade Plan Preparation inputs plus Cross-Section Candidate Pool candidates. |
 | Momentum leaderboard skill | daily KVN momentum leaderboard display and query | script/reference present; focused skill missing | Add a focused `momentum-leaderboard` skill that wraps `kvn_leaderboard.py` after the storage/import contract is stable. |
 | Portfolio risk skill | exposure, sizing, and position daily report review | present | Needs broker-live fixture coverage; output should highlight only material concentration and constraint breaches. |
 | Trading stats skill | closed-trade stats and system review | present | Needs closed-trade fixture rows; output should focus on actionable system changes. |
 | Shared references | active plan, trading profile, broker-live contract, intraday scan, trade review context, risk, output rules, automation contract | present | Treat as product contract for scripts and fixtures. |
-| Templates | market plan, trading profile, weekly plan, daily tracking, watchlist, trade plans, intraday watchlist, broker views, report snapshots, reviews | present | Make plan-preparation and position daily report output executable before building scan fixtures. |
-| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review, KVN snapshot import/query | present | Use `kvn_leaderboard.py` output in Trade Plan Preparation fixtures before building heavier intraday scan logic. |
+| Templates | market plan, trading profile, weekly plan, daily tracking, watchlist, trade plans, intraday watchlist, broker views, report snapshots, reviews | present with KVN input-read fields | Make position daily report output executable before building scan fixtures. |
+| Scripts | daily init, watchlist score, portfolio risk, trade stats, append review, KVN snapshot import/query | present | Add the focused `momentum-leaderboard` wrapper and then use fixture-backed setup fields before building heavier intraday scan logic. |
 
 ## Minimum Fixture Package
 
@@ -112,4 +112,4 @@ Coverage requirements:
 
 ## Next Slice
 
-Next, update Trade Plan Preparation fixtures so macro/financial/policy reads and imported KVN candidates can feed the Cross-Section Candidate Pool. Then add the focused `momentum-leaderboard` skill wrapper and position daily report fixture. Implement `intraday_scan.py` only after setup pool fields are stable.
+Next, add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`, then build the fuller Active Market Plan fixture package and position daily report fixture. Implement `intraday_scan.py` only after setup pool fields are stable.

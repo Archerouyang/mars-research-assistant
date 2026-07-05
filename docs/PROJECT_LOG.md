@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-05
+
+- Commit: pending
+- Scope: skill, template, fixture, test
+- What changed: wired imported KVN snapshots into Trade Plan Preparation. Weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates now treat `KVN Momentum Leaderboard` as an input read. Added `trade-plan-preparation-with-kvn-2026-06-24.md` showing how KVN names enter the Cross-Section Candidate Pool while still requiring macro/financial support, thesis checks, price structure, and portfolio risk before `candidate setup` promotion.
+- Why it matters: KVN is no longer just a standalone leaderboard. It now participates in the actual planning contract without becoming a buy list or bypassing setup discipline.
+- Next step: add the focused `momentum-leaderboard` skill wrapper or build the fuller Active Market Plan fixture package.
+
 ## 2026-07-04
 
 - Commit: pending

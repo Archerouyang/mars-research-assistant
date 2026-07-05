@@ -76,7 +76,7 @@ Commands:
 - Preserve Top10 entry memory fields for triage.
 - Do not infer a trade setup from KVN alone.
 - Feed KVN names into Trade Plan Preparation only after macro/financial
-  conditions, industry strength, company thesis, price structure, and portfolio
-  risk are checked.
+  conditions, industry strength, company thesis, price structure, and portfolio risk
+  are checked.
 - If the KVN store is missing or stale, run `runtime_health.py` and ask whether
   to import a snapshot or continue without KVN.

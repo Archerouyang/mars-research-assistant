@@ -93,6 +93,7 @@ Only include earnings that can affect current holdings, index/sector beta, momen
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
+| KVN Momentum Leaderboard | imported snapshot / missing / stale |  |  |  | Top10 / query / changes |  |
 
 ### Cross-Section Candidate Pool
 
