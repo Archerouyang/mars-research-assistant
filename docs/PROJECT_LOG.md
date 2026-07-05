@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: automation, template, fixture, test
+- What changed: added `automation-setup-checklist.md`, fixture request, expected setup output, and contract verifier. The Daily Ops automation setup checklist confirms thread, timezone, cadence, runtime directory, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries before creating real Codex automations.
+- Why it matters: scheduled trading-operation prompts should not be created from implicit assumptions. This keeps Daily Ops automation setup explicit, reviewable, and separate from automated trading.
+- Next step: after the user confirms the missing setup decisions, create the real Codex automations from the confirmed checklist.
+
+- Commit: pending
 - Scope: planning, automation, research
 - What changed: added the scheduled macro/industry/news research monitor prompt, fixture input, expected output, and contract verifier. The monitor starts from weekly P0/P1 focus variables, searches public/authorized sources on a confirmed cadence, and returns concise deltas, report leads, verification queue, and Active Market Plan impact.
 - Why it matters: after a weekly plan identifies variables like Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing, the plugin can monitor those variables directly instead of forcing a full weekly refresh every time.
