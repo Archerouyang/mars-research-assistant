@@ -153,7 +153,7 @@ Rules:
 | Broker-live data contract | Started | `plugins/trading-research-system/skills/trading-research/references/broker-data-contract.md` |
 | Automation contract | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md`; `plugins/trading-research-system/scripts/verify_active_plan_automation_contract.py` |
 | Active Plan automation prompts | Done | `plugins/trading-research-system/assets/templates/automation-active-plan-deep-update.md`; `plugins/trading-research-system/assets/templates/automation-active-plan-quick-update.md`; `plugins/trading-research-system/assets/templates/automation-intraday-trigger-monitor.md`; `plugins/trading-research-system/assets/templates/automation-post-market-review.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
-| Scheduled macro/industry research monitor | Planned | derive search queries from weekly P0/P1 focus variables; use public/authorized sources; feed `Research Report Intake` and `Trade Plan Preparation`; no template yet |
+| Scheduled macro/industry research monitor | Prompt-backed | `plugins/trading-research-system/assets/templates/automation-macro-industry-research-monitor.md`; `plugins/trading-research-system/assets/fixtures/input/macro-industry-monitor-focus-2026-07-06.md`; `plugins/trading-research-system/assets/fixtures/expected/macro-industry-monitor-2026-07-06.md`; `plugins/trading-research-system/scripts/verify_macro_industry_research_monitor_contract.py` |
 | Trading profile template | Started | `plugins/trading-research-system/assets/templates/trading-profile.md` |
 | Intraday status model | Script-backed | `plugins/trading-research-system/skills/trading-research/references/intraday-setup-scan.md`; `plugins/trading-research-system/scripts/intraday_scan.py` |
 | Development workflow norms | Done | `docs/DEVELOPMENT.md` |
@@ -314,12 +314,10 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Define the position daily report contract/script, visualization fields, broker-source configuration prompt, and automation draft behavior.
-2. Add an intraday scan script that reads setup-level plan data and emits status/attention summaries after setup pool fields are stable.
-3. Add chart artifact generation from fixture-backed authorized OHLCV data.
-4. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-5. Define the scheduled macro/industry/news research monitor prompt, source-priority contract, query generation from weekly P0/P1 focus variables, and no-paywall behavior.
-6. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
+1. Add chart artifact generation from fixture-backed authorized OHLCV data.
+2. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+3. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
+4. Connect real read-only Longbridge/IBKR source adapters to the standard broker-live runtime views.
 
 ## MVP 1 Acceptance Criteria
 
