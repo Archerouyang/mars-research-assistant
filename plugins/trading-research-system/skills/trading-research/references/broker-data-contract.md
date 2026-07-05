@@ -73,6 +73,11 @@ When scripts or fixtures need files, map broker data into:
 
 Core risk, review, and statistics workflows should consume these fields from the broker-live runtime view. File materialization is an implementation detail for tests, fixtures, or user-approved snapshots.
 
+For position daily reports, broker adapters should produce the standard
+`portfolio_snapshot.csv` view, then use `position_daily_report.py` to render the
+concise report. Keep connector-specific mapping outside the renderer so the
+report stays broker-agnostic.
+
 ## Portfolio Snapshot Schema
 
 Required columns:

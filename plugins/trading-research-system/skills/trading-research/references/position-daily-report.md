@@ -14,6 +14,22 @@ Use the first available source the user authorized for this run:
 
 If no source is available, state the gap and do not invent positions.
 
+## Script Path
+
+When a standard runtime view is available, render the report with:
+
+```bash
+python3 plugins/trading-research-system/scripts/position_daily_report.py \
+  {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv \
+  --date YYYY-MM-DD \
+  --source "Longbridge / IBKR / manual / broker-live fixture"
+```
+
+Live broker adapters should map read-only broker facts into
+`portfolio_snapshot.csv` first, then call the report renderer. The renderer is a
+reporting layer only; it does not connect to brokers, save raw exports, or place
+orders.
+
 ## Required Disclosures
 
 Every report must include:
@@ -53,3 +69,4 @@ Do not display unnecessary account identifiers, raw execution details, or privat
 ## Safety
 
 The report may say a holding needs attention, review, add-zone validation, TP/rebalance review, or risk-budget review. It must not place, modify, cancel, or imply approval of orders.
+The renderer does not place orders and must not call broker write actions.

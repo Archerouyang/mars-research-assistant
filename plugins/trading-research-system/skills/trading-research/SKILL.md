@@ -87,6 +87,12 @@ KVN snapshot:
 python3 ../../scripts/kvn_leaderboard.py show --top 10
 ```
 
+Position daily report from a standard runtime snapshot:
+
+```bash
+python3 ../../scripts/position_daily_report.py {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv --date YYYY-MM-DD
+```
+
 ## Output Style
 
 Use Chinese unless the user asks otherwise. Prefer Markdown notes suitable for Obsidian.
