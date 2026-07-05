@@ -99,7 +99,7 @@ Use these statuses:
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Use `momentum-leaderboard` for user-facing KVN tasks and run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Forward-test on one user-provided report and one public-source discovery prompt, then add realistic fixtures. |
-| P1 | in_progress | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Cover Trade Plan Preparation first, then setup pool, intraday watchlist, broker-live runtime views, position daily report output, review context, and expected scan outputs. |
+| P1 | done | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Use `verify_active_market_plan_fixture_contract.py` before building position daily report or intraday scan scripts. |
 | P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
 | P1 | review | Re-scope canonical record schema registry | Existing CSV schemas are useful for fixtures and compatibility, but broker-live reads are now the default source for objective broker facts. | Decide which schemas stay as fixture/debug artifacts and which scripts should be deprecated or converted to snapshot tools. |
 | P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
@@ -117,10 +117,10 @@ Use these statuses:
 
 Date: 2026-07-05
 
-- Main task: add the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py`.
-- Secondary task: keep KVN quantitative model construction, broker integration, and automations out of this slice.
-- Definition of done: router delegates KVN import/show/query/change tasks to `momentum-leaderboard`; the focused skill uses runtime health, `momentum-leaderboard.md`, and `kvn_leaderboard.py`; it states KVN is research priority only and feeds Trade Plan Preparation rather than direct setup rows.
-- Verification: KVN contract/selftest, router verifier, existing contract verifiers, `py_compile`, and `git diff --check` pass.
+- Main task: build the Active Market Plan fixture package.
+- Secondary task: keep live broker integration, automations, and real trade records out of this slice.
+- Definition of done: fixture package contains `market-plan.md`, `trading-profile.md`, update note, setup-level `trade-plans.csv`, `intraday-watchlist.csv`, broker-live fixture views, position daily report output, review context, and expected intraday scan output.
+- Verification: `verify_active_market_plan_fixture_contract.py`, KVN/router/trade-plan/runtime/research contract verifiers, `py_compile`, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
@@ -131,7 +131,8 @@ Date: 2026-07-05
 - Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.
 - Completed: added the focused `momentum-leaderboard` skill wrapper around `kvn_leaderboard.py` and updated the router to use it for KVN import/show/query/change tasks.
-- Next: build the fuller Active Market Plan fixture package or position daily report fixture.
+- Completed: added the Active Market Plan fixture package under `assets/fixtures/runtime/active-market-plan-2026-06-24/`, covering plan state, trading profile, update note, setup pool, intraday watchlist, broker-live fixture views, position daily report, review context, and expected intraday scan output.
+- Next: define the position daily report contract/script or implement the first `intraday_scan.py` against the fixture package.
 
 ### 2026-07-04
 

@@ -112,8 +112,8 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 | 状态 | 内容 |
 | --- | --- |
-| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、KVN snapshot import/storage、本地 KVN Top10/query/change 脚本、`momentum-leaderboard` focused skill、Trade Plan Preparation KVN 消费 fixture、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
-| 开发中 | fixture package、broker-live 持仓日报契约、盘中 scan script |
+| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、KVN snapshot import/storage、本地 KVN Top10/query/change 脚本、`momentum-leaderboard` focused skill、Trade Plan Preparation KVN 消费 fixture、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
+| 开发中 | broker-live 持仓日报契约、盘中 scan script |
 | 后续 | Codex 持仓日报 automation、异常期权数据源、可视化快照 |
 
 ## 更多文档

@@ -1,0 +1,5 @@
+as_of,broker,account_id,symbol,underlying,instrument_type,direction,quantity,avg_cost,market_price,market_value,currency,unrealized_pnl,realized_pnl,delta_exposure,notional_exposure,theme_id,source_timestamp,notes
+2026-06-24T20:00:00Z,IBKR,SIM-IBKR,QQQ,QQQ,etf_common,long,50,700,725,36250,USD,1250,0,36250,36250,tech_beta,2026-06-24T20:00:00Z,core ETF fixture
+2026-06-24T20:00:00Z,IBKR,SIM-IBKR,SOXX,SOXX,sector_etf,long,80,245,260,20800,USD,1200,0,20800,20800,semiconductor,2026-06-24T20:00:00Z,semiconductor fixture
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,CRDO,CRDO,stock_common,long,100,118,121,12100,USD,300,0,12100,12100,ai-infra-momentum,2026-06-24T20:00:00Z,synthetic broker-live fixture
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,CASH,USD,cash,long,1,15000,15000,15000,USD,0,0,0,0,cash,2026-06-24T20:00:00Z,cash fixture
