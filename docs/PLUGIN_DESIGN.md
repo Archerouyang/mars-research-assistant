@@ -43,6 +43,7 @@ confirmed in the design discussion.
 | Trading profile | Public plugin ships a blank framework; concrete strategy preferences live in private `trading-profile.md` | accepted | Keeps the plugin general while supporting personal workflows |
 | Automations | Trading operations automations default to draft mode and ask before runtime writes; broker access remains read-only | accepted | Keeps operations useful without becoming automated trading |
 | KVN | Plugin supports KVN snapshot import, storage, query, Top10 memory, and plan usage; KVN model construction stays outside plugin scope | accepted | Lets the workflow use momentum rankings without making this plugin own the quantitative model |
+| KVN model module | Future separate module owns KVN universe, factors, validation, model versions, and daily snapshots | accepted | Keeps quantitative research auditable without turning the plugin into a model lab |
 | Charts | Generate chart artifacts on demand by default; allow opt-in auto-generation for high-priority setup, invalidation, or review contexts; do not build a dashboard | accepted | Keeps the plugin lightweight and Codex-native |
 
 ## Design Review Path
@@ -486,6 +487,14 @@ Suggested issue slices:
 3. Add missing-state guidance to router and automation references.
 
 ### P1: KVN Momentum Leaderboard
+
+KVN has two separate layers:
+
+- the future KVN model module, documented in `docs/KVN_MODEL_PLAN.md`, which
+  owns data ingestion, factor calculation, validation, and daily model-produced
+  snapshots;
+- the Trading Research System plugin, which consumes imported or upstream KVN
+  snapshots and never re-ranks or re-scores them.
 
 Deliverables:
 

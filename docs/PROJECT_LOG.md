@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-05
 
 - Commit: pending
+- Scope: planning, decision
+- What changed: added `docs/KVN_MODEL_PLAN.md` and `docs/adr/0006-kvn-model-module-boundary.md` to define the future KVN Model module. The model module owns universe selection, market-data ingestion, factor computation, score ranking, validation, versioning, and daily snapshots; the plugin remains a snapshot consumer.
+- Why it matters: KVN scores need to come from a reproducible model, not an agent-authored narrative or plugin-side shortcut. This gives future implementation a detailed contract without implementing the model now.
+- Next step: continue the MVP sequence with broker-live position daily report planning and fixture/script work.
+
+- Commit: pending
 - Scope: skill, script, template, docs, test
 - What changed: tightened KVN leaderboard semantics across the script output, focused skill, daily/weekly/market templates, shared references, and contract verifier. KVN rows are now explicitly ticker-only, preserve the script-computed order from the scheduled/upstream model output, and cannot be re-ranked, re-scored, or replaced with sector/theme/narrative buckets by the agent. Sector/theme rotation must live in separate market breadth or theme sections.
 - Why it matters: KVN is a quantitative leaderboard artifact, not an agent-authored market narrative. This prevents daily tracking from turning broad rotation notes into fake KVN rankings.
