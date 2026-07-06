@@ -32,6 +32,18 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: planning, decision
+- What changed: clarified the KVN model deployment boundary. The KVN model can run as a local batch job, cloud scheduled job, GitHub Action, managed container, or read-only API. The plugin remains a score consumer: it imports or fetches versioned ticker-level snapshots, caches them into the private runtime, and uses validation summaries to qualify confidence.
+- Why it matters: KVN strategy research can move to cloud compute or a separate model repository without coupling the Dailytrades plugin to factor calculation, vendor data licensing, or backtest governance.
+- Next step: decide whether the first KVN integration should be cloud snapshot download or a read-only API after the model output and validation package stabilize.
+
+- Commit: pending
+- Scope: script, docs, test
+- What changed: added Runtime bootstrap for private Dailytrades runtime initialization. `bootstrap_runtime.py` creates blank `market-plan.md`, `trading-profile.md`, `ops-state.md`, config, runtime directories, update note, and an optional dated daily folder from bundled templates. It supports `--dry-run`, `--overwrite`, and `--no-daily`, and is covered by `verify_runtime_bootstrap_selftest.py` and `verify_runtime_bootstrap_contract.py`.
+- Why it matters: users can prepare `~/Documents/dailytrades-runtime` before live broker adapters or real Daily Ops automations exist, while keeping the public plugin repo free of private runtime data.
+- Next step: forward-test the initialized private runtime in a fresh Daily Ops dry-run, then implement read-only broker adapters or broker snapshot ingestion.
+
+- Commit: pending
 - Scope: tooling, script, docs, test
 - What changed: added Fixture-backed local MVP smoke coverage. `scripts/verify-mvp.sh` creates an isolated `.scratch/mvp-smoke-runtime.*`, runs `scripts/verify-plugin.sh`, fixture runtime health, KVN import/show/query/changes, intraday scan, position daily report, and the MVP smoke contract. Added `docs/MVP_RUNBOOK.md` with the Local MVP boundary and new-chat validation prompt.
 - Why it matters: local MVP readiness now has one command and does not depend on live broker reads, real Codex automations, live market data, or private runtime records.

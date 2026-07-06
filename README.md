@@ -84,6 +84,17 @@ daily/YYYY-MM-DD/
 charts/
 ```
 
+### Runtime bootstrap
+
+首次使用前可以先用空模板初始化私有 runtime。这个命令只写本地模板文件，
+No live broker reads，不读取真实账户、不调用真实 market data、不创建真实
+Codex automations。
+
+```bash
+uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --dry-run
+uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
+```
+
 Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏感摘要、持仓日报索引或可视化结果，不保存逐笔 broker facts。
 
 `trading-profile.md` 是私有策略配置层，用来记录使用者自己的策略评分、主动交易池、ETF 组合、交易工具、时间框架、拥挤度模型和风控偏好。public plugin 只提供模板，不内置某个使用者的具体交易模型。
@@ -112,7 +123,7 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 | 状态 | 内容 |
 | --- | --- |
-| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、KVN snapshot import/storage、本地 KVN Top10/query/change 脚本、`momentum-leaderboard` focused skill、Trade Plan Preparation KVN 消费 fixture、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
+| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、Runtime bootstrap、KVN snapshot import/storage、本地 KVN Top10/query/change 脚本、`momentum-leaderboard` focused skill、Trade Plan Preparation KVN 消费 fixture、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
 | 开发中 | broker-live 持仓日报契约、盘中 scan script |
 | 后续 | Codex 持仓日报 automation、异常期权数据源、可视化快照 |
 

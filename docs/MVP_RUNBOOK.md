@@ -73,7 +73,8 @@ records.
 
 ## Next After MVP
 
-1. Add runtime bootstrap command for private `~/Documents/dailytrades-runtime`.
+1. Use Runtime bootstrap with `bootstrap_runtime.py` to create the private
+   `~/Documents/dailytrades-runtime` skeleton from blank templates.
 2. Connect read-only broker adapters for Longbridge and IBKR.
 3. Add user-confirmed Codex automations that wake Daily Ops Orchestrator.
 4. Add chart screenshot/export workflow for price-action review.
