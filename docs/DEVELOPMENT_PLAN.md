@@ -103,6 +103,7 @@ Use these statuses:
 | P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
 | P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
+| P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
@@ -136,6 +137,12 @@ Date: 2026-07-05
 - End-of-day result: pending.
 
 ## Progress Log
+
+### 2026-07-06
+
+- Completed: added the Fixture-backed local MVP smoke path. `scripts/verify-mvp.sh` runs `scripts/verify-plugin.sh`, fixture runtime health, KVN import/show/query/changes, intraday scan, position daily report, and the MVP smoke contract without live broker reads, real Codex automations, or live market data.
+- Completed: added `docs/MVP_RUNBOOK.md` to define the Local MVP boundary, smoke output location, new-chat validation prompt, and next steps after MVP.
+- Next: refresh the installed plugin cache, validate the smoke output, and open a PR for review.
 
 ### 2026-07-05
 

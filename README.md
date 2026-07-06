@@ -129,9 +129,21 @@ bash scripts/verify-plugin.sh
 `scripts/verify-plugin.sh` 会把 `uv` cache、venv 和 managed Python 放到
 `.scratch/` 下，并运行 plugin validator 与关键合同检查。
 
+### Local MVP
+
+Fixture-backed local MVP smoke:
+
+```bash
+bash scripts/verify-mvp.sh
+```
+
+See [MVP Runbook](docs/MVP_RUNBOOK.md). This check does not perform live
+broker reads, real Codex automations, or live market data calls.
+
 ## 更多文档
 
 - [Plugin README](plugins/trading-research-system/README.md): plugin 包内详细说明、脚本和模板。
+- [MVP Runbook](docs/MVP_RUNBOOK.md): fixture-backed local MVP smoke 和新对话验证边界。
 - [Plugin Design](docs/PLUGIN_DESIGN.md): 已接受的 AI-native UX、runtime、broker、KVN、chart 和开发队列设计。
 - [Roadmap](docs/ROADMAP.md): 产品边界、执行方法、当前进度和任务拆分。
 - [Development Plan](docs/DEVELOPMENT_PLAN.md): 当前开发优先级和每日开发规划。

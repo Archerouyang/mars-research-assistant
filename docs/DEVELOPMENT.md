@@ -129,6 +129,14 @@ The script runs the external plugin validator and key contract checks through
 global cache directories. It prefers the Codex bundled Python 3.12 when
 available; otherwise it falls back to `python3.12` or `python3`.
 
+## MVP smoke
+
+Use `scripts/verify-mvp.sh` when a change affects the Local MVP path. It runs
+`scripts/verify-plugin.sh` plus fixture-backed runtime health, KVN import/show/
+query/changes, intraday scan, position daily report, and contract checks. It
+must not perform live broker reads, real Codex automations, or live market data
+calls.
+
 For individual scripts, use:
 
 ```bash
