@@ -88,6 +88,10 @@ _Avoid_: 内置 Longbridge 依赖, 自动安装
 Longbridge skill/plugin 中的 `macrodata` 能力，用于读取宏观数据、利率/收益率、经济指标或金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
 _Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
+**Source Routing Boundary**:
+按 source purpose 和 claim type 选择信源的硬边界。Longbridge broker source 可用于只读账户/持仓/成交事实，Longbridge macrodata 可用于宏观数值和金融条件，但 news source、政策事实、行业新闻和研报观点必须按 S0/S1/S2/S3 分层选择。选择 Longbridge 做股票数据或券商数据 does not make Longbridge the default source for news，也不能让宏观/政策/行业/新闻分析只使用 Longbridge。
+_Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, macrodata 替代官方政策事实
+
 **Broker-Live Data View**:
 券商只读数据在一次分析运行中的标准视图，包括当前持仓、账户风险、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成可视化或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。
 _Avoid_: 直接读各券商私有结构, 本地交易明细作为唯一事实来源

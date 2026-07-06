@@ -24,6 +24,19 @@ Chart rules:
 - keep chart annotations limited to decision-useful levels such as 20 EMA, 50 EMA, trigger zone, invalidation, profit-taking/rebalance zone, VIX confirmation, and setup status;
 - avoid chart dumps with every indicator. If the chart needs more than a few annotations, put the full version in local notes and show the user the simplified version.
 
+## Source Routing Boundary
+
+When reporting source use, separate each source purpose instead of naming one
+global data source. Longbridge selection for one purpose does not override the source mix for other purposes.
+
+| source purpose | Preferred evidence | User-facing wording |
+| --- | --- | --- |
+| official policy facts | S0 official / primary | 用官方来源确认政策事实、讲话、法规、经济数据发布时间 |
+| market data / macrodata | S1 authorized market data, broker data, Longbridge macrodata, calendars | 用于 rates / yields / price / volatility / event timing |
+| news leads | S2 reputable financial media | 只作为新闻线索，影响计划前要确认 |
+| research thesis | S3 authorized research / opinion | 用于 thesis/counter-thesis，不单独证明事实 |
+| broker/account facts | read-only broker/account source | 只用于持仓、成交、订单状态和账户风险 |
+
 For market-hour outputs, prefer:
 
 ```markdown

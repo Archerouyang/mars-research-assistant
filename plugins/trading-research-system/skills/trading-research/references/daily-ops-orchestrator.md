@@ -60,6 +60,17 @@ user has authorized deeper reads:
 Do not copy private runtime content into public repo docs. Do not write runtime
 files unless the user confirms a proposed write package.
 
+## Source Routing Boundary
+
+Track source purpose separately from broker-source selection. Do not reuse broker-source selection as news-source selection.
+
+- Longbridge or IBKR as a broker source can answer read-only holdings,
+  executions, order status, and authorized market-data facts.
+- Longbridge macrodata can support macro values but cannot replace official or reputable news sources.
+- Macro policy facts still need S0 official sources.
+- Industry/news monitoring should use the configured public/authorized source
+  mix from `macro-policy-filter.md`.
+
 ## Ticker Trade Horizon Confirmation
 
 Before a ticker can move from watchlist or Cross-Section Candidate Pool into a

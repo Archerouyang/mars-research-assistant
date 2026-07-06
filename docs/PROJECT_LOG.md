@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-06
+
+- Commit: pending
+- Scope: reference, skill, template, test, planning
+- What changed: added the Source Routing Boundary contract across the glossary, macro policy filter, output templates, Daily Ops Orchestrator, weekly planning, macro/equity research, broker contract, macro/industry monitor prompt, fixture expectation, roadmap, and development plan. Longbridge macrodata is allowed for macro and financial-condition reads, but choosing Longbridge for stock or broker data must not become the default source for news, policy facts, industry research, or report thesis.
+- Why it matters: the plugin can use Longbridge where it is strong without letting one connector collapse the evidence model. Macro policy facts still require official sources; industry/news leads require reputable public or authorized sources; research remains thesis input until verified.
+- Next step: validate in a fresh Daily Ops run that Longbridge is not treated as the only macro/news source.
+
 ## 2026-07-05
 
 - Commit: pending

@@ -30,6 +30,24 @@ Use media and research reports as leads only. Verify policy status:
 
 Longbridge `macrodata` can speed up macro and financial-condition reads, but it should not replace S0 sources for policy facts, official speech text, release status, or legal/regulatory changes.
 
+## Source Routing Boundary
+
+Choose sources by claim type before using any evidence in the plan. Source
+selection is scoped to the source purpose; selecting one connector for one
+purpose must not make it the default evidence layer for unrelated claims.
+
+| Source purpose | Allowed source class | What it can affect | Boundary |
+| --- | --- | --- | --- |
+| official policy facts | S0 official / primary | policy status, official remarks, releases, legal/regulatory facts | Macro policy facts require S0 |
+| market data / macrodata | S1 market data / broker / macrodata / calendar | rates, yields, prices, VIX, spreads, macro values, event timing | Longbridge `macrodata` is S1 macro/financial data |
+| news leads | S2 reputable financial media | headline triage, policy interpretation leads, industry events | Industry news leads require S2 or authorized research |
+| research thesis | S3 research / opinion | thesis, counter-thesis, valuation debate, report leads | verify against S0/S1/S2 before changing risk budget |
+| broker/account facts | read-only broker source | positions, executions, order status, account risk | Longbridge broker or market data is not a news source |
+
+Selecting Longbridge for stock data does not make Longbridge the default source for macro, policy, industry, or news analysis. Longbridge broker or market data
+is not a news source, and Longbridge `macrodata` is not a policy fact source.
+Do not use one connector as the exclusive evidence layer.
+
 ## Transmission Path
 
 Every macro claim should state the chain:

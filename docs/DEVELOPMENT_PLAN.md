@@ -37,9 +37,10 @@ The current product sequence is:
 19. basic stats and system review;
 20. automation setup checklist: confirm the Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries through `automation-setup-checklist.md`;
 21. user-confirmed Active Market Plan automations;
-22. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
-23. OHLCV-backed chart artifacts;
-24. option-flow anomaly research.
+22. Source Routing Boundary: scope broker/account facts, market data, Longbridge macrodata, official policy facts, news, and research by source purpose so selecting Longbridge for one purpose does not become the default source for news;
+23. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
+24. OHLCV-backed chart artifacts;
+25. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -100,6 +101,7 @@ Use these statuses:
 | P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
 | P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
 | P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
+| P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
