@@ -498,6 +498,12 @@ KVN has two separate layers:
 - the Trading Research System plugin, which consumes imported or upstream KVN
   snapshots and never re-ranks or re-scores them.
 
+The KVN model module may run locally or in the cloud. The plugin should not care
+where the score was produced; it should care that the result is a versioned,
+date-stamped, ticker-level snapshot or a read-only API response that can be
+cached into the private runtime. Cloud deployment must not move factor
+calculation, data-vendor licensing, or backtest governance into the plugin.
+
 Deliverables:
 
 - `momentum-leaderboard` focused workflow.
