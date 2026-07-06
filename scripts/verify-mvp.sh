@@ -48,6 +48,11 @@ echo "No live broker reads; no real Codex automations; no live market data."
 
 ./scripts/verify-plugin.sh
 
+uv_run python plugins/trading-research-system/scripts/bootstrap_runtime.py \
+  --runtime-dir "$MVP_RUNTIME_DIR/bootstrap-check" \
+  --date 2026-06-24 \
+  > "$MVP_RUNTIME_DIR/smoke-output/runtime-bootstrap.txt"
+
 uv_run python plugins/trading-research-system/scripts/runtime_health.py \
   --runtime-dir "$MVP_RUNTIME_DIR" \
   --date 2026-06-24 \

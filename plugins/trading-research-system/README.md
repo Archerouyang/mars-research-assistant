@@ -111,6 +111,17 @@ The plugin includes templates for Active Market Plans, update notes, holdings, b
 
 Use `trading-profile.md` in the runtime directory for private strategy scoring, pool definitions, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. The public repo only ships a blank template and does not store personal account allocation or a hard-coded personal strategy model.
 
+## Runtime bootstrap
+
+Use the bootstrap script to initialize a private runtime from blank bundled
+templates. It does not perform live broker reads, live market data calls, real
+Codex automations, or order actions.
+
+```bash
+uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --dry-run
+uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
+```
+
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the
 Longbridge skill/plugin and IBKR connector. Manual CSV remains a reduced fallback
@@ -142,6 +153,7 @@ reads, real Codex automations, or live market data calls.
 ## Scripts
 
 ```bash
+uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
 uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
 uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
 uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
