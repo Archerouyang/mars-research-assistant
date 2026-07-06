@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: skill, template, fixture, test
+- What changed: strengthened Daily Ops next-step guidance. The Orchestrator output now separates one-line `建议下一步` from operational `下一步指引`, including a default recommendation, meaningful alternatives, a copyable `你只需要回复` format, and the action the agent will run after confirmation.
+- Why it matters: Daily Ops should not leave users with a useful analysis but no clear next action. The new contract turns passive summaries into guided workflow handoffs without requiring users to remember focused skill names.
+- Next step: forward-test in a fresh Daily Ops chat and check that the first response gives the user a concrete reply format for broker source, ticker horizon/instrument, and runtime-write choice.
+
+- Commit: pending
 - Scope: skill, template, fixture, docs, test
 - What changed: added Broker Source Setup to Daily Ops. When runtime health reports broker sources as `missing` or `unauthorized`, the Orchestrator now asks whether to enable Longbridge read-only, IBKR read-only, both, or continue with manual CSV / no broker facts instead of only reporting the gap.
 - Why it matters: users can get broker-source authorization guidance during the first Daily Ops run or runtime initialization without confusing plugin installation with broker authorization. The setup remains read-only and does not read accounts, install software, write public repo data, or touch broker write actions.

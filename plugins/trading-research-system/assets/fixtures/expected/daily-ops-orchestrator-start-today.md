@@ -49,6 +49,13 @@
 
 Next Recommended Action: 先完成 ticker / setup 周期确认，然后执行盘前 quick update。
 
+## 下一步指引
+
+- 默认建议: 本轮先不读 broker，先确认 QQQ、MU、TSM、GLW 的 `ticker + trade_horizon + instrument`，并允许初始化 `ops-state.md` 草稿；确认后再做盘前 quick update。
+- 可选路径: 1. 先做 Broker Source Setup；2. 先初始化今天 runtime package；3. 不写 runtime，只做 reduced-scope dry-run；4. 先补 KVN snapshot 后再更新计划。
+- 你只需要回复: `Broker 暂不启用；QQQ=长期持有 ETF + 0DTE option；MU=中期正股；TSM=LEAP call；GLW=watch only；允许初始化 ops-state 草稿。`
+- 我会执行: 按确认后的分组读取 Active Market Plan，输出今日变化、需要盯的 setup、哪些接近触发、哪些暂停或复核；若允许写入，只生成 proposed write package，不直接写 runtime。
+
 ## 为什么现在做这一步
 
 - 盘前 quick update 需要知道每个标的是长期配置、波段、日内、0DTE、LEAP 还是观察，否则时间框架和触发严格度会错。

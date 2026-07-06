@@ -92,6 +92,24 @@ preference or enabled source order, but only after a proposed write package is
 confirmed. It must not read broker data until the user authorizes a read-only
 source for the current run or stored private runtime config already allows it.
 
+## Next Step Guidance
+
+Daily Ops output must not end with a vague summary. After `建议下一步`, include
+`下一步指引` that tells the user exactly what to do now and what the agent will
+do after the reply.
+
+The section should include:
+
+- `默认建议`: one recommended path that removes the largest blocker first.
+- `可选路径`: 2-4 alternatives when there are meaningful choices, such as
+  Broker Source Setup, runtime initialization, ticker horizon confirmation,
+  current-source refresh, or continuing reduced-scope.
+- `你只需要回复`: a short copyable reply format the user can send.
+- `我会执行`: the next focused workflow or runtime action after confirmation.
+
+Keep this concise. Do not ask the user to choose from every possible module.
+Prefer the shortest decision that unlocks the next useful Daily Ops step.
+
 ## Source Routing Boundary
 
 Track source purpose separately from broker-source selection. Do not reuse broker-source selection as news-source selection.
@@ -170,6 +188,7 @@ Return the sections from `assets/templates/daily-ops-orchestrator.md`:
 - Broker Source Setup;
 - Ticker / Setup 周期确认;
 - 建议下一步;
+- 下一步指引;
 - 为什么现在做这一步;
 - 确认后我会执行;
 - 安全边界.

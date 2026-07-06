@@ -59,6 +59,22 @@ or exit triggers.
 State one Next Recommended Action. It should be the single workflow that best
 unblocks the user's current Daily Ops loop.
 
+## 下一步指引
+
+- 默认建议:
+- 可选路径:
+- 你只需要回复:
+- 我会执行:
+
+Make this section operational, not descriptive. Give the user a short copyable
+reply format such as:
+
+```text
+Broker 用 <Longbridge read-only / IBKR read-only / 两者 / 暂不启用>；
+这些 ticker 的周期是 <ticker + trade_horizon + instrument>；
+允许/不允许初始化今天 runtime 草稿。
+```
+
 ## 为什么现在做这一步
 
 Explain the routing reason in one or two bullets.
