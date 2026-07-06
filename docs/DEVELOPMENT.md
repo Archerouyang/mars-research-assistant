@@ -112,6 +112,29 @@ External connectors are outside this repo's test scope. In particular, do not te
 
 If the repo later adds a pure transformation layer for external connector data, test only the transformation with fixture input. Example: fixture OHLCV JSON to normalized chart data. The connector itself remains outside repo CI.
 
+## Python Environment
+
+Use `uv` for all repo Python verification and script smoke checks. Do not rely
+on global Python packages, user site-packages, or ad-hoc `pip install` state.
+
+Standard local verification:
+
+```bash
+bash scripts/verify-plugin.sh
+```
+
+The script runs the external plugin validator and key contract checks through
+`uv run`. It sets `UV_CACHE_DIR`, `UV_PROJECT_ENVIRONMENT`, and
+`UV_PYTHON_INSTALL_DIR` under `.scratch/` so Codex sandbox runs do not write to
+global cache directories. It prefers the Codex bundled Python 3.12 when
+available; otherwise it falls back to `python3.12` or `python3`.
+
+For individual scripts, use:
+
+```bash
+uv run python plugins/trading-research-system/scripts/<script>.py
+```
+
 ## CI Policy
 
 Lightweight CI is useful once the first repo-owned test harness exists.
@@ -122,6 +145,7 @@ Initial CI should check:
 - unit tests against fixtures;
 - script smoke tests against fixture CSV files;
 - basic plugin file-structure sanity;
+- plugin validation through `scripts/verify-plugin.sh`;
 - no tests require live IBKR, Google Drive, Gmail, Calendar, or other external services.
 
 CI should not:
@@ -161,6 +185,7 @@ Codex can accept a task only when:
 - changed behavior is covered by fixture-based checks when practical;
 - relevant scripts or docs were inspected;
 - plugin structure remains valid when plugin files changed;
+- Python checks are run through `uv` or the reason for skipping `uv` is stated;
 - public/private repo boundary is preserved;
 - `docs/PROJECT_LOG.md` is updated when the change affects project trajectory;
 - no live external service behavior is required to prove the change.
