@@ -58,10 +58,43 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
 6. If a new opportunity appears, tie it back to an existing theme/context or create a new `candidate` setup before treating it as actively tracked.
 7. Prefer `../../assets/templates/daily-market-tracking.md` for notes.
 
+## Runtime Guidance Contract
+
+Always translate the runtime state into user-facing Chinese before giving
+market commentary. Internal slug values may appear only in parentheses after
+the Chinese label, for example `盘前快速更新 (premarket_quick_update)`, `待复核
+(needs_review)`, or `修复观察 (repair-watch)`. Do not make the internal slug
+the primary status text.
+
+Include `运行状态` and `可执行下一步` whenever runtime health is incomplete,
+broker access is missing, the KVN store is missing/stale, or the request cannot
+enter formal intraday scanning.
+
+Use these user-facing status labels:
+
+- `盘前快速更新`: useful quick market read, but not a formal scan.
+- `正式盘中扫描`: prepared setup scan using today's plan/watchlist files.
+- `待复核`: setup or data state needs user/agent review before a trigger call.
+- `修复观察`: rebound or repair tape that is not yet full risk-on confirmation.
+
+When degraded, choose 2-4 concrete `可执行下一步` actions from this set and
+adapt them to the exact missing files:
+
+- `初始化今日运行包`: create today's daily runtime directory and base files.
+- `生成盘中观察清单`: build `intraday-watchlist.csv` from Active Plan setups.
+- `导入 KVN snapshot`: import a user/upstream KVN snapshot before KVN output.
+- `跳过 KVN`: continue without KVN and do not label public data as KVN.
+- `继续盘前快速更新`: stay in quick-update mode until the next macro/event check.
+
+Every live quote, macro indicator, broker snapshot, and official data point
+must carry a `数据时间戳`, preferably `as of <timestamp/source date>`. If the
+timestamp is unavailable, say `as of 未确认` instead of implying freshness.
+
 ## Output
 
 Use Chinese Markdown with:
 
+- `运行状态`
 - `结论`
 - `重要变化`
 - `当前盘面`
@@ -77,5 +110,6 @@ Use Chinese Markdown with:
 - `需要复核`
 - `新证据`
 - `下一步看盘顺序`
+- `可执行下一步`
 
 Keep the note operational: what changed, what matters today, and what the user should inspect first. Avoid long intraday commentary; collapse repeated headlines and price noise into changed variables, setup transitions, and explicit invalidations.

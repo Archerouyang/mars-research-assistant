@@ -39,6 +39,7 @@ uv_run() {
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
 uv_run python plugins/trading-research-system/scripts/verify_source_routing_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_daily_ops_orchestrator_contract.py
+uv_run python plugins/trading-research-system/scripts/verify_daily_market_tracking_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_macro_industry_research_monitor_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_automation_setup_contract.py
