@@ -2,7 +2,7 @@
 
 This runbook defines the fixture-backed local MVP for the Trading Research
 System plugin. It is a local smoke path for development confidence, not a live
-trading workflow.
+trading execution flow.
 
 ## MVP Definition Of Done
 
@@ -56,7 +56,7 @@ directory on each run and writes generated smoke artifacts to:
 After plugin reinstall, start a fresh Codex thread and ask in Chinese:
 
 ```text
-开始今天交易流程。先只做 dry-run，不读 broker，不 web search，不写 runtime。
+开始今天的交易研究日程。先只做 dry-run，不读 broker，不 web search，不写 runtime。
 请说明当前阶段、缺失确认、下一步建议，并确认每个 ticker 都需要
 ticker + trade_horizon + instrument。
 ```

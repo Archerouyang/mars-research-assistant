@@ -2,8 +2,8 @@
   "router_intents": [
     {
       "id": "daily-ops-start-today",
-      "prompt": "开始今天交易流程。先判断现在该做什么，我不想一个个 call out 模块。",
-      "expected_public_route_label": "Daily Ops 主动流程引导",
+      "prompt": "开始今天的交易研究日程。先判断现在该做什么，我不想一个个 call out 模块。",
+      "expected_public_route_label": "Daily Ops 主动日程引导",
       "expected_workflows": ["runtime_health", "daily_ops_orchestrator"],
       "required_reads": ["ops-state.md", "market-plan.md", "trading-profile.md", "runtime health", "KVN snapshot availability", "broker source availability"],
       "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]

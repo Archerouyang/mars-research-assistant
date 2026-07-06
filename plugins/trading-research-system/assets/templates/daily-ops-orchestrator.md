@@ -1,9 +1,9 @@
 # Daily Ops Orchestrator Output
 
-Use this template when the user asks to start, continue, or check the trading
-workflow without specifying every internal workflow.
+Use this template when the user asks to start, continue, or check Daily Ops
+without specifying every internal workflow.
 
-## 当前流程阶段
+## 当前日程阶段
 
 - stage:
 - reason:

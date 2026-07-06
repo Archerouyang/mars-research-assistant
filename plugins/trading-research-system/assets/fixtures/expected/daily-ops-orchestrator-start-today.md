@@ -1,7 +1,7 @@
-# 当前流程阶段
+# 当前日程阶段
 
 - stage: 盘前 quick update
-- reason: 用户说“开始今天交易流程”，当前上下文是 weekday premarket，且已有 `market-plan.md` 和 `trading-profile.md` 可读。
+- reason: 用户说“开始今天的交易研究日程”，当前上下文是 weekday premarket，且已有 `market-plan.md` 和 `trading-profile.md` 可读。
 - confidence: medium，因为 `ops-state.md` 缺失且 KVN snapshot stale。
 
 ## 读取状态

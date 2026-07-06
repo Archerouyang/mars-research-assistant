@@ -3,7 +3,7 @@
 User prompt:
 
 ```text
-开始今天交易流程。先帮我判断现在应该做什么。我现在关注 QQQ、MU、TSM、GLW，但这些标的的交易周期未知。
+开始今天的交易研究日程。先帮我判断现在应该做什么。我现在关注 QQQ、MU、TSM、GLW，但这些标的的交易周期未知。
 ```
 
 Available state:

@@ -26,7 +26,7 @@ health, and available state:
 
 - `weekly_deep_update`: weekend, week reset, or user asks for next-week plan.
 - `premarket_quick_update`: weekday premarket or user says "start today",
-  "begin daily flow", "盘前", or "今天怎么安排".
+  "begin daily ops", "开始今天的交易研究日程", "盘前", or "今天怎么安排".
 - `intraday_trigger_monitor`: market hours and prepared active/approaching
   setups exist.
 - `post_market_review`: after market close or user asks to summarize today.
@@ -132,7 +132,7 @@ debugging.
 
 Return the sections from `assets/templates/daily-ops-orchestrator.md`:
 
-- 当前流程阶段;
+- 当前日程阶段;
 - 读取状态;
 - 缺失确认;
 - Ticker / Setup 周期确认;

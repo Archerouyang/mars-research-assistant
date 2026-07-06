@@ -31,7 +31,7 @@ FILES = {
 REQUIRED = {
     "context": [
         "Daily Ops Orchestrator",
-        "主动流程引导",
+        "主动日程引导",
         "ops-state.md",
         "交易周期确认",
         "ticker + trade_horizon + instrument",
@@ -40,7 +40,7 @@ REQUIRED = {
         "Daily Ops Orchestrator",
         "daily-ops-orchestrator.md",
         "start today",
-        "begin daily flow",
+        "begin daily ops",
         "trade_horizon",
         "ticker + trade_horizon + instrument",
         "If trade horizon is missing",
@@ -74,7 +74,7 @@ REQUIRED = {
     ],
     "orchestrator_template": [
         "Daily Ops Orchestrator Output",
-        "当前流程阶段",
+        "当前日程阶段",
         "读取状态",
         "缺失确认",
         "Ticker / Setup 周期确认",
@@ -97,7 +97,7 @@ REQUIRED = {
         "instrument",
     ],
     "fixture_input": [
-        "开始今天交易流程",
+        "开始今天的交易研究日程",
         "QQQ",
         "MU",
         "TSM",
@@ -106,7 +106,7 @@ REQUIRED = {
         "runtime health",
     ],
     "fixture_expected": [
-        "当前流程阶段",
+        "当前日程阶段",
         "盘前 quick update",
         "读取状态",
         "缺失确认",
@@ -141,7 +141,7 @@ REQUIRED = {
     ],
     "plugin_design": [
         "Daily Ops Orchestrator",
-        "主动流程引导",
+        "主动日程引导",
         "ticker + trade_horizon + instrument",
     ],
 }

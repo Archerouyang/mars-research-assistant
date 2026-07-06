@@ -15,7 +15,7 @@ current facts, and returns a concise decision-useful note.
 
 - The plugin is decision support, not an automated trading system.
 - The user should not need to memorize focused skill names.
-- The user should not need to manually call out every module in order; Daily Ops Orchestrator provides 主动流程引导 before focused workflows run.
+- The user should not need to manually call out every module in order; Daily Ops Orchestrator provides 主动日程引导 before focused workflows run.
 - Focused skills remain as agent-internal tools, test boundaries, and development
   units.
 - The public plugin must stay general. Personal strategy details belong in the

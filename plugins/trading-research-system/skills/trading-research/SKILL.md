@@ -13,7 +13,7 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 ## Routing
 
-- General Daily Ops flow, vague requests such as "start today", "begin daily flow", "开始今天交易流程", "现在该做什么", or any request where the user wants active process guidance:
+- General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究日程", "现在该做什么", or any request where the user wants active process guidance:
   read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
 - Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, momentum rebuild, and setup discovery:
   use `weekly-trading-plan`.
