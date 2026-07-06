@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
 
 FILES = {
     "weekly_skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",

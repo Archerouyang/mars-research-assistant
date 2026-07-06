@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Verify Runtime State module is the shared runtime path/write seam."""
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
 
 FILES = {
     "runtime_state": ROOT / "scripts" / "runtime_state.py",
@@ -21,6 +22,7 @@ FILES = {
     "update_trade_record": ROOT / "scripts" / "update_trade_record.py",
     "import_legacy_active_csv": ROOT / "scripts" / "import_legacy_active_csv.py",
     "kvn_leaderboard": ROOT / "scripts" / "kvn_leaderboard.py",
+    "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "verify_plugin": REPO / "scripts" / "verify-plugin.sh",
 }
 
@@ -50,7 +52,8 @@ REQUIRED = {
     "update_trade_record": ["from runtime_state import", "default_runtime_dir", "runtime_daily_dir"],
     "import_legacy_active_csv": ["from runtime_state import", "default_runtime_dir", "resolve_daily_root"],
     "kvn_leaderboard": ["from runtime_state import", "default_runtime_dir"],
-    "verify_plugin": ["verify_runtime_state_selftest.py", "verify_runtime_state_contract.py"],
+    "contract_suite": ["verify_runtime_state_selftest.py", "verify_runtime_state_contract.py"],
+    "verify_plugin": ["verify_contract_suite.py", "core"],
 }
 
 FORBIDDEN = {

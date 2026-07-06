@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Verify Daily Ops Orchestrator contract and fixtures."""
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
-REFERENCES = ROOT / "skills" / "trading-research" / "references"
-TEMPLATES = ROOT / "assets" / "templates"
-FIXTURES = ROOT / "assets" / "fixtures"
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
+REFERENCES = PATHS.references
+TEMPLATES = PATHS.templates
+FIXTURES = PATHS.fixtures
 
 FILES = {
     "context": REPO / "CONTEXT.md",

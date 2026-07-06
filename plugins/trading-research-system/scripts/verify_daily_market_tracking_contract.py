@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Verify Daily Market Tracking user-facing guidance contract."""
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
+PATHS = PluginPaths.from_script(__file__)
 
 FILES = {
-    "skill": ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
-    "template": ROOT / "assets" / "templates" / "daily-market-tracking.md",
+    "skill": PATHS.skills / "daily-market-tracking" / "SKILL.md",
+    "template": PATHS.templates / "daily-market-tracking.md",
 }
 
 REQUIRED = {

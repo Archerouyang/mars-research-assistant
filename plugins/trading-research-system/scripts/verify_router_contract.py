@@ -8,9 +8,10 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from contract_suite import PluginPaths
 
-ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "assets" / "fixtures" / "input" / "router-intents.json"
+PATHS = PluginPaths.from_script(__file__)
+FIXTURE = PATHS.fixture_input / "router-intents.json"
 
 ALLOWED_WORKFLOWS = {
     "broker_source_configuration",

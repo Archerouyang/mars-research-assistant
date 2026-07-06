@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: architecture, tooling, test
+- What changed: added the Contract Suite module. `contract_suite.py` now owns shared plugin path factories, `CORE_SUITE` registration, ordered contract execution, and quiet self-test failure-path checks. `verify_contract_suite.py core` replaces the repeated contract command list in `scripts/verify-plugin.sh`, and core contract verifiers now read registration from the suite instead of inspecting duplicated shell entries.
+- Why it matters: plugin verification now has one tested orchestration point. Adding or reordering core contract checks no longer requires editing the shell acceptance script and several verifier-specific path boilerplates.
+- Next step: keep using `verify_contract_suite.py core` as the plugin contract entrypoint, and migrate any future core verifier into `PluginPaths` plus `CORE_SUITE` registration.
+
+- Commit: pending
 - Scope: architecture, script, test
 - What changed: added a shared Runtime State module for private runtime path resolution and safe local writes. `runtime_state.py` now owns `TRADING_RESEARCH_RUNTIME_DIR` resolution, dated daily directory resolution, template directory resolution, and dry-run/overwrite write behavior. `bootstrap_runtime.py`, `init_daily.py`, `runtime_health.py`, KVN snapshot storage, review context, trade-record compatibility, legacy import, and append-review scripts now use this shared module.
 - Why it matters: runtime path and write-policy behavior is no longer repeated across many shallow CLI modules. This gives the Daily Ops workflow one tested seam for runtime state, reduces future drift, and makes bootstrap/health/review/KVN scripts easier to verify without touching private runtime data.

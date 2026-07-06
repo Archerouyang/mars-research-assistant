@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """Verify runtime bootstrap is documented and wired into local checks."""
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
 
 FILES = {
     "bootstrap_script": ROOT / "scripts" / "bootstrap_runtime.py",
     "bootstrap_selftest": ROOT / "scripts" / "verify_runtime_bootstrap_selftest.py",
+    "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "verify_plugin": REPO / "scripts" / "verify-plugin.sh",
     "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
@@ -43,10 +45,11 @@ REQUIRED = {
         "must not overwrite existing user files by default",
         "runtime_health.py",
     ],
-    "verify_plugin": [
+    "contract_suite": [
         "verify_runtime_bootstrap_selftest.py",
         "verify_runtime_bootstrap_contract.py",
     ],
+    "verify_plugin": ["verify_contract_suite.py", "core"],
     "root_readme": [
         "Runtime bootstrap",
         "bootstrap_runtime.py",

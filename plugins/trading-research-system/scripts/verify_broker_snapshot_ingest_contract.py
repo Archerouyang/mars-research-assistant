@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """Verify broker snapshot ingestion is documented and wired into checks."""
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 from record_schemas import CSV_SCHEMAS
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
 
 FILES = {
     "ingest_script": ROOT / "scripts" / "broker_snapshot_ingest.py",
     "selftest": ROOT / "scripts" / "verify_broker_snapshot_ingest_selftest.py",
     "expected_snapshot": ROOT / "assets" / "fixtures" / "expected" / "broker-snapshot-ingest-2026-06-24.csv",
+    "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "verify_plugin": REPO / "scripts" / "verify-plugin.sh",
     "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
@@ -43,10 +45,11 @@ REQUIRED = {
         "broker-positions-longbridge-2026-06-24.csv",
         "No live broker reads",
     ],
-    "verify_plugin": [
+    "contract_suite": [
         "verify_broker_snapshot_ingest_selftest.py",
         "verify_broker_snapshot_ingest_contract.py",
     ],
+    "verify_plugin": ["verify_contract_suite.py", "core"],
     "root_readme": [
         "Broker snapshot ingest",
         "broker_snapshot_ingest.py",
