@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: tooling, test, docs
+- What changed: standardized repo Python verification on `uv`. Added `pyproject.toml`, `uv.lock`, and `scripts/verify-plugin.sh`; the verification script runs the plugin validator and key contract checks through `uv run`, with cache, venv, and managed Python paths kept under `.scratch/`.
+- Why it matters: plugin validation no longer depends on global Python packages or user site-package state. `PyYAML` is resolved through the project lock instead of ad-hoc `pip install`.
+- Next step: use `bash scripts/verify-plugin.sh` as the default acceptance check for future plugin PRs.
+
+- Commit: pending
 - Scope: reference, skill, template, test, planning
 - What changed: added the Source Routing Boundary contract across the glossary, macro policy filter, output templates, Daily Ops Orchestrator, weekly planning, macro/equity research, broker contract, macro/industry monitor prompt, fixture expectation, roadmap, and development plan. Longbridge macrodata is allowed for macro and financial-condition reads, but choosing Longbridge for stock or broker data must not become the default source for news, policy facts, industry research, or report thesis.
 - Why it matters: the plugin can use Longbridge where it is strong without letting one connector collapse the evidence model. Macro policy facts still require official sources; industry/news leads require reputable public or authorized sources; research remains thesis input until verified.

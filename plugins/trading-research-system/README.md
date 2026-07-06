@@ -131,20 +131,26 @@ Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates 
 ## Scripts
 
 ```bash
-python3 plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
-python3 plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
-python3 plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
-python3 plugins/trading-research-system/scripts/kvn_leaderboard.py query SOXX --date 2026-06-24
-python3 plugins/trading-research-system/scripts/kvn_leaderboard.py changes --date 2026-06-24
-python3 plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
-python3 plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
-python3 plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv
-python3 plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/2026-06-12/trades.csv --group-by instrument_type
-python3 plugins/trading-research-system/scripts/write_trade_review_context.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/review-context-fields.json --review-file /path/to/review.md
-python3 plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/fields.json --review-file /path/to/review.md
-python3 plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-LEGACY --fields-json /path/to/legacy-fields.json --review-file /path/to/review.md --allow-unknown-execution-fields
-python3 plugins/trading-research-system/scripts/import_legacy_active_csv.py plugins/trading-research-system/assets/fixtures/input/legacy-active-trades.csv --runtime-dir ~/Documents/dailytrades-runtime
-python3 plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
-python3 plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
-python3 plugins/trading-research-system/scripts/intraday_scan.py ~/Documents/dailytrades-runtime/daily/2026-06-12/intraday-watchlist.csv --date 2026-06-12
+uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
+uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
+uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
+uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py query SOXX --date 2026-06-24
+uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py changes --date 2026-06-24
+uv run python plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
+uv run python plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
+uv run python plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv
+uv run python plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/2026-06-12/trades.csv --group-by instrument_type
+uv run python plugins/trading-research-system/scripts/write_trade_review_context.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/review-context-fields.json --review-file /path/to/review.md
+uv run python plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/fields.json --review-file /path/to/review.md
+uv run python plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-LEGACY --fields-json /path/to/legacy-fields.json --review-file /path/to/review.md --allow-unknown-execution-fields
+uv run python plugins/trading-research-system/scripts/import_legacy_active_csv.py plugins/trading-research-system/assets/fixtures/input/legacy-active-trades.csv --runtime-dir ~/Documents/dailytrades-runtime
+uv run python plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
+uv run python plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
+uv run python plugins/trading-research-system/scripts/intraday_scan.py ~/Documents/dailytrades-runtime/daily/2026-06-12/intraday-watchlist.csv --date 2026-06-12
+```
+
+For plugin validation and key contract checks, run:
+
+```bash
+bash scripts/verify-plugin.sh
 ```

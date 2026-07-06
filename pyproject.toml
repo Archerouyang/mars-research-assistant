@@ -1,0 +1,14 @@
+[project]
+name = "dailytrades"
+version = "0.0.0"
+description = "Development tooling for the Dailytrades Codex plugin repository."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "PyYAML>=6.0.3",
+]
+
+[tool.uv]
+package = false

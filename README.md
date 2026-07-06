@@ -116,6 +116,19 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 | 开发中 | broker-live 持仓日报契约、盘中 scan script |
 | 后续 | Codex 持仓日报 automation、异常期权数据源、可视化快照 |
 
+## 开发验证
+
+项目 Python 验证统一使用 `uv`。不要依赖全局 `python3` 是否已经安装
+`PyYAML` 或其它开发依赖。
+
+```bash
+brew install uv
+bash scripts/verify-plugin.sh
+```
+
+`scripts/verify-plugin.sh` 会把 `uv` cache、venv 和 managed Python 放到
+`.scratch/` 下，并运行 plugin validator 与关键合同检查。
+
 ## 更多文档
 
 - [Plugin README](plugins/trading-research-system/README.md): plugin 包内详细说明、脚本和模板。
