@@ -27,7 +27,8 @@ preference. If no preference exists, ask one short question before reading.
 2. Read current broker positions and account-risk fields only through authorized
    read-only sources.
 3. Map broker facts into the standard `portfolio_snapshot.csv` view or use a
-   user-approved existing snapshot.
+   user-approved existing snapshot. If the available source is a local
+   read-only broker export, normalize it first with `broker_snapshot_ingest.py`.
 4. Render the report with:
 
 ```bash

@@ -122,6 +122,24 @@ uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --dry
 uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
 ```
 
+## Broker snapshot ingest
+
+Use `broker_snapshot_ingest.py` after a read-only broker export or connector
+adapter has produced local CSV files. It maps those files into the standard
+`portfolio_snapshot.csv` view consumed by `position_daily_report.py`.
+
+```bash
+uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
+  --input IBKR:/path/to/ibkr-positions.csv \
+  --input Longbridge:/path/to/longbridge-positions.csv \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --as-of 2026-07-06T20:00:00Z
+```
+
+This script consumes read-only broker export files only. It does not perform
+live broker reads, live market data calls, real Codex automations, or order
+actions.
+
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the
 Longbridge skill/plugin and IBKR connector. Manual CSV remains a reduced fallback
@@ -154,6 +172,7 @@ reads, real Codex automations, or live market data calls.
 
 ```bash
 uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
+uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py --input IBKR:/path/to/ibkr-positions.csv --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv --as-of 2026-07-06T20:00:00Z
 uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
 uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
 uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
