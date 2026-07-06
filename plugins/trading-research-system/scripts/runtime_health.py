@@ -7,9 +7,10 @@ import argparse
 from dataclasses import asdict, dataclass
 from datetime import date
 import json
-import os
 from pathlib import Path
 import time
+
+from runtime_state import default_runtime_dir, resolve_daily_dir
 
 
 STATUSES = {"available", "missing", "stale", "unauthorized"}
@@ -23,13 +24,6 @@ class RuntimeCheck:
     status: str
     path: str | None = None
     note: str = ""
-
-
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
 
 
 def parse_args() -> argparse.Namespace:
@@ -71,7 +65,7 @@ def build_runtime_health(
     stale_after_days: int | None = None,
 ) -> dict[str, object]:
     runtime_dir = runtime_dir.expanduser()
-    daily_dir = runtime_dir / "daily" / trading_date
+    daily_dir = resolve_daily_dir(runtime_dir, trading_date)
     checks = [
         path_check("runtime_dir", "Runtime directory", runtime_dir, stale_after_days),
         path_check("market_plan", "Active Market Plan", runtime_dir / "market-plan.md", stale_after_days),

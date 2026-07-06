@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Mapping
 
 
@@ -241,7 +240,3 @@ DAILY_TEMPLATE_TARGETS: Mapping[str, str] = {
     "daily-market-tracking.md": "daily-market-tracking.md",
     "reviews.md": "reviews.md",
 }
-
-
-def template_dir_from_script(script_path: str | Path) -> Path:
-    return Path(script_path).resolve().parents[1] / "assets" / "templates"

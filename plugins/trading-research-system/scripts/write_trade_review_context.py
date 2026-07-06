@@ -6,9 +6,10 @@ from __future__ import annotations
 import argparse
 from datetime import date
 import json
-import os
 from pathlib import Path
 import sys
+
+from runtime_state import default_runtime_dir, resolve_daily_dir as runtime_daily_dir
 
 
 STAGE_CHOICES = ("post-order", "post-exit", "post_order", "post_exit")
@@ -44,13 +45,6 @@ POST_EXIT_FIELDS = (
     ("经验", ("lesson",)),
     ("下次规则", ("next_rule",)),
 )
-
-
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
 
 
 def parse_args() -> argparse.Namespace:
@@ -94,10 +88,7 @@ def load_review_text(path: str | None) -> str:
 
 
 def resolve_daily_dir(args: argparse.Namespace) -> Path:
-    if args.daily_dir:
-        return Path(args.daily_dir).expanduser()
-    root = Path(args.root).expanduser() if args.root else Path(args.runtime_dir).expanduser() / "daily"
-    return root / args.date
+    return runtime_daily_dir(args.runtime_dir, args.date, root=args.root, daily_dir=args.daily_dir)
 
 
 def compact_values(fields: dict[str, str], keys: tuple[str, ...]) -> str:

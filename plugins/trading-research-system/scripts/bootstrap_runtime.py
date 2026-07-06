@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import argparse
 from datetime import date
-import os
 from pathlib import Path
-import shutil
 
-from record_schemas import DAILY_TEMPLATE_TARGETS, template_dir_from_script as schema_template_dir
+from record_schemas import DAILY_TEMPLATE_TARGETS
+from runtime_state import RuntimeWriter, default_runtime_dir, template_dir_from_script as runtime_template_dir
 
 
 ROOT_TEMPLATES = {
@@ -24,13 +23,6 @@ ROOT_TEMPLATES = {
 }
 
 RUNTIME_DIRS = ("daily", "updates", "momentum", "charts", "reports")
-
-
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
 
 
 def parse_args() -> argparse.Namespace:
@@ -53,38 +45,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def template_dir_from_script() -> Path:
-    return schema_template_dir(__file__)
-
-
-def ensure_dir(path: Path, dry_run: bool) -> str:
-    if dry_run:
-        return f"would create dir {path}"
-    path.mkdir(parents=True, exist_ok=True)
-    return f"created dir {path}"
-
-
-def copy_template(source: Path, target: Path, overwrite: bool, dry_run: bool) -> str:
-    if not source.is_file():
-        raise SystemExit(f"missing template: {source}")
-    if target.exists() and not overwrite:
-        return f"kept existing {target}"
-    if dry_run:
-        action = "would overwrite" if target.exists() else "would write"
-        return f"{action} {target}"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, target)
-    return f"wrote {target}"
-
-
-def write_text(path: Path, text: str, overwrite: bool, dry_run: bool) -> str:
-    if path.exists() and not overwrite:
-        return f"kept existing {path}"
-    if dry_run:
-        action = "would overwrite" if path.exists() else "would write"
-        return f"{action} {path}"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
-    return f"wrote {path}"
+    return runtime_template_dir(__file__)
 
 
 def update_note_template(trading_date: str) -> str:
@@ -113,38 +74,33 @@ def bootstrap_runtime(
     include_daily: bool,
 ) -> list[str]:
     messages: list[str] = []
+    writer = RuntimeWriter(dry_run=dry_run, overwrite=overwrite)
     for directory in RUNTIME_DIRS:
-        messages.append(ensure_dir(runtime_dir / directory, dry_run))
+        messages.append(writer.ensure_dir(runtime_dir / directory))
 
     for template_name, target_name in ROOT_TEMPLATES.items():
         messages.append(
-            copy_template(
+            writer.copy_template(
                 template_dir / template_name,
                 runtime_dir / target_name,
-                overwrite,
-                dry_run,
             )
         )
 
     messages.append(
-        write_text(
+        writer.write_text(
             runtime_dir / "updates" / f"{trading_date}.md",
             update_note_template(trading_date),
-            overwrite,
-            dry_run,
         )
     )
 
     if include_daily:
         daily_dir = runtime_dir / "daily" / trading_date
-        messages.append(ensure_dir(daily_dir, dry_run))
+        messages.append(writer.ensure_dir(daily_dir))
         for template_name, target_name in DAILY_TEMPLATE_TARGETS.items():
             messages.append(
-                copy_template(
+                writer.copy_template(
                     template_dir / template_name,
                     daily_dir / target_name,
-                    overwrite,
-                    dry_run,
                 )
             )
 

@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: architecture, script, test
+- What changed: added a shared Runtime State module for private runtime path resolution and safe local writes. `runtime_state.py` now owns `TRADING_RESEARCH_RUNTIME_DIR` resolution, dated daily directory resolution, template directory resolution, and dry-run/overwrite write behavior. `bootstrap_runtime.py`, `init_daily.py`, `runtime_health.py`, KVN snapshot storage, review context, trade-record compatibility, legacy import, and append-review scripts now use this shared module.
+- Why it matters: runtime path and write-policy behavior is no longer repeated across many shallow CLI modules. This gives the Daily Ops workflow one tested seam for runtime state, reduces future drift, and makes bootstrap/health/review/KVN scripts easier to verify without touching private runtime data.
+- Next step: continue architecture hardening with the Contract Suite module so contract path/spec registration and `verify-plugin.sh` orchestration are similarly centralized.
+
+- Commit: pending
 - Scope: skill, template, fixture, test
 - What changed: strengthened Daily Ops next-step guidance. The Orchestrator output now separates one-line `建议下一步` from operational `下一步指引`, including a default recommendation, meaningful alternatives, a copyable `你只需要回复` format, and the action the agent will run after confirmation. User-facing step names should be Chinese.
 - Why it matters: Daily Ops should not leave users with a useful analysis but no clear next action. The new contract turns passive summaries into guided workflow handoffs without requiring users to remember focused skill names.

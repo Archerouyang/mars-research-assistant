@@ -5,15 +5,9 @@ from __future__ import annotations
 
 import argparse
 from datetime import date
-import os
 from pathlib import Path
 
-
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
+from runtime_state import default_runtime_dir, resolve_daily_dir
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,8 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    root = Path(args.root).expanduser() if args.root else Path(args.runtime_dir).expanduser() / "daily"
-    daily_dir = root / args.date
+    daily_dir = resolve_daily_dir(args.runtime_dir, args.date, root=args.root)
     reviews_path = daily_dir / "reviews.md"
     review_source = Path(args.review_file)
     if not review_source.is_file():

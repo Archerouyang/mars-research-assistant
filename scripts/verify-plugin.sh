@@ -44,6 +44,8 @@ uv_run python plugins/trading-research-system/scripts/verify_macro_industry_rese
 uv_run python plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_automation_setup_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_router_contract.py
+uv_run python plugins/trading-research-system/scripts/verify_runtime_state_selftest.py
+uv_run python plugins/trading-research-system/scripts/verify_runtime_state_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_runtime_bootstrap_selftest.py
 uv_run python plugins/trading-research-system/scripts/verify_runtime_bootstrap_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_broker_snapshot_ingest_selftest.py

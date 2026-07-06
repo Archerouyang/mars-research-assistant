@@ -7,10 +7,11 @@ import argparse
 import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import os
 from pathlib import Path
 import sqlite3
 import sys
+
+from runtime_state import default_runtime_dir
 
 
 TOP10_DEFAULT = 10
@@ -35,13 +36,6 @@ class KvnRow:
     kvn_p: float
     is_sp500: bool
     source: str
-
-
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
 
 
 def default_db_path() -> Path:

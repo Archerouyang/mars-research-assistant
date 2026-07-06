@@ -6,11 +6,11 @@ from __future__ import annotations
 import argparse
 import csv
 from collections import defaultdict
-import os
 from pathlib import Path
 import re
 import sys
 
+from runtime_state import default_runtime_dir, resolve_daily_root
 from trade_records import TradeRecordUpdate, apply_trade_update
 
 
@@ -54,13 +54,6 @@ CONFIDENCE = {
 }
 
 
-def default_runtime_dir() -> Path:
-    configured = os.environ.get("TRADING_RESEARCH_RUNTIME_DIR")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "Documents" / "dailytrades-runtime"
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Import legacy active Sheet CSV rows.")
     parser.add_argument("active_csv", help="CSV export of the legacy active tab")
@@ -89,9 +82,7 @@ def load_legacy_rows(path: Path) -> list[dict[str, str]]:
 
 
 def daily_root(args: argparse.Namespace) -> Path:
-    if args.root:
-        return Path(args.root).expanduser()
-    return Path(args.runtime_dir).expanduser() / "daily"
+    return resolve_daily_root(args.runtime_dir, args.root)
 
 
 def import_rows(rows: list[dict[str, str]], root: Path, dry_run: bool) -> list[str]:
