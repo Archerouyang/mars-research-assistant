@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: script, fixture, docs, test
+- What changed: added Broker snapshot ingest. `broker_snapshot_ingest.py` maps user-approved read-only broker export CSVs into the standard `portfolio_snapshot.csv` runtime view used by position daily reports. Added IBKR-like and Longbridge-like fixture exports, expected normalized output, selftest, contract verifier, and MVP smoke wiring.
+- Why it matters: the broker-live position daily report path now has an adapter boundary between raw broker facts and the broker-agnostic report renderer, without requiring live connector calls inside repo tests.
+- Next step: implement real read-only Longbridge/IBKR connector adapters that produce the same local export shape or call this normalization path after explicit user authorization.
+
+- Commit: pending
 - Scope: planning, decision
 - What changed: clarified the KVN model deployment boundary. The KVN model can run as a local batch job, cloud scheduled job, GitHub Action, managed container, or read-only API. The plugin remains a score consumer: it imports or fetches versioned ticker-level snapshots, caches them into the private runtime, and uses validation summaries to qualify confidence.
 - Why it matters: KVN strategy research can move to cloud compute or a separate model repository without coupling the Dailytrades plugin to factor calculation, vendor data licensing, or backtest governance.

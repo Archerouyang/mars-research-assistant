@@ -88,6 +88,13 @@ uv_run python plugins/trading-research-system/scripts/kvn_leaderboard.py changes
   --date 2026-06-24 \
   > "$MVP_RUNTIME_DIR/smoke-output/kvn-changes.md"
 
+uv_run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
+  --input "IBKR:plugins/trading-research-system/assets/fixtures/input/broker-positions-ibkr-2026-06-24.csv" \
+  --input "Longbridge:plugins/trading-research-system/assets/fixtures/input/broker-positions-longbridge-2026-06-24.csv" \
+  --output "$MVP_RUNTIME_DIR/smoke-output/portfolio_snapshot_from_brokers.csv" \
+  --as-of 2026-06-24T20:00:00Z \
+  > "$MVP_RUNTIME_DIR/smoke-output/broker-snapshot-ingest.txt"
+
 uv_run python plugins/trading-research-system/scripts/intraday_scan.py \
   "$MVP_RUNTIME_DIR/daily/2026-06-24/intraday-watchlist.csv" \
   --date 2026-06-24 \

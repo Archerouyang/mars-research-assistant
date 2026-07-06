@@ -45,3 +45,5 @@ uv_run python plugins/trading-research-system/scripts/verify_automation_setup_co
 uv_run python plugins/trading-research-system/scripts/verify_router_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_runtime_bootstrap_selftest.py
 uv_run python plugins/trading-research-system/scripts/verify_runtime_bootstrap_contract.py
+uv_run python plugins/trading-research-system/scripts/verify_broker_snapshot_ingest_selftest.py
+uv_run python plugins/trading-research-system/scripts/verify_broker_snapshot_ingest_contract.py

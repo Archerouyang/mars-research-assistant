@@ -78,6 +78,22 @@ For position daily reports, broker adapters should produce the standard
 concise report. Keep connector-specific mapping outside the renderer so the
 report stays broker-agnostic.
 
+When a live connector is not being called by the plugin, use
+`broker_snapshot_ingest.py` to normalize a read-only broker export into the same
+standard `portfolio_snapshot.csv` view:
+
+```bash
+python3 plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
+  --input IBKR:/path/to/ibkr-positions.csv \
+  --input Longbridge:/path/to/longbridge-positions.csv \
+  --output {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv \
+  --as-of YYYY-MM-DDTHH:MM:SSZ
+```
+
+This is an adapter boundary, not broker access. It consumes user-approved local
+exports or connector-produced CSV artifacts and does not perform live broker
+reads, market-data calls, or order actions.
+
 ## Portfolio Snapshot Schema
 
 Required columns:
