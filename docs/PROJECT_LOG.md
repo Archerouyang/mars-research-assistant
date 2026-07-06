@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: tooling, script, docs, test
+- What changed: added Fixture-backed local MVP smoke coverage. `scripts/verify-mvp.sh` creates an isolated `.scratch/mvp-smoke-runtime.*`, runs `scripts/verify-plugin.sh`, fixture runtime health, KVN import/show/query/changes, intraday scan, position daily report, and the MVP smoke contract. Added `docs/MVP_RUNBOOK.md` with the Local MVP boundary and new-chat validation prompt.
+- Why it matters: local MVP readiness now has one command and does not depend on live broker reads, real Codex automations, live market data, or private runtime records.
+- Next step: validate the installed plugin in a fresh Daily Ops dry-run, then choose between private runtime bootstrap and read-only broker adapters as the next implementation slice.
+
+- Commit: pending
 - Scope: tooling, test, docs
 - What changed: standardized repo Python verification on `uv`. Added `pyproject.toml`, `uv.lock`, and `scripts/verify-plugin.sh`; the verification script runs the plugin validator and key contract checks through `uv run`, with cache, venv, and managed Python paths kept under `.scratch/`.
 - Why it matters: plugin validation no longer depends on global Python packages or user site-package state. `PyYAML` is resolved through the project lock instead of ad-hoc `pip install`.

@@ -128,6 +128,17 @@ In the source repository, `docs/ROADMAP.md` is the public planning document for 
 
 Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates and important plugin changes.
 
+## MVP smoke
+
+From the repository root:
+
+```bash
+bash scripts/verify-mvp.sh
+```
+
+This is a fixture-backed local MVP check. It does not perform live broker
+reads, real Codex automations, or live market data calls.
+
 ## Scripts
 
 ```bash
