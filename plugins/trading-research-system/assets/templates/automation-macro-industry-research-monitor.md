@@ -28,6 +28,13 @@ Use source priority before allowing a search result to affect the plan:
    checked.
 5. S4 social / rumor: ignore unless confirmed by stronger sources.
 
+## Source Routing Boundary
+
+Search public/authorized sources by source purpose. Longbridge macrodata can
+support rates, yields, macro values, and financial-condition checks, but the
+monitor must still use official or reputable sources for policy facts, public
+remarks, industry news, and company confirmation. Do not use Longbridge as the only source unless the user explicitly limits this run to macrodata values; do not use Longbridge as the only source for macro, policy, industry, or news analysis.
+
 ## Query Generation
 
 Generate searches from weekly P0/P1 focus variables. Examples:

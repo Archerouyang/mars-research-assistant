@@ -32,6 +32,14 @@ Use this skill to convert current macro/rates information and research claims in
 8. Use the 动量候选池 only from an imported KVN snapshot or another user-authorized snapshot. The plugin consumes KVN output; it does not calculate the model inside this research step. KVN rows remain ticker-only and in script-computed order; do not re-rank, re-score, or replace ticker rows with themes/sectors.
 9. Promote candidates toward the weekly plan only when the next step is clear: higher-timeframe environment check, price-structure check, setup type, trigger zone, invalidation, additional thesis validation, or portfolio-risk review.
 
+## Source Routing Boundary
+
+Choose sources by claim type before turning research into plan impact.
+Longbridge `macrodata` can be used for macro and financial-condition reads, but
+not as the exclusive source for macro, policy, industry, or news analysis.
+Broker/account sources are not news sources; research articles are thesis
+inputs, not primary policy or macro facts.
+
 ## Output
 
 Use Chinese Markdown with:

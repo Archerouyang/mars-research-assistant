@@ -75,6 +75,13 @@ Use the source priority vocabulary from `macro-policy-filter.md`:
 
 Weekly outputs must include a `信源优先级` section when macro, policy, or news events drive the plan.
 
+## Source Routing Boundary
+
+Choose sources by claim type. Selecting Longbridge for stock data does not make Longbridge the default source for macro, policy, industry, or news analysis.
+Longbridge `macrodata` may support macro and financial-condition values, but
+policy facts require S0 official sources and industry/news leads require S2 or
+authorized research before they can change risk budget.
+
 ## Trade Plan Preparation
 
 Weekly outputs must include a `交易计划准备` section before setup discovery. This section is the bridge from research to Active Market Plan, and must not be skipped in favor of immediate setup rows.
