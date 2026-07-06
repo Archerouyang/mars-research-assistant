@@ -89,7 +89,7 @@ Longbridge 作为可选 broker source，第一阶段提供 positions、execution
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
 **Longbridge Macrodata Source**:
-Longbridge skill/plugin 中的 `macrodata` 能力，用于读取宏观数据、利率/收益率、经济指标或金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
 _Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
 **Source Routing Boundary**:

@@ -32,7 +32,7 @@ global data source. Longbridge selection for one purpose does not override the s
 | source purpose | Preferred evidence | User-facing wording |
 | --- | --- | --- |
 | official policy facts | S0 official / primary | 用官方来源确认政策事实、讲话、法规、经济数据发布时间 |
-| market data / macrodata | S1 authorized market data, broker data, Longbridge macrodata, calendars | 用于 rates / yields / price / volatility / event timing |
+| market data / macrodata | S1 authorized market data, broker data, Longbridge macrodata, calendars | 用于 rates / yields / price / volatility / event timing / multi-indicator macro values |
 | news leads | S2 reputable financial media | 只作为新闻线索，影响计划前要确认 |
 | research thesis | S3 authorized research / opinion | 用于 thesis/counter-thesis，不单独证明事实 |
 | broker/account facts | read-only broker/account source | 只用于持仓、成交、订单状态和账户风险 |
