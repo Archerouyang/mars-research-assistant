@@ -4,6 +4,11 @@
 
 Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into a daily KVN momentum leaderboard, an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, broker-live position daily reports, review context, visualization snapshots, and statistics for improving a discretionary trading system.
 
+Daily Ops Orchestrator is the active process guide on top of those modules. It
+uses `ops-state.md`, runtime health, Active Market Plan, and Trading Profile to
+recommend the next workflow, ask for missing confirmations, and prevent users
+from manually calling out every part of the system.
+
 The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
 
 The product is AI-native. Its core value is not producing long reports; it is making the agent read broadly, verify facts, filter noise, and return concise decision-useful notes to the user.
@@ -13,6 +18,7 @@ The product is AI-native. Its core value is not producing long reports; it is ma
 The system supports:
 
 - agent-heavy research synthesis that compresses large source sets into conclusions, changed variables, invalidations, setup status, and next checks;
+- Daily Ops Orchestrator guidance that detects the current stage, reads runtime status, asks for missing confirmations, and groups ideas by `ticker + trade_horizon + instrument`;
 - macro policy and rates filtering focused on market-moving variables, with Longbridge `macrodata` available as an optional macro/financial-conditions source;
 - research report discovery from public/authorized sources plus user-provided report intake for PDFs, links, excerpts, screenshots, and copied text;
 - research-note and market-view validation against primary/current sources;
@@ -56,6 +62,7 @@ The default workflow is:
 6. **KVN Momentum Leaderboard**: import or read daily, S&P500-benchmarked KVN ticker snapshots from a user-provided or upstream scheduled script/model output; show Top10 by script-computed order by default and preserve Top10 entry memory for later research triage. Agents may read, query, and explain changes, but must not re-rank or re-score KVN.
 7. **Trade Plan Preparation**: compress Macro Regime, Financial Conditions, Policy/Event Risk, Industry/Sector Strength, Company Thesis Check, the latest KVN leaderboard, and profile-defined pool/scoring rules into input reads and a Cross-Section Candidate Pool before creating setup rows.
 8. **Setup analysis**: classify higher-timeframe regime from 4H/1D/1W, map it to strategy bias, then use 1H and lower only for execution observation, trigger zone, invalidation, and next check.
+8a. **Daily Ops Orchestrator**: when the user asks to start or continue the workflow, read `ops-state.md`, runtime health, Active Market Plan, and Trading Profile; detect stage; ask for missing `ticker + trade_horizon + instrument` confirmations; then route to the next workflow.
 9. **Active Market Plan deep update**: review prior trades when relevant, analyze current tape, macro/rates, policy, news, future event risk, Trade Plan Preparation, setup pool, invalidation, trigger timeframe, and risk budget; overwrite `{runtime_dir}/market-plan.md` and append the rationale to `{runtime_dir}/updates/YYYY-MM-DD.md`.
 10. **Active Market Plan quick update**: parse today's tape, macro/rates, policy, news, event preview, and setup-relevant changes against `market-plan.md`; update setup statuses, trigger zones, invalidation levels, targets, and which setups are approaching, triggered, invalidated, completed, or require review.
 11. **Scheduled macro/industry/news research monitor**: after the weekly plan locks the week's P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources for macro, rates, policy, industry, company confirmation, and research leads. Output only deltas, source-priority notes, verification queue, report leads, and Active Market Plan impact; do not bypass paywalls or turn reports into setups directly.
@@ -135,6 +142,7 @@ Rules:
 | Plugin design contract | Done | `docs/PLUGIN_DESIGN.md` |
 | AI-native task UX and router fixtures | Done | `README.md`; `plugins/trading-research-system/README.md`; `plugins/trading-research-system/assets/fixtures/input/router-intents.json`; `plugins/trading-research-system/scripts/verify_router_contract.py` |
 | Runtime health contract | Done | `plugins/trading-research-system/skills/trading-research/references/runtime-health.md`; `plugins/trading-research-system/scripts/runtime_health.py`; `plugins/trading-research-system/scripts/verify_runtime_health_contract.py`; `plugins/trading-research-system/scripts/verify_runtime_health_selftest.py` |
+| Daily Ops Orchestrator contract | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/daily-ops-orchestrator.md`; `plugins/trading-research-system/assets/templates/daily-ops-orchestrator.md`; `plugins/trading-research-system/assets/templates/ops-state.md`; `plugins/trading-research-system/scripts/verify_daily_ops_orchestrator_contract.py`; setup keys use `ticker + trade_horizon + instrument` |
 | KVN model planning contract | Done | `docs/adr/0006-kvn-model-module-boundary.md`; `docs/KVN_MODEL_PLAN.md` |
 | KVN snapshot leaderboard contract | Done | `plugins/trading-research-system/skills/momentum-leaderboard/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/momentum-leaderboard.md`; `plugins/trading-research-system/scripts/kvn_leaderboard.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_contract.py`; `plugins/trading-research-system/scripts/verify_kvn_leaderboard_selftest.py`; `plugins/trading-research-system/assets/fixtures/expected/kvn-leaderboard-2026-06-24.md` |
 | Trade Plan Preparation contract | Done | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/active-market-plan.md`; `plugins/trading-research-system/assets/fixtures/expected/trade-plan-preparation-with-kvn-2026-06-24.md`; `plugins/trading-research-system/scripts/verify_trade_plan_preparation_contract.py` |
@@ -176,6 +184,7 @@ Deliverables:
 
 - Maintain canonical glossary in `CONTEXT.md`.
 - Maintain Active Market Plan, update note, research memo, and trade plan output templates.
+- Maintain Daily Ops Orchestrator and `ops-state.md` templates so users can start or continue the workflow without manually calling each focused workflow.
 - Keep `trading-research` as the router skill.
 - Maintain focused skills for momentum leaderboard, research report intake, Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics.
 - Keep active plan, broker data, macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
@@ -316,10 +325,11 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Add chart artifact generation from fixture-backed authorized OHLCV data.
-2. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-3. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
-4. Connect real read-only Longbridge/IBKR source adapters to the standard broker-live runtime views.
+1. Finalize Daily Ops Orchestrator fixtures and `ops-state.md` behavior before enabling real trading-operation automations.
+2. Add chart artifact generation from fixture-backed authorized OHLCV data.
+3. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+4. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
+5. Connect real read-only Longbridge/IBKR source adapters to the standard broker-live runtime views.
 
 ## MVP 1 Acceptance Criteria
 

@@ -13,6 +13,8 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 ## Routing
 
+- General Daily Ops flow, vague requests such as "start today", "begin daily flow", "开始今天交易流程", "现在该做什么", or any request where the user wants active process guidance:
+  read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
 - Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, momentum rebuild, and setup discovery:
   use `weekly-trading-plan`.
 - Daily quick update against `market-plan.md`: macro/policy/news/event delta, momentum change, setup status changes, and level updates:
@@ -39,16 +41,22 @@ Before workflows that depend on private runtime state, use
 whether required state is available, missing, stale, or unauthorized. Do not read
 private file contents just to perform the health check.
 
+If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or
+exit triggers. Ask for the intended `ticker + trade_horizon + instrument`
+grouping first. If trade horizon is missing, the correct output is a compact
+blocking question, not a forced setup.
+
 If a request spans multiple workflows, run them in the natural order:
 
-1. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
-2. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
-3. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
-4. `daily-market-tracking` to quick-update the same plan against today's market.
-5. `intraday-setup-scan` to classify setup-level status during the session.
-6. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
-7. `trade-review` after orders/fills and after exits.
-8. `trading-stats` after enough closed-trade records exist.
+1. Daily Ops Orchestrator when the user asks to start, continue, or decide what to do next.
+2. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
+3. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
+4. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
+5. `daily-market-tracking` to quick-update the same plan against today's market.
+6. `intraday-setup-scan` to classify setup-level status during the session.
+7. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
+8. `trade-review` after orders/fills and after exits.
+9. `trading-stats` after enough closed-trade records exist.
 
 ## Shared Resources
 
@@ -57,6 +65,7 @@ Detailed domain rules remain in:
 - `references/macro-policy-filter.md`
 - `references/research-report-intake.md`
 - `references/equity-screening.md`
+- `references/daily-ops-orchestrator.md`
 - `references/active-market-plan.md`
 - `references/runtime-health.md`
 - `references/momentum-leaderboard.md`

@@ -27,18 +27,19 @@ The current product sequence is:
 9. trade plan preparation: macro, financial conditions, policy/event risk, KVN snapshot, industry strength, and company thesis checks produce input reads and a Cross-Section Candidate Pool before setup rows are created;
 10. research report intake: `research-report-intake` finds public/authorized reports, digests user-provided PDFs/links/text, creates a claim ledger, and maps verified report impact into Trade Plan Preparation;
 11. fixture data covering KVN leaderboard snapshots, `market-plan.md`, private-style `trading-profile.md` fixture, append-only update notes, event previews, Trade Plan Preparation, setup pool, broker-live runtime views, position daily report output, and two-stage review context;
-12. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
-13. setup-scoped intraday scan;
-14. broker-live position daily report automation and visualization snapshots;
-15. post-order review to capture user context from read-only broker facts;
-16. post-exit review to capture results, lessons, and optional statistics snapshots;
-17. broker-agnostic portfolio reconciliation and risk view;
-18. basic stats and system review;
-19. automation setup checklist: confirm the Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries through `automation-setup-checklist.md`;
-20. user-confirmed Active Market Plan automations;
-21. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
-22. OHLCV-backed chart artifacts;
-23. option-flow anomaly research.
+12. Daily Ops Orchestrator: active process guidance backed by `ops-state.md`, runtime health, Active Market Plan, Trading Profile, and `ticker + trade_horizon + instrument` confirmations;
+13. premarket/intraday market parsing, level updates, and dynamic tracking against the Active Market Plan;
+14. setup-scoped intraday scan;
+15. broker-live position daily report automation and visualization snapshots;
+16. post-order review to capture user context from read-only broker facts;
+17. post-exit review to capture results, lessons, and optional statistics snapshots;
+18. broker-agnostic portfolio reconciliation and risk view;
+19. basic stats and system review;
+20. automation setup checklist: confirm the Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries through `automation-setup-checklist.md`;
+21. user-confirmed Active Market Plan automations;
+22. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
+23. OHLCV-backed chart artifacts;
+24. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -98,6 +99,7 @@ Use these statuses:
 | P0 | done | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Maintain root/plugin README examples around natural-language tasks as the default UX. |
 | P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
 | P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
+| P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
@@ -143,6 +145,7 @@ Date: 2026-07-05
 - Completed: added the first Plan-scoped intraday scan script. `intraday_scan.py` renders `intraday-watchlist.csv` into a priority-ordered Chinese setup status note, and `verify_intraday_scan_selftest.py` locks the fixture behavior.
 - Completed: added scheduled macro/industry/news research monitor prompt and fixture coverage. The monitor starts from weekly P0/P1 focus variables such as Fed minutes, yields, TSMC monthly revenue, AI hardware news, and DRAM pricing; it searches public/authorized sources on a confirmed cadence, produces concise deltas and report leads, and feeds `Research Report Intake` / `Trade Plan Preparation` without becoming a full-plan rerun or automated trading signal.
 - Completed: added the Automation setup checklist contract. `automation-setup-checklist.md` now defines the setup interview for Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker access, and paywall boundaries before creating real Codex automations.
+- Completed: added the Daily Ops Orchestrator contract. `daily-ops-orchestrator.md` and `ops-state.md` define proactive stage detection, next recommended action, missing confirmations, and ticker-level `ticker + trade_horizon + instrument` grouping before focused workflow routing.
 - Completed: extended Trade Plan Preparation from five input reads to six by adding `KVN Momentum Leaderboard` as an imported snapshot input.
 - Completed: updated weekly planning, macro/equity research, Active Market Plan, output templates, and market/weekly templates so KVN feeds the Cross-Section Candidate Pool but cannot become a buy list or direct setup.
 - Completed: added `trade-plan-preparation-with-kvn-2026-06-24.md` fixture showing SNDK/CRDO/GLW/SOXX style KVN candidates, thesis/risk gates, and promotion requirements for `candidate setup`.

@@ -16,6 +16,22 @@ _Avoid_: 聊天流程, 临时分析
 Trading Research System 作为一个 plugin 保持统一产品边界，但内部拆成多个 focused skills。`trading-research` 是路由入口；Active Market Plan 深度更新、快速更新、盘中 setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘分别由小 skill 承担。
 _Avoid_: 一个巨型提示词, 多个互不相干的 plugin
 
+**Daily Ops Orchestrator**:
+Trading Research System 的主动流程引导层。它在 `trading-research` 路由入口之后、focused skills 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代 focused skills。
+_Avoid_: 新的荐股模块, 让用户手动 call out 每个步骤
+
+**Daily Ops State**:
+Daily Ops Orchestrator 的私有运行状态，默认保存在 `{runtime_dir}/ops-state.md`。它记录当前流程阶段、上次 deep/quick/scan/review 时间、待确认事项、active setup 摘要、blocked reason 和 next recommended action。它是流程状态，不是交易日志、broker 原始记录或研报仓库。
+_Avoid_: 用聊天记录当状态, 把私有状态写进 public repo
+
+**主动流程引导**:
+agent 主动根据时间、runtime health、Active Market Plan、Trading Profile、KVN 状态、broker 授权状态和用户请求判断下一步，而不是要求用户记住并逐个调用 weekly、daily、KVN、setup、risk、review 等模块。主动流程引导的输出必须包含当前阶段、读取状态、缺失确认、建议下一步和确认后动作。
+_Avoid_: 模块菜单, 用户自己编排流程
+
+**交易周期确认**:
+每个标的或 setup 进入具体触发分析前必须确认的使用意图。标准分组是 `ticker + trade_horizon + instrument`，例如 `QQQ + long-term holding + ETF`、`QQQ + 0DTE + option`、`MU + medium-term swing + equity`、`TSM + LEAP + call`。交易周期决定大周期分析时间框架、触发时间框架、风险边界和输出重点。若交易周期未知，系统只能输出观察问题，不能生成具体 entry/exit trigger。
+_Avoid_: 只按 ticker 分组, 所有工具共用时间框架
+
 **Active Market Plan**:
 当前有效市场计划，是系统的 living state。它保存在 `{runtime_dir}/market-plan.md`，可以被覆盖更新，始终代表当前操作视图。周末、盘前、盘中和交易后都不是新建一套流程，而是对同一个 Active Market Plan 做不同深度的更新。
 _Avoid_: 一次性周报, 每天从零开始

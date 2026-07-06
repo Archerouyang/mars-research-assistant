@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""Verify Daily Ops Orchestrator contract and fixtures."""
+
+from pathlib import Path
+import sys
+
+from contract_verifier import ContractSpec, FileContract, run_contract
+
+
+ROOT = Path(__file__).resolve().parents[1]
+REPO = ROOT.parents[1]
+REFERENCES = ROOT / "skills" / "trading-research" / "references"
+TEMPLATES = ROOT / "assets" / "templates"
+FIXTURES = ROOT / "assets" / "fixtures"
+
+FILES = {
+    "context": REPO / "CONTEXT.md",
+    "router_skill": ROOT / "skills" / "trading-research" / "SKILL.md",
+    "orchestrator_reference": REFERENCES / "daily-ops-orchestrator.md",
+    "active_plan": REFERENCES / "active-market-plan.md",
+    "orchestrator_template": TEMPLATES / "daily-ops-orchestrator.md",
+    "ops_state_template": TEMPLATES / "ops-state.md",
+    "fixture_input": FIXTURES / "input" / "daily-ops-orchestrator-start-today.md",
+    "fixture_expected": FIXTURES / "expected" / "daily-ops-orchestrator-start-today.md",
+    "roadmap": REPO / "docs" / "ROADMAP.md",
+    "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
+    "project_log": REPO / "docs" / "PROJECT_LOG.md",
+    "plugin_design": REPO / "docs" / "PLUGIN_DESIGN.md",
+}
+
+REQUIRED = {
+    "context": [
+        "Daily Ops Orchestrator",
+        "主动流程引导",
+        "ops-state.md",
+        "交易周期确认",
+        "ticker + trade_horizon + instrument",
+    ],
+    "router_skill": [
+        "Daily Ops Orchestrator",
+        "daily-ops-orchestrator.md",
+        "start today",
+        "begin daily flow",
+        "trade_horizon",
+        "ticker + trade_horizon + instrument",
+        "If trade horizon is missing",
+    ],
+    "orchestrator_reference": [
+        "Daily Ops Orchestrator",
+        "Purpose",
+        "Stage Detection",
+        "Required Reads",
+        "Output Contract",
+        "Ticker Trade Horizon Confirmation",
+        "trade_horizon",
+        "instrument",
+        "ticker + trade_horizon + instrument",
+        "long-term holding",
+        "medium-term swing",
+        "intraday",
+        "0DTE",
+        "LEAP",
+        "watch only",
+        "If trade horizon is missing",
+        "ops-state.md",
+        "Next Recommended Action",
+        "Do not create buy/sell instructions",
+    ],
+    "active_plan": [
+        "trade_horizon",
+        "Ticker Trade Horizon Confirmation",
+        "ticker + trade_horizon + instrument",
+        "If trade horizon is missing",
+    ],
+    "orchestrator_template": [
+        "Daily Ops Orchestrator Output",
+        "当前流程阶段",
+        "读取状态",
+        "缺失确认",
+        "Ticker / Setup 周期确认",
+        "建议下一步",
+        "确认后我会执行",
+        "ticker + trade_horizon + instrument",
+        "Do not create buy/sell instructions",
+    ],
+    "ops_state_template": [
+        "Daily Ops State",
+        "current_stage",
+        "last_deep_update",
+        "last_quick_update",
+        "last_intraday_scan",
+        "pending_confirmations",
+        "next_recommended_action",
+        "active_setups",
+        "ticker",
+        "trade_horizon",
+        "instrument",
+    ],
+    "fixture_input": [
+        "开始今天交易流程",
+        "QQQ",
+        "MU",
+        "TSM",
+        "GLW",
+        "交易周期未知",
+        "runtime health",
+    ],
+    "fixture_expected": [
+        "当前流程阶段",
+        "盘前 quick update",
+        "读取状态",
+        "缺失确认",
+        "Ticker / Setup 周期确认",
+        "QQQ",
+        "MU",
+        "TSM",
+        "GLW",
+        "trade_horizon",
+        "instrument",
+        "建议下一步",
+        "确认后我会执行",
+        "不会写 runtime",
+        "不会读取 broker",
+        "不会创建真实 automation",
+    ],
+    "roadmap": [
+        "Daily Ops Orchestrator",
+        "ops-state.md",
+        "ticker + trade_horizon + instrument",
+    ],
+    "development_plan": [
+        "Daily Ops Orchestrator",
+        "ops-state.md",
+        "ticker + trade_horizon + instrument",
+    ],
+    "project_log": [
+        "Daily Ops Orchestrator",
+        "ops-state.md",
+        "ticker + trade_horizon + instrument",
+        "active process guide",
+    ],
+    "plugin_design": [
+        "Daily Ops Orchestrator",
+        "主动流程引导",
+        "ticker + trade_horizon + instrument",
+    ],
+}
+
+SPEC = ContractSpec(
+    name="Daily Ops Orchestrator",
+    success_message="daily ops orchestrator contract ok",
+    failure_header="daily ops orchestrator contract failed:",
+    files={
+        key: FileContract(path=path, required_terms=REQUIRED[key])
+        for key, path in FILES.items()
+    },
+)
+
+
+def main() -> int:
+    return run_contract(SPEC)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
