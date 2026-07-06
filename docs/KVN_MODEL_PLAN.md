@@ -25,6 +25,23 @@ and not a trading-order system.
 | Trading Research System plugin | snapshot import/read/query/change summary, Trade Plan Preparation input, concise explanation | factor research, score calculation, model backtesting, vendor selection |
 | Agent | explains KVN output and combines it with macro, industry, thesis, price structure, and risk | re-ranking, re-scoring, inventing KVN-like results |
 
+The KVN model module does not have to run on the same machine as Codex or the
+Trading Research System plugin. Treat it as an independent score producer. The
+plugin is a score consumer, explanation layer, and Trade Plan Preparation input
+adapter.
+
+Supported deployment shapes:
+
+| Deployment | Model location | Plugin integration | Use when |
+| --- | --- | --- | --- |
+| Local batch job | same workstation or private runtime host | write `snapshots/YYYY-MM-DD.csv` and import to local `kvn.sqlite` | early research, fast iteration, offline reproducibility |
+| Cloud batch job | cloud VM, scheduled container, GitHub Actions, or managed job | publish versioned CSV/Parquet/JSON snapshot for local import | model compute/data lives outside the trading workstation |
+| Read-only model API | cloud service or internal endpoint | plugin fetches `latest`, `history`, `query`, and `validation-summary` responses, then caches locally | model is stable enough to serve multiple clients or devices |
+
+The plugin must not depend on the model process being local. It should depend on
+a stable output contract, model version, completed trading date, source label,
+and validation summary.
+
 ## Output Contract
 
 Every daily snapshot should contain these fields:
@@ -47,6 +64,25 @@ Every daily snapshot should contain these fields:
 The plugin may support legacy snapshot CSVs without metadata for manual import,
 but model-produced snapshots should include `model_version`, `source`, and
 `benchmark_universe`.
+
+For cloud-produced snapshots or API responses, the same logical fields are
+required even if the transport is not CSV. The plugin should normalize API
+responses into the same local read model used by imported snapshots.
+
+Minimum API contract if the model is exposed as a service:
+
+| Endpoint | Required behavior |
+| --- | --- |
+| `GET /latest` | returns the latest completed snapshot metadata and Top10 rows |
+| `GET /snapshots/{date}` | returns the full ticker-level snapshot for a date |
+| `GET /ticker/{ticker}` | returns the latest row plus Top10 memory and recent history for one ticker |
+| `GET /changes?date=YYYY-MM-DD` | returns new, dropped, and continued Top10 names versus the prior snapshot |
+| `GET /validation-summary?model_version=...` | returns validation period, benchmark comparisons, drawdown, turnover, regime slices, and known failure modes |
+
+API responses should be read-only. Authentication, if used, should grant read
+access only. The plugin should cache fetched snapshots into the private runtime
+before using them in Trade Plan Preparation so research notes remain
+reproducible.
 
 ## Universe
 
@@ -117,6 +153,13 @@ package:
 
 Model changes must produce a new `model_version` and a short validation note.
 
+The validation package belongs to the KVN model project, not this plugin. The
+plugin consumes the validation summary and uses it to qualify confidence:
+
+- strong validation and matching regime: KVN can raise research priority;
+- weak or stale validation: KVN can only be shown as an experimental signal;
+- missing validation summary: KVN must not be described as proven alpha.
+
 ## Runtime Layout
 
 The future module should write deterministic artifacts under the private runtime
@@ -133,6 +176,12 @@ or another user-approved model runtime:
 The public plugin repo should keep only fixtures and contracts, not private
 market-data downloads or user-specific model runs.
 
+If the model runs in the cloud, the cloud runtime should keep raw data,
+intermediate factors, model run metadata, and backtest artifacts outside this
+plugin repo. The local Dailytrades runtime should keep only imported snapshots,
+API cache artifacts, and short validation summaries needed for research
+reproducibility.
+
 ## Implementation Phases
 
 1. **Contract only**: document model boundary, output fields, universe rules,
@@ -145,9 +194,12 @@ market-data downloads or user-specific model runs.
    drawdown, regime behavior, and concentration.
 5. **Daily job**: run after market close, write model metadata and daily
    snapshots into the private runtime.
-6. **Plugin read path**: keep using the existing KVN snapshot read/query/change
+6. **Optional cloud deployment**: move the daily job to a cloud VM, scheduled
+   container, GitHub Action, or managed job only after the output contract and
+   validation package are stable.
+7. **Plugin read path**: keep using the existing KVN snapshot read/query/change
    interface; do not move scoring logic into the plugin.
-7. **Forward-test governance**: freeze a model version, observe live results, and
+8. **Forward-test governance**: freeze a model version, observe live results, and
    only then increase confidence in Trade Plan Preparation.
 
 ## Open Questions
@@ -162,3 +214,7 @@ market-data downloads or user-specific model runs.
   hybrid?
 - What minimum validation threshold is required before KVN becomes a primary
   research-priority input?
+- Should the first non-local integration be cloud snapshot download or a
+  read-only API?
+- What cloud secrets, data licenses, and data redistribution limits apply to the
+  model job and any API cache?

@@ -25,6 +25,12 @@ The KVN module may later live in a separate package, repository, or runtime job.
 Until that implementation exists, the plugin must continue to treat KVN as an
 imported or upstream snapshot source.
 
+The KVN module does not need to run on the same machine as the plugin. It may run
+as a local batch job, cloud scheduled job, GitHub Action, managed container, or
+read-only model API, provided the plugin receives the same standardized
+snapshot/API contract. Deployment location is an implementation detail; the
+architectural dependency is the versioned model output.
+
 **Consequences**
 
 - The plugin must not calculate, re-rank, re-score, or relabel KVN rows.
@@ -36,3 +42,9 @@ imported or upstream snapshot source.
   Research plugin behavior.
 - The model must be validated through backtests and forward tests before its
   scores are used as a high-confidence research-priority input.
+- Cloud deployment is allowed, but the plugin should cache imported/fetched
+  snapshots into the private runtime before using them so research notes remain
+  reproducible.
+- Any cloud API must be read-only from the plugin's perspective and must not
+  make the plugin responsible for model scoring, vendor data licensing, or
+  backtest governance.
