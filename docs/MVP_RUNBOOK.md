@@ -62,7 +62,7 @@ ticker + trade_horizon + instrument。
 ```
 
 Expected behavior: the agent routes through Daily Ops Orchestrator, reports
-runtime/source limitations, enters Broker Source Setup when broker source is
+runtime/source limitations, enters `券商只读来源设置` when broker source is
 missing or unauthorized, gives a concrete `下一步指引` with a copyable reply
 format, and refuses concrete trigger levels for tickers without trade horizon
 and instrument confirmation.

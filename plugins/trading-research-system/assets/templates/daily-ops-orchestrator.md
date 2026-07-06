@@ -1,4 +1,4 @@
-# Daily Ops Orchestrator Output
+# 交易研究日程引导输出
 
 Use this template when the user asks to start, continue, or check Daily Ops
 without specifying every internal workflow.
@@ -23,7 +23,7 @@ without specifying every internal workflow.
 
 List only confirmations that block useful output. If none, write `无阻塞确认`.
 
-## Broker Source Setup
+## 券商只读来源设置
 
 Include this section when broker source is `missing`, `stale`, or
 `unauthorized`, or when the next recommended action needs holdings, executions,
@@ -39,7 +39,7 @@ State that this is read-only setup only. Do not read broker data, install
 software, save source preferences, or write runtime files until the user
 confirms.
 
-## Ticker / Setup 周期确认
+## 标的与交易想法周期确认
 
 Group every tradable idea by:
 
@@ -56,7 +56,7 @@ or exit triggers.
 
 ## 建议下一步
 
-State one Next Recommended Action. It should be the single workflow that best
+State one `建议下一步`. It should be the single workflow that best
 unblocks the user's current Daily Ops loop.
 
 ## 下一步指引
@@ -70,7 +70,7 @@ Make this section operational, not descriptive. Give the user a short copyable
 reply format such as:
 
 ```text
-Broker 用 <Longbridge read-only / IBKR read-only / 两者 / 暂不启用>；
+券商来源用 <Longbridge read-only / IBKR read-only / 两者 / 暂不启用>；
 这些 ticker 的周期是 <ticker + trade_horizon + instrument>；
 允许/不允许初始化今天 runtime 草稿。
 ```

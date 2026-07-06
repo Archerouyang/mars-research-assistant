@@ -366,7 +366,7 @@ Broker source rules:
 - During the first Daily Ops run or runtime initialization, ask which broker
   sources the user wants to enable.
 - If runtime health reports broker source as `missing` or `unauthorized`, enter
-  Broker Source Setup instead of only reporting the gap.
+  `券商只读来源设置` instead of only reporting the gap.
 - Store the user's preferred broker-source order in private runtime config or
   `trading-profile.md`, not in the public plugin repo.
 - If only one supported source is enabled, use it for read-only broker facts.

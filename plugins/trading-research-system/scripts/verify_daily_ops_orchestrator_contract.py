@@ -32,7 +32,7 @@ REQUIRED = {
     "context": [
         "Daily Ops Orchestrator",
         "主动日程引导",
-        "Broker Source Setup",
+        "券商只读来源设置",
         "ops-state.md",
         "交易周期确认",
         "ticker + trade_horizon + instrument",
@@ -52,8 +52,8 @@ REQUIRED = {
         "Stage Detection",
         "Required Reads",
         "Output Contract",
-        "Broker Source Setup",
-        "Next Step Guidance",
+        "券商只读来源设置",
+        "下一步指引",
         "Ticker Trade Horizon Confirmation",
         "trade_horizon",
         "instrument",
@@ -66,7 +66,7 @@ REQUIRED = {
         "watch only",
         "If trade horizon is missing",
         "ops-state.md",
-        "Next Recommended Action",
+        "建议下一步",
         "默认建议",
         "你只需要回复",
         "Longbridge read-only",
@@ -81,12 +81,12 @@ REQUIRED = {
         "If trade horizon is missing",
     ],
     "orchestrator_template": [
-        "Daily Ops Orchestrator Output",
+        "交易研究日程引导输出",
         "当前日程阶段",
         "读取状态",
         "缺失确认",
-        "Broker Source Setup",
-        "Ticker / Setup 周期确认",
+        "券商只读来源设置",
+        "标的与交易想法周期确认",
         "建议下一步",
         "下一步指引",
         "默认建议",
@@ -119,14 +119,14 @@ REQUIRED = {
     ],
     "fixture_expected": [
         "当前日程阶段",
-        "盘前 quick update",
+        "盘前快速更新",
         "读取状态",
         "缺失确认",
-        "Broker Source Setup",
+        "券商只读来源设置",
         "Longbridge read-only",
         "IBKR read-only",
         "暂不启用",
-        "Ticker / Setup 周期确认",
+        "标的与交易想法周期确认",
         "QQQ",
         "MU",
         "TSM",
@@ -170,7 +170,22 @@ SPEC = ContractSpec(
     success_message="daily ops orchestrator contract ok",
     failure_header="daily ops orchestrator contract failed:",
     files={
-        key: FileContract(path=path, required_terms=REQUIRED[key])
+        key: FileContract(
+            path=path,
+            required_terms=REQUIRED[key],
+            forbidden_terms=(
+                [
+                    "Broker Source Setup",
+                    "Daily Ops Orchestrator Output",
+                    "Next Recommended Action",
+                    "盘前 quick update",
+                    "Ticker / Setup 周期确认",
+                ]
+                if key in {"orchestrator_template", "fixture_expected"}
+                else []
+            ),
+            forbidden_label="user-facing English step name",
+        )
         for key, path in FILES.items()
     },
 )

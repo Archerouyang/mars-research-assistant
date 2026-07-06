@@ -42,9 +42,9 @@ whether required state is available, missing, stale, or unauthorized. Do not rea
 private file contents just to perform the health check.
 
 If runtime health reports broker sources as missing or unauthorized, do not stop
-at a passive warning. Enter Broker Source Setup: ask whether to enable
+at a passive warning. Enter `券商只读来源设置`: ask whether to enable
 Longbridge read-only, IBKR read-only, both, or continue without broker facts for
-this run. Broker Source Setup configures read intent only; it must not read
+this run. `券商只读来源设置` configures read intent only; it must not read
 accounts, install software, or call broker write actions.
 
 If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or

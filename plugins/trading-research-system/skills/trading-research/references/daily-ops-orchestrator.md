@@ -60,10 +60,10 @@ user has authorized deeper reads:
 Do not copy private runtime content into public repo docs. Do not write runtime
 files unless the user confirms a proposed write package.
 
-## Broker Source Setup
+## 券商只读来源设置
 
 When runtime health reports broker-source status as `missing` or
-`unauthorized`, enter Broker Source Setup instead of only reporting the gap.
+`unauthorized`, enter `券商只读来源设置` instead of only reporting the gap.
 This setup is a one-question read-only authorization preference check; it is not
 plugin installation and not broker authentication by itself.
 
@@ -87,7 +87,7 @@ brew install --cask longbridge/tap/longbridge-terminal
 If IBKR is selected but unauthorized, ask the user to enable the IBKR connector
 or continue without broker facts. Do not retry with a broker write-capable tool.
 
-Broker Source Setup may propose a private runtime write such as source
+`券商只读来源设置` may propose a private runtime write such as source
 preference or enabled source order, but only after a proposed write package is
 confirmed. It must not read broker data until the user authorizes a read-only
 source for the current run or stored private runtime config already allows it.
@@ -102,7 +102,7 @@ The section should include:
 
 - `默认建议`: one recommended path that removes the largest blocker first.
 - `可选路径`: 2-4 alternatives when there are meaningful choices, such as
-  Broker Source Setup, runtime initialization, ticker horizon confirmation,
+  `券商只读来源设置`, runtime initialization, ticker horizon confirmation,
   current-source refresh, or continuing reduced-scope.
 - `你只需要回复`: a short copyable reply format the user can send.
 - `我会执行`: the next focused workflow or runtime action after confirmation.
@@ -185,8 +185,8 @@ Return the sections from `assets/templates/daily-ops-orchestrator.md`:
 - 当前日程阶段;
 - 读取状态;
 - 缺失确认;
-- Broker Source Setup;
-- Ticker / Setup 周期确认;
+- 券商只读来源设置;
+- 标的与交易想法周期确认;
 - 建议下一步;
 - 下一步指引;
 - 为什么现在做这一步;
