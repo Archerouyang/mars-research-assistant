@@ -60,6 +60,38 @@ user has authorized deeper reads:
 Do not copy private runtime content into public repo docs. Do not write runtime
 files unless the user confirms a proposed write package.
 
+## Broker Source Setup
+
+When runtime health reports broker-source status as `missing` or
+`unauthorized`, enter Broker Source Setup instead of only reporting the gap.
+This setup is a one-question read-only authorization preference check; it is not
+plugin installation and not broker authentication by itself.
+
+Ask the user which broker facts source to enable for Daily Ops:
+
+1. `Longbridge read-only` for positions, executions/trades, orders/status, and
+   authorized market data when the Longbridge skill/plugin is installed.
+2. `IBKR read-only` for positions, executions/trades, orders/status, and
+   authorized market data when the IBKR connector is enabled.
+3. `Longbridge read-only + IBKR read-only` when both should be used, then ask
+   for preferred source order if the two disagree.
+4. `暂不启用` and continue this run with manual CSV or no broker facts.
+
+If Longbridge is selected but unavailable, ask the user to install or enable the
+Longbridge skill/plugin/terminal. A user-managed installation path can be:
+
+```bash
+brew install --cask longbridge/tap/longbridge-terminal
+```
+
+If IBKR is selected but unauthorized, ask the user to enable the IBKR connector
+or continue without broker facts. Do not retry with a broker write-capable tool.
+
+Broker Source Setup may propose a private runtime write such as source
+preference or enabled source order, but only after a proposed write package is
+confirmed. It must not read broker data until the user authorizes a read-only
+source for the current run or stored private runtime config already allows it.
+
 ## Source Routing Boundary
 
 Track source purpose separately from broker-source selection. Do not reuse broker-source selection as news-source selection.
@@ -135,6 +167,7 @@ Return the sections from `assets/templates/daily-ops-orchestrator.md`:
 - 当前日程阶段;
 - 读取状态;
 - 缺失确认;
+- Broker Source Setup;
 - Ticker / Setup 周期确认;
 - 建议下一步;
 - 为什么现在做这一步;

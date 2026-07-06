@@ -351,9 +351,10 @@ liquidity, or major market structure.
 
 ## Broker Source Configuration
 
-Broker source choice should be configurable during plugin onboarding or runtime
-initialization. The plugin should not hard-code one broker as the universal
-default.
+Broker source choice should be configurable after plugin installation during the
+first Daily Ops run or runtime initialization. The plugin should not hard-code
+one broker as the universal default, and plugin installation itself should not be
+presented as broker authorization.
 
 V1 supported broker sources:
 
@@ -362,7 +363,10 @@ V1 supported broker sources:
 
 Broker source rules:
 
-- During onboarding, ask which broker sources the user wants to enable.
+- During the first Daily Ops run or runtime initialization, ask which broker
+  sources the user wants to enable.
+- If runtime health reports broker source as `missing` or `unauthorized`, enter
+  Broker Source Setup instead of only reporting the gap.
 - Store the user's preferred broker-source order in private runtime config or
   `trading-profile.md`, not in the public plugin repo.
 - If only one supported source is enabled, use it for read-only broker facts.

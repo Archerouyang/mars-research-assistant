@@ -76,6 +76,10 @@ _Avoid_: 全自动数据湖, 不可核验来源
 提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill/plugin 或手动 CSV。Broker Source 是可插拔 adapter，不是 Trading Research System 的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
 _Avoid_: 单一券商绑定, 券商即系统
 
+**Broker Source Setup**:
+Daily Ops 首次启动或 runtime health 显示 broker source 为 `missing` / `unauthorized` 时触发的只读券商来源访谈。它应询问用户是否启用 Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。本步骤只配置读取意图和偏好，不读取账户、不安装软件、不写入 public repo，也不允许任何 broker write action。
+_Avoid_: 安装 plugin 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
+
 **Read-only Broker Adapter**:
 把 broker 原始数据转换成标准运行时视图的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。适配层可以为一次分析返回内存数据、临时文件或派生快照，但不应要求长期保存券商逐笔事实。
 _Avoid_: 自动下单插件, 账户控制层

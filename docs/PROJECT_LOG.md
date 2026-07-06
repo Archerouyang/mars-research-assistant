@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-06
 
 - Commit: pending
+- Scope: skill, template, fixture, docs, test
+- What changed: added Broker Source Setup to Daily Ops. When runtime health reports broker sources as `missing` or `unauthorized`, the Orchestrator now asks whether to enable Longbridge read-only, IBKR read-only, both, or continue with manual CSV / no broker facts instead of only reporting the gap.
+- Why it matters: users can get broker-source authorization guidance during the first Daily Ops run or runtime initialization without confusing plugin installation with broker authorization. The setup remains read-only and does not read accounts, install software, write public repo data, or touch broker write actions.
+- Next step: forward-test the new Daily Ops prompt in a fresh chat, then implement real read-only Longbridge/IBKR adapters behind the same source preference boundary.
+
+- Commit: pending
 - Scope: script, fixture, docs, test
 - What changed: added Broker snapshot ingest. `broker_snapshot_ingest.py` maps user-approved read-only broker export CSVs into the standard `portfolio_snapshot.csv` runtime view used by position daily reports. Added IBKR-like and Longbridge-like fixture exports, expected normalized output, selftest, contract verifier, and MVP smoke wiring.
 - Why it matters: the broker-live position daily report path now has an adapter boundary between raw broker facts and the broker-agnostic report renderer, without requiring live connector calls inside repo tests.

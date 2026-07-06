@@ -23,6 +23,22 @@ without specifying every internal workflow.
 
 List only confirmations that block useful output. If none, write `无阻塞确认`.
 
+## Broker Source Setup
+
+Include this section when broker source is `missing`, `stale`, or
+`unauthorized`, or when the next recommended action needs holdings, executions,
+orders/status, margin, cash, or position risk.
+
+Ask one concise question:
+
+```text
+是否启用只读 broker 数据？选项：Longbridge read-only / IBKR read-only / 两者都启用 / 暂不启用，本轮用 manual CSV 或 no broker facts。
+```
+
+State that this is read-only setup only. Do not read broker data, install
+software, save source preferences, or write runtime files until the user
+confirms.
+
 ## Ticker / Setup 周期确认
 
 Group every tradable idea by:

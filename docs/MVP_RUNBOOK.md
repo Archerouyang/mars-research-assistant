@@ -62,8 +62,9 @@ ticker + trade_horizon + instrument。
 ```
 
 Expected behavior: the agent routes through Daily Ops Orchestrator, reports
-runtime/source limitations, and refuses concrete trigger levels for tickers
-without trade horizon and instrument confirmation.
+runtime/source limitations, enters Broker Source Setup when broker source is
+missing or unauthorized, and refuses concrete trigger levels for tickers without
+trade horizon and instrument confirmation.
 
 ## Safety Boundary
 

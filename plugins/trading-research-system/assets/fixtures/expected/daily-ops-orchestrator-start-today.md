@@ -17,8 +17,22 @@
 ## 缺失确认
 
 - 确认是否允许初始化 `ops-state.md` 草稿。
+- 选择 Broker Source Setup：Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。
 - 确认 QQQ、MU、TSM、GLW 分别是什么交易周期和工具。
 - 确认是否需要在后续正式运行中允许 web/current-source 检查。
+
+## Broker Source Setup
+
+当前 broker source 是 unauthorized，所以不能只报告缺口，需要询问只读来源偏好。
+
+是否启用只读 broker 数据？选项：
+
+1. Longbridge read-only：读取持仓、成交、订单状态和授权行情；若未安装/启用，需要用户先处理 Longbridge skill/plugin/terminal。
+2. IBKR read-only：读取持仓、成交、订单状态和授权行情；若 connector 未授权，需要用户先启用。
+3. Longbridge read-only + IBKR read-only：两者都启用，并在后续确认 source order。
+4. 暂不启用：本轮用 manual CSV 或 no broker facts 继续。
+
+本步骤不会读取 broker，不会写 runtime，不会安装软件，也不会创建、修改、取消或批准订单。
 
 ## Ticker / Setup 周期确认
 
