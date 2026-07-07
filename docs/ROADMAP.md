@@ -340,7 +340,10 @@ Target result:
 2. Add chart artifact generation from fixture-backed authorized OHLCV data.
 3. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
 4. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
-5. Connect real read-only Longbridge/IBKR source adapters to the standard broker-live runtime views.
+5. Connect real read-only source adapters to the standard runtime views:
+   Longbridge skill adapter for read-only broker facts, IBKR connector adapter
+   for read-only broker/market facts, and Longbridge `macrodata` adapter for
+   macro panel values.
 
 ## MVP 1 Acceptance Criteria
 
