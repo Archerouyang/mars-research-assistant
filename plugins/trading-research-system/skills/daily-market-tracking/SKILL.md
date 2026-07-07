@@ -17,6 +17,7 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - Runtime health: `../trading-research/references/runtime-health.md`.
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
+   - Macro data source contract: `../trading-research/references/macro-data-source-contract.md`.
    - optional external quantitative momentum snapshots when already configured
      or explicitly provided by the user.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
@@ -32,6 +33,12 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - optional external quantitative momentum snapshot changes only when the
      source is already configured or explicitly provided;
    - prices, key levels, and chart context.
+   For macro/rates and financial-condition reads, first report `宏观数据来源状态`.
+   Use Longbridge macrodata for actual macro values when available, use
+   IBKR market data for price/OHLCV transmission, and official source fallback
+   for S0 facts or fallback values. Then include `实际宏观指标读数` with current values,
+   5D/20D change when available, thresholds, strategy posture impact, source,
+   and `数据时间戳`. Do not claim macro analysis if no actual macro values were read.
    If an external momentum snapshot is missing or stale, report that the
    optional snapshot is unavailable and continue without it unless the user
    explicitly provides a fresh file. Do not rebuild private quantitative models
@@ -97,6 +104,8 @@ Use Chinese Markdown with:
 - `运行状态`
 - `结论`
 - `重要变化`
+- `宏观数据来源状态`
+- `实际宏观指标读数`
 - `当前盘面`
 - `快速宏观/利率`
 - `政策/新闻`

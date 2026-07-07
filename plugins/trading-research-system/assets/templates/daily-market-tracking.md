@@ -34,6 +34,32 @@ status.
 - Do not rebuild, rank, or backtest a private quantitative model inside this plugin.
 - Portfolio exposure concern:
 
+## 宏观数据来源状态
+
+| source | status | used_for | fallback |
+| --- | --- | --- | --- |
+| Longbridge macrodata | available / unauthorized / not_installed / missing / stale | macro values and financial conditions | official source fallback |
+| IBKR market data | available / unauthorized / not_installed / missing / stale | price and OHLCV transmission | public/authorized market data |
+| official source fallback | available / pending / unavailable | S0 facts and fallback values | reputable media leads only |
+
+## 实际宏观指标读数
+
+| 指标 | 当前值 | 近5日/20日变化 | 阈值 | 对策略姿态影响 | 数据时间戳 | source |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10Y |  |  | 4.5% | high beta momentum / balanced / defensive |  | Longbridge macrodata / official source fallback |
+| 30Y |  |  | 5.0% | duration pressure / relief |  |  |
+| HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
+| DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |
+| Oil |  |  | spike / breakdown | inflation and volatility pressure |  |  |
+| Gold |  |  | trend confirmation | defensive / easing hedge |  |  |
+
+## 策略姿态
+
+- posture: defensive / balanced / high beta momentum
+- supports:
+- pressures:
+- blocks:
+
 ## Current Market Read
 
 - Index structure:

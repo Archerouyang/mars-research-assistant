@@ -61,6 +61,7 @@ class ContractScript:
 
 CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("source-routing", "verify_source_routing_contract.py"),
+    ("macro-data-source", "verify_macro_data_source_contract.py"),
     ("daily-ops-orchestrator", "verify_daily_ops_orchestrator_contract.py"),
     ("daily-market-tracking", "verify_daily_market_tracking_contract.py"),
     ("release-surface", "verify_release_surface_contract.py"),

@@ -44,6 +44,12 @@ Before workflows that depend on private runtime state, use
 whether required state is available, missing, stale, or unauthorized. Do not read
 private file contents just to perform the health check.
 
+Use the formal runtime as the only active Daily Ops state root:
+`runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless
+`TRADING_RESEARCH_RUNTIME_DIR` or a user-confirmed runtime path overrides it.
+Repo fixtures, bundled templates, and example plans are development inputs only;
+do not treat them as the current Active Market Plan in a new chat.
+
 If runtime health reports broker sources as missing or unauthorized, do not stop
 at a passive warning. Enter `券商只读来源设置`: ask whether to enable
 Longbridge read-only, IBKR read-only, both, or continue without broker facts for
@@ -54,6 +60,12 @@ If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or
 exit triggers. Ask for the intended `ticker + trade_horizon + instrument`
 grouping first. If trade horizon is missing, the correct output is a compact
 blocking question, not a forced setup.
+
+Before macro regime, financial-conditions, rates/liquidity, or strategy posture
+claims, read `references/macro-data-source-contract.md`. Use Longbridge
+macrodata as the preferred source for macro values when available, use
+IBKR market data for price/OHLCV transmission, and official source fallback for
+S0 facts or when Longbridge macrodata is unavailable.
 
 If a request spans multiple workflows, run them in the natural order:
 
@@ -72,6 +84,7 @@ If a request spans multiple workflows, run them in the natural order:
 Detailed domain rules remain in:
 
 - `references/macro-policy-filter.md`
+- `references/macro-data-source-contract.md`
 - `references/research-report-intake.md`
 - `references/equity-screening.md`
 - `references/daily-ops-orchestrator.md`

@@ -15,6 +15,11 @@ Use only these status values:
 - `stale`: expected file exists but is older than the configured freshness
   threshold.
 - `unauthorized`: broker or external source is not authorized for this run.
+- `not_installed`: broker source, connector, skill, or local terminal is not
+  installed or visible in the current Codex session.
+
+`not_installed` is broker-source health only. File/runtime path checks should
+continue to use `missing`.
 
 ## Default Checks
 
@@ -27,7 +32,16 @@ The health check should cover:
 - `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`
 - `{runtime_dir}/momentum/kvn.sqlite`
+- `Longbridge` broker source
+- `IBKR` broker source
+- `Manual snapshot` source
 - `broker_sources`
+
+The JSON payload must include:
+
+- `current_mode`: `live read-only`, `manual snapshot`, or `dry-run`.
+- `broker_source_health`: per-source status rows for Longbridge, IBKR, and
+  Manual snapshot.
 
 ## Script
 
@@ -45,6 +59,9 @@ Useful options:
 - `--format markdown`: human-readable status note.
 - `--broker-source longbridge=available`: disclose known broker-source status.
 - `--broker-source ibkr=unauthorized`: disclose missing broker authorization.
+- `--broker-source ibkr=not_installed`: disclose that the connector/source is
+  not installed or visible in this run.
+- `--broker-source manual=available`: disclose a user-approved manual snapshot.
 - `--stale-after-days 3`: mark existing files stale when modified before the
   freshness window.
 
@@ -53,6 +70,13 @@ Useful options:
 If required state is `missing`, `stale`, or `unauthorized`, report the gap and
 ask whether to initialize, import, connect a source, or continue with reduced
 analysis.
+
+Use `current_mode` to explain what the current Daily Ops run can trust:
+
+- `live read-only`: at least one authorized broker source is available.
+- `manual snapshot`: no live broker source is available, but a user-approved
+  derived snapshot is available.
+- `dry-run`: no broker facts should be assumed.
 
 Do not invent current plan state. Do not treat a stale local broker snapshot as
 current broker truth. Return to authorized read-only broker sources when exact

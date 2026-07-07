@@ -58,8 +58,54 @@ user has authorized deeper reads:
 - broker-source authorization status when holdings, executions, or position
   daily report are needed.
 
+The formal runtime is `runtime_dir`, defaulting to
+`~/Documents/dailytrades-runtime` unless the user or environment provides an
+override. A repo fixture, bundled template, or stale example plan is not the
+active runtime. If only repo fixture state is available, label it as `fixture /
+debug only`, do not call it the current Active Market Plan, and ask whether to
+bootstrap or point to the formal runtime.
+
 Do not copy private runtime content into public repo docs. Do not write runtime
 files unless the user confirms a proposed write package.
+
+## Startup Health Block
+
+Every new Daily Ops chat or "start today" response must include a fixed startup
+health block before analysis. This block prevents the agent from guessing which
+state it can trust.
+
+In `读取状态`, include:
+
+### 运行状态检查
+
+- `runtime_dir`: the formal runtime path or `unknown`.
+- `formal runtime`: `available`, `missing`, `stale`, or `unauthorized`.
+- `ops-state.md`: status only.
+- `market-plan.md`: status only.
+- `trading-profile.md`: status only.
+- `daily/YYYY-MM-DD/`: status only.
+- `current_mode` / `当前模式`: one of `live read-only`, `manual snapshot`, or `dry-run`.
+
+### 券商来源健康
+
+Always show a compact table:
+
+| source | status | effect |
+| --- | --- | --- |
+| Longbridge | available / unauthorized / not_installed / missing / stale |  |
+| IBKR | available / unauthorized / not_installed / missing / stale |  |
+| Manual snapshot | available / missing / stale |  |
+
+Use `current_mode` from `runtime_health.py` when available:
+
+- `live read-only`: at least one authorized broker source is available.
+- `manual snapshot`: no live broker source is available, but a user-approved
+  snapshot is available.
+- `dry-run`: no broker facts should be assumed.
+
+If `current_mode` is `dry-run`, the next step can still proceed with public data
+and plan context, but portfolio sizing, broker facts, and execution review must
+be marked as reduced confidence.
 
 ## 券商只读来源设置
 

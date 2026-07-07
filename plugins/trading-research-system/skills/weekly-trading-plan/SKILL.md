@@ -89,6 +89,13 @@ Longbridge `macrodata` may support macro and financial-condition values, but
 policy facts require S0 official sources and industry/news leads require S2 or
 authorized research before they can change risk budget.
 
+Read `../trading-research/references/macro-data-source-contract.md` before
+writing `Macro Regime`, `Financial Conditions`, or `策略姿态`. Weekly output
+must include `宏观数据来源状态` and `实际宏观指标读数`: use Longbridge macrodata
+as the preferred S1 source for macro values when available, IBKR market data for
+price/OHLCV transmission, and official source fallback for S0 facts or when
+Longbridge macrodata is unavailable.
+
 ## Trade Plan Preparation
 
 Weekly outputs must include a `交易计划准备` section before setup discovery. This section is the bridge from research to Active Market Plan, and must not be skipped in favor of immediate setup rows.

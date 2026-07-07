@@ -28,6 +28,7 @@ REQUIRED = {
         "run_scripts",
         "run_contract_suite",
         "verify_source_routing_contract.py",
+        "verify_macro_data_source_contract.py",
         "verify_contract_suite_selftest.py",
         "verify_contract_suite_contract.py",
         "verify_visual_artifact_selftest.py",
@@ -47,6 +48,7 @@ REQUIRED = {
         "run_scripts",
         "emit_output=False",
         "source-routing",
+        "macro-data-source",
         "broker-snapshot-ingest-contract",
     ],
     "verify_plugin": [

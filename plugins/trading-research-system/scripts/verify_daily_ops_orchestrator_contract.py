@@ -43,6 +43,8 @@ REQUIRED = {
         "daily-ops-orchestrator.md",
         "start today",
         "begin daily ops",
+        "formal runtime",
+        "runtime_dir",
         "trade_horizon",
         "ticker + trade_horizon + instrument",
         "If trade horizon is missing",
@@ -53,6 +55,13 @@ REQUIRED = {
         "Stage Detection",
         "Required Reads",
         "Output Contract",
+        "Startup Health Block",
+        "运行状态检查",
+        "券商来源健康",
+        "当前模式",
+        "formal runtime",
+        "runtime_dir",
+        "repo fixture",
         "券商只读来源设置",
         "下一步指引",
         "Ticker Trade Horizon Confirmation",
@@ -85,6 +94,11 @@ REQUIRED = {
         "交易研究日程引导输出",
         "当前日程阶段",
         "读取状态",
+        "运行状态检查",
+        "券商来源健康",
+        "当前模式",
+        "formal runtime",
+        "runtime_dir",
         "缺失确认",
         "券商只读来源设置",
         "标的与交易想法周期确认",
@@ -122,6 +136,11 @@ REQUIRED = {
         "当前日程阶段",
         "盘前快速更新",
         "读取状态",
+        "运行状态检查",
+        "券商来源健康",
+        "当前模式",
+        "runtime_dir",
+        "正式 runtime",
         "缺失确认",
         "券商只读来源设置",
         "Longbridge read-only",
@@ -184,7 +203,8 @@ SPEC = ContractSpec(
                 ]
                 if key in {"orchestrator_template", "fixture_expected"}
                 else []
-            ),
+            )
+            + (["data/market-plan.md"] if key in {"router_skill", "orchestrator_reference", "orchestrator_template", "fixture_expected"} else []),
             forbidden_label="user-facing English step name",
         )
         for key, path in FILES.items()

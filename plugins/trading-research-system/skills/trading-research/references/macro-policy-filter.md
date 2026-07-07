@@ -33,6 +33,23 @@ rates, yields, inflation, labor, liquidity, credit, FX, commodities, and
 financial-condition reads, but it should not replace S0 sources for policy
 facts, official speech text, release status, or legal/regulatory changes.
 
+## Macro Data Source Contract
+
+Use `macro-data-source-contract.md` before claiming a macro regime, financial
+conditions, rates, or liquidity read.
+
+- Longbridge macrodata is the preferred S1 source for macro values when
+  installed and authorized.
+- IBKR market data is price and OHLCV transmission, useful for tape, charts,
+  sector/index confirmation, and market response.
+- official source fallback confirms S0 policy facts, release status, official
+  macro prints, and official speech text; it also backs up macro values when
+  Longbridge macrodata is unavailable.
+
+Macro outputs must show `宏观数据来源状态` and `实际宏观指标读数`. If no actual
+macro values were read, say the run is degraded instead of calling it complete
+macro analysis.
+
 ## Source Routing Boundary
 
 Choose sources by claim type before using any evidence in the plan. Source

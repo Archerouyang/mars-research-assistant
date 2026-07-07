@@ -49,6 +49,9 @@ def main() -> int:
             raise AssertionError("runtime health leaked private file content")
 
         payload = json.loads(result.stdout)
+        if payload.get("current_mode") != "dry-run":
+            raise AssertionError(f"current_mode: expected 'dry-run', got {payload.get('current_mode')!r}")
+
         checks = {item["id"]: item for item in payload["checks"]}
 
         assert_status(checks, "market_plan", "available")
@@ -56,7 +59,46 @@ def main() -> int:
         assert_status(checks, "updates_dir", "available")
         assert_status(checks, "daily_dir", "available")
         assert_status(checks, "kvn_store", "available")
+        assert_status(checks, "longbridge_broker_source", "unauthorized")
+        assert_status(checks, "ibkr_broker_source", "unauthorized")
         assert_status(checks, "broker_sources", "unauthorized")
+
+        sourced_result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--runtime-dir",
+                str(runtime_dir),
+                "--date",
+                "2026-07-04",
+                "--format",
+                "json",
+                "--broker-source",
+                "longbridge=available",
+                "--broker-source",
+                "ibkr=not_installed",
+                "--broker-source",
+                "manual=available",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        if sourced_result.returncode != 0:
+            raise AssertionError(f"runtime health sourced command failed: {sourced_result.stderr or sourced_result.stdout}")
+
+        sourced_payload = json.loads(sourced_result.stdout)
+        if sourced_payload.get("current_mode") != "live read-only":
+            raise AssertionError(
+                f"current_mode: expected 'live read-only', got {sourced_payload.get('current_mode')!r}"
+            )
+
+        sourced_checks = {item["id"]: item for item in sourced_payload["checks"]}
+        assert_status(sourced_checks, "longbridge_broker_source", "available")
+        assert_status(sourced_checks, "ibkr_broker_source", "not_installed")
+        assert_status(sourced_checks, "manual_snapshot_source", "available")
+        assert_status(sourced_checks, "broker_sources", "available")
 
     print("runtime health selftest ok")
     return 0

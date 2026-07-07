@@ -52,6 +52,18 @@ Use this shape:
 - Next step: keep using `verify_contract_suite.py core` as the plugin contract entrypoint, and migrate any future core verifier into `PluginPaths` plus `CORE_SUITE` registration.
 
 - Commit: pending
+- Scope: script, skill, template, fixture, docs, test
+- What changed: hardened fresh-chat Daily Ops startup health after the `交易研究2` forward test. `runtime_health.py` now emits `current_mode` and per-source `broker_source_health` for Longbridge, IBKR, and Manual snapshot. Daily Ops startup output must show `运行状态检查`, `券商来源健康`, `当前模式`, and formal `runtime_dir` before analysis.
+- Why it matters: a new chat can now distinguish `live read-only`, `manual snapshot`, and `dry-run` before reading broker facts or interpreting portfolio risk, and it should not treat repo fixtures or stale example plans as the active runtime state.
+- Next step: reinstall the plugin and forward-test a fresh Daily Ops chat against the formal runtime path.
+
+- Commit: pending
+- Scope: skill, reference, template, docs, test
+- What changed: added the Macro Data Source Contract. Daily, weekly, and macro-equity workflows now require `宏观数据来源状态` and `实际宏观指标读数`; Longbridge macrodata is the preferred S1 source for actual macro values, IBKR market data is limited to price/OHLCV transmission, and official source fallback handles S0 facts and fallback macro values.
+- Why it matters: macro/rates output should not default to IBKR or web-only commentary when Longbridge macrodata is available, and it should not claim macro analysis without actual macro indicator reads.
+- Next step: forward-test a fresh Daily Ops or weekly update with Longbridge macrodata available, then decide whether to build a live macrodata adapter helper.
+
+- Commit: pending
 - Scope: architecture, script, test
 - What changed: added a shared Runtime State module for private runtime path resolution and safe local writes. `runtime_state.py` now owns `TRADING_RESEARCH_RUNTIME_DIR` resolution, dated daily directory resolution, template directory resolution, and dry-run/overwrite write behavior. `bootstrap_runtime.py`, `init_daily.py`, `runtime_health.py`, KVN snapshot storage, review context, trade-record compatibility, legacy import, and append-review scripts now use this shared module.
 - Why it matters: runtime path and write-policy behavior is no longer repeated across many shallow CLI modules. This gives the Daily Ops workflow one tested seam for runtime state, reduces future drift, and makes bootstrap/health/review/KVN scripts easier to verify without touching private runtime data.

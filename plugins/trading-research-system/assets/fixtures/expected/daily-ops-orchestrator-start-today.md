@@ -7,12 +7,37 @@
 ## 读取状态
 
 - runtime health: available
+- runtime_dir: `~/Documents/dailytrades-runtime`
+- formal runtime: available，正式 runtime 可用；不要把 repo fixture 当作当前 Active Market Plan
+- 当前模式: `dry-run`
 - `ops-state.md`: missing，需要建议初始化但不会写 runtime
 - `market-plan.md`: available
 - `trading-profile.md`: available
+- `daily/YYYY-MM-DD/`: missing
 - KVN snapshot: stale，本次不能把公开行情重建成 KVN
 - broker source: unauthorized，本次不会读取 broker
 - missing data: ticker 交易周期未知，不能生成具体 entry / exit trigger
+
+### 运行状态检查
+
+| item | status | note |
+| --- | --- | --- |
+| runtime_dir | available | `~/Documents/dailytrades-runtime` |
+| formal runtime | available | 正式 runtime 可用；只读取状态，不复制私有内容 |
+| ops-state.md | missing | 可建议初始化草稿，但需要用户确认 |
+| market-plan.md | available | 只作为当前状态读取 |
+| trading-profile.md | available | 用于交易周期和工具偏好 |
+| daily/YYYY-MM-DD/ | missing | 今日运行包尚未初始化 |
+
+### 券商来源健康
+
+| source | status | effect |
+| --- | --- | --- |
+| Longbridge | unauthorized | 不能读取持仓、成交、订单状态或授权行情 |
+| IBKR | unauthorized | 不能读取持仓、成交、订单状态或授权行情 |
+| Manual snapshot | missing | 本轮没有用户确认的 broker snapshot |
+
+当前模式: `dry-run`，可以做公开数据和计划状态 quick update，但持仓 sizing、成交事实和组合风险只能降级处理。
 
 ## 缺失确认
 
