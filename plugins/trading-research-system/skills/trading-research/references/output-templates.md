@@ -93,14 +93,43 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| KVN Momentum Leaderboard | imported snapshot / missing / stale | ticker-only script-computed order |  |  | Top10 / query / changes |  |
+| External Momentum Snapshot | optional / provided / missing / stale | user-configured external model output only |  |  | snapshot summary / skipped |  |
 
 ### 截面候选池 / Cross-Section Candidate Pool
 | rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  | 4H/1D/1W 大周期环境 + price structure 待确认 |  |
 
-只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。KVN Momentum Leaderboard 是 imported snapshot 和 ticker-only script-computed order，只能改变研究优先级；它不是买入名单，也不能单独生成 setup。Agent 不得重排、重打分或把主题/行业轮动写成 KVN row。
+只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。External Momentum Snapshot 是用户配置或提供的外部量化模型输出，只能改变研究优先级；它不是买入名单，也不能单独生成 setup。Agent 不得在插件内重建、重排、重打分或把主题/行业轮动伪装成外部模型输出。
+
+## Price Action 滚动盘面分析
+
+用于用户要求 PA、盘面分析、点位更新、加仓/减仓区域、或对上次分析做更新时。
+
+### 时间框架声明
+| 标的 | 主分析时间框架 | 辅助时间框架 | 为什么这样选 |
+| --- | --- | --- | --- |
+| DRAM/SOXX | 4H / 1D / 1W | 1H / 15m / 5m | 主分析时间框架判断走势环境；辅助时间框架只微调执行观察和短线确认 |
+
+### 上次分析对照
+| 标的 | 上次结论 | 上次关键点位 | 最新变化 | 本次是否修正 |
+| --- | --- | --- | --- | --- |
+|  | 未找到时写：本次作为基准分析 |  |  |  |
+
+### 走势强弱参考点位
+| 标的 | 点位所属时间框架 | 支撑/压力 | 强势延续 | 修复确认 | 中性/震荡 | 转弱 | 失效/暂停复核 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  | 4H / 1D / 1W / 1H | 支撑 / 压力 / 中轴 / 缺口 |  |  |  |  |  |
+
+### 加仓/减仓/暂停区
+| 标的 | 成本/买入记录 | 仓位定位 | 可考虑加仓区 | TP/再平衡区 | 暂停加仓/复核区 | 比例式加减仓 | 不做什么 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 长期 ETF/主题 ETF | 均价 / 低成本核心 / 高成本批次 / unknown | 长期持有 / 主题仓 / 交易仓 | 只写区域和确认条件 | 减仓=TP/再平衡 | 不等于普通止损 | 少量 / 中等 / 较大 / 1/10 / 1/5 / 1/3 | 不追第一根、不在区间中间加仓、不默认给具体股数 |
+
+### 本周事件映射
+| 事件 | 时间 | 传导路径 | 影响标的 | 会增强什么判断 | 会削弱什么判断 |
+| --- | --- | --- | --- | --- | --- |
+| FOMC / 10Y / 30Y / 财报 / 产业新闻 | 日期 + 时区 | rates / yields / USD / oil / sector / volatility / earnings | DRAM/SOXX/QQQ/VOO/计划中标的 |  |  |
 
 ## 对当前持仓的总体影响
 | 持仓 | 影响 | 本周动作 | 暂停/复核条件 |

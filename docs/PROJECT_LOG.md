@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-07
 
 - Commit: pending
+- Scope: skill, template, docs, test
+- What changed: hardened the 1.0 RC release surface and PA rollforward output contract. The plugin no longer exposes the unfinished external quantitative momentum model as a default focused skill or user-facing router path. PA outputs now have to compare against prior analysis, state main/auxiliary timeframes, bind levels to support/resistance and timeframe, consider cost/buy records, use proportional add/reduce sizing by default, and map levels to weekly events.
+- Why it matters: users should not see unfinished quantitative-model modules as public plugin capabilities, and DRAM/SOXX-style PA updates need to be stable, cost-aware, and directly usable instead of loose chart commentary.
+- Next step: refresh the installed plugin cache and forward-test a fresh chat PA update against existing runtime/holding context.
+
+- Commit: pending
 - Scope: script, fixture, reference, docs, test
 - What changed: added the Content & Visualization Artifact System MVP. The plugin now has a shared display-first visual artifact helper, fixture-backed price action SVG output, a macro/regime mini-panel path, and explicit optional durable save via artifact manifest instead of saving by default.
 - Why it matters: users can inspect QQQ-style price structure or macro/rates regime directly in chat without a frontend, while the public plugin keeps private runtime writes opt-in and source-bounded.

@@ -15,7 +15,7 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 - General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究日程", "现在该做什么", or any request where the user wants active process guidance:
   read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
-- Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, momentum rebuild, and setup discovery:
+- Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, optional external momentum context, and setup discovery:
   use `weekly-trading-plan`.
 - Daily quick update against `market-plan.md`: macro/policy/news/event delta, momentum change, setup status changes, and level updates:
   use `daily-market-tracking`.
@@ -27,8 +27,11 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
   use `research-report-intake`.
 - Macro policy, rates/yields, research-note verification, stock screening:
   use `macro-equity-research`.
-- KVN snapshot import, Top10 display, ticker lookup, or Top10 changes:
-  use `momentum-leaderboard`.
+- External quantitative momentum model requests:
+  explain that v1 does not bundle or publicly expose model construction,
+  rankings, or a standalone leaderboard. If the user provides an already
+  generated snapshot, treat it as an optional internal input to Trade Plan
+  Preparation after confirmation; otherwise continue without it.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:
@@ -74,7 +77,6 @@ Detailed domain rules remain in:
 - `references/daily-ops-orchestrator.md`
 - `references/active-market-plan.md`
 - `references/runtime-health.md`
-- `references/momentum-leaderboard.md`
 - `references/trading-profile.md`
 - `references/broker-data-contract.md`
 - `references/automation-contract.md`
@@ -94,12 +96,6 @@ Runtime health:
 
 ```bash
 python3 ../../scripts/runtime_health.py --format json
-```
-
-KVN snapshot:
-
-```bash
-python3 ../../scripts/kvn_leaderboard.py show --top 10
 ```
 
 Position daily report from a standard runtime snapshot:

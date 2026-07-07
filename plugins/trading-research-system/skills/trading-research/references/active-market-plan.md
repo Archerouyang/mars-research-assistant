@@ -35,7 +35,7 @@ Google Sheets is only a compact one-way mirror for review, filtering, and cross-
 
 Use one loop with different depth, not separate modes:
 
-- `deep_update`: weekend or major reset. Includes prior-week trade summary, market state, macro/rates, policy/news, event preview, KVN snapshot read/change summary, setup pool refresh, and risk budget review.
+- `deep_update`: weekend or major reset. Includes prior-week trade summary, market state, macro/rates, policy/news, event preview, optional external momentum context, setup pool refresh, and risk budget review.
 - `quick_update`: weekday premarket or market-hours update. Focuses on what changed since the current plan and which setups move status or priority.
 - `trigger_update`: intraday update focused on setup status, trigger zone, invalidation, execution checklist, and exposure constraints.
 - `review_update`: post-order or post-exit update linking actual trade facts and review notes back to the setup.
@@ -46,12 +46,16 @@ The setup is the smallest planning unit. A setup is not just a ticker and not ju
 
 Before a new setup enters the setup pool, route research through `Trade Plan Preparation`:
 
-1. Summarize the six input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, `Company Thesis Check`, and `KVN Momentum Leaderboard` when an imported snapshot is available.
+1. Summarize the input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, `Company Thesis Check`, and `External Momentum Snapshot` when an optional user-configured snapshot is available.
 2. Apply profile-defined strategy posture, pool, instrument, timeframe, and crowding rules.
 3. Convert those reads into a `Cross-Section Candidate Pool`.
 4. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.
 
-The setup pool should not receive raw macro views, plain watchlist names, unverified research claims, or momentum rankings without a prepared setup structure. KVN Momentum Leaderboard output can raise research priority, but it cannot bypass higher-timeframe regime, price_structure, risk_context, or portfolio checks.
+The setup pool should not receive raw macro views, plain watchlist names,
+unverified research claims, or momentum rankings without a prepared setup
+structure. External momentum context can raise research priority, but it cannot
+bypass higher-timeframe regime, price_structure, risk_context, or portfolio
+checks.
 
 Minimum promotion guidance from Cross-Section Candidate Pool to Setup Pool:
 

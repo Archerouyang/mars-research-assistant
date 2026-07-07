@@ -17,7 +17,8 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - Runtime health: `../trading-research/references/runtime-health.md`.
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
-   - KVN imported snapshots: `../trading-research/references/momentum-leaderboard.md`.
+   - optional external quantitative momentum snapshots when already configured
+     or explicitly provided by the user.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
    - Intraday statuses: `../trading-research/references/intraday-setup-scan.md`.
    - Portfolio risk: `../trading-research/references/portfolio-risk.md`.
@@ -28,17 +29,15 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - fiscal/Treasury/Fed/policy headlines;
    - high-impact news and earnings;
    - major events in the current week and next-week preview window;
-   - KVN Momentum Leaderboard changes from imported snapshots only;
+   - optional external quantitative momentum snapshot changes only when the
+     source is already configured or explicitly provided;
    - prices, key levels, and chart context.
-   Use `../../scripts/kvn_leaderboard.py` only when runtime health shows the
-   KVN store is available. If the KVN store is missing or stale, report that KVN
-   is unavailable and ask whether to import a snapshot or continue without KVN.
-   KVN output is ticker-only. Preserve the imported script order and do not
-   re-rank, re-score, or reorder KVN rows. Do not rebuild KVN from public market
-   data inside daily tracking. Do not label public market data as KVN; public
-   market data can support tape, sector breadth, and relative-strength notes
-   only. Any sector/theme rotation belongs in market breadth, not in the KVN
-   table. Daily tracking must not re-rank, re-score, or reorder KVN rows.
+   If an external momentum snapshot is missing or stale, report that the
+   optional snapshot is unavailable and continue without it unless the user
+   explicitly provides a fresh file. Do not rebuild private quantitative models
+   from public market data inside daily tracking. Public market data can support
+   tape, sector breadth, and relative-strength notes only. Any sector/theme
+   rotation belongs in market breadth, not in the external snapshot table.
 4. Update setup-level fields:
    - trigger zone;
    - invalidation;
@@ -67,8 +66,8 @@ the Chinese label, for example `盘前快速更新 (premarket_quick_update)`, `�
 the primary status text.
 
 Include `运行状态` and `可执行下一步` whenever runtime health is incomplete,
-broker access is missing, the KVN store is missing/stale, or the request cannot
-enter formal intraday scanning.
+broker access is missing, optional external momentum input is missing/stale, or
+the request cannot enter formal intraday scanning.
 
 Use these user-facing status labels:
 
@@ -82,8 +81,9 @@ adapt them to the exact missing files:
 
 - `初始化今日运行包`: create today's daily runtime directory and base files.
 - `生成盘中观察清单`: build `intraday-watchlist.csv` from Active Plan setups.
-- `导入 KVN snapshot`: import a user/upstream KVN snapshot before KVN output.
-- `跳过 KVN`: continue without KVN and do not label public data as KVN.
+- `启用外部动量快照`: use a user-confirmed external momentum snapshot as an
+  optional input.
+- `跳过外部动量快照`: continue without optional external momentum input.
 - `继续盘前快速更新`: stay in quick-update mode until the next macro/event check.
 
 Every live quote, macro indicator, broker snapshot, and official data point
@@ -102,6 +102,11 @@ Use Chinese Markdown with:
 - `政策/新闻`
 - `事件预览`
 - `动量榜单更新`
+- `Price Action 滚动盘面分析`
+- `上次分析对照`
+- `走势强弱参考点位`
+- `加仓/减仓/暂停区`
+- `本周事件映射`
 - `Active Plan 对照`
 - `点位更新`
 - `交易风格匹配`
@@ -113,3 +118,40 @@ Use Chinese Markdown with:
 - `可执行下一步`
 
 Keep the note operational: what changed, what matters today, and what the user should inspect first. Avoid long intraday commentary; collapse repeated headlines and price noise into changed variables, setup transitions, and explicit invalidations.
+
+## Price Action Rolling Output
+
+When the user asks for PA, 盘面分析, point updates, or add/reduce levels, include
+`Price Action 滚动盘面分析` even in a quick update.
+
+Before giving new levels, check the previous analysis in this order:
+
+1. current `market-plan.md` setup rows and holding plans;
+2. latest `updates/YYYY-MM-DD.md` notes;
+3. today's `daily/YYYY-MM-DD/` notes and watchlist rows;
+4. user-provided prior analysis in the current chat.
+
+If no previous analysis is available, say `上次分析对照: 未找到可用记录，本次作为基准分析`.
+
+For every ticker, state:
+
+- `主分析时间框架`: the higher timeframe used to judge structure, normally
+  `4H`, `1D`, or `1W`.
+- `辅助时间框架`: the lower timeframe used for execution observation or level
+  refinement, normally `1H` or below.
+- `走势强弱参考点位`: levels that separate strong continuation, repair,
+  neutral/range, weakness, and invalidation.
+- `加仓/减仓/暂停区`: add, TP/rebalance, and pause/review zones tied to the
+  user's holding horizon. Long-term ETF holdings should discuss add and
+  TP/rebalance, not ordinary stop-loss exits.
+- `支撑/压力`: every key level should say whether it is support, resistance,
+  midpoint, gap, or invalidation.
+- `点位所属时间框架`: every add/reduce/pause level should say whether it comes
+  from `4H`, `1D`, `1W`, `1H`, or a lower execution timeframe.
+- `成本/买入记录`: when holdings or prior buys are available, distinguish
+  low-cost core lots from high-cost chase lots before proposing add or
+  TP/rebalance zones.
+- `比例式加减仓`: use `少量`, `中等`, `较大`, `1/10`, `1/5`, or `1/3` style
+  sizing. Do not give exact share counts unless the user explicitly asks.
+- `本周事件映射`: macro, rates, policy, earnings, or industry events that can
+  make those levels more or less reliable.
