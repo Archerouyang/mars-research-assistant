@@ -12,12 +12,44 @@ without specifying every internal workflow.
 ## 读取状态
 
 - runtime health:
+- runtime_dir:
+- formal runtime:
+- 当前模式:
 - `ops-state.md`:
 - `market-plan.md`:
 - `trading-profile.md`:
+- `daily/YYYY-MM-DD/`:
 - optional external momentum snapshot:
 - broker source:
 - missing data:
+
+### 运行状态检查
+
+Use the formal runtime path from `runtime_dir`; default is
+`~/Documents/dailytrades-runtime` unless the user or environment overrides it.
+Do not treat repo fixtures, templates, or example plans as active runtime state.
+
+| item | status | note |
+| --- | --- | --- |
+| runtime_dir |  |  |
+| formal runtime |  |  |
+| ops-state.md |  |  |
+| market-plan.md |  |  |
+| trading-profile.md |  |  |
+| daily/YYYY-MM-DD/ |  |  |
+
+### 券商来源健康
+
+Always include this table during a new Daily Ops chat, even when broker facts
+are not needed yet.
+
+| source | status | effect |
+| --- | --- | --- |
+| Longbridge | available / unauthorized / not_installed / missing / stale |  |
+| IBKR | available / unauthorized / not_installed / missing / stale |  |
+| Manual snapshot | available / missing / stale |  |
+
+当前模式: `live read-only` / `manual snapshot` / `dry-run`
 
 ## 缺失确认
 

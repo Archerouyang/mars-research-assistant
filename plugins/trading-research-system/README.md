@@ -194,3 +194,8 @@ For plugin validation and key contract checks, run:
 ```bash
 bash scripts/verify-plugin.sh
 ```
+
+`runtime_health.py --format json` includes `current_mode` and
+`broker_source_health` so a fresh Daily Ops chat can distinguish
+`live read-only`, `manual snapshot`, and `dry-run` before reading broker facts
+or interpreting portfolio risk.

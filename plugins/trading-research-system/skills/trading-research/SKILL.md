@@ -44,6 +44,12 @@ Before workflows that depend on private runtime state, use
 whether required state is available, missing, stale, or unauthorized. Do not read
 private file contents just to perform the health check.
 
+Use the formal runtime as the only active Daily Ops state root:
+`runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless
+`TRADING_RESEARCH_RUNTIME_DIR` or a user-confirmed runtime path overrides it.
+Repo fixtures, bundled templates, and example plans are development inputs only;
+do not treat them as the current Active Market Plan in a new chat.
+
 If runtime health reports broker sources as missing or unauthorized, do not stop
 at a passive warning. Enter `券商只读来源设置`: ask whether to enable
 Longbridge read-only, IBKR read-only, both, or continue without broker facts for
