@@ -181,8 +181,7 @@ Order status is used to trigger review intake and reconcile actual trades. It is
 
 ## Longbridge First Phase
 
-Longbridge broker integration should be implemented as a Longbridge skill/plugin
-adapter. It only needs these read-only account capabilities first:
+Longbridge broker integration should be implemented as a Longbridge skill/plugin adapter. It only needs these read-only account capabilities first:
 
 - positions;
 - executions/trades;

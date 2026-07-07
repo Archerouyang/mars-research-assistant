@@ -149,6 +149,12 @@ for one-off runs or fixtures. Local files are fixtures, debug artifacts, or
 user-confirmed derived snapshots, not the default broker fact source of truth.
 Longbridge `macrodata` is a separate macro-data source, not an account source.
 
+The Longbridge skill adapter is split into `longbridge_broker_skill` and
+`longbridge_macrodata`. `runtime_health.py --format json` reports
+`source_capability_health` so Daily Ops can tell whether the Longbridge skill is
+available, unauthorized, missing, stale, or simply not visible in the current
+chat.
+
 Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
 
 Google Sheets is optional summary display only. It should not be used as a trade-record layer.

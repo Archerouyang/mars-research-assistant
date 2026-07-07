@@ -29,6 +29,7 @@ REQUIRED = {
         "run_contract_suite",
         "verify_source_routing_contract.py",
         "verify_macro_data_source_contract.py",
+        "verify_longbridge_skill_adapter_contract.py",
         "verify_contract_suite_selftest.py",
         "verify_contract_suite_contract.py",
         "verify_visual_artifact_selftest.py",
@@ -49,6 +50,7 @@ REQUIRED = {
         "emit_output=False",
         "source-routing",
         "macro-data-source",
+        "longbridge-skill-adapter",
         "broker-snapshot-ingest-contract",
     ],
     "verify_plugin": [

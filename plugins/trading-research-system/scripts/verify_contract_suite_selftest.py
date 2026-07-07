@@ -22,6 +22,8 @@ def main() -> None:
         raise AssertionError(f"core suite should start with source-routing, got {names[0]!r}")
     if "macro-data-source" not in names:
         raise AssertionError("core suite should include macro-data-source")
+    if "longbridge-skill-adapter" not in names:
+        raise AssertionError("core suite should include longbridge-skill-adapter")
     if names[-1] != "broker-snapshot-ingest-contract":
         raise AssertionError(f"core suite should end with broker snapshot contract, got {names[-1]!r}")
     if len(names) != len(set(names)):

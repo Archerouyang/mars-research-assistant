@@ -92,6 +92,10 @@ _Avoid_: 内置 Longbridge 依赖, 自动安装
 Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
 _Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
+**Longbridge Skill Adapter**:
+把 Longbridge skill/plugin 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成两个 capability：`longbridge_broker_skill` 用于 positions、executions/trades、orders/status 等 broker facts；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、未授权、缺失、过期和可用状态。
+_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在
+
 **Macro Data Source Contract**:
 宏观和金融条件分析的来源选择契约。若 Longbridge macrodata 可用，它是宏观数值和金融条件的优先 S1 来源；IBKR 行情数据用于价格、OHLCV、盘中 tape 和市场传导确认；官方来源 fallback 用于 S0 政策事实、经济数据发布时间、官方讲话、法规状态，以及 Longbridge macrodata 不可用时的官方宏观数值回退。Daily Ops / weekly / macro-equity 输出不能只说“宏观重要”，必须列出 `宏观数据来源状态` 和 `实际宏观指标读数`，否则要标记为降级分析。
 _Avoid_: 没有实际宏观数值却声称完成宏观分析, 用 IBKR 行情替代 broad macrodata, 用新闻替代官方宏观数据

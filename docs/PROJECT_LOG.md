@@ -64,6 +64,12 @@ Use this shape:
 - Next step: forward-test a fresh Daily Ops or weekly update with Longbridge macrodata available, then decide whether to build a live macrodata adapter helper.
 
 - Commit: pending
+- Scope: skill, reference, script, test, docs
+- What changed: defined the Longbridge Skill Adapter contract and extended `runtime_health.py` with `source_capability_health` for `longbridge_broker_skill`, `longbridge_macrodata`, `ibkr_connector`, and `manual_snapshot`.
+- Why it matters: Daily Ops can now distinguish "Longbridge skill not visible in the current chat" from "Longbridge does not exist", and can keep broker facts separate from Longbridge macrodata before analysis.
+- Next step: forward-test in a trading research chat where the Longbridge skill is exposed, then implement the live read-only adapter mapping into standard runtime views.
+
+- Commit: pending
 - Scope: architecture, script, test
 - What changed: added a shared Runtime State module for private runtime path resolution and safe local writes. `runtime_state.py` now owns `TRADING_RESEARCH_RUNTIME_DIR` resolution, dated daily directory resolution, template directory resolution, and dry-run/overwrite write behavior. `bootstrap_runtime.py`, `init_daily.py`, `runtime_health.py`, KVN snapshot storage, review context, trade-record compatibility, legacy import, and append-review scripts now use this shared module.
 - Why it matters: runtime path and write-policy behavior is no longer repeated across many shallow CLI modules. This gives the Daily Ops workflow one tested seam for runtime state, reduces future drift, and makes bootstrap/health/review/KVN scripts easier to verify without touching private runtime data.

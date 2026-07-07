@@ -52,6 +52,12 @@ def main() -> int:
         if payload.get("current_mode") != "dry-run":
             raise AssertionError(f"current_mode: expected 'dry-run', got {payload.get('current_mode')!r}")
 
+        capabilities = {item["id"]: item for item in payload["source_capability_health"]}
+        assert_status(capabilities, "longbridge_broker_skill", "unauthorized")
+        assert_status(capabilities, "longbridge_macrodata", "unauthorized")
+        assert_status(capabilities, "ibkr_connector", "unauthorized")
+        assert_status(capabilities, "manual_snapshot", "missing")
+
         checks = {item["id"]: item for item in payload["checks"]}
 
         assert_status(checks, "market_plan", "available")
@@ -79,6 +85,8 @@ def main() -> int:
                 "ibkr=not_installed",
                 "--broker-source",
                 "manual=available",
+                "--source-capability",
+                "longbridge_macrodata=not_installed",
             ],
             text=True,
             capture_output=True,
@@ -99,6 +107,10 @@ def main() -> int:
         assert_status(sourced_checks, "ibkr_broker_source", "not_installed")
         assert_status(sourced_checks, "manual_snapshot_source", "available")
         assert_status(sourced_checks, "broker_sources", "available")
+        sourced_capabilities = {item["id"]: item for item in sourced_payload["source_capability_health"]}
+        assert_status(sourced_capabilities, "longbridge_broker_skill", "available")
+        assert_status(sourced_capabilities, "longbridge_macrodata", "not_installed")
+        assert_status(sourced_capabilities, "ibkr_connector", "not_installed")
 
     print("runtime health selftest ok")
     return 0
