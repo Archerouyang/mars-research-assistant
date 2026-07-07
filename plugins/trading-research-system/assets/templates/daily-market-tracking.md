@@ -14,7 +14,7 @@
 - runtime health:
 - missing blockers:
 - broker source:
-- KVN source status:
+- optional external momentum snapshot:
 - 数据时间戳:
 - 行情数据: as of
 - 宏观/利率数据: as of
@@ -29,11 +29,9 @@ status.
 - Macro / policy events:
 - News catalysts:
 - Event preview:
-- KVN source status: imported snapshot / missing / stale
-- KVN ticker-only Top10:
-- KVN change summary:
-- If missing or stale: Do not rebuild KVN; ask whether to import a snapshot or continue without KVN.
-- Do not re-rank or re-score KVN; preserve the script-computed ticker order.
+- optional external momentum snapshot: provided / missing / stale / skipped
+- If missing or stale: continue without optional external momentum unless the user explicitly provides a snapshot.
+- Do not rebuild, rank, or backtest a private quantitative model inside this plugin.
 - Portfolio exposure concern:
 
 ## Current Market Read
@@ -55,11 +53,11 @@ status.
 - News:
 - Next major event:
 
-## KVN Momentum Leaderboard Update
+## External Momentum Snapshot Update
 
-| Ticker | Rank vs S&P500 | KVN 分数 | KVN P | 当前是否 S&P500 | Top10 memory | Plan impact |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |
+| Ticker | Source rank | Score / percentile | Snapshot date | Source status | Plan impact |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |
 
 ## Sector/theme rotation
 
@@ -91,6 +89,38 @@ status.
 - Portfolio impact:
 - Next user decision:
 
+## Price Action 滚动盘面分析
+
+## 时间框架声明
+
+| 标的 | 主分析时间框架 | 辅助时间框架 | 为什么这样选 |
+| --- | --- | --- | --- |
+|  | 4H / 1D / 1W | 1H / 15m / 5m | 主分析时间框架判断走势环境；辅助时间框架只微调执行观察和短线确认 |
+
+## 上次分析对照
+
+| 标的 | 上次结论 | 上次关键点位 | 最新变化 | 本次是否修正 |
+| --- | --- | --- | --- | --- |
+|  | 未找到时写：本次作为基准分析 |  |  |  |
+
+## 走势强弱参考点位
+
+| 标的 | 点位所属时间框架 | 支撑/压力 | 强势延续 | 修复确认 | 中性/震荡 | 转弱 | 失效/暂停复核 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  | 4H / 1D / 1W / 1H | 支撑 / 压力 / 中轴 / 缺口 |  |  |  |  |  |
+
+## 加仓/减仓/暂停区
+
+| 标的 | 成本/买入记录 | 仓位定位 | 可考虑加仓区 | TP/再平衡区 | 暂停加仓/复核区 | 比例式加减仓 | 不做什么 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  | 均价 / 低成本核心 / 高成本批次 / unknown | 长期持有 / 主题仓 / 交易仓 |  |  |  | 少量 / 中等 / 较大 / 1/10 / 1/5 / 1/3 | 不默认给具体股数 |
+
+## 本周事件映射
+
+| 事件 | 时间 | 传导路径 | 影响标的 | 会增强什么判断 | 会削弱什么判断 |
+| --- | --- | --- | --- | --- | --- |
+|  | 日期 + 时区 | rates / yields / USD / oil / sector / volatility / earnings |  |  |  |
+
 ## End Of Day Notes
 
 - Best opportunity:
@@ -106,6 +136,6 @@ status.
 | --- | --- | --- | --- |
 | 初始化今日运行包 | `daily/YYYY-MM-DD/`、`trade-plans.csv` 或基础 daily 文件缺失 | 允许/不允许初始化今天 runtime 草稿 | 盘前快速更新或正式盘中扫描准备 |
 | 生成盘中观察清单 | Active Plan 可读但 `intraday-watchlist.csv` 缺失 | 确认要跟踪的 setup / ticker + trade_horizon + instrument | 正式盘中扫描 |
-| 导入 KVN snapshot | 用户有新的 KVN CSV 或上游 snapshot | 提供文件路径或确认导入来源 | KVN ticker-only Top10 更新 |
-| 跳过 KVN | KVN store 缺失/过期但今天仍要继续 | 确认本轮不使用 KVN | 继续盘前快速更新 |
+| 启用外部动量快照 | 用户已有外部模型输出 snapshot | 提供文件路径或确认来源 | 交易计划准备 |
+| 跳过外部动量快照 | 外部动量快照缺失/过期但今天仍要继续 | 确认本轮不用外部动量输入 | 继续盘前快速更新 |
 | 继续盘前快速更新 | 关键宏观/事件尚未落地，或正式扫描条件不足 | 确认下一次检查时间/事件 | 盘前快速更新 |

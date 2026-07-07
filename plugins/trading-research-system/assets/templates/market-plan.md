@@ -44,7 +44,7 @@
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| KVN Momentum Leaderboard | imported snapshot / missing / stale |  |  |  | Top10 / query / changes |  |
+| External Momentum Snapshot | optional / provided / missing / stale |  |  |  | snapshot summary / skipped |  |
 
 ### Cross-Section Candidate Pool
 
@@ -58,13 +58,15 @@
 | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |
 
-## KVN Momentum Leaderboard
+## External Momentum Snapshot
 
-KVN ticker-only Top10. Preserve script-computed order from the scheduled or upstream script. Do not re-rank, re-score, or mix in sectors/themes.
+Optional external quantitative model output. Use only when the user has already
+provided or configured a snapshot. Do not rebuild, rank, or backtest the model
+inside this plugin.
 
-| Rank | Ticker | Rank vs S&P500 | KVN 分数 | KVN P | What changed | Setup relevance |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |
+| Rank | Ticker | Source score / percentile | Snapshot date | What changed | Setup relevance |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |
 
 ## Sector/theme Momentum Context
 

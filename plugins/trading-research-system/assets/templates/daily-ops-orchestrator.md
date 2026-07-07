@@ -15,7 +15,7 @@ without specifying every internal workflow.
 - `ops-state.md`:
 - `market-plan.md`:
 - `trading-profile.md`:
-- KVN snapshot:
+- optional external momentum snapshot:
 - broker source:
 - missing data:
 

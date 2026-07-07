@@ -16,7 +16,9 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
-- KVN snapshot import, Top10 display, ticker lookup, and Top10 change summary from local SQLite.
+- Optional external quantitative momentum snapshot consumption when the user has
+  already provided or enabled a separate model output. The plugin does not
+  build, rank, or publicly expose that model in v1.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
 - Trading profile template for personal strategy scoring, pool definitions, ETF groups, instrument preference, timeframe rules, crowding model, and setup-to-instrument translation.
 - Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
@@ -64,7 +66,7 @@ task to the right internal workflow.
 
 The conceptual router is `trading-research`. Focused skills such as
 `weekly-trading-plan`, `daily-market-tracking`, `intraday-setup-scan`,
-`momentum-leaderboard`, `trade-review`, `research-report-intake`, `macro-equity-research`,
+`trade-review`, `research-report-intake`, `macro-equity-research`,
 `portfolio-risk`, and `trading-stats` remain available as internal agent
 workflows, power-user shortcuts, and development/test boundaries. They should
 not be presented as the default user-facing menu.
@@ -174,10 +176,6 @@ reads, real Codex automations, or live market data calls.
 uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
 uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py --input IBKR:/path/to/ibkr-positions.csv --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv --as-of 2026-07-06T20:00:00Z
 uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
-uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py import /path/to/kvn.csv --db ~/Documents/dailytrades-runtime/momentum/kvn.sqlite --source user
-uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py show --date 2026-06-24 --top 10
-uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py query SOXX --date 2026-06-24
-uv run python plugins/trading-research-system/scripts/kvn_leaderboard.py changes --date 2026-06-24
 uv run python plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
 uv run python plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
 uv run python plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv

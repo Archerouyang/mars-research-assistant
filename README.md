@@ -139,7 +139,8 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 | 状态 | 内容 |
 | --- | --- |
-| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、Runtime bootstrap、KVN snapshot import/storage、本地 KVN Top10/query/change 脚本、`momentum-leaderboard` focused skill、Trade Plan Preparation KVN 消费 fixture、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
+| 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、Runtime bootstrap、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
+| 可选内部输入 | 外部量化动量快照消费层；默认不开放模型构建、排名生成或公开入口 |
 | 开发中 | broker-live adapter live read、盘中 scan data adapter |
 | 后续 | Codex 持仓日报 automation、异常期权数据源、可视化快照 |
 
@@ -171,7 +172,7 @@ broker reads, real Codex automations, or live market data calls.
 
 - [Plugin README](plugins/trading-research-system/README.md): plugin 包内详细说明、脚本和模板。
 - [MVP Runbook](docs/MVP_RUNBOOK.md): fixture-backed local MVP smoke 和新对话验证边界。
-- [Plugin Design](docs/PLUGIN_DESIGN.md): 已接受的 AI-native UX、runtime、broker、KVN、chart 和开发队列设计。
+- [Plugin Design](docs/PLUGIN_DESIGN.md): 已接受的 AI-native UX、runtime、broker、chart 和开发队列设计。
 - [Roadmap](docs/ROADMAP.md): 产品边界、执行方法、当前进度和任务拆分。
 - [Development Plan](docs/DEVELOPMENT_PLAN.md): 当前开发优先级和每日开发规划。
 - [Project Log](docs/PROJECT_LOG.md): GitHub trajectory 和重要变更记录。

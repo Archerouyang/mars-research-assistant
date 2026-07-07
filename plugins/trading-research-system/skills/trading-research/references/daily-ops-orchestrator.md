@@ -53,7 +53,8 @@ user has authorized deeper reads:
 - `{runtime_dir}/market-plan.md` status when available;
 - `{runtime_dir}/trading-profile.md` status when available;
 - today's daily directory status;
-- KVN snapshot availability when the next step depends on momentum;
+- optional external momentum snapshot availability when the next step depends
+  on a user-configured momentum model;
 - broker-source authorization status when holdings, executions, or position
   daily report are needed.
 

@@ -1,6 +1,6 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260707053023",
+  "version": "0.1.0+codex.20260707055601",
   "description": "Focused trading research skills for report intake, Active Market Plan updates, setup scans, trade review, broker reconciliation, and risk checks.",
   "author": {
     "name": "Archer"
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Trading Research System",
     "shortDescription": "Report intake, active plans, setup scans, trade review, and broker-risk workflows.",
-    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: find and digest public or user-provided research reports, maintain an overwriteable Active Market Plan, append update notes, review prior trades during deep updates, analyze current market tape, macro, policy, news, and upcoming events, update momentum rankings, manage setup-level opportunities, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews from read-only broker facts, reconcile portfolio exposure across brokers, and review trading statistics.",
+    "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: find and digest public or user-provided research reports, maintain an overwriteable Active Market Plan, append update notes, review prior trades during deep updates, analyze current market tape, macro, policy, news, and upcoming events, consume optional external momentum context when provided, manage setup-level opportunities, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews from read-only broker facts, reconcile portfolio exposure across brokers, and review trading statistics.",
     "developerName": "Archer",
     "category": "Productivity",
     "capabilities": [

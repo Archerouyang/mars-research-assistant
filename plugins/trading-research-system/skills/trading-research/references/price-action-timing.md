@@ -45,6 +45,48 @@ Every setup needs:
 7. What failure looks like after entry.
 8. Whether the setup fits the user's time horizon and portfolio.
 
+## Rolling Price Action Update
+
+Use this contract when the user asks for PA, 盘面分析, point updates, 加仓/减仓
+levels, or a refresh of a prior chart read.
+
+Before giving new levels, first look for previous analysis in:
+
+1. current `market-plan.md` setup rows and holding plans;
+2. latest `updates/YYYY-MM-DD.md` entries;
+3. today's `daily/YYYY-MM-DD/` notes, watchlist, and chart artifacts;
+4. user-provided prior analysis in the active chat.
+
+If no prior analysis is available, say: `上次分析对照: 未找到可用记录，本次作为基准分析`.
+
+Every rolling PA update must include:
+
+- `主分析时间框架`: the higher timeframe used to judge structure, usually
+  `4H`, `1D`, or `1W`.
+- `辅助时间框架`: the lower timeframe used only to refine execution observation
+  or near-term confirmation, usually `1H` or below.
+- `上次分析对照`: what changed versus the prior read and which prior levels are
+  still valid.
+- `走势强弱参考点位`: levels or zones that separate strong continuation,
+  repair/reclaim, neutral/range, weakness, and invalidation. Mark whether each
+  level is `支撑/压力`, and state the `点位所属时间框架`.
+- `加仓/减仓/暂停区`: add zones, TP/rebalance zones, and pause/review zones
+  matched to the user's holding horizon. Long-term ETF holdings should discuss
+  add and TP/rebalance, not ordinary tactical stop-loss exits.
+- `成本/买入记录`: if holdings or prior buys are available, use them to decide
+  whether a level is a good add zone, TP/rebalance zone, or just a risk-control
+  zone. Do not treat a low-cost core position the same as high-cost chase lots.
+- `比例式加减仓`: use qualitative or proportional sizing such as `少量`,
+  `中等`, `较大`, `1/10`, `1/5`, or `1/3`. Do not bind the plan to exact share
+  counts unless the user explicitly asks.
+- `本周事件映射`: macro, rates, policy, earnings, and industry events that can
+  validate or invalidate the level read.
+
+Do not mix timeframe roles. The main timeframe decides the background; the
+auxiliary timeframe can only refine execution observation or short-term
+confirmation. If different tickers need different main timeframes, state that
+explicitly ticker by ticker.
+
 ## Intraday Trigger Confirmation
 
 For plan-scoped intraday setup scans, do not mark a plan as `triggered` from price contact alone. A triggered setup needs all default confirmation checks:

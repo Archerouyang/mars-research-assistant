@@ -112,7 +112,9 @@ Use these statuses:
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
-| P1 | done | Define KVN snapshot leaderboard contract | Makes externally generated KVN rankings a first-class analysis input without making this plugin own the quantitative model. | Use `momentum-leaderboard` for user-facing KVN tasks and run `kvn_leaderboard.py`, `verify_kvn_leaderboard_selftest.py`, and `verify_kvn_leaderboard_contract.py` as the local acceptance gate. |
+| P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
+| P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
+| P1 | done | Add PA rollforward output contract | Makes PA updates usable for DRAM/SOXX-style follow-ups by requiring prior-analysis comparison, explicit timeframe roles, support/resistance, cost/buy-record context, proportional sizing, and weekly event mapping. | Use `verify_price_action_rollforward_contract.py`; PA outputs should not default to exact share counts. |
 | P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Keep the fixture-backed user-provided report and discovery/access-boundary examples current as the workflow changes. |
 | P1 | done | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Use `verify_active_market_plan_fixture_contract.py` before building position daily report or intraday scan scripts. |
 | P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
@@ -135,17 +137,20 @@ Use these statuses:
 
 Date: 2026-07-07
 
-- Main task: implement the Content & Visualization Artifact System MVP.
-- Current stage: add display-first price action SVG, macro/regime mini-panel SVG, optional manifest-backed durable save, and contract suite wiring.
-- Secondary task: refresh plugin install after verification if behavior changed.
-- Definition of done: chat display artifacts work from fixtures; no default durable save; macro visuals preserve Source Routing Boundary; core contract suite and MVP smoke pass.
-- Verification: visual artifact selftest/contract, core contract suite, plugin verify, MVP smoke, compileall, and `git diff --check` pass.
-- End-of-day result: pending.
+- Main task: release-surface and PA output hardening for 1.0 RC readiness.
+- Current stage: hide unfinished external quantitative model modules from default user-facing plugin surface; strengthen PA rollforward output around previous analysis, explicit timeframes, support/resistance, cost/buy records, proportional sizing, and weekly event mapping.
+- Secondary task: keep Content & Visualization Artifact System MVP verified after the release-surface changes.
+- Definition of done: release surface contract, PA rollforward contract, core contract suite, plugin verify, MVP smoke, compileall, and `git diff --check` pass.
+- Verification: `verify_release_surface_contract.py`, `verify_price_action_rollforward_contract.py`, `verify_contract_suite.py core`, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
+- End-of-day result: in progress.
 
 ## Progress Log
 
 ### 2026-07-07
 
+- Completed: hardened the 1.0 RC release surface. External quantitative momentum modules are now hidden from the default README, router, focused skill list, and daily tracking template. The internal compatibility scripts and planning docs remain for user-provided snapshots, but the plugin no longer exposes model construction or a standalone leaderboard workflow by default.
+- Completed: added the Price Action rollforward contract. PA updates must now compare with prior analysis, state `主分析时间框架` and `辅助时间框架`, bind levels to support/resistance and timeframe, include cost/buy-record context, use proportional sizing instead of exact share counts by default, and map levels to the week's macro/news/events.
+- Verification: release surface contract, PA rollforward contract, core contract suite, plugin verify, MVP smoke, compileall, and `git diff --check` pass locally.
 - Completed: implemented the Content & Visualization Artifact System MVP. This adds display-first visual artifacts for price action and macro/regime context, with transient chat SVG output by default and optional durable manifest save only after explicit confirmation.
 - Scope: `chart_artifact.py`, `macro_regime_artifact.py`, shared visual helpers, fixture data, output template rules, ADR, roadmap, project log, and contract-suite checks.
 - Next: review the PR, then decide whether the next visualization slice should be richer price charts, confirmed runtime save integration, or content-output polishing.
