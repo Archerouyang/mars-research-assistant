@@ -181,7 +181,8 @@ Order status is used to trigger review intake and reconcile actual trades. It is
 
 ## Longbridge First Phase
 
-Longbridge broker integration only needs these read-only account capabilities first:
+Longbridge broker integration should be implemented as a Longbridge skill/plugin
+adapter. It only needs these read-only account capabilities first:
 
 - positions;
 - executions/trades;
@@ -189,6 +190,9 @@ Longbridge broker integration only needs these read-only account capabilities fi
 
 Do not make Longbridge market data a first-phase hard dependency. Use IBKR, public sources, or authorized market data sources for prices/charts when available.
 
-Longbridge `macrodata` is a separate macro-data source. It belongs in `macro-policy-filter.md` and macro/rates workflows, not in broker account reconciliation.
+Longbridge `macrodata` is a separate macro-data source. It is exposed through
+the Longbridge skill/plugin capability when available. It belongs in
+`macro-policy-filter.md` and macro/rates workflows, not in broker account
+reconciliation.
 
 Longbridge broker source does not become the source for macro policy or industry news.
