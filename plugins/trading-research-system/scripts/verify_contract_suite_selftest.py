@@ -20,6 +20,8 @@ def main() -> None:
     names = [script.name for script in scripts]
     if names[0] != "source-routing":
         raise AssertionError(f"core suite should start with source-routing, got {names[0]!r}")
+    if "macro-data-source" not in names:
+        raise AssertionError("core suite should include macro-data-source")
     if names[-1] != "broker-snapshot-ingest-contract":
         raise AssertionError(f"core suite should end with broker snapshot contract, got {names[-1]!r}")
     if len(names) != len(set(names)):

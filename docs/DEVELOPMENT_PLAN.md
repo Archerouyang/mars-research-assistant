@@ -112,6 +112,7 @@ Use these statuses:
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Harden fresh-chat Daily Ops startup health | Makes new Daily Ops chats show formal runtime health, per-source broker health, and current mode before analysis. | Use `verify_daily_ops_orchestrator_contract.py` and `verify_runtime_health_contract.py`; do not treat repo fixtures as active runtime state. |
+| P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
 | P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
 | P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
@@ -138,8 +139,8 @@ Use these statuses:
 
 Date: 2026-07-07
 
-- Main task: release-surface, PA output, and fresh-chat Daily Ops startup hardening for 1.0 RC readiness.
-- Current stage: hide unfinished external quantitative model modules from default user-facing plugin surface; strengthen PA rollforward output around previous analysis, explicit timeframes, support/resistance, cost/buy records, proportional sizing, weekly event mapping, and new-chat runtime/broker health reporting.
+- Main task: release-surface, PA output, fresh-chat Daily Ops startup, and macro data source hardening for 1.0 RC readiness.
+- Current stage: hide unfinished external quantitative model modules from default user-facing plugin surface; strengthen PA rollforward output around previous analysis, explicit timeframes, support/resistance, cost/buy records, proportional sizing, weekly event mapping, new-chat runtime/broker health reporting, and Longbridge macrodata-first macro reads.
 - Secondary task: keep Content & Visualization Artifact System MVP verified after the release-surface changes.
 - Definition of done: release surface contract, PA rollforward contract, core contract suite, plugin verify, MVP smoke, compileall, and `git diff --check` pass.
 - Verification: `verify_release_surface_contract.py`, `verify_price_action_rollforward_contract.py`, `verify_contract_suite.py core`, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
@@ -157,6 +158,8 @@ Date: 2026-07-07
 - Next: review the PR, then decide whether the next visualization slice should be richer price charts, confirmed runtime save integration, or content-output polishing.
 - Completed: hardened fresh-chat Daily Ops startup health after the `交易研究2` forward test. `runtime_health.py` now emits `current_mode` and per-source `broker_source_health`; Daily Ops startup output must include `运行状态检查`, `券商来源健康`, `当前模式`, formal `runtime_dir`, and the repo-fixture boundary before analysis.
 - Verification: runtime health selftest, runtime health contract, and Daily Ops Orchestrator contract pass locally.
+- Completed: added the Macro Data Source Contract. Daily, weekly, and macro-equity workflows now have to report `宏观数据来源状态` and `实际宏观指标读数`; Longbridge macrodata is the preferred S1 macro-values source, IBKR market data is limited to price/OHLCV transmission, and official source fallback covers S0 facts and fallback values.
+- Verification: `verify_macro_data_source_contract.py` added to the core suite.
 
 ### 2026-07-06
 

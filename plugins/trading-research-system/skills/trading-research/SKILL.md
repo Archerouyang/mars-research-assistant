@@ -61,6 +61,12 @@ exit triggers. Ask for the intended `ticker + trade_horizon + instrument`
 grouping first. If trade horizon is missing, the correct output is a compact
 blocking question, not a forced setup.
 
+Before macro regime, financial-conditions, rates/liquidity, or strategy posture
+claims, read `references/macro-data-source-contract.md`. Use Longbridge
+macrodata as the preferred source for macro values when available, use
+IBKR market data for price/OHLCV transmission, and official source fallback for
+S0 facts or when Longbridge macrodata is unavailable.
+
 If a request spans multiple workflows, run them in the natural order:
 
 1. Daily Ops Orchestrator when the user asks to start, continue, or decide what to do next.
@@ -78,6 +84,7 @@ If a request spans multiple workflows, run them in the natural order:
 Detailed domain rules remain in:
 
 - `references/macro-policy-filter.md`
+- `references/macro-data-source-contract.md`
 - `references/research-report-intake.md`
 - `references/equity-screening.md`
 - `references/daily-ops-orchestrator.md`
