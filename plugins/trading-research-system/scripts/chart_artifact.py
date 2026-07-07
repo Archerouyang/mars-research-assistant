@@ -289,12 +289,12 @@ def _price_reference_rows(chart_payload: dict[str, Any]) -> list[tuple[str, str,
         ),
     ]
 
-    for level in chart_payload.get("levels") or []:
+    for index, level in enumerate(chart_payload.get("levels") or [], start=1):
         kind = str(level.get("kind") or "level")
         label = str(level.get("label") or kind)
         rows.append(
             (
-                label,
+                f"L{index} {label}",
                 kind,
                 _price_label(float(level["price"])),
                 "single level",
@@ -302,12 +302,12 @@ def _price_reference_rows(chart_payload: dict[str, Any]) -> list[tuple[str, str,
             )
         )
 
-    for zone in chart_payload.get("zones") or []:
+    for index, zone in enumerate(chart_payload.get("zones") or [], start=1):
         kind = str(zone.get("kind") or "zone")
         label = str(zone.get("label") or kind)
         rows.append(
             (
-                label,
+                f"Z{index} {label}",
                 kind,
                 f'{_price_label(float(zone["low"]))}-{_price_label(float(zone["high"]))}',
                 "price / range",
@@ -367,6 +367,87 @@ def render_price_reference_table(
             )
 
     return y + table_h
+
+
+def render_chart_callouts(
+    svg: list[str],
+    *,
+    levels: list[dict[str, Any]],
+    zones: list[dict[str, Any]],
+    plot_x: float,
+    plot_y: float,
+    plot_w: float,
+    plot_h: float,
+    y_for_price: Any,
+) -> None:
+    """Render direct chart callouts that map visible marks to table rows."""
+
+    svg.append(f'<text class="tag" x="{plot_x}" y="{plot_y - 12}">chart callouts</text>')
+
+    def badge(
+        *,
+        x: float,
+        y: float,
+        text: str,
+        color: str,
+        width: float,
+    ) -> None:
+        safe_y = min(max(y, plot_y + 12), plot_y + plot_h - 10)
+        svg.extend(
+            [
+                f'<rect x="{x}" y="{safe_y - 12:.1f}" width="{width}" height="18" rx="9" fill="#ffffff" stroke="{color}" stroke-width="1.2"/>',
+                f'<text class="small" x="{x + 8}" y="{safe_y + 1:.1f}" style="fill:{color}">{_svg_escape(text)}</text>',
+            ]
+        )
+
+    for index, zone in enumerate(zones, start=1):
+        y_mid = (
+            y_for_price(float(zone["high"])) + y_for_price(float(zone["low"]))
+        ) / 2
+        kind = str(zone.get("kind") or "zone")
+        color = str(zone.get("color") or color_for_kind(kind))
+        badge(
+            x=plot_x + 12,
+            y=y_mid,
+            text=f"Z{index} {kind}",
+            color=color,
+            width=104,
+        )
+
+    level_items = []
+    for index, level in enumerate(levels, start=1):
+        kind = str(level.get("kind") or "level")
+        color = str(level.get("color") or color_for_kind(kind))
+        level_items.append(
+            {
+                "index": index,
+                "price": float(level["price"]),
+                "raw_y": y_for_price(float(level["price"])),
+                "color": color,
+            }
+        )
+
+    level_items.sort(key=lambda item: item["raw_y"])
+    min_gap = 22
+    next_y = plot_y + 14
+    for item in level_items:
+        item["label_y"] = max(float(item["raw_y"]), next_y)
+        next_y = float(item["label_y"]) + min_gap
+
+    overflow = next_y - min_gap - (plot_y + plot_h - 10)
+    if overflow > 0:
+        for item in level_items:
+            item["label_y"] = max(plot_y + 14, float(item["label_y"]) - overflow)
+
+    level_items.sort(key=lambda item: item["index"])
+    for item in level_items:
+        badge(
+            x=plot_x + plot_w - 120,
+            y=float(item["label_y"]),
+            text=f"L{item['index']} {_price_label(float(item['price']))}",
+            color=str(item["color"]),
+            width=96,
+        )
 
 
 def render_svg(chart_payload: dict[str, Any]) -> str:
@@ -506,6 +587,17 @@ def render_svg(chart_payload: dict[str, Any]) -> str:
         svg.append(
             f'<text class="small" x="{plot_x + plot_w + 8}" y="{y + 4:.1f}" fill="{color}">{label}</text>'
         )
+
+    render_chart_callouts(
+        svg,
+        levels=levels,
+        zones=zones,
+        plot_x=plot_x,
+        plot_y=plot_y,
+        plot_w=plot_w,
+        plot_h=plot_h,
+        y_for_price=y_for_price,
+    )
 
     latest = candles[-1]
     svg.extend(
