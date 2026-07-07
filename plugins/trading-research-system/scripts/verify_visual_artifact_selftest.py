@@ -56,7 +56,20 @@ def main() -> None:
             raise AssertionError("chart script should write a display SVG")
         assert_contains(
             display_svg,
-            ["<svg", "QQQ", "EMA 20", "trigger zone", "TP/rebalance"],
+            [
+                "<svg",
+                "QQQ",
+                "EMA 20",
+                "EMA 50",
+                "trigger zone",
+                "TP/rebalance",
+                "price reference table",
+                "price / range",
+                "plan action",
+                "last close",
+                "trigger zone high / EMA 20",
+                "invalidation / review trigger",
+            ],
         )
         if (tmp / "artifact-manifest.json").exists():
             raise AssertionError("chart script must not write a manifest by default")

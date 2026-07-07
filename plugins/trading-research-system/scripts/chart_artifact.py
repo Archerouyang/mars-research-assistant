@@ -223,6 +223,152 @@ def _polyline(points: list[tuple[float, float]]) -> str:
     return " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
 
 
+def _clip(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[: max(0, max_chars - 3)] + "..."
+
+
+def _price_label(value: float) -> str:
+    return f"{value:.2f}".rstrip("0").rstrip(".")
+
+
+def _latest_ema(points: list[dict[str, Any]]) -> str:
+    if not points:
+        return "n/a"
+    try:
+        return _price_label(float(points[-1]["value"]))
+    except (TypeError, ValueError, KeyError):
+        return "n/a"
+
+
+def _kind_action(kind: str) -> str:
+    lowered = kind.lower()
+    if lowered in {"trigger", "add"}:
+        return "wait for confirmation; no early entry"
+    if lowered in {"support"}:
+        return "watch reclaim / support response"
+    if lowered in {"profit", "rebalance", "target"}:
+        return "TP/rebalance review, not forced exit"
+    if lowered in {"invalid", "invalidation", "review", "risk"}:
+        return "pause adds and review plan"
+    return "reference only"
+
+
+def _price_reference_rows(chart_payload: dict[str, Any]) -> list[tuple[str, str, str, str, str]]:
+    candles = chart_payload["candles"]
+    latest = candles[-1]
+    rows: list[tuple[str, str, str, str, str]] = [
+        (
+            "setup status",
+            "context",
+            str(chart_payload.get("setup_status") or "watch"),
+            "current plan state",
+            "do not trade from chart alone",
+        ),
+        (
+            "last close",
+            "price",
+            _price_label(float(latest["close"])),
+            str(latest["time"]),
+            "anchor current read",
+        ),
+        (
+            "EMA 20",
+            "moving average",
+            _latest_ema(chart_payload.get("ema20") or []),
+            "trend reference",
+            "check pullback / reclaim context",
+        ),
+        (
+            "EMA 50",
+            "moving average",
+            _latest_ema(chart_payload.get("ema50") or []),
+            "trend reference",
+            "check larger trend pressure",
+        ),
+    ]
+
+    for level in chart_payload.get("levels") or []:
+        kind = str(level.get("kind") or "level")
+        label = str(level.get("label") or kind)
+        rows.append(
+            (
+                label,
+                kind,
+                _price_label(float(level["price"])),
+                "single level",
+                _kind_action(kind),
+            )
+        )
+
+    for zone in chart_payload.get("zones") or []:
+        kind = str(zone.get("kind") or "zone")
+        label = str(zone.get("label") or kind)
+        rows.append(
+            (
+                label,
+                kind,
+                f'{_price_label(float(zone["low"]))}-{_price_label(float(zone["high"]))}',
+                "price / range",
+                _kind_action(kind),
+            )
+        )
+
+    return rows
+
+
+def render_price_reference_table(
+    svg: list[str],
+    rows: list[tuple[str, str, str, str, str]],
+    *,
+    x: float,
+    y: float,
+    width: float,
+) -> float:
+    """Render a compact price reference table below the chart."""
+
+    row_h = 23
+    header_h = 30
+    table_h = header_h + row_h * len(rows)
+    svg.extend(
+        [
+            f'<text class="tag" x="{x}" y="{y - 10}">price reference table</text>',
+            f'<rect x="{x}" y="{y}" width="{width}" height="{table_h}" rx="7" fill="#ffffff" stroke="#d8dee4"/>',
+            f'<rect x="{x}" y="{y}" width="{width}" height="{header_h}" rx="7" fill="#f6f8fa" stroke="#d8dee4"/>',
+        ]
+    )
+    columns = [
+        ("item", x + 16),
+        ("type", x + 312),
+        ("price / range", x + 460),
+        ("role", x + 612),
+        ("plan action", x + 824),
+    ]
+    for label, col_x in columns:
+        svg.append(f'<text class="tag" x="{col_x}" y="{y + 20}">{_svg_escape(label)}</text>')
+
+    for index, row in enumerate(rows, start=1):
+        row_y = y + header_h + index * row_h
+        if index % 2 == 0:
+            svg.append(
+                f'<rect x="{x}" y="{row_y - row_h + 3}" width="{width}" height="{row_h}" fill="#fbfcfd"/>'
+            )
+        cells = [
+            (row[0], x + 16, 44),
+            (row[1], x + 312, 22),
+            (row[2], x + 460, 20),
+            (row[3], x + 612, 30),
+            (row[4], x + 824, 42),
+        ]
+        for value, col_x, max_chars in cells:
+            svg.append(
+                f'<text class="muted" x="{col_x}" y="{row_y}">{_svg_escape(_clip(value, max_chars))}</text>'
+            )
+
+    return y + table_h
+
+
 def render_svg(chart_payload: dict[str, Any]) -> str:
     """Render a static display-first SVG with trigger zone and TP/rebalance annotations."""
 
@@ -248,12 +394,17 @@ def render_svg(chart_payload: dict[str, Any]) -> str:
     min_price -= pad
     max_price += pad
 
+    reference_rows = _price_reference_rows(chart_payload)
+
     width = 1200
-    height = 720
     plot_x = 78
     plot_y = 108
     plot_w = 850
     plot_h = 455
+    table_y = 620
+    table_h = 30 + 23 * len(reference_rows)
+    footer_y = table_y + table_h + 34
+    height = max(720, footer_y + 42)
     side_x = 962
     side_w = 190
     n = len(candles)
@@ -277,8 +428,9 @@ def render_svg(chart_payload: dict[str, Any]) -> str:
         ".small{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}",
         ".title{font:700 22px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}",
         ".subtitle{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}",
+        ".tag{font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}",
         "</style>",
-        '<rect width="1200" height="720" fill="#ffffff"/>',
+        f'<rect width="1200" height="{height}" fill="#ffffff"/>',
         f'<text class="title" x="36" y="42">{_svg_escape(chart_payload["title"])}</text>',
     ]
 
@@ -385,8 +537,9 @@ def render_svg(chart_payload: dict[str, Any]) -> str:
     svg.append(
         f'<text class="small" x="{plot_x + plot_w - 86}" y="{plot_y + plot_h + 30}">{_svg_escape(last_time)}</text>'
     )
+    render_price_reference_table(svg, reference_rows, x=36, y=table_y, width=1128)
     svg.append(
-        '<text class="small" x="36" y="682">Display-first chart artifact. Use authorized OHLCV or fixture data only; no live broker reads or live market data calls.</text>'
+        f'<text class="small" x="36" y="{footer_y}">Display-first chart artifact. Use authorized OHLCV or fixture data only; no live broker reads or live market data calls.</text>'
     )
     svg.append("</svg>")
     return "\n".join(svg) + "\n"
