@@ -77,6 +77,7 @@ def normalize_variables(payload: dict[str, Any]) -> list[dict[str, Any]]:
             latest_value = float(latest)
         except (TypeError, ValueError) as exc:
             raise SystemExit(f"variable {index} has invalid latest value") from exc
+        thresholds = normalize_thresholds(variable, index)
         variables.append(
             {
                 "name": name,
@@ -85,10 +86,37 @@ def normalize_variables(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "latest": latest_value,
                 "status": str(variable.get("status") or "watch"),
                 "interpretation": str(variable.get("interpretation") or ""),
+                "impact_path": str(variable.get("impact_path") or variable.get("impact") or ""),
+                "thresholds": thresholds,
                 "series": series,
             }
         )
     return variables
+
+
+def normalize_thresholds(variable: dict[str, Any], variable_index: int) -> list[dict[str, Any]]:
+    raw = variable.get("thresholds") or []
+    if not isinstance(raw, list):
+        raise SystemExit(f"variable {variable_index} thresholds must be a list when provided")
+
+    thresholds: list[dict[str, Any]] = []
+    for index, threshold in enumerate(raw, start=1):
+        if not isinstance(threshold, dict):
+            raise SystemExit(f"variable {variable_index} threshold {index} must be an object")
+        try:
+            value = float(threshold["value"])
+        except KeyError as exc:
+            raise SystemExit(f"variable {variable_index} threshold {index} missing value") from exc
+        except (TypeError, ValueError) as exc:
+            raise SystemExit(f"variable {variable_index} threshold {index} has invalid value") from exc
+        thresholds.append(
+            {
+                "value": value,
+                "label": str(threshold.get("label") or value),
+                "kind": str(threshold.get("kind") or "watch"),
+            }
+        )
+    return thresholds
 
 
 def _svg_escape(value: Any) -> str:
@@ -106,12 +134,70 @@ def _status_color(status: str) -> str:
     return "#57606a"
 
 
-def _sparkline(points: list[dict[str, Any]], x: float, y: float, w: float, h: float) -> str:
+def _threshold_color(kind: str) -> str:
+    lowered = kind.lower()
+    if lowered in {"pressure", "risk", "stress", "upper"}:
+        return "#cf222e"
+    if lowered in {"support", "constructive", "lower", "risk-on"}:
+        return "#1a7f37"
+    return "#6f42c1"
+
+
+def _format_value(value: float, unit: str) -> str:
+    if abs(value) >= 100:
+        rendered = f"{value:.0f}"
+    elif abs(value) >= 10:
+        rendered = f"{value:.2f}"
+    else:
+        rendered = f"{value:.3f}".rstrip("0").rstrip(".")
+    return f"{rendered}{unit}"
+
+
+def _delta_label(points: list[dict[str, Any]], unit: str) -> str:
+    if len(points) < 2:
+        return "delta n/a"
+    delta = float(points[-1]["value"]) - float(points[0]["value"])
+    sign = "+" if delta > 0 else ""
+    return f"delta {sign}{_format_value(delta, unit)}"
+
+
+def _wrap_text(text: str, max_chars: int, max_lines: int) -> list[str]:
+    if not text:
+        return []
+    words = text.split()
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+        current = word
+        if len(lines) == max_lines:
+            break
+    if current and len(lines) < max_lines:
+        lines.append(current)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+    if lines and len(" ".join(words)) > len(" ".join(lines)):
+        lines[-1] = lines[-1][: max(0, max_chars - 3)] + "..."
+    return lines
+
+
+def _sparkline(
+    points: list[dict[str, Any]],
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    low: float,
+    high: float,
+) -> str:
     if len(points) < 2:
         return ""
     values = [float(point["value"]) for point in points]
-    low = min(values)
-    high = max(values)
     if high == low:
         high += 1
         low -= 1
@@ -119,23 +205,48 @@ def _sparkline(points: list[dict[str, Any]], x: float, y: float, w: float, h: fl
     coords = []
     for index, value in enumerate(values):
         px = x + index * step
-        py = y + h - ((value - low) / (high - low)) * h
+        py = _value_to_y(value, low, high, y, h)
         coords.append(f"{px:.1f},{py:.1f}")
     return " ".join(coords)
+
+
+def _value_bounds(variable: dict[str, Any]) -> tuple[float, float]:
+    values = [float(point["value"]) for point in variable["series"]]
+    values.extend(float(threshold["value"]) for threshold in variable["thresholds"])
+    values.append(float(variable["latest"]))
+    low = min(values)
+    high = max(values)
+    if low == high:
+        low -= 1
+        high += 1
+    pad = max((high - low) * 0.12, 0.01)
+    return low - pad, high + pad
+
+
+def _value_to_y(value: float, low: float, high: float, y: float, h: float) -> float:
+    return y + h - ((value - low) / (high - low)) * h
 
 
 def render_svg(payload: dict[str, Any]) -> str:
     variables = normalize_variables(payload)
     title = str(payload.get("title") or "Macro / Regime Mini-Panel")
     subtitle = str(payload.get("subtitle") or "display-first visual artifact")
+    strategy_posture = str(payload.get("strategy_posture") or payload.get("regime") or "watch")
+    summary = str(payload.get("summary") or "Use threshold and delta context before changing risk.")
     source = str(payload.get("source") or "provided")
     as_of = str(payload.get("as_of") or payload.get("data_as_of") or "")
     notes = payload.get("notes") or []
 
     width = 1200
-    row_h = 86
-    top = 104
-    height = max(420, top + row_h * len(variables) + 118)
+    cols = 2
+    card_w = 548
+    card_h = 184
+    gap_x = 28
+    gap_y = 24
+    left = 36
+    top = 132
+    rows = (len(variables) + cols - 1) // cols
+    height = max(520, top + rows * card_h + max(rows - 1, 0) * gap_y + 138)
     svg: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{_svg_escape(title)}">',
         "<style>",
@@ -144,6 +255,8 @@ def render_svg(payload: dict[str, Any]) -> str:
         ".label{font:600 14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}",
         ".muted{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}",
         ".value{font:700 19px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}",
+        ".tag{font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}",
+        ".axis{font:10px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#6e7781}",
         "</style>",
         f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
         f'<text class="title" x="36" y="42">{_svg_escape(title)}</text>',
@@ -153,35 +266,87 @@ def render_svg(payload: dict[str, Any]) -> str:
     if as_of:
         meta = f"{meta} | as of: {as_of}"
     svg.append(f'<text class="muted" x="36" y="86">{_svg_escape(meta)}</text>')
+    svg.extend(
+        [
+            '<text class="tag" x="36" y="112">strategy posture</text>',
+            f'<rect x="154" y="96" width="178" height="25" rx="12" fill="#fff8c5" stroke="#d4a72c"/>',
+            f'<text class="tag" x="170" y="113">{_svg_escape(strategy_posture)}</text>',
+            f'<text class="muted" x="358" y="113">{_svg_escape(summary)}</text>',
+        ]
+    )
 
     for index, variable in enumerate(variables):
-        y = top + index * row_h
+        row = index // cols
+        col = index % cols
+        x = left + col * (card_w + gap_x)
+        y = top + row * (card_h + gap_y)
         color = _status_color(variable["status"])
         unit = variable["unit"]
-        value_label = f'{variable["latest"]:.2f}{unit}'
+        value_label = _format_value(float(variable["latest"]), unit)
+        delta = _delta_label(variable["series"], unit)
+        plot_x = x + 20
+        plot_y = y + 72
+        plot_w = 294
+        plot_h = 70
+        low, high = _value_bounds(variable)
         svg.extend(
             [
-                f'<rect x="36" y="{y}" width="1128" height="70" rx="6" fill="#fbfcfd" stroke="#d8dee4"/>',
-                f'<circle cx="58" cy="{y + 35}" r="7" fill="{color}"/>',
-                f'<text class="label" x="78" y="{y + 29}">{_svg_escape(variable["name"])}</text>',
-                f'<text class="muted" x="78" y="{y + 51}">{_svg_escape(variable["label"])}</text>',
-                f'<text class="value" x="246" y="{y + 42}">{_svg_escape(value_label)}</text>',
-                f'<text class="muted" x="336" y="{y + 42}">{_svg_escape(variable["status"])}</text>',
+                f'<rect x="{x}" y="{y}" width="{card_w}" height="{card_h}" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>',
+                f'<circle cx="{x + 22}" cy="{y + 26}" r="7" fill="{color}"/>',
+                f'<text class="label" x="{x + 40}" y="{y + 25}">{_svg_escape(variable["name"])}</text>',
+                f'<text class="muted" x="{x + 40}" y="{y + 47}">{_svg_escape(variable["label"])}</text>',
+                f'<text class="value" x="{x + 332}" y="{y + 30}">{_svg_escape(value_label)}</text>',
+                f'<text class="muted" x="{x + 332}" y="{y + 52}">{_svg_escape(delta)} | {_svg_escape(variable["status"])}</text>',
+                f'<rect x="{plot_x}" y="{plot_y}" width="{plot_w}" height="{plot_h}" fill="#ffffff" stroke="#d8dee4"/>',
             ]
         )
-        points = _sparkline(variable["series"], 476, y + 14, 220, 42)
+
+        for guide in (0.25, 0.5, 0.75):
+            gy = plot_y + plot_h * guide
+            svg.append(
+                f'<line x1="{plot_x}" y1="{gy:.1f}" x2="{plot_x + plot_w}" y2="{gy:.1f}" stroke="#eaeef2"/>'
+            )
+
+        for threshold in variable["thresholds"]:
+            ty = _value_to_y(float(threshold["value"]), low, high, plot_y, plot_h)
+            threshold_color = _threshold_color(threshold["kind"])
+            label = f'threshold {threshold["label"]}'
+            svg.extend(
+                [
+                    f'<line x1="{plot_x}" y1="{ty:.1f}" x2="{plot_x + plot_w}" y2="{ty:.1f}" stroke="{threshold_color}" stroke-width="1.4" stroke-dasharray="5 4"/>',
+                    f'<text class="axis" x="{plot_x + 6}" y="{max(plot_y + 11, ty - 4):.1f}" style="fill:{threshold_color}">{_svg_escape(label)}</text>',
+                ]
+            )
+
+        points = _sparkline(variable["series"], plot_x, plot_y, plot_w, plot_h, low, high)
         if points:
             svg.append(
-                f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2.2"/>'
+                f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2.6"/>'
             )
-        interpretation = variable["interpretation"]
-        if len(interpretation) > 76:
-            interpretation = interpretation[:73] + "..."
-        svg.append(
-            f'<text class="muted" x="730" y="{y + 42}">{_svg_escape(interpretation)}</text>'
+            latest_x = plot_x + plot_w
+            latest_y = _value_to_y(float(variable["series"][-1]["value"]), low, high, plot_y, plot_h)
+            svg.append(f'<circle cx="{latest_x:.1f}" cy="{latest_y:.1f}" r="4.2" fill="{color}"/>')
+
+        first_time = variable["series"][0]["time"] if variable["series"] else ""
+        last_time = variable["series"][-1]["time"] if variable["series"] else ""
+        svg.extend(
+            [
+                f'<text class="axis" x="{plot_x}" y="{plot_y + plot_h + 16}">{_svg_escape(first_time)}</text>',
+                f'<text class="axis" x="{plot_x + plot_w - 58}" y="{plot_y + plot_h + 16}">{_svg_escape(last_time)}</text>',
+                f'<text class="axis" x="{plot_x + plot_w + 8}" y="{plot_y + 10}">{_svg_escape(_format_value(high, unit))}</text>',
+                f'<text class="axis" x="{plot_x + plot_w + 8}" y="{plot_y + plot_h}">{_svg_escape(_format_value(low, unit))}</text>',
+            ]
         )
 
-    note_y = top + row_h * len(variables) + 20
+        info_x = x + 332
+        svg.append(f'<text class="tag" x="{info_x}" y="{y + 82}">impact path</text>')
+        read_text = variable["impact_path"] or variable["interpretation"]
+        for line_index, line in enumerate(_wrap_text(read_text, 29, 3)):
+            svg.append(
+                f'<text class="muted" x="{info_x}" y="{y + 104 + line_index * 18}">{_svg_escape(line)}</text>'
+            )
+
+    note_y = top + rows * card_h + max(rows - 1, 0) * gap_y + 28
     svg.append(
         f'<text class="muted" x="36" y="{note_y}">Source Routing Boundary: Longbridge macrodata can supply authorized series; policy/news require official / reputable confirmation.</text>'
     )

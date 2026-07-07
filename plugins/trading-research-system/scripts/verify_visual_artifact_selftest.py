@@ -116,7 +116,17 @@ def main() -> None:
             raise AssertionError("macro script should write a display SVG")
         assert_contains(
             macro_svg,
-            ["<svg", "Macro / Regime", "10Y", "VIX", "NDX/RUT"],
+            [
+                "<svg",
+                "Macro / Regime",
+                "strategy posture",
+                "threshold",
+                "delta",
+                "impact path",
+                "10Y",
+                "VIX",
+                "NDX/RUT",
+            ],
         )
 
     print("visual artifact selftest ok")
