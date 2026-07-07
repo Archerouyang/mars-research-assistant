@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-07
+
+- Commit: pending
+- Scope: script, fixture, reference, docs, test
+- What changed: added the Content & Visualization Artifact System MVP. The plugin now has a shared display-first visual artifact helper, fixture-backed price action SVG output, a macro/regime mini-panel path, and explicit optional durable save via artifact manifest instead of saving by default.
+- Why it matters: users can inspect QQQ-style price structure or macro/rates regime directly in chat without a frontend, while the public plugin keeps private runtime writes opt-in and source-bounded.
+- Next step: review the PR, then decide whether the next visualization slice should be richer price charts, confirmed runtime save integration, or content-output polishing.
+
 ## 2026-07-06
 
 - Commit: pending
