@@ -30,6 +30,8 @@ REQUIRED = {
         "verify_source_routing_contract.py",
         "verify_contract_suite_selftest.py",
         "verify_contract_suite_contract.py",
+        "verify_visual_artifact_selftest.py",
+        "verify_visual_artifact_contract.py",
         "verify_broker_snapshot_ingest_contract.py",
     ],
     "runner": [
@@ -67,6 +69,8 @@ FORBIDDEN = {
         "verify_runtime_state_contract.py",
         "verify_runtime_bootstrap_selftest.py",
         "verify_runtime_bootstrap_contract.py",
+        "verify_visual_artifact_selftest.py",
+        "verify_visual_artifact_contract.py",
         "verify_broker_snapshot_ingest_selftest.py",
         "verify_broker_snapshot_ingest_contract.py",
     ],

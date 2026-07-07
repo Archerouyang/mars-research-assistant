@@ -3,6 +3,8 @@
   "subtitle": "Sample local fixture for lightweight-charts artifact generation",
   "symbol": "QQQ",
   "source": "fixture",
+  "data_as_of": "2026-06-12",
+  "setup_status": "active market plan fixture",
   "candles": [
     {"time": "2026-04-01", "open": 581.49, "high": 587.73, "low": 580.42, "close": 584.31, "volume": 17786346},
     {"time": "2026-04-02", "open": 573.97, "high": 585.94, "low": 571.92, "close": 584.98, "volume": 11624395},
@@ -57,12 +59,17 @@
     {"time": "2026-06-12", "open": 717.61, "high": 724.01, "low": 711.28, "close": 721.34, "volume": 8956291}
   ],
   "levels": [
-    {"price": 715, "label": "20 EMA / add zone high", "kind": "add"},
-    {"price": 711, "label": "add zone low", "kind": "add"},
+    {"price": 715, "label": "trigger zone high / EMA 20", "kind": "trigger"},
+    {"price": 711, "label": "trigger zone low", "kind": "trigger"},
     {"price": 705, "label": "deep reclaim high", "kind": "support"},
     {"price": 695, "label": "deep reclaim low", "kind": "support"},
-    {"price": 748.63, "label": "prior high / rebalance watch", "kind": "profit"},
-    {"price": 686.40, "label": "review trigger", "kind": "review"}
+    {"price": 748.63, "label": "prior high / TP/rebalance watch", "kind": "profit"},
+    {"price": 686.40, "label": "invalidation / review trigger", "kind": "review"}
+  ],
+  "zones": [
+    {"low": 711, "high": 715, "label": "trigger zone: add only after confirmation", "kind": "trigger"},
+    {"low": 686.40, "high": 695, "label": "invalidation / review zone", "kind": "invalidation"},
+    {"low": 742, "high": 748.63, "label": "TP/rebalance zone", "kind": "rebalance"}
   ],
   "notes": [
     "Fixture only; use authorized OHLCV data for live analysis.",

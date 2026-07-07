@@ -19,8 +19,12 @@ Default rules:
 Chart rules:
 
 - use TradingView links or screenshots when the user provides them or when an authenticated browser session makes that practical;
-- otherwise generate local TradingView `lightweight-charts` HTML artifacts from authorized OHLCV data;
-- when the chat benefits from inline visuals, show a screenshot or exported image of the generated artifact, while keeping the HTML as the richer local artifact;
+- prefer display-first visual artifacts when the chat needs a compact price or macro view;
+- for inline price visual output, generate a transient SVG from authorized OHLCV data or fixture data and show that image directly in chat;
+- for inline macro visual output, generate a transient macro/regime mini-panel from authorized macro/market-condition data or fixture data;
+- otherwise generate local TradingView `lightweight-charts` HTML artifacts from authorized OHLCV data as an optional inspection artifact;
+- optional local save is allowed only after the user confirms durable storage and the caller writes an artifact manifest;
+- Do not save visual artifacts by default; default output should live under ignored transient paths such as `.scratch/visual-artifacts/`;
 - keep chart annotations limited to decision-useful levels such as 20 EMA, 50 EMA, trigger zone, invalidation, profit-taking/rebalance zone, VIX confirmation, and setup status;
 - avoid chart dumps with every indicator. If the chart needs more than a few annotations, put the full version in local notes and show the user the simplified version.
 

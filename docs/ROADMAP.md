@@ -26,6 +26,7 @@ The system supports:
 - a daily KVN momentum leaderboard that imports or reads user-provided/upstream KVN snapshots, displays Top10 by default, and keeps all symbols searchable from a local SQLite store;
 - equity and ETF screening with momentum, thesis, catalyst, and risk context;
 - Al Brooks-style high-level price action timing with 20 EMA, 50 EMA, and multi-timeframe context;
+- chat-first visual artifacts for concise inline price action and macro/regime views, with optional durable save only after confirmation;
 - Active Market Plan maintenance with overwriteable current state and append-only update history;
 - trading profile support for personal strategy models, instrument preferences, pool definitions, scoring thresholds, timeframe rules, and setup-to-instrument translation without storing account allocation in the public repo;
 - automation-ready Active Market Plan deep updates, quick updates, intraday monitor prompts, post-market review prompts, and position daily reports;
@@ -157,6 +158,7 @@ Rules:
 | Two-stage review context | Started | `plugins/trading-research-system/skills/trade-review/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/interactive-trade-review.md`; `plugins/trading-research-system/scripts/write_trade_review_context.py`; `plugins/trading-research-system/scripts/verify_trade_review_context_selftest.py`; `plugins/trading-research-system/scripts/verify_trade_review_context_contract.py` |
 | Plan-scoped intraday scan script | Started | `plugins/trading-research-system/skills/intraday-setup-scan/SKILL.md`; `plugins/trading-research-system/skills/trading-research/references/intraday-setup-scan.md`; `plugins/trading-research-system/scripts/intraday_scan.py`; `plugins/trading-research-system/scripts/verify_intraday_scan_selftest.py`; `plugins/trading-research-system/scripts/verify_intraday_scan_contract.py` |
 | Contract verification modules | Done | `plugins/trading-research-system/scripts/contract_verifier.py`; `plugins/trading-research-system/scripts/verify_contract_verifier_selftest.py`; `plugins/trading-research-system/scripts/contract_suite.py`; `plugins/trading-research-system/scripts/verify_contract_suite.py`; `plugins/trading-research-system/scripts/verify_contract_suite_selftest.py`; `plugins/trading-research-system/scripts/verify_contract_suite_contract.py`; `scripts/verify-plugin.sh` delegates core checks to `verify_contract_suite.py core` |
+| Content & Visualization Artifact System MVP | Review | `plugins/trading-research-system/scripts/visual_artifacts.py`; `plugins/trading-research-system/scripts/chart_artifact.py`; `plugins/trading-research-system/scripts/macro_regime_artifact.py`; display-first SVG output defaults to transient `.scratch/visual-artifacts/`; optional manifest-backed local save requires explicit opt-in |
 | Canonical record schema module | Compatibility | `plugins/trading-research-system/scripts/record_schemas.py`; `plugins/trading-research-system/scripts/verify_record_templates_contract.py` |
 | Actual trade record module | Compatibility | `plugins/trading-research-system/scripts/trade_records.py`; `plugins/trading-research-system/scripts/update_trade_record.py`; `plugins/trading-research-system/scripts/verify_trade_record_update_selftest.py` |
 | Legacy active import module | Deferred compatibility | `plugins/trading-research-system/scripts/import_legacy_active_csv.py`; `plugins/trading-research-system/scripts/verify_legacy_active_import_selftest.py` |
@@ -176,7 +178,7 @@ Rules:
 | Daily development task-planning automation loop | Done | `docs/DEVELOPMENT_PLAN.md`; Codex automations `dailytrades-weekday-development-brief` and `dailytrades-end-of-day-progress-review` |
 | Position daily report automation | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/automation-contract.md`; `plugins/trading-research-system/assets/templates/automation-position-daily-report.md` |
 | Google Sheets summary display | Deferred | no script yet |
-| OHLCV-driven chart/scan artifacts | Started | `plugins/trading-research-system/scripts/chart_artifact.py` |
+| OHLCV-driven chart/scan artifacts | Started | `plugins/trading-research-system/scripts/chart_artifact.py`; now folded into the Content & Visualization Artifact System MVP as chat-first visual artifacts plus optional HTML inspection output |
 | Option-flow anomaly module | Planned | data vendor not selected |
 
 ## Task Breakdown

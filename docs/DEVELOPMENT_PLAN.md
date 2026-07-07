@@ -39,8 +39,9 @@ The current product sequence is:
 21. user-confirmed Active Market Plan automations;
 22. Source Routing Boundary: scope broker/account facts, market data, Longbridge macrodata, official policy facts, news, and research by source purpose so selecting Longbridge for one purpose does not become the default source for news;
 23. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
-24. OHLCV-backed chart artifacts;
-25. option-flow anomaly research.
+24. Content & Visualization Artifact System MVP: display-first visual artifacts for price action and macro/regime context, with optional durable saves only after confirmation;
+25. OHLCV-backed chart artifacts;
+26. option-flow anomaly research.
 
 Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules are support rails. They should be mentioned when relevant, but should not become the recommended main task unless they are directly blocking a product capability.
 
@@ -126,21 +127,28 @@ Use these statuses:
 | P2 | done | Add Active Plan automation prompts | Turns deep update, quick update, intraday monitor, post-market review, and position daily report into recurring Codex prompts after the user confirms cadence and broker data permissions. | Actual Codex automations remain user-confirmed; use `automation-active-plan-deep-update.md`, the sibling prompt templates, and `verify_active_plan_automation_contract.py` before enabling cadence. |
 | P2 | done | Add scheduled macro/industry research monitor | After the weekly plan locks the week's P0/P1 macro, rates, policy, industry, and company-confirmation variables, the plugin can schedule focused searches and return concise analysis/report leads instead of re-running a full plan. | Use `automation-macro-industry-research-monitor.md`, `macro-industry-monitor-2026-07-06.md`, and `verify_macro_industry_research_monitor_contract.py`; real Codex automation still needs cadence and source permission confirmation. |
 | P2 | done | Add Automation setup checklist | Defines the required setup interview before creating real Daily Ops schedules. | Use `automation-setup-checklist.md` and `verify_automation_setup_contract.py`; real Codex automations still require setup confirmation. |
-| P2 | in_progress | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Forward-test `chart_artifact.py` with fixture and real authorized OHLCV exports; add screenshot/export workflow later. |
+| P2 | review | Content & Visualization Artifact System MVP | Supports chat-first price action and macro/regime visuals without adding a frontend or saving artifacts by default. | Review fixture-backed implementation and PR; next slice is richer chart rendering or save-on-confirm runtime integration. |
+| P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
 ## Today
 
-Date: 2026-07-05
+Date: 2026-07-07
 
-- Main task: execute the local MVP sequence in small verified stages.
-- Current stage: forward-test `research-report-intake` with safe realistic fixtures after completing the KVN model contract and position daily report slices.
-- Secondary task: prepare the next stage around two-stage trade review re-scoping.
-- Definition of done: user-provided report and public-source discovery fixtures lock source priority, inaccessible-source handling, Claim Ledger, Verification Queue, and Trade Plan Preparation impact.
-- Verification: `verify_research_report_intake_contract.py`, focused script compilation, and `git diff --check` pass.
+- Main task: implement the Content & Visualization Artifact System MVP.
+- Current stage: add display-first price action SVG, macro/regime mini-panel SVG, optional manifest-backed durable save, and contract suite wiring.
+- Secondary task: refresh plugin install after verification if behavior changed.
+- Definition of done: chat display artifacts work from fixtures; no default durable save; macro visuals preserve Source Routing Boundary; core contract suite and MVP smoke pass.
+- Verification: visual artifact selftest/contract, core contract suite, plugin verify, MVP smoke, compileall, and `git diff --check` pass.
 - End-of-day result: pending.
 
 ## Progress Log
+
+### 2026-07-07
+
+- Completed: implemented the Content & Visualization Artifact System MVP. This adds display-first visual artifacts for price action and macro/regime context, with transient chat SVG output by default and optional durable manifest save only after explicit confirmation.
+- Scope: `chart_artifact.py`, `macro_regime_artifact.py`, shared visual helpers, fixture data, output template rules, ADR, roadmap, project log, and contract-suite checks.
+- Next: review the PR, then decide whether the next visualization slice should be richer price charts, confirmed runtime save integration, or content-output polishing.
 
 ### 2026-07-06
 
