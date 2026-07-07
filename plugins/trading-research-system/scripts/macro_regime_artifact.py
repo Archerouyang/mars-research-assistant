@@ -186,6 +186,22 @@ def _wrap_text(text: str, max_chars: int, max_lines: int) -> list[str]:
     return lines
 
 
+def _clip(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[: max(0, max_chars - 3)] + "..."
+
+
+def _threshold_summary(variable: dict[str, Any]) -> str:
+    unit = str(variable.get("unit") or "")
+    parts = []
+    for threshold in variable["thresholds"]:
+        label = str(threshold["label"])
+        value = _format_value(float(threshold["value"]), unit)
+        parts.append(f"{label} ({value})")
+    return "; ".join(parts) or "n/a"
+
+
 def _sparkline(
     points: list[dict[str, Any]],
     x: float,
@@ -227,6 +243,59 @@ def _value_to_y(value: float, low: float, high: float, y: float, h: float) -> fl
     return y + h - ((value - low) / (high - low)) * h
 
 
+def render_reference_table(
+    svg: list[str],
+    variables: list[dict[str, Any]],
+    *,
+    x: float,
+    y: float,
+    width: float,
+) -> float:
+    """Render a compact reference table for the macro / regime mini-panel."""
+
+    row_h = 26
+    header_h = 30
+    table_h = header_h + row_h * (len(variables) + 1)
+    svg.extend(
+        [
+            f'<text class="tag" x="{x}" y="{y - 10}">reference table</text>',
+            f'<rect x="{x}" y="{y}" width="{width}" height="{table_h}" rx="7" fill="#ffffff" stroke="#d8dee4"/>',
+            f'<rect x="{x}" y="{y}" width="{width}" height="{header_h}" rx="7" fill="#f6f8fa" stroke="#d8dee4"/>',
+        ]
+    )
+
+    columns = [
+        ("indicator", x + 16),
+        ("latest", x + 150),
+        ("delta", x + 258),
+        ("key thresholds", x + 372),
+        ("read", x + 820),
+    ]
+    for label, col_x in columns:
+        svg.append(f'<text class="tag" x="{col_x}" y="{y + 20}">{_svg_escape(label)}</text>')
+
+    for index, variable in enumerate(variables, start=1):
+        row_y = y + header_h + index * row_h
+        if index % 2 == 0:
+            svg.append(
+                f'<rect x="{x}" y="{row_y - row_h + 3}" width="{width}" height="{row_h}" fill="#fbfcfd"/>'
+            )
+        unit = str(variable.get("unit") or "")
+        cells = [
+            (variable["name"], x + 16, 42),
+            (_format_value(float(variable["latest"]), unit), x + 150, 36),
+            (_delta_label(variable["series"], unit).replace("delta ", ""), x + 258, 36),
+            (_threshold_summary(variable), x + 372, 64),
+            (f'{variable["status"]}: {variable["interpretation"]}', x + 820, 44),
+        ]
+        for value, col_x, max_chars in cells:
+            svg.append(
+                f'<text class="muted" x="{col_x}" y="{row_y}">{_svg_escape(_clip(str(value), max_chars))}</text>'
+            )
+
+    return y + table_h
+
+
 def render_svg(payload: dict[str, Any]) -> str:
     variables = normalize_variables(payload)
     title = str(payload.get("title") or "Macro / Regime Mini-Panel")
@@ -246,7 +315,9 @@ def render_svg(payload: dict[str, Any]) -> str:
     left = 36
     top = 132
     rows = (len(variables) + cols - 1) // cols
-    height = max(520, top + rows * card_h + max(rows - 1, 0) * gap_y + 138)
+    cards_bottom = top + rows * card_h + max(rows - 1, 0) * gap_y
+    table_h = 30 + 26 * (len(variables) + 1)
+    height = max(520, cards_bottom + table_h + 162)
     svg: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{_svg_escape(title)}">',
         "<style>",
@@ -346,7 +417,14 @@ def render_svg(payload: dict[str, Any]) -> str:
                 f'<text class="muted" x="{info_x}" y="{y + 104 + line_index * 18}">{_svg_escape(line)}</text>'
             )
 
-    note_y = top + rows * card_h + max(rows - 1, 0) * gap_y + 28
+    table_bottom = render_reference_table(
+        svg,
+        variables,
+        x=36,
+        y=cards_bottom + 34,
+        width=1128,
+    )
+    note_y = table_bottom + 28
     svg.append(
         f'<text class="muted" x="36" y="{note_y}">Source Routing Boundary: Longbridge macrodata can supply authorized series; policy/news require official / reputable confirmation.</text>'
     )

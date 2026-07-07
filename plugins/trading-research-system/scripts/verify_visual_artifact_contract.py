@@ -51,6 +51,8 @@ SPEC = ContractSpec(
                 "impact path",
                 "threshold",
                 "delta",
+                "reference table",
+                "key thresholds",
                 "--display-output",
                 "No live broker reads",
             ],
