@@ -122,6 +122,7 @@ def build_runtime_health(
             daily_dir / "intraday-watchlist.csv",
             stale_after_days,
         ),
+        path_check("macro_panel", "Macro panel", daily_dir / "macro-panel.json", stale_after_days),
         path_check("kvn_store", "KVN store", runtime_dir / "momentum" / "kvn.sqlite", stale_after_days),
     ] + capability_health["checks"] + broker_health["checks"]
     return {

@@ -31,6 +31,7 @@ The health check should cover:
 - `{runtime_dir}/daily/YYYY-MM-DD/`
 - `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`
+- `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`
 - `{runtime_dir}/momentum/kvn.sqlite`
 - `Longbridge` broker source
 - `IBKR` broker source
