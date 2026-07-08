@@ -88,7 +88,22 @@ In `读取状态`, include:
 
 ### 券商来源健康
 
-Always show a compact table:
+Always show compact source capability and broker source tables. When
+`runtime_health.py` returns `source_capability_health`, show it before broker
+source health:
+
+| capability | status | effect |
+| --- | --- | --- |
+| Longbridge broker skill | available / unauthorized / not_installed / missing / stale |  |
+| Longbridge macrodata | available / unauthorized / not_installed / missing / stale |  |
+| IBKR connector | available / unauthorized / not_installed / missing / stale |  |
+| Manual snapshot | available / missing / stale |  |
+
+If the user says Longbridge worked in another chat but the current chat cannot
+see the capability, say: `当前 chat 未暴露 Longbridge skill capability；这不代表
+Longbridge 不存在，只代表本轮不能直接调用。`
+
+Then show broker source health:
 
 | source | status | effect |
 | --- | --- | --- |

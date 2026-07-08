@@ -113,6 +113,7 @@ Use these statuses:
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Harden fresh-chat Daily Ops startup health | Makes new Daily Ops chats show formal runtime health, per-source broker health, and current mode before analysis. | Use `verify_daily_ops_orchestrator_contract.py` and `verify_runtime_health_contract.py`; do not treat repo fixtures as active runtime state. |
 | P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
+| P1 | done | Define Longbridge Skill Adapter contract | Distinguishes `longbridge_broker_skill` from `longbridge_macrodata` and makes runtime health report `source_capability_health` before Daily Ops uses either. | Use `verify_longbridge_skill_adapter_contract.py`; current-chat visibility is a capability status, not proof that Longbridge does not exist. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
 | P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
 | P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
@@ -161,6 +162,8 @@ Date: 2026-07-07
 - Verification: runtime health selftest, runtime health contract, and Daily Ops Orchestrator contract pass locally.
 - Completed: added the Macro Data Source Contract. Daily, weekly, and macro-equity workflows now have to report `宏观数据来源状态` and `实际宏观指标读数`; Longbridge macrodata is the preferred S1 macro-values source, IBKR market data is limited to price/OHLCV transmission, and official source fallback covers S0 facts and fallback values.
 - Verification: `verify_macro_data_source_contract.py` added to the core suite.
+- Completed: defined the Longbridge Skill Adapter contract. Runtime health now reports `source_capability_health` so Daily Ops can distinguish Longbridge broker skill, Longbridge macrodata, IBKR connector, and manual snapshot readiness before analysis.
+- Verification: `verify_longbridge_skill_adapter_contract.py` added to the core suite.
 
 ### 2026-07-06
 

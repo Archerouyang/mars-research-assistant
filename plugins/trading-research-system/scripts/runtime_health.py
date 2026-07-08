@@ -17,6 +17,7 @@ STATUSES = {"available", "missing", "stale", "unauthorized"}
 BROKER_STATUSES = STATUSES | {"not_installed"}
 BROKER_SOURCES = {"longbridge", "ibkr", "manual"}
 LIVE_BROKER_SOURCES = ("longbridge", "ibkr")
+SOURCE_CAPABILITIES = {"longbridge_broker_skill", "longbridge_macrodata", "ibkr_connector", "manual_snapshot"}
 BROKER_SOURCE_LABELS = {
     "longbridge": "Longbridge",
     "ibkr": "IBKR",
@@ -26,6 +27,12 @@ BROKER_SOURCE_CHECK_IDS = {
     "longbridge": "longbridge_broker_source",
     "ibkr": "ibkr_broker_source",
     "manual": "manual_snapshot_source",
+}
+SOURCE_CAPABILITY_LABELS = {
+    "longbridge_broker_skill": "Longbridge broker skill",
+    "longbridge_macrodata": "Longbridge macrodata",
+    "ibkr_connector": "IBKR connector",
+    "manual_snapshot": "Manual snapshot",
 }
 
 
@@ -62,6 +69,16 @@ def parse_args() -> argparse.Namespace:
         help="Broker source status, e.g. longbridge=available or ibkr=unauthorized",
     )
     parser.add_argument(
+        "--source-capability",
+        action="append",
+        default=[],
+        metavar="CAPABILITY=STATUS",
+        help=(
+            "Source capability status, e.g. longbridge_macrodata=available, "
+            "longbridge_broker_skill=not_installed, or ibkr_connector=available"
+        ),
+    )
+    parser.add_argument(
         "--stale-after-days",
         type=int,
         default=None,
@@ -74,11 +91,16 @@ def build_runtime_health(
     runtime_dir: Path,
     trading_date: str,
     broker_sources: list[str],
+    source_capabilities: list[str] | None = None,
     stale_after_days: int | None = None,
 ) -> dict[str, object]:
     runtime_dir = runtime_dir.expanduser()
     daily_dir = resolve_daily_dir(runtime_dir, trading_date)
     broker_health = build_broker_source_health(broker_sources)
+    capability_health = build_source_capability_health(
+        source_capabilities or [],
+        broker_health["source_statuses"],
+    )
     checks = [
         path_check("runtime_dir", "Runtime directory", runtime_dir, stale_after_days),
         path_check("market_plan", "Active Market Plan", runtime_dir / "market-plan.md", stale_after_days),
@@ -93,11 +115,12 @@ def build_runtime_health(
             stale_after_days,
         ),
         path_check("kvn_store", "KVN store", runtime_dir / "momentum" / "kvn.sqlite", stale_after_days),
-    ] + broker_health["checks"]
+    ] + capability_health["checks"] + broker_health["checks"]
     return {
         "runtime_dir": str(runtime_dir),
         "date": trading_date,
         "current_mode": broker_health["current_mode"],
+        "source_capability_health": capability_health["source_capability_health"],
         "broker_source_health": broker_health["source_health"],
         "checks": [asdict(check) for check in checks],
     }
@@ -171,6 +194,68 @@ def build_broker_source_health(raw_sources: list[str]) -> dict[str, object]:
     return {
         "current_mode": current_mode,
         "source_health": source_health,
+        "source_statuses": source_statuses,
+        "checks": checks,
+    }
+
+
+def build_source_capability_health(
+    raw_capabilities: list[str],
+    broker_source_statuses: dict[str, str],
+) -> dict[str, object]:
+    parsed = [parse_source_capability(capability) for capability in raw_capabilities]
+    invalid = [
+        f"{capability}={status}"
+        for capability, status in parsed
+        if capability not in SOURCE_CAPABILITIES or status not in BROKER_STATUSES
+    ]
+    statuses = {
+        "longbridge_broker_skill": broker_source_statuses["longbridge"],
+        "longbridge_macrodata": "unauthorized",
+        "ibkr_connector": broker_source_statuses["ibkr"],
+        "manual_snapshot": broker_source_statuses["manual"],
+    }
+    for capability, status in parsed:
+        if capability in SOURCE_CAPABILITIES and status in BROKER_STATUSES:
+            statuses[capability] = status
+
+    capability_order = (
+        "longbridge_broker_skill",
+        "longbridge_macrodata",
+        "ibkr_connector",
+        "manual_snapshot",
+    )
+    source_capability_health = [
+        {
+            "source": SOURCE_CAPABILITY_LABELS[capability],
+            "id": capability,
+            "status": statuses[capability],
+            "note": source_capability_note(capability, statuses[capability], raw_capabilities),
+        }
+        for capability in capability_order
+    ]
+    checks = [
+        RuntimeCheck(
+            capability,
+            SOURCE_CAPABILITY_LABELS[capability],
+            statuses[capability],
+            None,
+            source_capability_note(capability, statuses[capability], raw_capabilities),
+        )
+        for capability in capability_order
+    ]
+    if invalid:
+        checks.append(
+            RuntimeCheck(
+                "source_capabilities",
+                "Source capabilities",
+                "unauthorized",
+                None,
+                f"invalid source capability status: {', '.join(invalid)}",
+            )
+        )
+    return {
+        "source_capability_health": source_capability_health,
         "checks": checks,
     }
 
@@ -189,6 +274,21 @@ def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
     if source in {parsed_source for parsed_source, _ in map(parse_broker_source, raw_sources)}:
         return "source provided but not authorized"
     return "no source status provided"
+
+
+def source_capability_note(capability: str, status: str, raw_capabilities: list[str]) -> str:
+    if status == "available":
+        return "read-only capability available for this run"
+    if status == "not_installed":
+        return "skill, connector, or capability not visible in this Codex session"
+    if status == "missing":
+        return "capability output missing"
+    if status == "stale":
+        return "capability output stale"
+    parsed_capabilities = {parsed_capability for parsed_capability, _ in map(parse_source_capability, raw_capabilities)}
+    if capability in parsed_capabilities:
+        return "capability provided but not authorized"
+    return "no capability status provided"
 
 
 def infer_current_mode(source_statuses: dict[str, str]) -> str:
@@ -253,11 +353,20 @@ def parse_broker_source(value: str) -> tuple[str, str]:
     return source.strip().lower(), status.strip().lower()
 
 
+def parse_source_capability(value: str) -> tuple[str, str]:
+    if "=" not in value:
+        return value.strip().lower().replace("-", "_"), "available"
+    capability, status = value.split("=", 1)
+    return capability.strip().lower().replace("-", "_"), status.strip().lower()
+
+
 def render_markdown(payload: dict[str, object]) -> str:
     checks = payload["checks"]
     assert isinstance(checks, list)
     broker_source_health = payload["broker_source_health"]
     assert isinstance(broker_source_health, list)
+    source_capability_health = payload["source_capability_health"]
+    assert isinstance(source_capability_health, list)
 
     lines = [
         "# Runtime Health",
@@ -265,6 +374,17 @@ def render_markdown(payload: dict[str, object]) -> str:
         f"- Runtime dir: `{payload['runtime_dir']}`",
         f"- Date: `{payload['date']}`",
         f"- Current mode: `{payload['current_mode']}`",
+        "",
+        "## Source Capability Health",
+        "",
+        "| Capability | Status | Note |",
+        "| --- | --- | --- |",
+    ]
+    for item in source_capability_health:
+        assert isinstance(item, dict)
+        lines.append(f"| {item['source']} | `{item['status']}` | {item['note']} |")
+
+    lines += [
         "",
         "## Broker Source Health",
         "",
@@ -297,6 +417,7 @@ def main() -> int:
         Path(args.runtime_dir),
         args.date,
         args.broker_source,
+        args.source_capability,
         args.stale_after_days,
     )
 
