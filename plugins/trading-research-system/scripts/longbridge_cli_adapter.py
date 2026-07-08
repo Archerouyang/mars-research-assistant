@@ -22,6 +22,36 @@ from record_schemas import CSV_SCHEMAS
 
 PORTFOLIO_HEADER = list(CSV_SCHEMAS["portfolio_snapshot.csv"])
 COMMON_MARKET_SUFFIXES = {".US", ".HK", ".SG", ".SH", ".SZ"}
+COMMON_ETF_ROOTS = {
+    "DIA",
+    "DRAM",
+    "GLD",
+    "HYG",
+    "IEF",
+    "IWM",
+    "KORU",
+    "LQD",
+    "MVLL",
+    "QQQ",
+    "SHY",
+    "SLV",
+    "SMH",
+    "SOXX",
+    "SPY",
+    "TLT",
+    "TSMX",
+    "VOO",
+}
+ETF_NAME_MARKERS = (
+    " ETF",
+    " EXCHANGE TRADED",
+    "DIREXION",
+    "GRANITESHARES",
+    "ISHARES",
+    "PROSHARES",
+    "SPDR",
+    "VANGUARD",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -84,6 +114,18 @@ def underlying_from_symbol(symbol: str, currency: str) -> str:
     return upper or currency.upper()
 
 
+def infer_instrument_type(symbol: str, name: str, currency: str) -> str:
+    underlying = underlying_from_symbol(symbol, currency)
+    upper_name = name.upper()
+    if underlying in COMMON_ETF_ROOTS:
+        return "etf_common"
+    if "QQQ TRUST" in upper_name:
+        return "etf_common"
+    if any(marker in upper_name for marker in ETF_NAME_MARKERS):
+        return "etf_common"
+    return "stock_common"
+
+
 def position_direction(quantity: Decimal) -> str:
     return "short" if quantity < 0 else "long"
 
@@ -112,7 +154,7 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
         "account_id": account_id,
         "symbol": symbol,
         "underlying": underlying_from_symbol(symbol, currency),
-        "instrument_type": "stock_common",
+        "instrument_type": infer_instrument_type(symbol, name, currency),
         "direction": position_direction(quantity),
         "quantity": decimal_text(abs(quantity)),
         "avg_cost": decimal_text(avg_cost),
