@@ -79,8 +79,10 @@ concise report. Keep connector-specific mapping outside the renderer so the
 report stays broker-agnostic.
 
 When a live connector is not being called by the plugin, use
-`broker_snapshot_ingest.py` to normalize a read-only broker export into the same
-standard `portfolio_snapshot.csv` view:
+`broker_snapshot_ingest.py` to normalize a read-only broker CSV export into the
+same standard `portfolio_snapshot.csv` view:
+
+This remains the read-only broker export path for CSV artifacts.
 
 ```bash
 python3 plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
@@ -93,6 +95,21 @@ python3 plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
 This is an adapter boundary, not broker access. It consumes user-approved local
 exports or connector-produced CSV artifacts and does not perform live broker
 reads, market-data calls, or order actions.
+
+When Longbridge Terminal CLI is user-installed and authorized, a read-only
+portfolio command can produce JSON for a local adapter step:
+
+```bash
+longbridge portfolio --format json > /tmp/longbridge-portfolio.json
+python3 plugins/trading-research-system/scripts/longbridge_cli_adapter.py \
+  --portfolio-json /tmp/longbridge-portfolio.json \
+  --output {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv \
+  --as-of YYYY-MM-DDTHH:MM:SSZ
+```
+
+`longbridge_cli_adapter.py` consumes saved Longbridge CLI JSON only. No live broker reads.
+It does not run the Longbridge CLI, perform live broker reads, call market
+data, or create/modify/cancel/submit orders.
 
 ## Portfolio Snapshot Schema
 
@@ -181,7 +198,12 @@ Order status is used to trigger review intake and reconcile actual trades. It is
 
 ## Longbridge First Phase
 
-Longbridge broker integration should be implemented as a Longbridge skill/plugin adapter. It only needs these read-only account capabilities first:
+Longbridge broker integration should be implemented as a Longbridge
+skill/plugin/terminal adapter. It only needs these read-only account
+capabilities first:
+
+The Longbridge skill/plugin adapter and the Longbridge Terminal CLI adapter are
+separate implementation paths that map into the same standard runtime views.
 
 - positions;
 - executions/trades;

@@ -24,8 +24,10 @@ def main() -> None:
         raise AssertionError("core suite should include macro-data-source")
     if "longbridge-skill-adapter" not in names:
         raise AssertionError("core suite should include longbridge-skill-adapter")
-    if names[-1] != "broker-snapshot-ingest-contract":
-        raise AssertionError(f"core suite should end with broker snapshot contract, got {names[-1]!r}")
+    if "broker-snapshot-ingest-contract" not in names:
+        raise AssertionError("core suite should include broker snapshot contract")
+    if names[-1] != "longbridge-cli-adapter-contract":
+        raise AssertionError(f"core suite should end with Longbridge CLI adapter contract, got {names[-1]!r}")
     if len(names) != len(set(names)):
         raise AssertionError("core suite should not contain duplicate names")
 

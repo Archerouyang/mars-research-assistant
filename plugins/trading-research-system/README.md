@@ -142,18 +142,37 @@ This script consumes read-only broker export files only. It does not perform
 live broker reads, live market data calls, real Codex automations, or order
 actions.
 
+## Longbridge Terminal CLI adapter
+
+When the user has installed and authorized the Longbridge Terminal CLI, a
+read-only portfolio JSON snapshot can be mapped into the same standard
+`portfolio_snapshot.csv` view with `longbridge_cli_adapter.py`.
+
+```bash
+longbridge portfolio --format json > /tmp/longbridge-portfolio.json
+
+uv run python plugins/trading-research-system/scripts/longbridge_cli_adapter.py \
+  --portfolio-json /tmp/longbridge-portfolio.json \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --as-of 2026-07-06T20:00:00Z
+```
+
+The adapter consumes saved Longbridge CLI JSON only. It reports the required
+contract phrases `No live broker reads` and `No order actions`; it never
+creates, modifies, cancels, or submits orders.
+
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the
-Longbridge skill/plugin and IBKR connector. Manual CSV remains a reduced fallback
+Longbridge skill/plugin/Terminal CLI and IBKR connector. Manual CSV remains a reduced fallback
 for one-off runs or fixtures. Local files are fixtures, debug artifacts, or
 user-confirmed derived snapshots, not the default broker fact source of truth.
 Longbridge `macrodata` is a separate macro-data source, not an account source.
 
-The Longbridge skill adapter is split into `longbridge_broker_skill` and
-`longbridge_macrodata`. `runtime_health.py --format json` reports
-`source_capability_health` so Daily Ops can tell whether the Longbridge skill is
-available, unauthorized, missing, stale, or simply not visible in the current
-chat.
+The Longbridge skill adapter is split into `longbridge_broker_skill`,
+`longbridge_terminal_cli`, and `longbridge_macrodata`. `runtime_health.py --format json` reports
+`source_capability_health` so Daily Ops can tell whether Longbridge skill,
+Longbridge Terminal CLI, and Longbridge macrodata are available, unauthorized,
+missing, stale, or simply not visible in the current chat.
 
 Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
 

@@ -38,6 +38,7 @@ The health check should cover:
 - `broker_sources`
 - `source_capability_health`
 - `Longbridge broker skill`
+- `Longbridge Terminal CLI`
 - `Longbridge macrodata`
 - `IBKR connector`
 
@@ -45,7 +46,8 @@ The JSON payload must include:
 
 - `current_mode`: `live read-only`, `manual snapshot`, or `dry-run`.
 - `source_capability_health`: per-capability status rows for Longbridge broker
-  skill, Longbridge macrodata, IBKR connector, and Manual snapshot.
+  skill, Longbridge Terminal CLI, Longbridge macrodata, IBKR connector, and
+  Manual snapshot.
 - `broker_source_health`: per-source status rows for Longbridge, IBKR, and
   Manual snapshot.
 
@@ -70,6 +72,9 @@ Useful options:
 - `--broker-source manual=available`: disclose a user-approved manual snapshot.
 - `--source-capability longbridge_broker_skill=available`: disclose that the
   Longbridge skill can provide read-only broker facts in this run.
+- `--source-capability longbridge_terminal_cli=available`: disclose that a
+  user-installed Longbridge Terminal CLI can provide read-only broker facts in
+  this run.
 - `--source-capability longbridge_macrodata=available`: disclose that the
   Longbridge skill can provide macrodata values in this run.
 - `--source-capability longbridge_macrodata=not_installed`: disclose that the

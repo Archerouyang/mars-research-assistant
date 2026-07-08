@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-07
 
 - Commit: pending
+- Scope: script, reference, docs, test
+- What changed: added the Longbridge Terminal CLI adapter. `longbridge_cli_adapter.py` maps saved `longbridge portfolio --format json` output into the standard `portfolio_snapshot.csv` view, and `runtime_health.py` now exposes `longbridge_terminal_cli` separately from `longbridge_broker_skill` and `longbridge_macrodata`.
+- Why it matters: a Daily Ops chat can use a user-installed Longbridge Terminal CLI as a read-only broker fact path even when the Codex-native Longbridge skill is not visible, without turning CLI availability into macrodata availability or broker write capability.
+- Next step: forward-test a position daily report by producing a user-approved Longbridge portfolio JSON snapshot outside the public repo, then rendering `position_daily_report.py`.
+
+- Commit: pending
 - Scope: skill, template, docs, test
 - What changed: hardened the 1.0 RC release surface and PA rollforward output contract. The plugin no longer exposes the unfinished external quantitative momentum model as a default focused skill or user-facing router path. PA outputs now have to compare against prior analysis, state main/auxiliary timeframes, bind levels to support/resistance and timeframe, consider cost/buy records, use proportional add/reduce sizing by default, and map levels to weekly events.
 - Why it matters: users should not see unfinished quantitative-model modules as public plugin capabilities, and DRAM/SOXX-style PA updates need to be stable, cost-aware, and directly usable instead of loose chart commentary.
