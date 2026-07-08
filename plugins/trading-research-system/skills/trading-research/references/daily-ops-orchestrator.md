@@ -49,9 +49,12 @@ Before recommending a workflow, inspect only availability/status unless the
 user has authorized deeper reads:
 
 - runtime health via `runtime-health.md` and `runtime_health.py`;
+- visual trigger policy via `visual-trigger-policy.md`;
 - `{runtime_dir}/ops-state.md` when available;
 - `{runtime_dir}/market-plan.md` status when available;
 - `{runtime_dir}/trading-profile.md` status when available;
+- `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json` status when available;
+- `{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv` status when available;
 - today's daily directory status;
 - optional external momentum snapshot availability when the next step depends
   on a user-configured momentum model;
@@ -83,6 +86,8 @@ In `读取状态`, include:
 - `ops-state.md`: status only.
 - `market-plan.md`: status only.
 - `trading-profile.md`: status only.
+- `macro-panel.json`: status only.
+- `portfolio_snapshot.csv`: status only.
 - `daily/YYYY-MM-DD/`: status only.
 - `current_mode` / `当前模式`: one of `live read-only`, `manual snapshot`, or `dry-run`.
 
@@ -122,6 +127,19 @@ Use `current_mode` from `runtime_health.py` when available:
 If `current_mode` is `dry-run`, the next step can still proceed with public data
 and plan context, but portfolio sizing, broker facts, and execution review must
 be marked as reduced confidence.
+
+### 宏观图触发判断
+
+After the startup health block, apply `visual-trigger-policy.md`:
+
+- if `macro-panel.json` is available and the next answer discusses strategy
+  posture, rates pressure, risk-on/risk-off, or financial conditions, generate
+  or request a `Macro Regime Mini-Panel`;
+- if `portfolio_snapshot.csv` is available and the next answer discusses
+  concentration, leveraged ETF exposure, cash pressure, or theme crowding,
+  generate or request a `Position Risk Visual`;
+- if either file is missing or stale, say why no visual appears instead of
+  silently skipping the chart.
 
 ## 券商只读来源设置
 

@@ -136,6 +136,7 @@ Use these statuses:
 | P2 | done | Add scheduled macro/industry research monitor | After the weekly plan locks the week's P0/P1 macro, rates, policy, industry, and company-confirmation variables, the plugin can schedule focused searches and return concise analysis/report leads instead of re-running a full plan. | Use `automation-macro-industry-research-monitor.md`, `macro-industry-monitor-2026-07-06.md`, and `verify_macro_industry_research_monitor_contract.py`; real Codex automation still needs cadence and source permission confirmation. |
 | P2 | done | Add Automation setup checklist | Defines the required setup interview before creating real Daily Ops schedules. | Use `automation-setup-checklist.md` and `verify_automation_setup_contract.py`; real Codex automations still require setup confirmation. |
 | P2 | review | Content & Visualization Artifact System MVP | Supports chat-first price action and macro/regime visuals without adding a frontend or saving artifacts by default. | Review fixture-backed implementation and PR; next slice is richer chart rendering or save-on-confirm runtime integration. |
+| P2 | review | Visual Trigger Policy | Prevents chart scripts from staying invisible while also avoiding chart spam in every update. | Use `visual-trigger-policy.md` and `verify_visual_trigger_contract.py`; next forward-test whether Daily Ops/weekly/PA/intraday/position outputs trigger charts at the right time. |
 | P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
@@ -143,19 +144,21 @@ Use these statuses:
 
 Date: 2026-07-08
 
-- Main task: define the 1.0 local trading research workflow acceptance plan.
+- Main task: define the 1.0 local trading research workflow acceptance plan and visual trigger policy.
 - Current stage: convert the existing module-level MVP into fresh-chat
-  Acceptance Prompts for daily startup, weekly plan, intraday setup tracking,
-  position daily report, rolling PA analysis, and two-stage review.
+  Acceptance Prompts and add a `Visual Trigger Policy` so macro/PA/position
+  charts appear when the workflow needs visual inspection instead of remaining
+  disconnected scripts.
 - Secondary task: keep the scope explicit: no release tag, no hidden KVN model
   exposure, no option-flow vendor integration, no real automations, and no
   broker write actions.
 - Definition of done: `docs/1.0_ACCEPTANCE.md`, roadmap, development plan,
-  project log, MVP runbook, and the core contract suite agree on the 1.0
-  acceptance gate.
-- Verification: `verify_1_0_acceptance_contract.py`, `verify_contract_suite.py
-  core`, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and
-  `git diff --check` pass.
+  project log, MVP runbook, visual-trigger-policy.md, and the core contract
+  suite agree on the 1.0 acceptance and visualization trigger gates.
+- Verification: `verify_1_0_acceptance_contract.py`,
+  `verify_visual_trigger_contract.py`, `verify_contract_suite.py core`,
+  `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git
+  diff --check` pass.
 - End-of-day result: review.
 
 ## Progress Log

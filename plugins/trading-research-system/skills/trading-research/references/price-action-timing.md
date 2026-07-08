@@ -50,6 +50,12 @@ Every setup needs:
 Use this contract when the user asks for PA, 盘面分析, point updates, 加仓/减仓
 levels, or a refresh of a prior chart read.
 
+Read `visual-trigger-policy.md` before deciding whether the rolling update
+should stay text-only or show a `PA Scenario Board`. Use the board when the user
+directly asks for a chart, when 关键点位接近, or when scenario paths, support /
+resistance, EMA context, add/TP zones, and invalidation are easier to inspect
+visually than in a table.
+
 Before giving new levels, first look for previous analysis in:
 
 1. current `market-plan.md` setup rows and holding plans;

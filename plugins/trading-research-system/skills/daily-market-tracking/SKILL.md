@@ -18,6 +18,7 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro/rates context: `../trading-research/references/macro-policy-filter.md`.
    - Macro data source contract: `../trading-research/references/macro-data-source-contract.md`.
+   - Visual trigger policy: `../trading-research/references/visual-trigger-policy.md`.
    - optional external quantitative momentum snapshots when already configured
      or explicitly provided by the user.
    - Price action/timeframes: `../trading-research/references/price-action-timing.md`.
@@ -39,6 +40,11 @@ This is an AI-native workflow. Read current tape, macro/rates, policy/news, even
    for S0 facts or fallback values. Then include `实际宏观指标读数` with current values,
    5D/20D change when available, thresholds, strategy posture impact, source,
    and `数据时间戳`. Do not claim macro analysis if no actual macro values were read.
+   If `macro-panel.json` or equivalent authorized macro values are available
+   and the update discusses strategy posture, rates pressure, risk-on/risk-off,
+   or financial conditions, apply `visual-trigger-policy.md` and show or request
+   a `Macro Regime Mini-Panel`. If no macro chart is shown, say whether the
+   reason is missing/stale macro values or that the update is text-only.
    If an external momentum snapshot is missing or stale, report that the
    optional snapshot is unavailable and continue without it unless the user
    explicitly provides a fresh file. Do not rebuild private quantitative models

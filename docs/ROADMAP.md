@@ -167,6 +167,7 @@ Rules:
 | Release surface hidden-quant contract | Done | `plugins/trading-research-system/scripts/verify_release_surface_contract.py`; default README/router/skill/template surface does not expose external quant model modules |
 | Price Action rollforward contract | Done | `plugins/trading-research-system/scripts/verify_price_action_rollforward_contract.py`; PA output must include previous-analysis comparison, timeframe roles, support/resistance levels, cost/buy-record context, proportional add/reduce sizing, and weekly event mapping |
 | Content & Visualization Artifact System MVP | Review | `plugins/trading-research-system/scripts/visual_artifacts.py`; `plugins/trading-research-system/scripts/chart_artifact.py`; `plugins/trading-research-system/scripts/macro_regime_artifact.py`; display-first SVG output defaults to transient `.scratch/visual-artifacts/`; optional manifest-backed local save requires explicit opt-in |
+| Visual Trigger Policy | Prompt-backed | `plugins/trading-research-system/skills/trading-research/references/visual-trigger-policy.md`; `plugins/trading-research-system/scripts/verify_visual_trigger_contract.py`; defines when Daily Ops, weekly, quick update, rolling PA, intraday scan, position report, and review outputs should show chat-first visuals |
 | Canonical record schema module | Compatibility | `plugins/trading-research-system/scripts/record_schemas.py`; `plugins/trading-research-system/scripts/verify_record_templates_contract.py` |
 | Actual trade record module | Compatibility | `plugins/trading-research-system/scripts/trade_records.py`; `plugins/trading-research-system/scripts/update_trade_record.py`; `plugins/trading-research-system/scripts/verify_trade_record_update_selftest.py` |
 | Legacy active import module | Deferred compatibility | `plugins/trading-research-system/scripts/import_legacy_active_csv.py`; `plugins/trading-research-system/scripts/verify_legacy_active_import_selftest.py` |
@@ -343,10 +344,13 @@ Target result:
 1. Run the `docs/1.0_ACCEPTANCE.md` fresh-chat acceptance prompts and fix any
    gaps in the local trading research workflow before claiming 1.0 readiness.
 2. Finalize Daily Ops Orchestrator fixtures and `ops-state.md` behavior before enabling real trading-operation automations.
-3. Add chart artifact generation from fixture-backed authorized OHLCV data.
-4. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-5. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
-6. Connect real read-only source adapters to the standard runtime views:
+3. Forward-test the `Visual Trigger Policy` in Daily Ops, weekly planning, PA
+   rollforward, intraday scan, and position daily report so macro and PA charts
+   appear only when the trigger matrix says they should.
+4. Add richer chart artifact generation from fixture-backed authorized OHLCV data.
+5. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+6. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
+7. Connect real read-only source adapters to the standard runtime views:
    Longbridge skill/Terminal CLI adapter for read-only broker facts, IBKR connector adapter
    for read-only broker/market facts, and Longbridge `macrodata` adapter for
    macro panel values.
