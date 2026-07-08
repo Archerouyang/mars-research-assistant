@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: script, fixture, reference, docs, test
+- What changed: added the Longbridge macrodata adapter. `longbridge_macrodata_adapter.py` normalizes saved or tool-returned Longbridge macrodata JSON into the standard `macro-panel.json` runtime view covering 10Y, 30Y, HYG/LQD, DXY, Oil, Gold, and liquidity. The adapter discloses `No live macrodata reads`, `not a broker account source`, and `No order actions`.
+- Why it matters: Daily Ops and weekly/macro research can now consume actual macro values through a standard panel without letting Longbridge macrodata replace broker facts, policy/news confirmation, or official S0 sources.
+- Next step: forward-test the adapter against real Longbridge macrodata tool output in a trading research chat, then wire that standard `macro-panel.json` into Daily Ops quick updates and macro visualization.
+
+- Commit: pending
 - Scope: script, fixture, reference, test
 - What changed: strengthened `position_daily_report.py` so broker-live position reports now summarize instrument/product exposure, broker/account exposure, and leveraged or single-stock ETF path risk. The fixture now includes TSMX/MVLL-style Longbridge ETF rows, and the position daily report selftest plus contract are registered in the core contract suite.
 - Why it matters: after Longbridge/IBKR positions are normalized into `portfolio_snapshot.csv`, the user sees the risk structure that affects decisions, not just a flat holding list. This helps separate core ETF exposure, sector ETF exposure, common stock exposure, cash, and leveraged-product risk before adding or reducing positions.

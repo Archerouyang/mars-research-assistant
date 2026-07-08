@@ -171,6 +171,18 @@ Longbridge skill/plugin/Terminal CLI and IBKR connector. Manual CSV remains a re
 for one-off runs or fixtures. Local files are fixtures, debug artifacts, or
 user-confirmed derived snapshots, not the default broker fact source of truth.
 Longbridge `macrodata` is a separate macro-data source, not an account source.
+Saved or tool-returned Longbridge `macrodata` JSON can be normalized into the
+standard `macro-panel.json` runtime view:
+
+```bash
+uv run python plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
+  --macrodata-json /tmp/longbridge-macrodata.json \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/macro-panel.json \
+  --as-of 2026-07-06T20:00:00Z
+```
+
+The adapter reports `No live macrodata reads`; it is not a broker account
+source and performs `No order actions`.
 
 The Longbridge skill adapter is split into `longbridge_broker_skill`,
 `longbridge_terminal_cli`, and `longbridge_macrodata`. `runtime_health.py --format json` reports

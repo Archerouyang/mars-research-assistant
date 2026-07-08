@@ -60,6 +60,21 @@ Add or remove rows only when useful. For the user's current framework, the key
 answer is whether financial conditions support `high beta momentum`, require a
 `balanced` posture, or argue for `defensive` risk posture.
 
+When Longbridge macrodata values are available as saved or tool-returned JSON,
+normalize them into the standard runtime view:
+
+```bash
+python3 plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
+  --macrodata-json /path/to/longbridge-macrodata.json \
+  --output {runtime_dir}/daily/YYYY-MM-DD/macro-panel.json \
+  --as-of YYYY-MM-DDTHH:MM:SSZ
+```
+
+The standard `macro-panel.json` preserves `value`, `change_5d`, `change_20d`,
+`threshold`, `source`, `timestamp`, `strategy_posture`, and
+`missing_indicators`. It is a macro values panel, not a policy/news source and
+not a broker account source.
+
 ## Strategy Posture Link
 
 Translate macro reads into `策略姿态`:

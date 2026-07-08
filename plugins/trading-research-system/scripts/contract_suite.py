@@ -85,6 +85,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("broker-snapshot-ingest-contract", "verify_broker_snapshot_ingest_contract.py"),
     ("longbridge-cli-adapter-selftest", "verify_longbridge_cli_adapter_selftest.py"),
     ("longbridge-cli-adapter-contract", "verify_longbridge_cli_adapter_contract.py"),
+    ("longbridge-macrodata-adapter-selftest", "verify_longbridge_macrodata_adapter_selftest.py"),
+    ("longbridge-macrodata-adapter-contract", "verify_longbridge_macrodata_adapter_contract.py"),
 )
 
 SUITES: Mapping[str, tuple[tuple[str, str], ...]] = {
