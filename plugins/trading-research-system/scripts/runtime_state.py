@@ -60,6 +60,8 @@ class RuntimeWriter:
     def ensure_dir(self, path: str | Path) -> str:
         target = Path(path).expanduser()
         if self.dry_run:
+            if target.exists():
+                return f"would keep existing dir {target}"
             return f"would create dir {target}"
         target.mkdir(parents=True, exist_ok=True)
         return f"created dir {target}"

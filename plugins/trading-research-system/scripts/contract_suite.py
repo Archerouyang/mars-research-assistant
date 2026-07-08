@@ -78,6 +78,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("runtime-state-contract", "verify_runtime_state_contract.py"),
     ("runtime-bootstrap-selftest", "verify_runtime_bootstrap_selftest.py"),
     ("runtime-bootstrap-contract", "verify_runtime_bootstrap_contract.py"),
+    ("daily-runtime-package-selftest", "verify_daily_runtime_package_selftest.py"),
+    ("daily-runtime-package-contract", "verify_daily_runtime_package_contract.py"),
     ("visual-artifact-selftest", "verify_visual_artifact_selftest.py"),
     ("visual-artifact-contract", "verify_visual_artifact_contract.py"),
     ("visual-trigger", "verify_visual_trigger_contract.py"),

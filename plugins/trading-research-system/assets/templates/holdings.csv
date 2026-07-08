@@ -1,4 +1,2 @@
 ticker,direction,weight,market_value,asset_class,sector,beta,rate_sensitivity,usd_sensitivity,policy_sensitivity,notes
-SPY,long,25%,,ETF,Broad Market,1.0,medium,low,medium,core equity exposure
-TLT,long,10%,,ETF,Treasury Duration,-0.2,high,medium,high,long-duration rate exposure
 NVDA,long,8%,,Equity,Semiconductors,1.8,medium,medium,medium,AI growth exposure

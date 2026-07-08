@@ -88,6 +88,20 @@ If required state is `missing`, `stale`, or `unauthorized`, report the gap and
 ask whether to initialize, import, connect a source, or continue with reduced
 analysis.
 
+For a missing daily runtime package, use the bundled preparation script after
+user confirmation:
+
+```bash
+python3 plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08 --dry-run
+```
+
+`prepare_daily_runtime.py` creates the daily runtime package with header-only
+CSV containers such as `trade-plans.csv` and `intraday-watchlist.csv`, plus the
+daily update note and `ops-state.md` if absent. It must not overwrite existing
+files by default and must not read broker data, market data, or create orders.
+If the watchlist is still header-only, `intraday_scan.py` should report that no
+setup rows are prepared instead of failing.
+
 Use `current_mode` to explain what the current Daily Ops run can trust:
 
 - `live read-only`: at least one authorized broker source is available.
