@@ -66,6 +66,7 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("daily-ops-orchestrator", "verify_daily_ops_orchestrator_contract.py"),
     ("daily-market-tracking", "verify_daily_market_tracking_contract.py"),
     ("release-surface", "verify_release_surface_contract.py"),
+    ("one-zero-acceptance", "verify_1_0_acceptance_contract.py"),
     ("price-action-rollforward", "verify_price_action_rollforward_contract.py"),
     ("macro-industry-monitor", "verify_macro_industry_research_monitor_contract.py"),
     ("trade-plan-preparation", "verify_trade_plan_preparation_contract.py"),

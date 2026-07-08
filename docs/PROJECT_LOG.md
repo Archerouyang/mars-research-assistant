@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: planning, docs, test
+- What changed: added the 1.0 Acceptance Plan in `docs/1.0_ACCEPTANCE.md` and registered `verify_1_0_acceptance_contract.py` in the core contract suite.
+- Why it matters: the project now has a fresh-chat user-workflow gate for the local trading research workflow, instead of treating 1.0 readiness as a loose list of modules. The plan keeps KVN model construction, option-flow vendors, real automations, public release tags, private runtime data, and broker write actions out of the acceptance scope.
+- Next step: reinstall the plugin and run the acceptance prompts in a new chat, then fix the specific Daily Ops, macro panel, position report, PA rollforward, or review-flow gaps that show up.
+
+- Commit: pending
 - Scope: script, fixture, reference, docs, test
 - What changed: added the Longbridge macrodata adapter. `longbridge_macrodata_adapter.py` normalizes saved or tool-returned Longbridge macrodata JSON into the standard `macro-panel.json` runtime view covering 10Y, 30Y, HYG/LQD, DXY, Oil, Gold, and liquidity. The adapter discloses `No live macrodata reads`, `not a broker account source`, and `No order actions`.
 - Why it matters: Daily Ops and weekly/macro research can now consume actual macro values through a standard panel without letting Longbridge macrodata replace broker facts, policy/news confirmation, or official S0 sources.
