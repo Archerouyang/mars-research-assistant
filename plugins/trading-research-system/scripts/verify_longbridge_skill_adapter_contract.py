@@ -32,19 +32,23 @@ REQUIRED = {
     "context": [
         "Longbridge Skill Adapter",
         "longbridge_broker_skill",
+        "longbridge_terminal_cli",
         "longbridge_macrodata",
         "source_capability_health",
     ],
     "adapter_reference": [
         "# Longbridge Skill Adapter",
         "Longbridge broker skill",
+        "Longbridge Terminal CLI",
         "Longbridge macrodata",
         "longbridge_broker_skill",
+        "longbridge_terminal_cli",
         "longbridge_macrodata",
         "source_capability_health",
         "not visible in the current Codex session",
         "当前 chat 未暴露 Longbridge skill capability",
         "portfolio_snapshot.csv",
+        "longbridge_cli_adapter.py",
         "broker_executions.csv",
         "broker_orders.csv",
         "macro-panel.json",
@@ -61,11 +65,13 @@ REQUIRED = {
     "runtime_health": [
         "source_capability_health",
         "Longbridge broker skill",
+        "Longbridge Terminal CLI",
         "Longbridge macrodata",
         "--source-capability longbridge_macrodata=available",
     ],
     "broker_contract": [
         "Longbridge skill/plugin adapter",
+        "Longbridge Terminal CLI",
         "Longbridge `macrodata` is a separate macro-data source",
     ],
     "macro_contract": [
@@ -76,6 +82,7 @@ REQUIRED = {
     "daily_ops": [
         "source_capability_health",
         "Longbridge broker skill",
+        "Longbridge Terminal CLI",
         "Longbridge macrodata",
         "当前 chat 未暴露 Longbridge skill",
     ],
@@ -83,6 +90,7 @@ REQUIRED = {
         "source_capability_health",
         "--source-capability",
         "longbridge_broker_skill",
+        "longbridge_terminal_cli",
         "longbridge_macrodata",
         "ibkr_connector",
         "manual_snapshot",
@@ -91,6 +99,7 @@ REQUIRED = {
     "runtime_health_selftest": [
         "source_capability_health",
         "longbridge_broker_skill",
+        "longbridge_terminal_cli",
         "longbridge_macrodata",
         "ibkr_connector",
         "longbridge_macrodata=not_installed",

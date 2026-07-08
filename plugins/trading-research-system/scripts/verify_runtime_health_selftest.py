@@ -54,6 +54,7 @@ def main() -> int:
 
         capabilities = {item["id"]: item for item in payload["source_capability_health"]}
         assert_status(capabilities, "longbridge_broker_skill", "unauthorized")
+        assert_status(capabilities, "longbridge_terminal_cli", "unauthorized")
         assert_status(capabilities, "longbridge_macrodata", "unauthorized")
         assert_status(capabilities, "ibkr_connector", "unauthorized")
         assert_status(capabilities, "manual_snapshot", "missing")
@@ -86,6 +87,10 @@ def main() -> int:
                 "--broker-source",
                 "manual=available",
                 "--source-capability",
+                "longbridge_broker_skill=not_installed",
+                "--source-capability",
+                "longbridge_terminal_cli=available",
+                "--source-capability",
                 "longbridge_macrodata=not_installed",
             ],
             text=True,
@@ -104,11 +109,13 @@ def main() -> int:
 
         sourced_checks = {item["id"]: item for item in sourced_payload["checks"]}
         assert_status(sourced_checks, "longbridge_broker_source", "available")
+        assert_status(sourced_checks, "longbridge_terminal_cli", "available")
         assert_status(sourced_checks, "ibkr_broker_source", "not_installed")
         assert_status(sourced_checks, "manual_snapshot_source", "available")
         assert_status(sourced_checks, "broker_sources", "available")
         sourced_capabilities = {item["id"]: item for item in sourced_payload["source_capability_health"]}
-        assert_status(sourced_capabilities, "longbridge_broker_skill", "available")
+        assert_status(sourced_capabilities, "longbridge_broker_skill", "not_installed")
+        assert_status(sourced_capabilities, "longbridge_terminal_cli", "available")
         assert_status(sourced_capabilities, "longbridge_macrodata", "not_installed")
         assert_status(sourced_capabilities, "ibkr_connector", "not_installed")
 

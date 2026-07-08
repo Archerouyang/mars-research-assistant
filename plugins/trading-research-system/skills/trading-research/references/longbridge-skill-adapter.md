@@ -12,6 +12,7 @@ Treat Longbridge as two separate read-only capabilities:
 | capability id | user-facing name | purpose | standard output |
 | --- | --- | --- | --- |
 | `longbridge_broker_skill` | Longbridge broker skill | positions, executions/trades, orders/status | broker-live runtime views |
+| `longbridge_terminal_cli` | Longbridge Terminal CLI | positions/portfolio JSON produced by user-installed terminal | broker-live runtime views |
 | `longbridge_macrodata` | Longbridge macrodata | rates, yields, credit, FX, commodities, liquidity, macro indicators | macro panel runtime view |
 
 The Longbridge broker skill and Longbridge macrodata are not interchangeable.
@@ -27,7 +28,8 @@ Required rows:
 
 | capability | status | meaning |
 | --- | --- | --- |
-| `longbridge_broker_skill` | available / unauthorized / not_installed / missing / stale | whether Longbridge read-only account facts are usable |
+| `longbridge_broker_skill` | available / unauthorized / not_installed / missing / stale | whether Longbridge skill read-only account facts are usable |
+| `longbridge_terminal_cli` | available / unauthorized / not_installed / missing / stale | whether Longbridge Terminal CLI read-only account facts are usable |
 | `longbridge_macrodata` | available / unauthorized / not_installed / missing / stale | whether Longbridge macrodata values are usable |
 | `ibkr_connector` | available / unauthorized / not_installed / missing / stale | whether IBKR connector facts are usable |
 | `manual_snapshot` | available / missing / stale | whether a user-approved snapshot is usable |
@@ -39,6 +41,12 @@ search, mark the relevant capability `not_installed` and say:
 ```text
 当前 chat 未暴露 Longbridge skill capability；这不代表 Longbridge 不存在，只代表本轮不能直接调用。
 ```
+
+If the current machine has the user-installed Longbridge Terminal CLI and the
+user has authorized read-only account access for this run, mark
+`longbridge_terminal_cli=available` separately. Do not use terminal availability
+as proof that `longbridge_macrodata` or a Codex-native Longbridge skill is
+available.
 
 ## Broker Skill Adapter
 
@@ -59,6 +67,31 @@ Map results into the standard broker-live runtime views:
 Do not pass raw Longbridge shapes directly into portfolio risk, position daily
 report, trade review, or statistics workflows. The adapter boundary exists so
 the rest of the plugin can stay broker-agnostic.
+
+## Terminal CLI Adapter
+
+When `longbridge_terminal_cli` is available and authorized, use
+`longbridge_cli_adapter.py` only on saved JSON produced by read-only CLI
+commands such as `longbridge portfolio --format json`. The adapter maps the
+saved JSON into:
+
+- `{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv`
+
+The CLI adapter must disclose:
+
+- `No live broker reads`;
+- `No order actions`;
+- the source JSON file or stdin;
+- the snapshot timestamp used for `source_timestamp`.
+
+It preserves each position or cash row's source currency and does not
+FX-convert values. If a portfolio snapshot contains multiple currencies,
+downstream reports must either convert through a separate authorized FX step or
+label total exposure as multi-currency / partial.
+
+The CLI adapter must not run `longbridge order buy`, `longbridge order sell`,
+`longbridge order cancel`, `longbridge order replace`, or any other broker write
+command.
 
 ## Macrodata Adapter
 

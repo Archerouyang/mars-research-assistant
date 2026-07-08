@@ -17,7 +17,13 @@ STATUSES = {"available", "missing", "stale", "unauthorized"}
 BROKER_STATUSES = STATUSES | {"not_installed"}
 BROKER_SOURCES = {"longbridge", "ibkr", "manual"}
 LIVE_BROKER_SOURCES = ("longbridge", "ibkr")
-SOURCE_CAPABILITIES = {"longbridge_broker_skill", "longbridge_macrodata", "ibkr_connector", "manual_snapshot"}
+SOURCE_CAPABILITIES = {
+    "longbridge_broker_skill",
+    "longbridge_terminal_cli",
+    "longbridge_macrodata",
+    "ibkr_connector",
+    "manual_snapshot",
+}
 BROKER_SOURCE_LABELS = {
     "longbridge": "Longbridge",
     "ibkr": "IBKR",
@@ -30,6 +36,7 @@ BROKER_SOURCE_CHECK_IDS = {
 }
 SOURCE_CAPABILITY_LABELS = {
     "longbridge_broker_skill": "Longbridge broker skill",
+    "longbridge_terminal_cli": "Longbridge Terminal CLI",
     "longbridge_macrodata": "Longbridge macrodata",
     "ibkr_connector": "IBKR connector",
     "manual_snapshot": "Manual snapshot",
@@ -75,7 +82,8 @@ def parse_args() -> argparse.Namespace:
         metavar="CAPABILITY=STATUS",
         help=(
             "Source capability status, e.g. longbridge_macrodata=available, "
-            "longbridge_broker_skill=not_installed, or ibkr_connector=available"
+            "longbridge_terminal_cli=available, longbridge_broker_skill=not_installed, "
+            "or ibkr_connector=available"
         ),
     )
     parser.add_argument(
@@ -211,6 +219,7 @@ def build_source_capability_health(
     ]
     statuses = {
         "longbridge_broker_skill": broker_source_statuses["longbridge"],
+        "longbridge_terminal_cli": "unauthorized",
         "longbridge_macrodata": "unauthorized",
         "ibkr_connector": broker_source_statuses["ibkr"],
         "manual_snapshot": broker_source_statuses["manual"],
@@ -221,6 +230,7 @@ def build_source_capability_health(
 
     capability_order = (
         "longbridge_broker_skill",
+        "longbridge_terminal_cli",
         "longbridge_macrodata",
         "ibkr_connector",
         "manual_snapshot",

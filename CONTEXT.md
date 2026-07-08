@@ -93,8 +93,12 @@ Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据�
 _Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
 **Longbridge Skill Adapter**:
-把 Longbridge skill/plugin 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成两个 capability：`longbridge_broker_skill` 用于 positions、executions/trades、orders/status 等 broker facts；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、未授权、缺失、过期和可用状态。
+把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
 _Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在
+
+**Longbridge Terminal CLI Adapter**:
+消费用户已授权的 `longbridge portfolio --format json` 等只读 CLI 输出，并通过 `longbridge_cli_adapter.py` 转换成标准 `portfolio_snapshot.csv` 的本地适配层。该 adapter 只处理已保存 JSON，不主动运行 CLI、不读取 live broker、不调用行情、不创建/修改/取消/提交订单。
+_Avoid_: 把 CLI adapter 当下单层, 把本机安装等同于 macrodata 可用, 把用户真实持仓 fixture 化进 public repo
 
 **Macro Data Source Contract**:
 宏观和金融条件分析的来源选择契约。若 Longbridge macrodata 可用，它是宏观数值和金融条件的优先 S1 来源；IBKR 行情数据用于价格、OHLCV、盘中 tape 和市场传导确认；官方来源 fallback 用于 S0 政策事实、经济数据发布时间、官方讲话、法规状态，以及 Longbridge macrodata 不可用时的官方宏观数值回退。Daily Ops / weekly / macro-equity 输出不能只说“宏观重要”，必须列出 `宏观数据来源状态` 和 `实际宏观指标读数`，否则要标记为降级分析。

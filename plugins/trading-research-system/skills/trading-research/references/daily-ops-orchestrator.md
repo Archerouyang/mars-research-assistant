@@ -95,6 +95,7 @@ source health:
 | capability | status | effect |
 | --- | --- | --- |
 | Longbridge broker skill | available / unauthorized / not_installed / missing / stale |  |
+| Longbridge Terminal CLI | available / unauthorized / not_installed / missing / stale |  |
 | Longbridge macrodata | available / unauthorized / not_installed / missing / stale |  |
 | IBKR connector | available / unauthorized / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |

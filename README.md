@@ -110,6 +110,22 @@ uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py 
   --as-of 2026-07-06T20:00:00Z
 ```
 
+### Longbridge Terminal CLI adapter
+
+如果本机已经安装并授权 Longbridge Terminal CLI，可以先由用户/agent 在只读边界
+下生成 portfolio JSON，再用 `longbridge_cli_adapter.py` 转成标准
+`portfolio_snapshot.csv`。这个 adapter 只消费已保存 JSON；契约短语是
+`No live broker reads`，不运行 CLI、不调用行情、不创建或修改订单。
+
+```bash
+longbridge portfolio --format json > /tmp/longbridge-portfolio.json
+
+uv run python plugins/trading-research-system/scripts/longbridge_cli_adapter.py \
+  --portfolio-json /tmp/longbridge-portfolio.json \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --as-of 2026-07-06T20:00:00Z
+```
+
 Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏感摘要、持仓日报索引或可视化结果，不保存逐笔 broker facts。
 
 `trading-profile.md` 是私有策略配置层，用来记录使用者自己的策略评分、主动交易池、ETF 组合、交易工具、时间框架、拥挤度模型和风控偏好。public plugin 只提供模板，不内置某个使用者的具体交易模型。
@@ -117,7 +133,7 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 ## 数据和连接边界
 
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
-- 安装后首次交易研究日程或初始化 runtime 时询问启用哪些 broker 来源；v1 正式支持 Longbridge skill/plugin 和 IBKR connector。手动 CSV 只作为单次运行或 fixture 的降级 fallback。
+- 安装后首次交易研究日程或初始化 runtime 时询问启用哪些 broker 来源；v1 正式支持 Longbridge skill/plugin/Terminal CLI 和 IBKR connector。手动 CSV 只作为单次运行或 fixture 的降级 fallback。
 - 券商只读来源设置只确认 read-only 来源偏好，不自动读取账户、不自动安装软件、不写 public repo，也不允许任何下单/改单/撤单动作。
 - Longbridge `macrodata` 可作为宏观数据和金融条件读取源；政策事实和官方讲话仍需优先用 S0 官方来源确认。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
