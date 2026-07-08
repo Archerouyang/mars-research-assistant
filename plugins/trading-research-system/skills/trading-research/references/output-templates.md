@@ -18,8 +18,15 @@ Default rules:
 
 Chart rules:
 
+- before deciding whether to show a chart, read `visual-trigger-policy.md` and
+  apply its `视觉触发矩阵`;
 - use TradingView links or screenshots when the user provides them or when an authenticated browser session makes that practical;
 - prefer display-first visual artifacts when the chat needs a compact price or macro view;
+- use `Macro Regime Mini-Panel` when actual macro values from `macro-panel.json`
+  or an equivalent authorized macro panel can change strategy posture;
+- use `PA Scenario Board` for rolling PA, key level proximity, or setup state
+  changes where support/resistance, EMA, add/trim zones, and scenario paths are
+  easier to inspect visually;
 - for inline price visual output, generate a transient SVG from authorized OHLCV data or fixture data and show that image directly in chat;
 - for inline macro visual output, generate a transient macro/regime mini-panel from authorized macro/market-condition data or fixture data;
 - otherwise generate local TradingView `lightweight-charts` HTML artifacts from authorized OHLCV data as an optional inspection artifact;

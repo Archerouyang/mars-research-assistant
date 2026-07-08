@@ -26,6 +26,7 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - Trade plan schema: `../trading-research/references/trade-journal.md`.
    - Risk exposure: `../trading-research/references/portfolio-risk.md`.
    - Broker data contract when using account data: `../trading-research/references/broker-data-contract.md`.
+   - Visual trigger policy: `../trading-research/references/visual-trigger-policy.md`.
    - Formatting: `../trading-research/references/output-templates.md`.
 2. Use current sources for time-sensitive facts: policy, Treasury/rates/yields, prices, earnings, analyst claims, news, event calendars, and market state.
 3. Build the weekly note in this order:
@@ -95,6 +96,13 @@ must include `宏观数据来源状态` and `实际宏观指标读数`: use Long
 as the preferred S1 source for macro values when available, IBKR market data for
 price/OHLCV transmission, and official source fallback for S0 facts or when
 Longbridge macrodata is unavailable.
+
+When actual macro values are available and the weekly plan uses them to set
+strategy posture, risk budget, add/TP/pause decisions, or event sensitivity,
+apply `visual-trigger-policy.md` and include a `Macro Regime Mini-Panel` or say
+why it was skipped. When a setup candidate needs visual inspection of support,
+resistance, EMA context, trigger zone, or invalidation, use the same policy to
+request or show a `PA Scenario Board`.
 
 ## Trade Plan Preparation
 

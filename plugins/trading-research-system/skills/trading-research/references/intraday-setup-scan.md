@@ -28,6 +28,12 @@ python3 plugins/trading-research-system/scripts/intraday_scan.py \
 Then layer current chart/price interpretation on top only when authorized data
 is available.
 
+Before showing a visual, read `visual-trigger-policy.md`. Generate or request a
+`PA Scenario Board` only when a setup is `approaching`, `triggered`,
+`invalidated`, or `needs_review` and authorized chart/OHLCV data is available.
+If every setup is merely `active`, `candidate`, or far from its planned zone,
+keep the scan text-only and say which setup would unlock a chart.
+
 Every scanned setup should include:
 
 - `setup_id`

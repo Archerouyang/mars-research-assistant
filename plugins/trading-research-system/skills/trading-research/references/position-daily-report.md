@@ -30,6 +30,13 @@ Live broker adapters should map read-only broker facts into
 reporting layer only; it does not connect to brokers, save raw exports, or place
 orders.
 
+Read `visual-trigger-policy.md` before deciding whether the report should show a
+`Position Risk Visual`. Use the visual only when the standard
+`portfolio_snapshot.csv` view or authorized broker facts show concentration,
+leveraged ETF exposure, cash/margin pressure, broker/account imbalance, option
+expiry risk, or theme crowding. If no visual is shown, state whether the reason
+is missing holdings data or no material risk change.
+
 ## Required Disclosures
 
 Every report must include:

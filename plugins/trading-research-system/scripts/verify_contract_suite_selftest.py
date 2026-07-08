@@ -32,6 +32,8 @@ def main() -> None:
         raise AssertionError("core suite should include Longbridge macrodata adapter contract")
     if "one-zero-acceptance" not in names:
         raise AssertionError("core suite should include 1.0 acceptance contract")
+    if "visual-trigger" not in names:
+        raise AssertionError("core suite should include visual trigger contract")
     if len(names) != len(set(names)):
         raise AssertionError("core suite should not contain duplicate names")
 

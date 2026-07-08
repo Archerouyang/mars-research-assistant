@@ -12,11 +12,12 @@ Use this skill for setup-scoped intraday monitoring. It does not place orders an
 1. Read `../trading-research/references/active-market-plan.md`.
 2. Read `../trading-research/references/intraday-setup-scan.md`.
 3. Read `../trading-research/references/price-action-timing.md` for trigger confirmation and instrument-specific strictness.
-4. Read `../trading-research/references/portfolio-risk.md` when exposure or sizing may constrain action.
-5. Use `market-plan.md`, the current day's `intraday-watchlist.csv`, `trade-plans.csv`, and update notes when available.
-6. Use current chart/price data from authorized sources, such as IBKR, when available.
-7. When a prepared `intraday-watchlist.csv` exists, use `../../scripts/intraday_scan.py` to render the plan-scoped status summary, then add chart/current-data interpretation only where authorized data is available.
-8. Classify each setup:
+4. Read `../trading-research/references/visual-trigger-policy.md` before deciding whether to show a `PA Scenario Board`.
+5. Read `../trading-research/references/portfolio-risk.md` when exposure or sizing may constrain action.
+6. Use `market-plan.md`, the current day's `intraday-watchlist.csv`, `trade-plans.csv`, and update notes when available.
+7. Use current chart/price data from authorized sources, such as IBKR, when available.
+8. When a prepared `intraday-watchlist.csv` exists, use `../../scripts/intraday_scan.py` to render the plan-scoped status summary, then add chart/current-data interpretation only where authorized data is available.
+9. Classify each setup:
    - `candidate`
    - `active`
    - `invalidated`
@@ -24,7 +25,11 @@ Use this skill for setup-scoped intraday monitoring. It does not place orders an
    - `needs_review`
    - `approaching`
    - `completed`
-9. Sort by attention priority, not conviction. Sort by attention priority because the scan is a queue for human inspection, not an order instruction.
+10. Sort by attention priority, not conviction. Sort by attention priority because the scan is a queue for human inspection, not an order instruction.
+
+Show or request a `PA Scenario Board` only for setups that are `approaching`,
+`triggered`, `invalidated`, or `needs_review` and have authorized chart data.
+Keep ordinary `active` or distant `candidate` setups text-only.
 
 ## Output
 

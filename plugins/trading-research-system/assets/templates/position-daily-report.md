@@ -30,6 +30,9 @@ Snapshot saved: yes / no
 
 ## 可视化
 
+- visual trigger: show `Position Risk Visual` only when concentration, theme
+  crowding, leveraged-product exposure, cash/margin pressure, or broker/account
+  imbalance needs a chart; otherwise state why no visual is shown.
 - Allocation by symbol:
 - Theme / sector exposure:
 - PnL contribution:

@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: reference, skill, template, docs, test
+- What changed: added the Visual Trigger Policy in `visual-trigger-policy.md` and registered `verify_visual_trigger_contract.py` in the core contract suite. Daily Ops, weekly planning, daily tracking, rolling PA, intraday scan, and position daily report now have explicit rules for when to show `Macro Regime Mini-Panel`, `PA Scenario Board`, or `Position Risk Visual`.
+- Why it matters: chart scripts should not stay invisible, but visuals should also not appear in every note. The trigger policy makes macro charts appear when actual macro values affect strategy posture, PA charts appear around key levels or setup state changes, and position visuals appear only when portfolio risk needs inspection.
+- Next step: forward-test the policy in a fresh trading research chat with `macro-panel.json`, `portfolio_snapshot.csv`, and one DRAM/SOXX/QQQ rolling PA prompt.
+
+- Commit: pending
 - Scope: planning, docs, test
 - What changed: added the 1.0 Acceptance Plan in `docs/1.0_ACCEPTANCE.md` and registered `verify_1_0_acceptance_contract.py` in the core contract suite.
 - Why it matters: the project now has a fresh-chat user-workflow gate for the local trading research workflow, instead of treating 1.0 readiness as a loose list of modules. The plan keeps KVN model construction, option-flow vendors, real automations, public release tags, private runtime data, and broker write actions out of the acceptance scope.
