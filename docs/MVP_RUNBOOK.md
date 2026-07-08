@@ -67,6 +67,11 @@ missing or unauthorized, gives a concrete `下一步指引` with a copyable repl
 format, and refuses concrete trigger levels for tickers without trade horizon
 and instrument confirmation.
 
+For the complete user-workflow gate, use `docs/1.0_ACCEPTANCE.md`. The 1.0 acceptance
+path extends this smoke prompt into fresh-chat acceptance prompts for
+daily startup, weekly plan, intraday setup tracking, position daily report,
+rolling price action analysis, and two-stage trade review.
+
 ## Safety Boundary
 
 The MVP is decision support only. It uses public repo fixtures and does not

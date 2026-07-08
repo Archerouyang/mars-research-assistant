@@ -151,6 +151,7 @@ Rules:
 | Longbridge skill adapter contract | Done | `plugins/trading-research-system/skills/trading-research/references/longbridge-skill-adapter.md`; `runtime_health.py` reports `source_capability_health` for Longbridge broker skill, Longbridge Terminal CLI, Longbridge `macrodata`, IBKR connector, and manual snapshot |
 | Source Routing Boundary | Done | `CONTEXT.md`; `plugins/trading-research-system/skills/trading-research/references/macro-policy-filter.md`; `plugins/trading-research-system/skills/trading-research/references/output-templates.md`; `plugins/trading-research-system/assets/fixtures/expected/source-routing-longbridge-boundary.md`; Longbridge macrodata can support macro values but must not become the default source for news |
 | Fixture-backed local MVP | Done | `docs/MVP_RUNBOOK.md`; `scripts/verify-mvp.sh`; `scripts/verify-plugin.sh`; fixture runtime health, KVN snapshot, intraday scan, position daily report, and contract checks |
+| 1.0 Acceptance Plan | In progress | `docs/1.0_ACCEPTANCE.md`; `plugins/trading-research-system/scripts/verify_1_0_acceptance_contract.py`; defines `local trading research workflow` acceptance prompts before any public release tag |
 | Runtime bootstrap | Done | `plugins/trading-research-system/scripts/bootstrap_runtime.py`; `plugins/trading-research-system/scripts/verify_runtime_bootstrap_selftest.py`; `plugins/trading-research-system/scripts/verify_runtime_bootstrap_contract.py` |
 | Broker snapshot ingest | Done | `plugins/trading-research-system/scripts/broker_snapshot_ingest.py`; `plugins/trading-research-system/scripts/verify_broker_snapshot_ingest_selftest.py`; `plugins/trading-research-system/scripts/verify_broker_snapshot_ingest_contract.py`; fixture IBKR/Longbridge position exports normalize to `portfolio_snapshot.csv` |
 | Longbridge Terminal CLI adapter | Done | `plugins/trading-research-system/scripts/longbridge_cli_adapter.py`; `plugins/trading-research-system/scripts/verify_longbridge_cli_adapter_selftest.py`; `plugins/trading-research-system/scripts/verify_longbridge_cli_adapter_contract.py`; saved `longbridge portfolio --format json` snapshots normalize to `portfolio_snapshot.csv` without live broker reads or order actions |
@@ -339,11 +340,13 @@ Target result:
 
 ## Next Implementation Tasks
 
-1. Finalize Daily Ops Orchestrator fixtures and `ops-state.md` behavior before enabling real trading-operation automations.
-2. Add chart artifact generation from fixture-backed authorized OHLCV data.
-3. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
-4. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
-5. Connect real read-only source adapters to the standard runtime views:
+1. Run the `docs/1.0_ACCEPTANCE.md` fresh-chat acceptance prompts and fix any
+   gaps in the local trading research workflow before claiming 1.0 readiness.
+2. Finalize Daily Ops Orchestrator fixtures and `ops-state.md` behavior before enabling real trading-operation automations.
+3. Add chart artifact generation from fixture-backed authorized OHLCV data.
+4. Research option-flow data vendors and define the minimum anomaly schema outside the core MVP path.
+5. Create user-confirmed Codex automations for Active Market Plan deep update, quick update, intraday monitor, post-market review, position daily report, and scheduled macro/industry research monitor after cadence and data-source permissions are confirmed.
+6. Connect real read-only source adapters to the standard runtime views:
    Longbridge skill/Terminal CLI adapter for read-only broker facts, IBKR connector adapter
    for read-only broker/market facts, and Longbridge `macrodata` adapter for
    macro panel values.
