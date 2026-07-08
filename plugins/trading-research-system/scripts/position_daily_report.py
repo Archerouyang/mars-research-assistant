@@ -9,6 +9,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 import sys
+from typing import Callable
+
+
+LEVERAGED_PRODUCT_ROOTS = {"KORU", "MVLL", "MUU", "NVDL", "SOXL", "SQQQ", "TQQQ", "TSLL", "TSMX"}
+LEVERAGED_PRODUCT_MARKERS = ("2X", "3X", "LEVERAGED", "BULL", "BEAR")
 
 
 @dataclass(frozen=True)
@@ -133,10 +138,44 @@ def aggregate_weights(positions: list[Position], total_assets: float, field: str
     return dict(sorted(output.items(), key=lambda item: item[1], reverse=True))
 
 
+def aggregate_by_key(positions: list[Position], total_assets: float, key_fn: Callable[[Position], str]) -> dict[str, float]:
+    output: dict[str, float] = defaultdict(float)
+    if total_assets <= 0:
+        return {}
+    for position in positions:
+        output[key_fn(position)] += abs(position.market_value) / total_assets
+    return dict(sorted(output.items(), key=lambda item: item[1], reverse=True))
+
+
 def top_item(weights: dict[str, float]) -> tuple[str, float]:
     if not weights:
         return "-", 0.0
     return next(iter(weights.items()))
+
+
+def broker_account_key(position: Position) -> str:
+    return f"{position.broker}:{position.account_id}"
+
+
+def is_leveraged_product(position: Position) -> bool:
+    text = f"{position.symbol} {position.underlying} {position.instrument_type} {position.notes}".upper()
+    is_etf = "ETF" in position.instrument_type.upper()
+    if position.underlying in LEVERAGED_PRODUCT_ROOTS or position.symbol in LEVERAGED_PRODUCT_ROOTS:
+        return True
+    return is_etf and any(marker in text for marker in LEVERAGED_PRODUCT_MARKERS)
+
+
+def leveraged_weight(positions: list[Position], total_assets: float) -> float:
+    if total_assets <= 0:
+        return 0.0
+    return sum(abs(position.market_value) for position in positions if is_leveraged_product(position)) / total_assets
+
+
+def format_position_weights(positions: list[Position], total_assets: float, limit: int = 4) -> str:
+    if total_assets <= 0 or not positions:
+        return "none"
+    sorted_positions = sorted(positions, key=lambda position: abs(position.market_value), reverse=True)[:limit]
+    return ", ".join(f"{position.symbol} {pct(abs(position.market_value) / total_assets)}" for position in sorted_positions)
 
 
 def render_report(
@@ -155,6 +194,10 @@ def render_report(
     unrealized_pnl = sum(position.unrealized_pnl for position in positions)
     theme_weights = aggregate_weights(non_cash_positions(positions), total_assets, "theme_id")
     symbol_weights = aggregate_weights(non_cash_positions(positions), total_assets, "symbol")
+    instrument_weights = aggregate_weights(non_cash_positions(positions), total_assets, "instrument_type")
+    broker_weights = aggregate_by_key(positions, total_assets, broker_account_key)
+    leveraged_positions = [position for position in non_cash_positions(positions) if is_leveraged_product(position)]
+    leveraged_product_weight = leveraged_weight(non_cash_positions(positions), total_assets)
     top_theme, top_theme_weight = top_item(theme_weights)
     top_symbol, top_symbol_weight = top_item(symbol_weights)
 
@@ -171,6 +214,7 @@ def render_report(
         "",
         f"- 总资产 {money(total_assets)}；已投资 {pct(invested / total_assets) if total_assets else '0.0%'}；现金 {pct(cash / total_assets) if total_assets else '0.0%'}。",
         f"- 最大主题 `{top_theme}` 为 {pct(top_theme_weight)}；最大单一持仓 `{top_symbol}` 为 {pct(top_symbol_weight)}。",
+        f"- 产品暴露：{format_weights(instrument_weights)}；杠杆/单股 ETF {pct(leveraged_product_weight)}。",
         f"- 未实现盈亏合计 {money(unrealized_pnl)}；本报告只提示复核项，不生成任何订单动作。",
         "",
         "## 需要用户决策",
@@ -178,7 +222,16 @@ def render_report(
         "| 优先级 | 持仓/主题 | 问题 | 可选动作 | 需要确认 |",
         "| --- | --- | --- | --- | --- |",
     ]
-    for row in decision_rows(top_theme, top_theme_weight, top_symbol, top_symbol_weight, cash, total_assets):
+    for row in decision_rows(
+        top_theme,
+        top_theme_weight,
+        top_symbol,
+        top_symbol_weight,
+        cash,
+        total_assets,
+        leveraged_product_weight,
+        format_position_weights(leveraged_positions, total_assets),
+    ):
         lines.append("| {} | {} | {} | {} | {} |".format(*row))
 
     lines.extend(
@@ -189,6 +242,9 @@ def render_report(
             "| 风险 | 当前状态 | 变化 | 影响 | 需要观察 |",
             "| --- | --- | --- | --- | --- |",
             f"| 集中度 | `{top_theme}` {pct(top_theme_weight)} / `{top_symbol}` {pct(top_symbol_weight)} | 来自当前 snapshot | 限制新增同向风险 | Active Market Plan risk budget |",
+            f"| 产品结构 | {format_weights(instrument_weights)} | 来自当前 snapshot | 区分核心 ETF、行业 ETF、个股和杠杆产品 | instrument-specific risk budget |",
+            f"| 杠杆/单股 ETF | {format_position_weights(leveraged_positions, total_assets)} | 来自当前 snapshot | 路径依赖、波动衰减和隔夜风险需单独复核 | holding period / event risk |",
+            f"| Broker exposure | {format_weights(broker_weights)} | 来自当前 snapshot | 防止漏读账户导致仓位判断失真 | broker authorization and stale data |",
             f"| 现金 | {pct(cash / total_assets) if total_assets else '0.0%'} | 来自当前 snapshot | 决定是否有新增仓位空间 | buying power / planned adds |",
             f"| Broker coverage | {coverage} | {data_status} | 缺失来源会降低置信度 | authorization and stale data |",
         ]
@@ -209,7 +265,10 @@ def render_report(
     )
     for position in sorted(non_cash_positions(positions), key=lambda item: abs(item.market_value), reverse=True):
         weight = abs(position.market_value) / total_assets if total_assets else 0.0
-        action = "继续持有；新增同主题风险前先复核" if weight >= 0.25 else "继续观察；按 setup/计划复核"
+        if is_leveraged_product(position):
+            action = "继续观察；新增或隔夜前复核路径风险"
+        else:
+            action = "继续持有；新增同主题风险前先复核" if weight >= 0.25 else "继续观察；按 setup/计划复核"
         lines.append(
             "| {symbol} | {theme} / {instrument} | weight {weight}; uPnL {pnl} | {action} | {notes} |".format(
                 symbol=position.symbol,
@@ -229,6 +288,9 @@ def render_report(
             "",
             f"- Allocation by symbol: {format_weights(symbol_weights)}",
             f"- Theme / sector exposure: {format_weights(theme_weights)}",
+            f"- Instrument exposure: {format_weights(instrument_weights)}",
+            f"- Broker / account exposure: {format_weights(broker_weights)}",
+            f"- Leveraged / path-risk exposure: {format_position_weights(leveraged_positions, total_assets)}",
             f"- PnL contribution: total unrealized {money(unrealized_pnl)}",
             f"- Risk heatmap: top theme `{top_theme}` and top symbol `{top_symbol}` need review before adding correlated exposure.",
             "",
@@ -249,6 +311,8 @@ def decision_rows(
     top_symbol_weight: float,
     cash: float,
     total_assets: float,
+    leveraged_product_weight: float,
+    leveraged_product_text: str,
 ) -> list[tuple[str, str, str, str, str]]:
     rows: list[tuple[str, str, str, str, str]] = []
     if top_theme_weight >= 0.35:
@@ -274,6 +338,17 @@ def decision_rows(
     cash_weight = cash / total_assets if total_assets else 0.0
     if cash_weight >= 0.05:
         rows.append(("P2", "cash", f"现金 {pct(cash_weight)}", "保留 / 等待计划内 setup / 补充风险缓冲", "今日是否有计划内新增风险"))
+    if leveraged_product_weight > 0:
+        priority = "P1" if leveraged_product_weight >= 0.05 else "P2"
+        rows.append(
+            (
+                priority,
+                "杠杆/单股 ETF",
+                f"暴露 {pct(leveraged_product_weight)} ({leveraged_product_text})",
+                "维持 / 暂停新增 / 降低路径风险",
+                "是否允许继续叠加杠杆或隔夜风险",
+            )
+        )
     if not rows:
         rows.append(("P2", "portfolio", "无 P0/P1 决策", "继续观察", "下次 broker read"))
     return rows

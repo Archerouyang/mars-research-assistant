@@ -47,7 +47,7 @@ Keep the output concise and decision-useful:
 
 1. **结论**: one to three bullets on today’s portfolio posture.
 2. **需要用户决策**: only decisions that matter today.
-3. **风险变化**: concentration, cash/margin, leverage, option expiry, event risk, correlated beta, and theme crowding.
+3. **风险变化**: concentration, instrument/product structure, broker/account exposure, cash/margin, leveraged-product exposure, option expiry, event risk, correlated beta, and theme crowding.
 4. **持仓影响**: existing holdings that need add/trim/hold/review attention according to the Active Market Plan.
 5. **可视化**: links or requested artifacts for allocation, PnL contribution, theme exposure, and risk flags.
 6. **缺口**: missing broker permissions, stale data, unavailable history, or fields that require user confirmation.
@@ -60,6 +60,8 @@ When chart artifacts are generated, prefer:
 - allocation by theme/sector;
 - daily or since-open PnL contribution when available;
 - unrealized PnL by holding;
+- instrument/product exposure;
+- broker/account exposure;
 - cash, margin, and buying power bands;
 - option expiry and leveraged-product exposure;
 - concentration heatmap.

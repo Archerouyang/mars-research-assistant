@@ -29,6 +29,14 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-08
+
+- Commit: pending
+- Scope: script, fixture, reference, test
+- What changed: strengthened `position_daily_report.py` so broker-live position reports now summarize instrument/product exposure, broker/account exposure, and leveraged or single-stock ETF path risk. The fixture now includes TSMX/MVLL-style Longbridge ETF rows, and the position daily report selftest plus contract are registered in the core contract suite.
+- Why it matters: after Longbridge/IBKR positions are normalized into `portfolio_snapshot.csv`, the user sees the risk structure that affects decisions, not just a flat holding list. This helps separate core ETF exposure, sector ETF exposure, common stock exposure, cash, and leveraged-product risk before adding or reducing positions.
+- Next step: connect the Longbridge skill / Longbridge Terminal CLI and IBKR read-only adapter paths into the same runtime snapshot flow, then forward-test a real private position daily report outside the public repo.
+
 ## 2026-07-07
 
 - Commit: pending
