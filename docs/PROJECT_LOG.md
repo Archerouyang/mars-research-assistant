@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: planning, acceptance
+- What changed: recorded the first fresh-chat 1.0 acceptance run in `docs/1.0_ACCEPTANCE_RESULTS.md`. Six user workflow prompts were tested from fresh chats: 4 PASS, 2 PARTIAL, 0 FAIL. The two partials are the formal intraday setup scan and rolling PA update, both blocked by missing runtime package and fresh market/macro inputs rather than router or skill-contract failure.
+- Why it matters: the project now has a concrete readiness trajectory for the local 1.0 workflow instead of a broad module checklist. It also separates plugin behavior that is already acceptable from runtime/live-source gaps that still need private forward testing.
+- Next step: fix or forward-test the P0 gaps: daily runtime package creation, `macro-panel.json` generation, authorized read-only broker adapters, PA OHLCV/current-price inputs, and runtime snapshot repair.
+
+- Commit: pending
 - Scope: reference, skill, template, docs, test
 - What changed: added the Visual Trigger Policy in `visual-trigger-policy.md` and registered `verify_visual_trigger_contract.py` in the core contract suite. Daily Ops, weekly planning, daily tracking, rolling PA, intraday scan, and position daily report now have explicit rules for when to show `Macro Regime Mini-Panel`, `PA Scenario Board`, or `Position Risk Visual`.
 - Why it matters: chart scripts should not stay invisible, but visuals should also not appear in every note. The trigger policy makes macro charts appear when actual macro values affect strategy posture, PA charts appear around key levels or setup state changes, and position visuals appear only when portfolio risk needs inspection.
