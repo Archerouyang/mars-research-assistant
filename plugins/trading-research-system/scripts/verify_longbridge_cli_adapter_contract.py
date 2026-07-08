@@ -73,6 +73,7 @@ REQUIRED = {
         "longbridge_cli_adapter.py",
         "No live broker reads",
         "No order actions",
+        "FX-convert",
         "must not run `longbridge order buy`",
     ],
     "broker_contract": [
@@ -80,6 +81,7 @@ REQUIRED = {
         "longbridge_cli_adapter.py",
         "portfolio --format json",
         "No live broker reads",
+        "FX conversion",
         "order actions",
     ],
     "root_readme": ["Longbridge Terminal CLI", "longbridge_cli_adapter.py", "No live broker reads"],

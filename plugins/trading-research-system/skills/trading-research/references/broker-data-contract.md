@@ -111,6 +111,11 @@ python3 plugins/trading-research-system/scripts/longbridge_cli_adapter.py \
 It does not run the Longbridge CLI, perform live broker reads, call market
 data, or create/modify/cancel/submit orders.
 
+The CLI adapter preserves each row's source currency and does not perform FX
+conversion. Downstream reports must not aggregate multi-currency rows as one
+currency unless a separate authorized FX conversion step has produced converted
+values.
+
 ## Portfolio Snapshot Schema
 
 Required columns:

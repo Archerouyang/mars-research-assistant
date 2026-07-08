@@ -161,6 +161,10 @@ The adapter consumes saved Longbridge CLI JSON only. It reports the required
 contract phrases `No live broker reads` and `No order actions`; it never
 creates, modifies, cancels, or submits orders.
 
+The adapter preserves each row's source currency and does not perform FX
+conversion. Multi-currency position reports need a separate authorized FX
+conversion step before totals are treated as one-currency exposure.
+
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the
 Longbridge skill/plugin/Terminal CLI and IBKR connector. Manual CSV remains a reduced fallback

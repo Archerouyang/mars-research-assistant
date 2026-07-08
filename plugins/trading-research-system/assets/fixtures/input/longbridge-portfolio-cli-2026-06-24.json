@@ -36,10 +36,10 @@
     },
     {
       "currency": "HKD",
-      "total_amount": "0.00",
-      "balance": "0.00",
+      "total_amount": "1000.00",
+      "balance": "1000.00",
       "frozen_cash": "0.00",
-      "withdraw_cash": "0.00"
+      "withdraw_cash": "1000.00"
     }
   ],
   "holdings": [
@@ -66,6 +66,18 @@
       "market_value_usd": "22950.00",
       "market_price": "765.00",
       "prev_close": "760.00"
+    },
+    {
+      "symbol": "700.HK",
+      "name": "Tencent Holdings",
+      "currency": "HKD",
+      "quantity": "10",
+      "available_quantity": "10",
+      "cost_price": "300.00",
+      "market_value": "3500.00",
+      "market_value_usd": "448.00",
+      "market_price": "350.00",
+      "prev_close": "345.00"
     }
   ]
 }

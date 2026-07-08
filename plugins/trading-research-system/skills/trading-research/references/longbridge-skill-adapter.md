@@ -84,6 +84,11 @@ The CLI adapter must disclose:
 - the source JSON file or stdin;
 - the snapshot timestamp used for `source_timestamp`.
 
+It preserves each position or cash row's source currency and does not
+FX-convert values. If a portfolio snapshot contains multiple currencies,
+downstream reports must either convert through a separate authorized FX step or
+label total exposure as multi-currency / partial.
+
 The CLI adapter must not run `longbridge order buy`, `longbridge order sell`,
 `longbridge order cancel`, `longbridge order replace`, or any other broker write
 command.

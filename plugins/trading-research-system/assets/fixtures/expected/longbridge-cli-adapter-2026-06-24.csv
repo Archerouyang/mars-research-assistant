@@ -1,4 +1,6 @@
 as_of,broker,account_id,symbol,underlying,instrument_type,direction,quantity,avg_cost,market_price,market_value,currency,unrealized_pnl,realized_pnl,delta_exposure,notional_exposure,theme_id,source_timestamp,notes
 2026-06-24T20:00:00Z,Longbridge,SIM-LB,CRDO.US,CRDO,stock_common,long,100,118,121,12100,USD,300,0,12100,12100,unmapped,2026-06-24T20:00:00Z,Longbridge CLI portfolio JSON; Credo Technology
 2026-06-24T20:00:00Z,Longbridge,SIM-LB,QQQ.US,QQQ,stock_common,long,30,700,765,22950,USD,1950,0,22950,22950,unmapped,2026-06-24T20:00:00Z,Longbridge CLI portfolio JSON; Invesco QQQ Trust
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,700.HK,700,stock_common,long,10,300,350,3500,HKD,500,0,3500,3500,unmapped,2026-06-24T20:00:00Z,Longbridge CLI portfolio JSON; Tencent Holdings
 2026-06-24T20:00:00Z,Longbridge,SIM-LB,CASH,USD,cash,long,1,15000,15000,15000,USD,0,0,0,0,cash,2026-06-24T20:00:00Z,Longbridge CLI portfolio JSON cash balance
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,CASH,HKD,cash,long,1,1000,1000,1000,HKD,0,0,0,0,cash,2026-06-24T20:00:00Z,Longbridge CLI portfolio JSON cash balance

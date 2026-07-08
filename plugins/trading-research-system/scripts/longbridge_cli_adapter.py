@@ -97,7 +97,7 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
     quantity = decimal_or_zero(holding.get("quantity"))
     avg_cost = decimal_or_zero(holding.get("cost_price"))
     market_price = decimal_or_zero(holding.get("market_price"))
-    market_value = decimal_or_zero(holding.get("market_value_usd") or holding.get("market_value"))
+    market_value = decimal_or_zero(holding.get("market_value") or holding.get("market_value_usd"))
     if market_value == 0 and market_price != 0:
         market_value = quantity * market_price
     unrealized = market_value - (quantity * avg_cost)
