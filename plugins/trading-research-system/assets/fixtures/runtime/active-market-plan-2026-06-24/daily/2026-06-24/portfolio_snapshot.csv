@@ -2,4 +2,6 @@ as_of,broker,account_id,symbol,underlying,instrument_type,direction,quantity,avg
 2026-06-24T20:00:00Z,IBKR,SIM-IBKR,QQQ,QQQ,etf_common,long,50,700,725,36250,USD,1250,0,36250,36250,tech_beta,2026-06-24T20:00:00Z,core ETF fixture
 2026-06-24T20:00:00Z,IBKR,SIM-IBKR,SOXX,SOXX,sector_etf,long,80,245,260,20800,USD,1200,0,20800,20800,semiconductor,2026-06-24T20:00:00Z,semiconductor fixture
 2026-06-24T20:00:00Z,Longbridge,SIM-LB,CRDO,CRDO,stock_common,long,100,118,121,12100,USD,300,0,12100,12100,ai-infra-momentum,2026-06-24T20:00:00Z,synthetic broker-live fixture
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,TSMX,TSMX,etf_common,long,10,60,70,700,USD,100,0,700,700,ai-hardware-leverage,2026-06-24T20:00:00Z,leveraged ETF fixture; 2x TSM exposure
+2026-06-24T20:00:00Z,Longbridge,SIM-LB,MVLL,MVLL,etf_common,long,5,40,42,210,USD,10,0,210,210,ai-hardware-leverage,2026-06-24T20:00:00Z,leveraged ETF fixture; 2x MRVL exposure
 2026-06-24T20:00:00Z,Longbridge,SIM-LB,CASH,USD,cash,long,1,15000,15000,15000,USD,0,0,0,0,cash,2026-06-24T20:00:00Z,cash fixture
