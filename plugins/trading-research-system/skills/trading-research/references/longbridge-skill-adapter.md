@@ -119,6 +119,21 @@ The macro panel must preserve `value`, `change_5d`, `change_20d` when available,
 `threshold`, `source`, and `timestamp`. If Longbridge macrodata is unavailable,
 use official source fallback or mark the macro read degraded.
 
+When an authorized Longbridge macrodata read has been saved or passed into the
+runtime, normalize it with:
+
+```bash
+python3 plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
+  --macrodata-json /path/to/longbridge-macrodata.json \
+  --output {runtime_dir}/daily/YYYY-MM-DD/macro-panel.json \
+  --as-of YYYY-MM-DDTHH:MM:SSZ
+```
+
+The adapter reports `No live macrodata reads`, `not a broker account source`,
+and `No order actions`. It standardizes the minimum macro panel into
+`macro-panel.json`; it does not call Longbridge by itself and does not replace
+official S0 policy/news confirmation.
+
 ## Safety Boundary
 
 The Longbridge skill adapter is read-only. It must not create, submit, cancel,

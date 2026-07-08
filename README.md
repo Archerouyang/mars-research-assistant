@@ -135,7 +135,7 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
 - 安装后首次交易研究日程或初始化 runtime 时询问启用哪些 broker 来源；v1 正式支持 Longbridge skill/plugin/Terminal CLI 和 IBKR connector。手动 CSV 只作为单次运行或 fixture 的降级 fallback。
 - 券商只读来源设置只确认 read-only 来源偏好，不自动读取账户、不自动安装软件、不写 public repo，也不允许任何下单/改单/撤单动作。
-- Longbridge `macrodata` 可作为宏观数据和金融条件读取源；政策事实和官方讲话仍需优先用 S0 官方来源确认。
+- Longbridge `macrodata` 可作为宏观数据和金融条件读取源；已授权读取到的 macrodata JSON 可用 `longbridge_macrodata_adapter.py` 归一成标准 `macro-panel.json`。政策事实和官方讲话仍需优先用 S0 官方来源确认。该 adapter 只消费已保存 JSON，输出 `No live macrodata reads`，且不是 broker account source。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
 - Google Sheets 是可选摘要展示层，不做双向同步，也不维护交易记录。
 - 研报只能来自公开、授权或用户提供内容；不可访问内容只能标记为 inaccessible。
