@@ -107,6 +107,12 @@ reply format such as:
 允许/不允许初始化今天 runtime 草稿。
 ```
 
+If `daily/YYYY-MM-DD/`, `trade-plans.csv`, or `intraday-watchlist.csv` is
+missing, propose `prepare_daily_runtime.py --dry-run` first. After confirmation,
+`prepare_daily_runtime.py` may initialize today runtime 草稿 with header-only
+`trade-plans.csv` and `intraday-watchlist.csv`; it 不会覆盖已有文件 by default,
+does not read broker/market data, and does not create setup rows.
+
 ## 为什么现在做这一步
 
 Explain the routing reason in one or two bullets.

@@ -130,6 +130,19 @@ Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏
 
 `trading-profile.md` 是私有策略配置层，用来记录使用者自己的策略评分、主动交易池、ETF 组合、交易工具、时间框架、拥挤度模型和风控偏好。public plugin 只提供模板，不内置某个使用者的具体交易模型。
 
+### Daily runtime package
+
+每天进入正式盘中扫描前，可以先用 `prepare_daily_runtime.py` 准备当天
+Daily runtime package。它只创建 header-only 的本地容器，例如
+`trade-plans.csv`、`intraday-watchlist.csv`、当天 update note 和缺失的
+`ops-state.md`；No live broker reads，不调用行情，不创建或修改订单，默认不覆盖已有文件。
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py \
+  --date 2026-07-08 \
+  --dry-run
+```
+
 ## 数据和连接边界
 
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。

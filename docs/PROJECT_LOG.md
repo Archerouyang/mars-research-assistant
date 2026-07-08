@@ -32,6 +32,12 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: script, template, reference, docs, test
+- What changed: added Daily runtime package preparation. `prepare_daily_runtime.py` can dry-run or create today's `ops-state.md`, update note, `trade-plans.csv`, `intraday-watchlist.csv`, and other header-only daily containers without overwriting existing user files. `intraday_scan.py` now handles an empty/header-only watchlist as a valid "no prepared setup rows" state instead of a script failure.
+- Why it matters: a fresh Daily Ops chat can move from missing daily package to formal runtime-ready state without copying fixture examples or inventing setup rows. This directly addresses the 1.0 acceptance PARTIAL where intraday scan failed because today's `trade-plans.csv` and `intraday-watchlist.csv` were missing.
+- Next step: forward-test the package preparation in a fresh Daily Ops chat, then wire macro-panel generation and live read-only broker adapters.
+
+- Commit: pending
 - Scope: reference, skill, template, docs, test
 - What changed: added the Visual Trigger Policy in `visual-trigger-policy.md` and registered `verify_visual_trigger_contract.py` in the core contract suite. Daily Ops, weekly planning, daily tracking, rolling PA, intraday scan, and position daily report now have explicit rules for when to show `Macro Regime Mini-Panel`, `PA Scenario Board`, or `Position Risk Visual`.
 - Why it matters: chart scripts should not stay invisible, but visuals should also not appear in every note. The trigger policy makes macro charts appear when actual macro values affect strategy posture, PA charts appear around key levels or setup state changes, and position visuals appear only when portfolio risk needs inspection.
