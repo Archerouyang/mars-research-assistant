@@ -68,6 +68,18 @@
       "prev_close": "760.00"
     },
     {
+      "symbol": "TSMX.US",
+      "name": "Direxion Daily TSM Bull 2X Shares",
+      "currency": "USD",
+      "quantity": "10",
+      "available_quantity": "10",
+      "cost_price": "60.00",
+      "market_value": "700.00",
+      "market_value_usd": "700.00",
+      "market_price": "70.00",
+      "prev_close": "68.00"
+    },
+    {
       "symbol": "700.HK",
       "name": "Tencent Holdings",
       "currency": "HKD",
