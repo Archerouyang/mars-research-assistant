@@ -74,6 +74,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("router", "verify_router_contract.py"),
     ("contract-suite-selftest", "verify_contract_suite_selftest.py"),
     ("contract-suite-contract", "verify_contract_suite_contract.py"),
+    ("runtime-health-selftest", "verify_runtime_health_selftest.py"),
+    ("runtime-health-contract", "verify_runtime_health_contract.py"),
     ("runtime-state-selftest", "verify_runtime_state_selftest.py"),
     ("runtime-state-contract", "verify_runtime_state_contract.py"),
     ("runtime-bootstrap-selftest", "verify_runtime_bootstrap_selftest.py"),

@@ -65,6 +65,7 @@ def main() -> int:
         assert_status(checks, "trading_profile", "missing")
         assert_status(checks, "updates_dir", "available")
         assert_status(checks, "daily_dir", "available")
+        assert_status(checks, "macro_panel", "missing")
         assert_status(checks, "kvn_store", "available")
         assert_status(checks, "longbridge_broker_source", "unauthorized")
         assert_status(checks, "ibkr_broker_source", "unauthorized")
@@ -118,6 +119,33 @@ def main() -> int:
         assert_status(sourced_capabilities, "longbridge_terminal_cli", "available")
         assert_status(sourced_capabilities, "longbridge_macrodata", "not_installed")
         assert_status(sourced_capabilities, "ibkr_connector", "not_installed")
+
+        (daily_dir / "macro-panel.json").write_text('{"PRIVATE": "MACRO PANEL SECRET"}\n', encoding="utf-8")
+        macro_panel_result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--runtime-dir",
+                str(runtime_dir),
+                "--date",
+                "2026-07-04",
+                "--format",
+                "json",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        if macro_panel_result.returncode != 0:
+            raise AssertionError(
+                f"runtime health macro panel command failed: {macro_panel_result.stderr or macro_panel_result.stdout}"
+            )
+        if "PRIVATE" in macro_panel_result.stdout:
+            raise AssertionError("runtime health leaked private macro-panel file content")
+        macro_panel_payload = json.loads(macro_panel_result.stdout)
+        macro_panel_checks = {item["id"]: item for item in macro_panel_payload["checks"]}
+        assert_status(macro_panel_checks, "macro_panel", "available")
 
     print("runtime health selftest ok")
     return 0

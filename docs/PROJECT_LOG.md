@@ -44,6 +44,12 @@ Use this shape:
 - Next step: forward-test the package preparation in a fresh Daily Ops chat, then wire macro-panel generation and live read-only broker adapters.
 
 - Commit: pending
+- Scope: script, reference, test
+- What changed: added `macro_panel` to `runtime_health.py` so Daily Ops checks `daily/YYYY-MM-DD/macro-panel.json` as a first-class runtime view. `verify_runtime_health_selftest.py` now proves the check reports missing/available without leaking JSON contents, and runtime-health selftest/contract are registered in the core contract suite.
+- Why it matters: macro-panel availability is now visible in the standard Daily Ops startup health path, instead of only being implied by the Longbridge macrodata adapter docs. This closes the "macro-panel status not first-class" part of the 1.0 acceptance gap.
+- Next step: forward-test real Longbridge macrodata output into `macro-panel.json`, then rerun weekly/daily prompts with actual macro reads.
+
+- Commit: pending
 - Scope: reference, skill, template, docs, test
 - What changed: added the Visual Trigger Policy in `visual-trigger-policy.md` and registered `verify_visual_trigger_contract.py` in the core contract suite. Daily Ops, weekly planning, daily tracking, rolling PA, intraday scan, and position daily report now have explicit rules for when to show `Macro Regime Mini-Panel`, `PA Scenario Board`, or `Position Risk Visual`.
 - Why it matters: chart scripts should not stay invisible, but visuals should also not appear in every note. The trigger policy makes macro charts appear when actual macro values affect strategy posture, PA charts appear around key levels or setup state changes, and position visuals appear only when portfolio risk needs inspection.
