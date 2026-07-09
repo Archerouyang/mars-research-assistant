@@ -134,6 +134,13 @@ conversion. Downstream reports must not aggregate multi-currency rows as one
 currency unless a separate authorized FX conversion step has produced converted
 values.
 
+After adapter output is available, use `repair_portfolio_snapshot.py` when a
+standard `portfolio_snapshot.csv` has stale or unmapped product/theme fields.
+This repair step remaps `underlying`, `instrument_type`, and `theme_id` from
+known symbol/product rules and appends a `Snapshot repair:` note. It consumes
+the existing runtime CSV only; No live broker reads, no market-data calls, and
+No order actions.
+
 ## Portfolio Snapshot Schema
 
 Required columns:

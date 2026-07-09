@@ -113,6 +113,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("ibkr-connector-adapter-contract", "verify_ibkr_connector_adapter_contract.py"),
     ("longbridge-cli-adapter-selftest", "verify_longbridge_cli_adapter_selftest.py"),
     ("longbridge-cli-adapter-contract", "verify_longbridge_cli_adapter_contract.py"),
+    ("portfolio-snapshot-repair-selftest", "verify_repair_portfolio_snapshot_selftest.py"),
+    ("portfolio-snapshot-repair-contract", "verify_repair_portfolio_snapshot_contract.py"),
     ("longbridge-macrodata-adapter-selftest", "verify_longbridge_macrodata_adapter_selftest.py"),
     ("longbridge-macrodata-adapter-contract", "verify_longbridge_macrodata_adapter_contract.py"),
     ("prepare-macro-panel-selftest", "verify_prepare_macro_panel_selftest.py"),

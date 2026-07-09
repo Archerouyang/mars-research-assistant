@@ -33,6 +33,17 @@ Use this shape:
 
 - Commit: pending
 - Scope: script, reference, docs, test
+- What changed: added Runtime snapshot normalization repair via
+  `repair_portfolio_snapshot.py`. The script remaps stale or unmapped
+  `portfolio_snapshot.csv` product/theme fields such as ETF, sector ETF,
+  leveraged ETF, and AI hardware theme exposure before position daily reports.
+- Why it matters: position daily reports can now repair stale adapter mappings
+  instead of showing misleading product/theme concentration.
+- Next step: forward-test on the latest private runtime snapshot and only
+  overwrite the runtime file after user confirmation.
+
+- Commit: pending
+- Scope: script, reference, docs, test
 - What changed: added PA OHLCV rollforward via `price_action_rollforward.py`.
   The script turns authorized or user-provided OHLCV JSON into a consistent
   rolling PA note with explicit main/aux timeframes, support/resistance,

@@ -148,6 +148,19 @@ uv run python plugins/trading-research-system/scripts/longbridge_cli_adapter.py 
   --as-of 2026-07-06T20:00:00Z
 ```
 
+### Portfolio snapshot repair
+
+如果已有 `portfolio_snapshot.csv` 里的 ETF/杠杆 ETF/主题字段明显 stale，
+例如 `QQQ.US` 被当作普通股票，或 `TSMX.US` 没有识别为杠杆 ETF，可以先用
+`repair_portfolio_snapshot.py` 修复 stale/unmapped product/theme，再生成持仓日报。
+它只消费现有 runtime CSV；`No live broker reads`，`No order actions`。
+
+```bash
+uv run python plugins/trading-research-system/scripts/repair_portfolio_snapshot.py \
+  --input ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.repaired.csv
+```
+
 Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏感摘要、持仓日报索引或可视化结果，不保存逐笔 broker facts。
 
 `trading-profile.md` 是私有策略配置层，用来记录使用者自己的策略评分、主动交易池、ETF 组合、交易工具、时间框架、拥挤度模型和风控偏好。public plugin 只提供模板，不内置某个使用者的具体交易模型。

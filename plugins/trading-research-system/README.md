@@ -31,6 +31,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Broker-live runtime view templates for read-only Longbridge skill/plugin and IBKR connector sources, with manual CSV as a reduced one-off fallback.
 - Local planning, report snapshot, and review-context templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
+- `repair_portfolio_snapshot.py` for stale/unmapped product/theme cleanup in standard `portfolio_snapshot.csv` before position daily reports.
 - `price_action_rollforward.py` for OHLCV-backed rolling price-action notes with timeframe-labeled support/resistance, proportional add/trim zones, and weekly event mapping.
 - On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
@@ -240,6 +241,22 @@ creates, modifies, cancels, or submits orders.
 The adapter preserves each row's source currency and does not perform FX
 conversion. Multi-currency position reports need a separate authorized FX
 conversion step before totals are treated as one-currency exposure.
+
+## Portfolio Snapshot Repair
+
+When a standard `portfolio_snapshot.csv` has stale/unmapped product/theme fields
+after an adapter run, use `repair_portfolio_snapshot.py` before rendering the
+position daily report:
+
+```bash
+uv run python plugins/trading-research-system/scripts/repair_portfolio_snapshot.py \
+  --input ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.repaired.csv
+```
+
+The repair script consumes existing runtime CSV only. It reports
+`No live broker reads` and `No order actions`; it never reads live broker
+accounts or creates orders.
 
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the
