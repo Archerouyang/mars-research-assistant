@@ -120,6 +120,7 @@ Use these statuses:
 | P1 | done | Add macro-panel runtime health check | Makes Daily Ops report whether today's standard macro panel is available, missing, or stale before macro/rates strategy posture claims. | `runtime_health.py` now checks `daily/YYYY-MM-DD/macro-panel.json`; runtime-health selftest/contract are registered in the core suite. |
 | P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
 | P1 | done | Define Longbridge Skill Adapter contract | Distinguishes `longbridge_broker_skill` from `longbridge_macrodata` and makes runtime health report `source_capability_health` before Daily Ops uses either. | Use `verify_longbridge_skill_adapter_contract.py`; current-chat visibility is a capability status, not proof that Longbridge does not exist. |
+| P1 | done | Macro panel runtime preparation | Connects saved Longbridge macrodata or official fallback JSON to the dated runtime `macro-panel.json` without inventing macro reads. | Use `prepare_macro_panel.py --macrodata-json`; missing input should produce next-step guidance, not a fake macro panel. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
 | P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
 | P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
@@ -196,11 +197,15 @@ Date: 2026-07-09
 - Completed: fixed packaged contract path resolution so installed plugin
   verifiers can use the project checkout from cwd for repo docs while keeping
   plugin files rooted in the installed cache.
+- Completed: added Macro panel runtime preparation. `prepare_macro_panel.py`
+  writes the standard dated `macro-panel.json` from saved macrodata JSON,
+  preserves existing panels by default, and gives missing-input guidance instead
+  of inventing macro values.
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
-  compileall, `git diff --check`, and installed-cache 1.0/IBKR contract checks
-  pass.
-- Next: continue with macro-panel live path, Longbridge read-only forward test,
+  compileall, `git diff --check`, installed-cache 1.0/IBKR contract checks, and
+  macro-panel preparation selftest/contract pass.
+- Next: continue with live Longbridge macrodata visibility, Longbridge read-only forward test,
   PA market-data inputs, setup-row population, and snapshot repair.
 
 ### 2026-07-08

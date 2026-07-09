@@ -123,14 +123,18 @@ When an authorized Longbridge macrodata read has been saved or passed into the
 runtime, normalize it with:
 
 ```bash
-python3 plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
+python3 plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date YYYY-MM-DD \
   --macrodata-json /path/to/longbridge-macrodata.json \
-  --output {runtime_dir}/daily/YYYY-MM-DD/macro-panel.json \
   --as-of YYYY-MM-DDTHH:MM:SSZ
 ```
 
-The adapter reports `No live macrodata reads`, `not a broker account source`,
-and `No order actions`. It standardizes the minimum macro panel into
+`prepare_macro_panel.py` is the runtime wrapper around
+`longbridge_macrodata_adapter.py`: it writes the standard
+`{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`, keeps existing files by
+default, and requires `--overwrite` before refreshing an existing panel. The
+adapter reports `No live macrodata reads`, `not a broker account source`, and
+`No order actions`. It standardizes the minimum macro panel into
 `macro-panel.json`; it does not call Longbridge by itself and does not replace
 official S0 policy/news confirmation.
 

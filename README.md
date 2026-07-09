@@ -153,6 +153,22 @@ Daily runtime package。它只创建 header-only 的本地容器，例如
 `trade-plans.csv`、`intraday-watchlist.csv`、当天 update note 和缺失的
 `ops-state.md`；No live broker reads，不调用行情，不创建或修改订单，默认不覆盖已有文件。
 
+### Macro panel runtime preparation
+
+当 Longbridge `macrodata` 或官方 fallback 已经授权读取并保存成 JSON 后，用
+`prepare_macro_panel.py` 写入当天标准 `macro-panel.json`。如果没有传入
+`--macrodata-json`，脚本只提示下一步，不伪造宏观读数。它输出
+`No live macrodata reads`、`not a broker account source` 和
+`No order actions`，默认保留已有 `macro-panel.json`，需要确认后才用
+`--overwrite` 刷新。
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date 2026-07-06 \
+  --macrodata-json /tmp/longbridge-macrodata.json \
+  --as-of 2026-07-06T20:00:00Z
+```
+
 ```bash
 uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py \
   --date 2026-07-08 \

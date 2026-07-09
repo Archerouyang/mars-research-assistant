@@ -64,11 +64,15 @@ When Longbridge macrodata values are available as saved or tool-returned JSON,
 normalize them into the standard runtime view:
 
 ```bash
-python3 plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
+python3 plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date YYYY-MM-DD \
   --macrodata-json /path/to/longbridge-macrodata.json \
-  --output {runtime_dir}/daily/YYYY-MM-DD/macro-panel.json \
   --as-of YYYY-MM-DDTHH:MM:SSZ
 ```
+
+`prepare_macro_panel.py` wraps `longbridge_macrodata_adapter.py` for the private
+runtime path and reports `No live macrodata reads`; it does not invent values
+when `--macrodata-json` is missing.
 
 The standard `macro-panel.json` preserves `value`, `change_5d`, `change_20d`,
 `threshold`, `source`, `timestamp`, `strategy_posture`, and

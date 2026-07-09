@@ -112,6 +112,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("longbridge-cli-adapter-contract", "verify_longbridge_cli_adapter_contract.py"),
     ("longbridge-macrodata-adapter-selftest", "verify_longbridge_macrodata_adapter_selftest.py"),
     ("longbridge-macrodata-adapter-contract", "verify_longbridge_macrodata_adapter_contract.py"),
+    ("prepare-macro-panel-selftest", "verify_prepare_macro_panel_selftest.py"),
+    ("prepare-macro-panel-contract", "verify_prepare_macro_panel_contract.py"),
 )
 
 SUITES: Mapping[str, tuple[tuple[str, str], ...]] = {

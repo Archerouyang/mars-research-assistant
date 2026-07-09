@@ -140,6 +140,9 @@ After the startup health block, apply `visual-trigger-policy.md`:
   generate or request a `Position Risk Visual`;
 - if either file is missing or stale, say why no visual appears instead of
   silently skipping the chart.
+- if `macro-panel.json` is missing but a saved Longbridge macrodata or official
+  fallback JSON is available, suggest `prepare_macro_panel.py --macrodata-json`
+  as the next runtime step instead of inventing macro values.
 
 ## 券商只读来源设置
 

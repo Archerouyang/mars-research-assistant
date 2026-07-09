@@ -138,6 +138,26 @@ uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py -
 uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08
 ```
 
+## Macro panel runtime preparation
+
+Use `prepare_macro_panel.py` after an authorized Longbridge macrodata read or
+official fallback collection has been saved as private JSON. It writes the
+standard `daily/YYYY-MM-DD/macro-panel.json` view used by Daily Ops, weekly
+updates, macro visuals, and strategy posture checks. If `--macrodata-json` is
+not supplied, it prints the missing-input next step and does not invent macro
+values.
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date 2026-07-06 \
+  --macrodata-json /tmp/longbridge-macrodata.json \
+  --as-of 2026-07-06T20:00:00Z
+```
+
+The script consumes saved JSON only. It reports `No live macrodata reads`,
+`not a broker account source`, and `No order actions`, and it keeps an existing
+`macro-panel.json` unless `--overwrite` is passed.
+
 ## Broker snapshot ingest
 
 Use `broker_snapshot_ingest.py` after a read-only broker export or connector

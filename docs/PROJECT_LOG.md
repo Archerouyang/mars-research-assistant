@@ -31,6 +31,19 @@ Use this shape:
 
 ## 2026-07-09
 
+- Commit: pending
+- Scope: script, reference, docs, test
+- What changed: added Macro panel runtime preparation. `prepare_macro_panel.py`
+  writes the standard dated `macro-panel.json` from saved Longbridge macrodata
+  or official fallback JSON, preserves existing panels by default, and gives
+  missing-input guidance instead of inventing macro reads.
+- Why it matters: Daily Ops now has a concrete bridge from authorized macrodata
+  JSON to the runtime panel consumed by strategy posture and macro visuals,
+  without requiring the script to call Longbridge live or treat macrodata as a
+  broker account source.
+- Next step: forward-test with a live Longbridge macrodata payload when the
+  Longbridge skill is visible in the trading research chat.
+
 - Commit: f692d5e Add IBKR connector snapshot adapter
 - Scope: script, fixture, reference, docs, test
 - What changed: added the IBKR connector adapter. `ibkr_connector_adapter.py`
