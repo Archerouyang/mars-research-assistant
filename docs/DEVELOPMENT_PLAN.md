@@ -164,9 +164,10 @@ Date: 2026-07-09
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, plugin validation, `scripts/verify-plugin.sh`,
   `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
-- End-of-day target: reinstall the updated plugin, verify installed packaged
-  contract path resolution, then choose whether to work on macro-panel live path
-  or Longbridge read-only forward test next.
+- End-of-day target: reinstall the updated plugin and verify installed packaged
+  contract path resolution. This has passed for the 1.0 acceptance and IBKR
+  adapter contracts; next choose whether to work on macro-panel live path or
+  Longbridge read-only forward test.
 
 ## Progress Log
 
@@ -197,10 +198,10 @@ Date: 2026-07-09
   plugin files rooted in the installed cache.
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
-  compileall, and `git diff --check` pass.
-- Next: refresh/reinstall the plugin, verify installed packaged contracts, then
-  continue with macro-panel live path, Longbridge read-only forward test, PA
-  market-data inputs, and snapshot repair.
+  compileall, `git diff --check`, and installed-cache 1.0/IBKR contract checks
+  pass.
+- Next: continue with macro-panel live path, Longbridge read-only forward test,
+  PA market-data inputs, setup-row population, and snapshot repair.
 
 ### 2026-07-08
 
