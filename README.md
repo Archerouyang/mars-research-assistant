@@ -153,6 +153,17 @@ Daily runtime package。它只创建 header-only 的本地容器，例如
 `trade-plans.csv`、`intraday-watchlist.csv`、当天 update note 和缺失的
 `ops-state.md`；No live broker reads，不调用行情，不创建或修改订单，默认不覆盖已有文件。
 
+当 agent 已经从 Active Market Plan 里整理出并让用户确认了具体 setup 后，
+可以用 `prepare_setup_rows.py` 把 user-confirmed setup JSON 写入当天
+`trade-plans.csv` 和 `intraday-watchlist.csv`。这个脚本只消费结构化确认结果，
+不解析自由文本交易想法，不读取 broker/market data，也不创建或修改订单。
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_setup_rows.py \
+  --date 2026-07-08 \
+  --setup-json /tmp/confirmed-setups.json
+```
+
 ### Macro panel runtime preparation
 
 当 Longbridge `macrodata` 或官方 fallback 已经授权读取并保存成 JSON 后，用

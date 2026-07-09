@@ -50,6 +50,12 @@ header-only daily containers such as `trade-plans.csv` and
 `intraday-watchlist.csv`. This prepares files for the workflow; it does not
 create setup rows, read brokers, read market data, or place orders.
 
+After the user confirms concrete setup rows from the Active Market Plan, use
+`../../scripts/prepare_setup_rows.py` with user-confirmed setup JSON to populate
+`trade-plans.csv` and `intraday-watchlist.csv`. This bridges plan preparation
+to formal scanning; it does not parse free-form trade ideas, read brokers, read
+market data, or place orders.
+
 Use the formal runtime as the only active Daily Ops state root:
 `runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless
 `TRADING_RESEARCH_RUNTIME_DIR` or a user-confirmed runtime path overrides it.

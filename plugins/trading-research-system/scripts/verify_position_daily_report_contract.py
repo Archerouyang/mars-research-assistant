@@ -4,13 +4,15 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 from record_schemas import CSV_SCHEMAS
 
 
-ROOT = Path(__file__).resolve().parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
 DAILY_DIR = ROOT / "assets" / "fixtures" / "runtime" / "active-market-plan-2026-06-24" / "daily" / "2026-06-24"
 
 
@@ -123,7 +125,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "roadmap": FileContract(
-                ROOT.parents[1] / "docs" / "ROADMAP.md",
+                REPO / "docs" / "ROADMAP.md",
                 required_terms=(
                     "Broker-live position daily report script",
                     "position_daily_report.py",
@@ -131,7 +133,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "development plan": FileContract(
-                ROOT.parents[1] / "docs" / "DEVELOPMENT_PLAN.md",
+                REPO / "docs" / "DEVELOPMENT_PLAN.md",
                 required_terms=(
                     "Add broker-live position daily report",
                     "position_daily_report.py",

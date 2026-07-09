@@ -13,7 +13,8 @@ def main() -> None:
     paths = PluginPaths.from_script(__file__)
     if paths.root != Path(__file__).resolve().parents[1]:
         raise AssertionError("PluginPaths should resolve plugin root from script path")
-    if paths.repo != paths.root.parents[1]:
+    expected_repo = paths.root.parents[1] if is_repo_checkout(paths.root.parents[1]) else Path.cwd().resolve()
+    if paths.repo != expected_repo:
         raise AssertionError("PluginPaths should expose repo root")
     if not is_repo_checkout(paths.repo):
         raise AssertionError("repo root should be detected as a dailytrades checkout")
@@ -34,6 +35,8 @@ def main() -> None:
         raise AssertionError("core suite should include Longbridge CLI adapter contract")
     if "longbridge-macrodata-adapter-contract" not in names:
         raise AssertionError("core suite should include Longbridge macrodata adapter contract")
+    if "setup-row-preparation-contract" not in names:
+        raise AssertionError("core suite should include setup row preparation contract")
     if "one-zero-acceptance" not in names:
         raise AssertionError("core suite should include 1.0 acceptance contract")
     if "visual-trigger" not in names:

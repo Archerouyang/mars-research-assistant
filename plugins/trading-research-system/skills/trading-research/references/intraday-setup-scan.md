@@ -28,6 +28,20 @@ python3 plugins/trading-research-system/scripts/intraday_scan.py \
 Then layer current chart/price interpretation on top only when authorized data
 is available.
 
+If `trade-plans.csv` and `intraday-watchlist.csv` exist but are header-only,
+first collect or derive setup rows from the Active Market Plan and ask the user
+to confirm them as `ticker + trade_horizon + instrument` groups. After
+confirmation, write user-confirmed setup JSON and populate the two CSV files
+with:
+
+```bash
+python3 plugins/trading-research-system/scripts/prepare_setup_rows.py \
+  --date YYYY-MM-DD \
+  --setup-json /path/to/confirmed-setups.json
+```
+
+`prepare_setup_rows.py` consumes user-confirmed setup JSON only; it does not parse free-form trade ideas, read broker data, call market data, or create orders.
+
 Before showing a visual, read `visual-trigger-policy.md`. Generate or request a
 `PA Scenario Board` only when a setup is `approaching`, `triggered`,
 `invalidated`, or `needs_review` and authorized chart/OHLCV data is available.

@@ -108,7 +108,8 @@ Use these statuses:
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | in_progress | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | First run recorded in `docs/1.0_ACCEPTANCE_RESULTS.md`: 4 PASS, 2 PARTIAL, 0 FAIL; daily runtime package has a 2026-07-09 header-only follow-up and needs fresh-chat rerun; next close macro panel, read-only broker adapter, PA market-data, and snapshot-repair gaps. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
-| P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 still needs fresh-chat rerun. |
+| P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
+| P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
 | P1 | done | Deepen Runtime State module | Centralizes private runtime root, daily path, template path, dry-run, and overwrite behavior behind one tested module. | Use `runtime_state.py`, `verify_runtime_state_selftest.py`, and `verify_runtime_state_contract.py` before adding new runtime-aware scripts. |
 | P1 | done | Deepen Contract Suite module | Centralizes plugin path factories and core contract-suite orchestration behind one tested runner. | Use `contract_suite.py` and `verify_contract_suite.py core`; register new core checks in `CORE_SUITE` instead of expanding `verify-plugin.sh`. |
 | P1 | done | Broker snapshot ingest | Maps user-approved read-only IBKR/Longbridge export CSVs into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `broker_snapshot_ingest.py`; live connector reads remain a later adapter layer. |
@@ -217,6 +218,10 @@ Date: 2026-07-09
   reran a fresh-chat #1/#3 combined acceptance. The rerun passed behavior
   acceptance: macro panel is available/non-degraded via official fallback, and
   header-only setup CSVs correctly produce no approaching/triggered claims.
+- Completed: added Setup row preparation. `prepare_setup_rows.py` consumes
+  user-confirmed setup JSON and fills scanner-ready `trade-plans.csv` and
+  `intraday-watchlist.csv`, while preserving populated files by default and
+  refusing to parse free-form trade ideas.
 - Completed: refreshed the plugin cachebuster to
   `0.1.0+codex.20260709052038`, synced the personal plugin source, reinstalled
   `trading-research-system@personal`, and verified the installed-cache
@@ -226,9 +231,10 @@ Date: 2026-07-09
   compileall, `git diff --check`, installed-cache 1.0/IBKR contract checks, and
   macro-panel preparation selftest/contract, runtime-health selftest/contract,
   and official fallback runtime smoke pass.
-- Next: continue with setup-row population, live Longbridge macrodata
-  visibility, Longbridge read-only forward test, PA market-data inputs, and
-  snapshot repair.
+- Next: forward-test setup-row population against the private 2026-07-09
+  runtime after the user confirms today's setup list, then continue with live
+  Longbridge macrodata visibility, Longbridge read-only forward test, PA
+  market-data inputs, and snapshot repair.
 
 ### 2026-07-08
 

@@ -85,6 +85,8 @@ records.
 2. Use Daily runtime package preparation with `prepare_daily_runtime.py` to
    create today's `trade-plans.csv`, `intraday-watchlist.csv`, update note, and
    missing `ops-state.md` before formal intraday scans.
-3. Connect read-only broker adapters for Longbridge and IBKR.
-4. Add user-confirmed Codex automations that wake Daily Ops Orchestrator.
-5. Add chart screenshot/export workflow for price-action review.
+3. Use `prepare_setup_rows.py` with confirmed setup JSON to populate prepared
+   setup rows before running `intraday_scan.py`.
+4. Connect read-only broker adapters for Longbridge and IBKR.
+5. Add user-confirmed Codex automations that wake Daily Ops Orchestrator.
+6. Add chart screenshot/export workflow for price-action review.

@@ -113,6 +113,11 @@ missing, propose `prepare_daily_runtime.py --dry-run` first. After confirmation,
 `trade-plans.csv` and `intraday-watchlist.csv`; it 不会覆盖已有文件 by default,
 does not read broker/market data, and does not create setup rows.
 
+If those files exist but are header-only, ask the user to confirm the planned
+`ticker + trade_horizon + instrument` setup rows. After confirmation, convert
+them into user-confirmed setup JSON and use `prepare_setup_rows.py` to populate
+populate setup rows. Do not use it to parse free-form trade ideas or invent plans.
+
 ## 为什么现在做这一步
 
 Explain the routing reason in one or two bullets.

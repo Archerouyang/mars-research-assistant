@@ -78,8 +78,15 @@ Use this shape:
   `macro-panel.json`, and reran fresh-chat #1/#3 behavior acceptance in thread
   `019f458c-7172-79c1-ae89-080674a39bd1`. Result: `PASS`; setup CSVs remain
   header-only, so real setup state generation still needs prepared rows.
-- Next step: implement setup-row population and continue Longbridge live
-  read-only/macrodata forward tests.
+- What changed: added Setup row preparation. `prepare_setup_rows.py` consumes
+  user-confirmed setup JSON and populates scanner-ready `trade-plans.csv` and
+  `intraday-watchlist.csv`.
+- Why it matters: Daily Ops now has a formal bridge from Active Market Plan
+  setup planning to `intraday_scan.py`, without parsing free-form trade ideas or
+  inventing plans.
+- Next step: forward-test setup-row population against the private 2026-07-09
+  runtime after the user confirms today's setup list, then continue Longbridge
+  live read-only/macrodata forward tests.
 
 - Commit: f692d5e Add IBKR connector snapshot adapter
 - Scope: script, fixture, reference, docs, test

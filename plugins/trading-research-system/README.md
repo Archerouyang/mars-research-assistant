@@ -138,6 +138,18 @@ uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py -
 uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08
 ```
 
+After setup rows are confirmed by the user or Active Market Plan workflow,
+`prepare_setup_rows.py` can populate `trade-plans.csv` and
+`intraday-watchlist.csv` from user-confirmed setup JSON. It does not parse
+free-form trade ideas, read broker accounts, call market data, or perform order
+actions.
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_setup_rows.py \
+  --date 2026-07-08 \
+  --setup-json /tmp/confirmed-setups.json
+```
+
 ## Macro panel runtime preparation
 
 Use `prepare_macro_panel.py` after an authorized Longbridge macrodata read or
