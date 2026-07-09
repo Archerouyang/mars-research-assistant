@@ -32,6 +32,19 @@ Use this shape:
 ## 2026-07-09
 
 - Commit: pending
+- Scope: validation, runtime
+- What changed: drafted a private monitor-only setup-row proposal from the
+  Active Market Plan and verified it with `prepare_setup_rows.py --dry-run`
+  against the 2026-07-09 private runtime. A temporary runtime write then proved
+  `intraday_scan.py` can render the proposal as `needs_review` / `candidate`
+  states only.
+- Why it matters: prompt #3 now has a concrete non-writing bridge from the
+  watch-only setup pool to scanner-ready rows. The remaining blocker is user
+  confirmation, not missing tooling.
+- Next step: after user confirmation, write the monitor-only rows to the
+  private runtime and rerun fresh-chat prompt #3.
+
+- Commit: pending
 - Scope: validation
 - What changed: reran fresh-chat acceptance prompt #5 in thread
   `019f4613-1145-7783-bc34-73f9f7b276b4` after reinstalling
