@@ -3,14 +3,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import sys
 
+from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
+PATHS = PluginPaths.from_script(__file__)
+ROOT = PATHS.root
+REPO = PATHS.repo
 
 FILES = {
     "script": ROOT / "scripts" / "runtime_health.py",
