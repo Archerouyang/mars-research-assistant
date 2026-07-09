@@ -55,6 +55,19 @@ Use this shape:
 - Next step: forward-test with a live Longbridge macrodata payload or an
   official fallback payload for today's runtime.
 
+- Commit: pending
+- Scope: script, runtime, docs, test
+- What changed: added `official_source_fallback` to runtime health source
+  capabilities and forward-smoked today's private runtime macro panel from
+  Treasury/FRED fallback data. Runtime health now reports `macro_panel`
+  available and `official_source_fallback=available`.
+- Why it matters: Daily Ops can now distinguish "Longbridge macrodata not
+  visible" from "official fallback macro reads are available", which keeps
+  macro/rates analysis usable without collapsing the source model.
+- Next step: resolve the remaining degraded panel issue by adding a high-quality
+  Gold source or making Gold optional for strategy posture, then rerun a
+  fresh-chat daily/weekly prompt.
+
 - Commit: f692d5e Add IBKR connector snapshot adapter
 - Scope: script, fixture, reference, docs, test
 - What changed: added the IBKR connector adapter. `ibkr_connector_adapter.py`

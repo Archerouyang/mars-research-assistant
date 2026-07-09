@@ -121,6 +121,7 @@ Use these statuses:
 | P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
 | P1 | done | Define Longbridge Skill Adapter contract | Distinguishes `longbridge_broker_skill` from `longbridge_macrodata` and makes runtime health report `source_capability_health` before Daily Ops uses either. | Use `verify_longbridge_skill_adapter_contract.py`; current-chat visibility is a capability status, not proof that Longbridge does not exist. |
 | P1 | done | Macro panel runtime preparation | Connects saved Longbridge macrodata or official fallback JSON to the dated runtime `macro-panel.json` without inventing macro reads. | Use `prepare_macro_panel.py --macrodata-json`; official fallback must pass `--source-capability official_source_fallback`; missing input should produce next-step guidance, not a fake macro panel. |
+| P1 | done | Official fallback macro-panel forward smoke | Proves today's private runtime can receive actual macro reads without Longbridge macrodata visibility. | 2026-07-09 runtime now has `macro-panel.json` from Treasury/FRED fallback; runtime health recognizes `official_source_fallback=available`, but the panel is degraded because Gold remains missing. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
 | P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
 | P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
@@ -204,6 +205,11 @@ Date: 2026-07-09
 - Completed: tightened macro panel source labeling. Official fallback JSON now
   uses `--source-capability official_source_fallback`, preserving item-level
   sources instead of being mislabeled as Longbridge macrodata.
+- Completed: added `official_source_fallback` to runtime health source
+  capabilities and forward-smoked today's private runtime macro panel from
+  Treasury/FRED fallback data. Runtime health now reports `macro_panel`
+  available and `official_source_fallback=available`; the panel is degraded
+  because Gold remains missing from high-quality fallback data.
 - Completed: refreshed the plugin cachebuster to
   `0.1.0+codex.20260709052038`, synced the personal plugin source, reinstalled
   `trading-research-system@personal`, and verified the installed-cache
@@ -211,9 +217,11 @@ Date: 2026-07-09
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
   compileall, `git diff --check`, installed-cache 1.0/IBKR contract checks, and
-  macro-panel preparation selftest/contract pass.
-- Next: continue with live Longbridge macrodata visibility, Longbridge read-only forward test,
-  PA market-data inputs, setup-row population, and snapshot repair.
+  macro-panel preparation selftest/contract, runtime-health selftest/contract,
+  and official fallback runtime smoke pass.
+- Next: continue with Gold source/optional macro posture handling, live
+  Longbridge macrodata visibility, Longbridge read-only forward test, PA
+  market-data inputs, setup-row population, and snapshot repair.
 
 ### 2026-07-08
 

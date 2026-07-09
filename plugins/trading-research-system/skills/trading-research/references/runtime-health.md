@@ -41,14 +41,15 @@ The health check should cover:
 - `Longbridge broker skill`
 - `Longbridge Terminal CLI`
 - `Longbridge macrodata`
+- `Official source fallback`
 - `IBKR connector`
 
 The JSON payload must include:
 
 - `current_mode`: `live read-only`, `manual snapshot`, or `dry-run`.
 - `source_capability_health`: per-capability status rows for Longbridge broker
-  skill, Longbridge Terminal CLI, Longbridge macrodata, IBKR connector, and
-  Manual snapshot.
+  skill, Longbridge Terminal CLI, Longbridge macrodata, Official source
+  fallback, IBKR connector, and Manual snapshot.
 - `broker_source_health`: per-source status rows for Longbridge, IBKR, and
   Manual snapshot.
 
@@ -80,6 +81,8 @@ Useful options:
   Longbridge skill can provide macrodata values in this run.
 - `--source-capability longbridge_macrodata=not_installed`: disclose that the
   current chat does not expose the Longbridge macrodata capability.
+- `--source-capability official_source_fallback=available`: disclose that
+  official or primary fallback macro values were collected for this run.
 - `--stale-after-days 3`: mark existing files stale when modified before the
   freshness window.
 

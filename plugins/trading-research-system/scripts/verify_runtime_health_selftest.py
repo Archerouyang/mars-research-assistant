@@ -56,6 +56,7 @@ def main() -> int:
         assert_status(capabilities, "longbridge_broker_skill", "unauthorized")
         assert_status(capabilities, "longbridge_terminal_cli", "unauthorized")
         assert_status(capabilities, "longbridge_macrodata", "unauthorized")
+        assert_status(capabilities, "official_source_fallback", "missing")
         assert_status(capabilities, "ibkr_connector", "unauthorized")
         assert_status(capabilities, "manual_snapshot", "missing")
 
@@ -93,6 +94,8 @@ def main() -> int:
                 "longbridge_terminal_cli=available",
                 "--source-capability",
                 "longbridge_macrodata=not_installed",
+                "--source-capability",
+                "official_source_fallback=available",
             ],
             text=True,
             capture_output=True,
@@ -118,6 +121,7 @@ def main() -> int:
         assert_status(sourced_capabilities, "longbridge_broker_skill", "not_installed")
         assert_status(sourced_capabilities, "longbridge_terminal_cli", "available")
         assert_status(sourced_capabilities, "longbridge_macrodata", "not_installed")
+        assert_status(sourced_capabilities, "official_source_fallback", "available")
         assert_status(sourced_capabilities, "ibkr_connector", "not_installed")
 
         (daily_dir / "macro-panel.json").write_text('{"PRIVATE": "MACRO PANEL SECRET"}\n', encoding="utf-8")

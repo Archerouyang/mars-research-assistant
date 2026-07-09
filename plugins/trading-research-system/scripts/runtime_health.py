@@ -21,6 +21,7 @@ SOURCE_CAPABILITIES = {
     "longbridge_broker_skill",
     "longbridge_terminal_cli",
     "longbridge_macrodata",
+    "official_source_fallback",
     "ibkr_connector",
     "manual_snapshot",
 }
@@ -38,6 +39,7 @@ SOURCE_CAPABILITY_LABELS = {
     "longbridge_broker_skill": "Longbridge broker skill",
     "longbridge_terminal_cli": "Longbridge Terminal CLI",
     "longbridge_macrodata": "Longbridge macrodata",
+    "official_source_fallback": "Official source fallback",
     "ibkr_connector": "IBKR connector",
     "manual_snapshot": "Manual snapshot",
 }
@@ -82,6 +84,7 @@ def parse_args() -> argparse.Namespace:
         metavar="CAPABILITY=STATUS",
         help=(
             "Source capability status, e.g. longbridge_macrodata=available, "
+            "official_source_fallback=available, "
             "longbridge_terminal_cli=available, longbridge_broker_skill=not_installed, "
             "or ibkr_connector=available"
         ),
@@ -222,6 +225,7 @@ def build_source_capability_health(
         "longbridge_broker_skill": broker_source_statuses["longbridge"],
         "longbridge_terminal_cli": "unauthorized",
         "longbridge_macrodata": "unauthorized",
+        "official_source_fallback": "missing",
         "ibkr_connector": broker_source_statuses["ibkr"],
         "manual_snapshot": broker_source_statuses["manual"],
     }
@@ -233,6 +237,7 @@ def build_source_capability_health(
         "longbridge_broker_skill",
         "longbridge_terminal_cli",
         "longbridge_macrodata",
+        "official_source_fallback",
         "ibkr_connector",
         "manual_snapshot",
     )
