@@ -32,6 +32,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Local planning, report snapshot, and review-context templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
 - `repair_portfolio_snapshot.py` for stale/unmapped product/theme cleanup in standard `portfolio_snapshot.csv` before position daily reports.
+- `longbridge_ohlcv_adapter.py` for saved Longbridge kline JSON to standard OHLCV JSON before rolling price-action notes.
 - `price_action_rollforward.py` for OHLCV-backed rolling price-action notes with timeframe-labeled support/resistance, proportional add/trim zones, and weekly event mapping.
 - On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
@@ -257,6 +258,25 @@ uv run python plugins/trading-research-system/scripts/repair_portfolio_snapshot.
 The repair script consumes existing runtime CSV only. It reports
 `No live broker reads` and `No order actions`; it never reads live broker
 accounts or creates orders.
+
+## Longbridge OHLCV Adapter
+
+Saved Longbridge `kline` JSON can be normalized into the standard OHLCV JSON
+consumed by `price_action_rollforward.py`:
+
+```bash
+longbridge kline QQQ.US --period day --count 90 --adjust forward --format json \
+  > /tmp/longbridge-kline-QQQ.US-day.json
+
+uv run python plugins/trading-research-system/scripts/longbridge_ohlcv_adapter.py \
+  --kline-json /tmp/longbridge-kline-QQQ.US-day.json \
+  --symbol QQQ.US \
+  --period day \
+  --output /tmp/longbridge-ohlcv-QQQ.US-day.json
+```
+
+The adapter consumes saved Longbridge kline JSON only. It reports
+`No live market data calls`, `No live broker reads`, and `No order actions`.
 
 Broker adapters are read-only sources. During onboarding or runtime
 initialization, ask which broker sources to enable. V1 formally supports the

@@ -152,6 +152,8 @@ When authorized or user-provided `OHLCV` JSON is available, use
 `price_action_rollforward.py` as the local baseline generator before adding
 judgement. It only transforms provided data; it does not fetch market data,
 read broker accounts, or create orders.
+If the source is saved Longbridge kline output, use
+`longbridge_ohlcv_adapter.py` to normalize it into OHLCV first.
 
 For every ticker, state:
 

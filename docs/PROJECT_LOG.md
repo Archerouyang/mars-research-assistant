@@ -32,6 +32,19 @@ Use this shape:
 ## 2026-07-09
 
 - Commit: pending
+- Scope: script, runtime, validation
+- What changed: added the Longbridge OHLCV adapter. `longbridge_ohlcv_adapter.py`
+  converts saved Longbridge kline JSON into the standard OHLCV JSON consumed by
+  `price_action_rollforward.py`. A private forward smoke used authorized
+  Longbridge kline data for QQQ.US, SOXX.US, and DRAM.US and generated
+  PA rollforward notes under `/private/tmp`.
+- Why it matters: rolling PA no longer depends only on fixture or user-pasted
+  OHLCV. The plugin has a tested path from authorized Longbridge kline data to
+  timeframe-labeled PA notes.
+- Next step: rerun fresh-chat acceptance prompt 5 with the saved authorized
+  OHLCV artifacts before marking the rolling PA prompt PASS.
+
+- Commit: pending
 - Scope: integration, runtime, validation
 - What changed: forward-smoked the Longbridge Terminal CLI read-only broker
   path. `longbridge check --format json` confirmed a valid token and API

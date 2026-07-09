@@ -61,6 +61,11 @@ When authorized or user-provided OHLCV JSON is available, use
 adding judgement. The script is local-only: it does not fetch market data, read
 broker accounts, or create orders.
 
+When the available market input is saved Longbridge kline JSON, run
+`longbridge_ohlcv_adapter.py` first. It converts Longbridge kline saved JSON
+into the standard OHLCV JSON consumed by `price_action_rollforward.py` without
+calling live market data itself.
+
 Before giving new levels, first look for previous analysis in:
 
 1. current `market-plan.md` setup rows and holding plans;

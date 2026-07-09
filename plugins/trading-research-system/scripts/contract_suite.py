@@ -86,6 +86,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("one-zero-acceptance", "verify_1_0_acceptance_contract.py"),
     ("price-action-rollforward-selftest", "verify_price_action_rollforward_selftest.py"),
     ("price-action-rollforward", "verify_price_action_rollforward_contract.py"),
+    ("longbridge-ohlcv-adapter-selftest", "verify_longbridge_ohlcv_adapter_selftest.py"),
+    ("longbridge-ohlcv-adapter-contract", "verify_longbridge_ohlcv_adapter_contract.py"),
     ("macro-industry-monitor", "verify_macro_industry_research_monitor_contract.py"),
     ("trade-plan-preparation", "verify_trade_plan_preparation_contract.py"),
     ("automation-setup", "verify_automation_setup_contract.py"),

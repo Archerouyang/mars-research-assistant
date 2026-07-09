@@ -161,6 +161,24 @@ uv run python plugins/trading-research-system/scripts/repair_portfolio_snapshot.
   --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.repaired.csv
 ```
 
+### Longbridge OHLCV adapter
+
+如果已经用 Longbridge `kline` 读取了授权行情，可以用
+`longbridge_ohlcv_adapter.py` 把 saved Longbridge kline JSON 转成标准 `OHLCV`
+JSON，再交给 `price_action_rollforward.py` 做滚动盘面分析。adapter 只消费已保存
+JSON；`No live market data calls`，`No live broker reads`，`No order actions`。
+
+```bash
+longbridge kline QQQ.US --period day --count 90 --adjust forward --format json \
+  > /tmp/longbridge-kline-QQQ.US-day.json
+
+uv run python plugins/trading-research-system/scripts/longbridge_ohlcv_adapter.py \
+  --kline-json /tmp/longbridge-kline-QQQ.US-day.json \
+  --symbol QQQ.US \
+  --period day \
+  --output /tmp/longbridge-ohlcv-QQQ.US-day.json
+```
+
 Google Sheets 不再作为交易记录层。后续如果启用，只同步非敏感摘要、持仓日报索引或可视化结果，不保存逐笔 broker facts。
 
 `trading-profile.md` 是私有策略配置层，用来记录使用者自己的策略评分、主动交易池、ETF 组合、交易工具、时间框架、拥挤度模型和风控偏好。public plugin 只提供模板，不内置某个使用者的具体交易模型。
