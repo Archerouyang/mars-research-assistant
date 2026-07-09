@@ -124,6 +124,20 @@ uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --dry
 uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
 ```
 
+## Daily runtime package
+
+Use `prepare_daily_runtime.py` at the start of a trading day to prepare the
+date-specific Daily runtime package. It creates header-only daily containers
+such as `trade-plans.csv` and `intraday-watchlist.csv`, plus the daily update
+note and missing `ops-state.md`. It does not perform live broker reads, live
+market data calls, real Codex automations, or order actions, and it does not
+overwrite existing files by default.
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08 --dry-run
+uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08
+```
+
 ## Broker snapshot ingest
 
 Use `broker_snapshot_ingest.py` after a read-only broker export or connector
@@ -215,6 +229,7 @@ reads, real Codex automations, or live market data calls.
 
 ```bash
 uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
+uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08 --dry-run
 uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py --input IBKR:/path/to/ibkr-positions.csv --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv --as-of 2026-07-06T20:00:00Z
 uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
 uv run python plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12

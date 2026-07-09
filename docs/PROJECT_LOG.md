@@ -32,6 +32,24 @@ Use this shape:
 ## 2026-07-08
 
 - Commit: pending
+- Scope: planning, acceptance
+- What changed: recorded the first fresh-chat 1.0 acceptance run in `docs/1.0_ACCEPTANCE_RESULTS.md`. Six user workflow prompts were tested from fresh chats: 4 PASS, 2 PARTIAL, 0 FAIL. The two partials are the formal intraday setup scan and rolling PA update, both blocked by missing runtime package and fresh market/macro inputs rather than router or skill-contract failure.
+- Why it matters: the project now has a concrete readiness trajectory for the local 1.0 workflow instead of a broad module checklist. It also separates plugin behavior that is already acceptable from runtime/live-source gaps that still need private forward testing.
+- Next step: fix or forward-test the P0 gaps: daily runtime package creation, `macro-panel.json` generation, authorized read-only broker adapters, PA OHLCV/current-price inputs, and runtime snapshot repair.
+
+- Commit: pending
+- Scope: script, template, reference, docs, test
+- What changed: added Daily runtime package preparation. `prepare_daily_runtime.py` can dry-run or create today's `ops-state.md`, update note, `trade-plans.csv`, `intraday-watchlist.csv`, and other header-only daily containers without overwriting existing user files. `intraday_scan.py` now handles an empty/header-only watchlist as a valid "no prepared setup rows" state instead of a script failure.
+- Why it matters: a fresh Daily Ops chat can move from missing daily package to formal runtime-ready state without copying fixture examples or inventing setup rows. This directly addresses the 1.0 acceptance PARTIAL where intraday scan failed because today's `trade-plans.csv` and `intraday-watchlist.csv` were missing.
+- Next step: forward-test the package preparation in a fresh Daily Ops chat, then wire macro-panel generation and live read-only broker adapters.
+
+- Commit: pending
+- Scope: script, reference, test
+- What changed: added `macro_panel` to `runtime_health.py` so Daily Ops checks `daily/YYYY-MM-DD/macro-panel.json` as a first-class runtime view. `verify_runtime_health_selftest.py` now proves the check reports missing/available without leaking JSON contents, and runtime-health selftest/contract are registered in the core contract suite.
+- Why it matters: macro-panel availability is now visible in the standard Daily Ops startup health path, instead of only being implied by the Longbridge macrodata adapter docs. This closes the "macro-panel status not first-class" part of the 1.0 acceptance gap.
+- Next step: forward-test real Longbridge macrodata output into `macro-panel.json`, then rerun weekly/daily prompts with actual macro reads.
+
+- Commit: pending
 - Scope: reference, skill, template, docs, test
 - What changed: added the Visual Trigger Policy in `visual-trigger-policy.md` and registered `verify_visual_trigger_contract.py` in the core contract suite. Daily Ops, weekly planning, daily tracking, rolling PA, intraday scan, and position daily report now have explicit rules for when to show `Macro Regime Mini-Panel`, `PA Scenario Board`, or `Position Risk Visual`.
 - Why it matters: chart scripts should not stay invisible, but visuals should also not appear in every note. The trigger policy makes macro charts appear when actual macro values affect strategy posture, PA charts appear around key levels or setup state changes, and position visuals appear only when portfolio risk needs inspection.

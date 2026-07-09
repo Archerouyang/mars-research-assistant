@@ -106,7 +106,9 @@ Use these statuses:
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
+| P1 | in_progress | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | First run recorded in `docs/1.0_ACCEPTANCE_RESULTS.md`: 4 PASS, 2 PARTIAL, 0 FAIL; next close daily runtime package, macro panel, read-only broker adapter, PA market-data, and snapshot-repair gaps. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
+| P1 | in_progress | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. |
 | P1 | done | Deepen Runtime State module | Centralizes private runtime root, daily path, template path, dry-run, and overwrite behavior behind one tested module. | Use `runtime_state.py`, `verify_runtime_state_selftest.py`, and `verify_runtime_state_contract.py` before adding new runtime-aware scripts. |
 | P1 | done | Deepen Contract Suite module | Centralizes plugin path factories and core contract-suite orchestration behind one tested runner. | Use `contract_suite.py` and `verify_contract_suite.py core`; register new core checks in `CORE_SUITE` instead of expanding `verify-plugin.sh`. |
 | P1 | done | Broker snapshot ingest | Maps user-approved read-only IBKR/Longbridge export CSVs into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `broker_snapshot_ingest.py`; live connector reads remain a later adapter layer. |
@@ -114,6 +116,7 @@ Use these statuses:
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
 | P1 | done | Harden fresh-chat Daily Ops startup health | Makes new Daily Ops chats show formal runtime health, per-source broker health, and current mode before analysis. | Use `verify_daily_ops_orchestrator_contract.py` and `verify_runtime_health_contract.py`; do not treat repo fixtures as active runtime state. |
+| P1 | done | Add macro-panel runtime health check | Makes Daily Ops report whether today's standard macro panel is available, missing, or stale before macro/rates strategy posture claims. | `runtime_health.py` now checks `daily/YYYY-MM-DD/macro-panel.json`; runtime-health selftest/contract are registered in the core suite. |
 | P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
 | P1 | done | Define Longbridge Skill Adapter contract | Distinguishes `longbridge_broker_skill` from `longbridge_macrodata` and makes runtime health report `source_capability_health` before Daily Ops uses either. | Use `verify_longbridge_skill_adapter_contract.py`; current-chat visibility is a capability status, not proof that Longbridge does not exist. |
 | P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
@@ -145,10 +148,10 @@ Use these statuses:
 Date: 2026-07-08
 
 - Main task: define the 1.0 local trading research workflow acceptance plan and visual trigger policy.
-- Current stage: convert the existing module-level MVP into fresh-chat
-  Acceptance Prompts and add a `Visual Trigger Policy` so macro/PA/position
-  charts appear when the workflow needs visual inspection instead of remaining
-  disconnected scripts.
+- Current stage: the Acceptance Prompts and Visual Trigger Policy are defined
+  and installed; the first fresh-chat run produced 4 PASS, 2 PARTIAL, 0 FAIL.
+  The remaining work is to close runtime/live-source gaps before calling the
+  local workflow complete.
 - Secondary task: keep the scope explicit: no release tag, no hidden KVN model
   exposure, no option-flow vendor integration, no real automations, and no
   broker write actions.
@@ -159,9 +162,25 @@ Date: 2026-07-08
   `verify_visual_trigger_contract.py`, `verify_contract_suite.py core`,
   `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git
   diff --check` pass.
-- End-of-day result: review.
+- End-of-day result: acceptance run in progress; `docs/1.0_ACCEPTANCE_RESULTS.md`
+  records the first pass/fail result and the remaining P0 blockers.
 
 ## Progress Log
+
+### 2026-07-08
+
+- Completed: merged the 1.0 Acceptance Plan and Visual Trigger Policy into
+  `dev`, refreshed the installed plugin cache, and reran the local gates.
+- Completed: ran the six fresh-chat acceptance prompts. Results: Daily Ops
+  startup PASS, weekly plan PASS, daily/intraday setup scan PARTIAL, position
+  daily PASS, rolling PA PARTIAL, two-stage trade review PASS.
+- Recorded: added `docs/1.0_ACCEPTANCE_RESULTS.md` with non-private evidence
+  and P0 gaps for daily runtime package creation, macro-panel generation,
+  authorized read-only broker adapters, PA market-data inputs, and snapshot
+  repair.
+- Next: choose the first blocker to close. The most workflow-critical slice is
+  daily runtime package creation, because it is what turns the intraday setup
+  scan from mirror-only into a formal scan.
 
 ### 2026-07-07
 

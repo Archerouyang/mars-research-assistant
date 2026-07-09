@@ -48,8 +48,6 @@ def parse_args() -> argparse.Namespace:
 def load_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8-sig") as handle:
         rows = [dict(row) for row in csv.DictReader(handle)]
-    if not rows:
-        raise ValueError(f"intraday watchlist is empty: {path}")
     return rows
 
 
@@ -100,6 +98,27 @@ def next_step(row: dict[str, str]) -> str:
 def render_scan(rows: list[dict[str, str]], date_label: str | None) -> str:
     sorted_rows = sorted(rows, key=sort_key)
     title = f"# Intraday Setup Scan - {date_label}" if date_label else "# Intraday Setup Scan"
+    if not sorted_rows:
+        return "\n".join(
+            [
+                title,
+                "",
+                "This is decision support only. It is not a buy/sell instruction.",
+                "这是决策辅助，不是买卖指令。",
+                "",
+                "## 结论",
+                "",
+                "- 没有已准备的 setup 行；先从 Active Market Plan 或用户确认的交易想法补齐 `intraday-watchlist.csv`。",
+                "- 如果今天只做盘前/盘中研究，可以继续更新宏观、新闻、持仓风险和候选 setup，但 cannot claim approaching / triggered 信号。",
+                "",
+                "## 下一步",
+                "",
+                "| 状态 | 需要做什么 |",
+                "| --- | --- |",
+                "| daily package available | 填入计划内 setup 后再运行 formal intraday scan |",
+                "",
+            ]
+        )
     lines = [
         title,
         "",

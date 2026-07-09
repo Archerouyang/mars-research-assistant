@@ -44,6 +44,12 @@ Before workflows that depend on private runtime state, use
 whether required state is available, missing, stale, or unauthorized. Do not read
 private file contents just to perform the health check.
 
+If the current trading date is missing its daily runtime package, ask before
+writing and then use `../../scripts/prepare_daily_runtime.py` to create safe
+header-only daily containers such as `trade-plans.csv` and
+`intraday-watchlist.csv`. This prepares files for the workflow; it does not
+create setup rows, read brokers, read market data, or place orders.
+
 Use the formal runtime as the only active Daily Ops state root:
 `runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless
 `TRADING_RESEARCH_RUNTIME_DIR` or a user-confirmed runtime path overrides it.
