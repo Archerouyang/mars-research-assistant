@@ -56,6 +56,11 @@ directly asks for a chart, when 关键点位接近, or when scenario paths, supp
 resistance, EMA context, add/TP zones, and invalidation are easier to inspect
 visually than in a table.
 
+When authorized or user-provided OHLCV JSON is available, use
+`price_action_rollforward.py` to generate the baseline rolling PA note before
+adding judgement. The script is local-only: it does not fetch market data, read
+broker accounts, or create orders.
+
 Before giving new levels, first look for previous analysis in:
 
 1. current `market-plan.md` setup rows and holding plans;

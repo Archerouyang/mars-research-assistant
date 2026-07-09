@@ -148,6 +148,11 @@ Before giving new levels, check the previous analysis in this order:
 
 If no previous analysis is available, say `上次分析对照: 未找到可用记录，本次作为基准分析`.
 
+When authorized or user-provided `OHLCV` JSON is available, use
+`price_action_rollforward.py` as the local baseline generator before adding
+judgement. It only transforms provided data; it does not fetch market data,
+read broker accounts, or create orders.
+
 For every ticker, state:
 
 - `主分析时间框架`: the higher timeframe used to judge structure, normally

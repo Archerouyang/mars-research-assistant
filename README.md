@@ -45,12 +45,18 @@ focused skill 名称；agent 会根据任务自动选择内部工作流。
 这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
 ```
 
+```text
+用我提供的 OHLCV 更新 DRAM/SOXX 的滚动盘面分析，标出主时间框架、
+支撑压力、加仓/减仓/暂停区，以及本周事件映射。
+```
+
 ## 主要能力
 
 | 能力 | 用户任务 | 输出 |
 | --- | --- | --- |
 | 周度深度计划 | “帮我做下周交易计划” | 上周复盘、宏观/政策/利率/新闻展望、重点事件、持仓影响、setup 候选 |
 | 每日盘面追踪 | “盘前更新一下” / “盘中看一下变化” | 当天变化、关键点位、setup 状态、风险变化、下一步检查 |
+| 滚动盘面分析 | “根据最新 OHLCV 更新这个标的” | `price_action_rollforward.py` 生成的时间框架声明、支撑压力、比例式加减仓区、事件映射 |
 | 盘中 setup 扫描 | “检查今天计划里的 setup” | `candidate` / `active` / `approaching` / `triggered` / `invalidated` / `needs_review` |
 | 研报摄取 | “读这篇研报，看是否影响计划” | `Research Report Digest`、`Claim Ledger`、`Verification Queue`、计划影响 |
 | 宏观和标的研究 | “筛一下受益于利率下行的股票” | 宏观、金融条件、政策事件、行业强弱、个股 thesis 校验 |

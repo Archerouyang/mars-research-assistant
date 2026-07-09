@@ -14,6 +14,12 @@ FILES = {
     "output_templates": PATHS.references / "output-templates.md",
     "daily_tracking_skill": PATHS.skills / "daily-market-tracking" / "SKILL.md",
     "daily_tracking_template": PATHS.templates / "daily-market-tracking.md",
+    "script": PATHS.scripts / "price_action_rollforward.py",
+    "selftest": PATHS.scripts / "verify_price_action_rollforward_selftest.py",
+    "root_readme": PATHS.repo / "README.md",
+    "plugin_readme": PATHS.root / "README.md",
+    "development_plan": PATHS.repo / "docs" / "DEVELOPMENT_PLAN.md",
+    "project_log": PATHS.repo / "docs" / "PROJECT_LOG.md",
 }
 
 REQUIRED = {
@@ -29,6 +35,9 @@ REQUIRED = {
         "成本/买入记录",
         "比例式加减仓",
         "点位所属时间框架",
+        "price_action_rollforward.py",
+        "OHLCV",
+        "does not fetch market data",
     ],
     "output_templates": [
         "## Price Action 滚动盘面分析",
@@ -54,6 +63,8 @@ REQUIRED = {
         "成本/买入记录",
         "比例式加减仓",
         "点位所属时间框架",
+        "price_action_rollforward.py",
+        "OHLCV",
     ],
     "daily_tracking_template": [
         "## Price Action 滚动盘面分析",
@@ -66,6 +77,43 @@ REQUIRED = {
         "成本/买入记录",
         "比例式加减仓",
         "点位所属时间框架",
+    ],
+    "script": [
+        "Generate a rolling price-action note",
+        "--ohlcv-json",
+        "--main-timeframe",
+        "--aux-timeframe",
+        "This is decision support only",
+        "not a buy/sell instruction",
+        "No live broker reads",
+        "does not fetch market data",
+        "点位所属时间框架",
+        "比例式加减仓",
+    ],
+    "selftest": [
+        "price action rollforward selftest ok",
+        "chart-ohlcv-qqq-sample.json",
+        "主分析时间框架 | 1D",
+        "trigger zone: add only after confirmation",
+        "prior high / TP/rebalance watch",
+    ],
+    "root_readme": [
+        "price_action_rollforward.py",
+        "OHLCV",
+        "滚动盘面分析",
+    ],
+    "plugin_readme": [
+        "price_action_rollforward.py",
+        "OHLCV",
+        "rolling price-action",
+    ],
+    "development_plan": [
+        "PA OHLCV rollforward",
+        "price_action_rollforward.py",
+    ],
+    "project_log": [
+        "PA OHLCV rollforward",
+        "price_action_rollforward.py",
     ],
 }
 

@@ -31,6 +31,17 @@ Use this shape:
 
 ## 2026-07-09
 
+- Commit: pending
+- Scope: script, reference, docs, test
+- What changed: added PA OHLCV rollforward via `price_action_rollforward.py`.
+  The script turns authorized or user-provided OHLCV JSON into a consistent
+  rolling PA note with explicit main/aux timeframes, support/resistance,
+  proportional add/trim/pause zones, cost context, and weekly event mapping.
+- Why it matters: DRAM/SOXX-style follow-ups can now start from fresh market
+  data and the previous PA note instead of relying on ad hoc chat formatting.
+- Next step: forward-test with authorized OHLCV payloads and decide when chart
+  display should be shown in chat versus saved only on request.
+
 - Commit: 7fcbac6 Add macro panel runtime preparation
 - Scope: script, reference, docs, test
 - What changed: added Macro panel runtime preparation. `prepare_macro_panel.py`

@@ -31,6 +31,7 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 - Broker-live runtime view templates for read-only Longbridge skill/plugin and IBKR connector sources, with manual CSV as a reduced one-off fallback.
 - Local planning, report snapshot, and review-context templates.
 - Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
+- `price_action_rollforward.py` for OHLCV-backed rolling price-action notes with timeframe-labeled support/resistance, proportional add/trim zones, and weekly event mapping.
 - On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
 
 ## User Interaction
