@@ -73,7 +73,11 @@ output explicitly says the macro read is degraded.
 | HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
 | DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |
 | Oil |  |  | spike / breakdown | inflation and volatility pressure |  |  |
-| Gold |  |  | trend confirmation | defensive / easing hedge |  |  |
+| Gold |  |  | trend confirmation | optional defensive / easing hedge confirmation |  |  |
+
+Gold is optional for posture classification. If every required macro input is
+available and only Gold is missing, disclose the missing optional confirmation
+without calling the whole macro panel degraded.
 
 For market-hour outputs, prefer:
 

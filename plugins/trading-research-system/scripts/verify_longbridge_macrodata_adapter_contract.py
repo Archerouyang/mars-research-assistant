@@ -72,6 +72,8 @@ REQUIRED = {
         "strategy_posture",
         "balanced",
         "missing_indicators",
+        "missing_required_indicators",
+        "missing_optional_indicators",
         "source_notes",
         "not a broker account source",
     ],

@@ -131,6 +131,28 @@ def main() -> None:
                             "unit": "%",
                             "source": "Treasury daily rates",
                         },
+                        {
+                            "indicator": "HYG/LQD",
+                            "value": "2.71",
+                            "source": "FRED BAMLH0A0HYM2",
+                        },
+                        {
+                            "indicator": "DXY",
+                            "value": "120.50",
+                            "change_5d": "-0.10",
+                            "source": "FRED DTWEXBGS",
+                        },
+                        {
+                            "indicator": "Oil",
+                            "value": "69.60",
+                            "change_5d": "-0.70",
+                            "source": "FRED DCOILWTICO",
+                        },
+                        {
+                            "indicator": "liquidity",
+                            "value": "RRP 3.347B; TGA 880.2B; reserves 2966.9B",
+                            "source": "FRED RRPONTSYD / WTREGEN / WRESBAL",
+                        },
                     ]
                 }
             ),
@@ -165,6 +187,13 @@ def main() -> None:
             fallback_panel["indicators"][0]["source"] == "Treasury daily rates",
             "official fallback should preserve item source when present",
         )
+        require(fallback_panel["degraded"] is False, "missing optional Gold should not degrade official fallback panel")
+        require(fallback_panel["missing_indicators"] == ["Gold"], "Gold should still be disclosed as missing")
+        require(
+            fallback_panel["missing_optional_indicators"] == ["Gold"],
+            "missing Gold should be disclosed as optional missing",
+        )
+        require(fallback_panel["strategy_posture"] == "defensive", "rates should still drive posture without Gold")
         require(
             "Longbridge macrodata is not a broker account source" not in fallback.stdout,
             "official fallback CLI output should not say the source is Longbridge",

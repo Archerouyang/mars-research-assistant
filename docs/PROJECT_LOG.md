@@ -64,9 +64,22 @@ Use this shape:
 - Why it matters: Daily Ops can now distinguish "Longbridge macrodata not
   visible" from "official fallback macro reads are available", which keeps
   macro/rates analysis usable without collapsing the source model.
-- Next step: resolve the remaining degraded panel issue by adding a high-quality
-  Gold source or making Gold optional for strategy posture, then rerun a
-  fresh-chat daily/weekly prompt.
+- Follow-up target: regenerate today's private macro panel with the updated
+  schema, then rerun fresh-chat acceptance; completed below.
+
+- What changed: made Gold an optional macro confirmation input. Missing Gold is
+  now disclosed via `missing_optional_indicators`, but it does not degrade the
+  macro panel when required posture inputs are present.
+- Why it matters: official fallback macro reads can classify strategy posture
+  from rates, credit, USD, oil, and liquidity without inventing a Gold value or
+  falsely marking the entire panel unusable.
+- Follow-up: refreshed and reinstalled `trading-research-system@personal`
+  `0.1.0+codex.20260709062046`, regenerated today's private
+  `macro-panel.json`, and reran fresh-chat #1/#3 behavior acceptance in thread
+  `019f458c-7172-79c1-ae89-080674a39bd1`. Result: `PASS`; setup CSVs remain
+  header-only, so real setup state generation still needs prepared rows.
+- Next step: implement setup-row population and continue Longbridge live
+  read-only/macrodata forward tests.
 
 - Commit: f692d5e Add IBKR connector snapshot adapter
 - Scope: script, fixture, reference, docs, test

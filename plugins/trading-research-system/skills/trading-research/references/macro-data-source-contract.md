@@ -54,11 +54,16 @@ Minimum table:
 | HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
 | DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |
 | Oil |  |  | spike / breakdown | inflation and volatility pressure |  |  |
-| Gold |  |  | trend confirmation | defensive / easing hedge |  |  |
+| Gold |  |  | trend confirmation | optional defensive / easing hedge confirmation |  |  |
 
 Add or remove rows only when useful. For the user's current framework, the key
 answer is whether financial conditions support `high beta momentum`, require a
 `balanced` posture, or argue for `defensive` risk posture.
+
+For the standard panel, `10Y`, `30Y`, `HYG/LQD`, `DXY`, `Oil`, and
+`liquidity` are required posture inputs. `Gold` is an optional confirmation
+input: disclose it when missing, but do not mark the whole panel degraded when
+Gold is the only absent indicator.
 
 When Longbridge macrodata values are available as saved or tool-returned JSON,
 normalize them into the standard runtime view:
@@ -80,8 +85,9 @@ when `--macrodata-json` is missing.
 
 The standard `macro-panel.json` preserves `value`, `change_5d`, `change_20d`,
 `threshold`, `source`, `timestamp`, `strategy_posture`, and
-`missing_indicators`. It is a macro values panel, not a policy/news source and
-not a broker account source.
+`missing_indicators`, plus `missing_required_indicators` and
+`missing_optional_indicators`. It is a macro values panel, not a policy/news
+source and not a broker account source.
 
 ## Strategy Posture Link
 

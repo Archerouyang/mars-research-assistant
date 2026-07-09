@@ -26,6 +26,9 @@ CANONICAL_INDICATORS = (
     "liquidity",
 )
 
+OPTIONAL_INDICATORS = ("Gold",)
+REQUIRED_INDICATORS = tuple(name for name in CANONICAL_INDICATORS if name not in OPTIONAL_INDICATORS)
+
 ALIASES = {
     "10Y": {"10Y", "US10Y", "US 10Y", "10Y Treasury", "10Y Treasury yield"},
     "30Y": {"30Y", "US30Y", "US 30Y", "30Y Treasury", "30Y Treasury yield"},
@@ -225,18 +228,22 @@ def normalize_panel(
         if name in indexed
     ]
     missing = [name for name in CANONICAL_INDICATORS if name not in indexed]
-    degraded = bool(missing) or source_status != "available"
+    missing_required = [name for name in REQUIRED_INDICATORS if name not in indexed]
+    missing_optional = [name for name in OPTIONAL_INDICATORS if name not in indexed]
+    degraded = bool(missing_required) or source_status != "available"
     return {
         "as_of": as_of,
         "data_status": data_status,
         "degraded": degraded,
         "indicators": indicators,
         "missing_indicators": missing,
+        "missing_required_indicators": missing_required,
+        "missing_optional_indicators": missing_optional,
         "source_capability": source_capability,
         "source_notes": source_notes or default_source_notes(source_capability, source_label),
         "source_status": source_status,
         "strategy_posture": infer_strategy_posture(indicators, degraded),
-        "summary": summarize_panel(indicators, degraded),
+        "summary": summarize_panel(indicators, degraded, missing_optional),
     }
 
 
@@ -271,15 +278,18 @@ def infer_strategy_posture(indicators: list[dict[str, Any]], degraded: bool) -> 
     return "high beta momentum"
 
 
-def summarize_panel(indicators: list[dict[str, Any]], degraded: bool) -> str:
+def summarize_panel(indicators: list[dict[str, Any]], degraded: bool, missing_optional: list[str] | None = None) -> str:
     if degraded:
         return "Macro panel is degraded because one or more required indicators are missing or unavailable."
     posture = infer_strategy_posture(indicators, False)
+    optional_note = ""
+    if missing_optional:
+        optional_note = f" Optional confirmations missing: {', '.join(missing_optional)}."
     if posture == "defensive":
-        return "Rates, credit, USD, oil, or liquidity conditions argue for a defensive posture."
+        return "Rates, credit, USD, oil, or liquidity conditions argue for a defensive posture." + optional_note
     if posture == "high beta momentum":
-        return "Macro and financial-condition reads support high beta momentum if price confirmation agrees."
-    return "Rates are near pressure thresholds, but credit, USD, oil, gold, and liquidity do not force a defensive posture."
+        return "Macro and financial-condition reads support high beta momentum if price confirmation agrees." + optional_note
+    return "Rates are near pressure thresholds, but credit, USD, oil, gold, and liquidity do not force a defensive posture." + optional_note
 
 
 def write_panel(path: Path, panel: dict[str, Any]) -> None:

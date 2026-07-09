@@ -108,16 +108,23 @@ Minimum macro panel:
 | `HYG/LQD` | credit risk appetite |
 | `DXY` | USD liquidity / earnings pressure |
 | `Oil` | inflation and geopolitical shock pressure |
-| `Gold` | defensive / easing hedge confirmation |
 | `liquidity` | reserves, RRP, TGA, or configured liquidity proxy |
+| `Gold` | optional defensive / easing hedge confirmation |
+
+`Gold` is an optional confirmation input. If every required macro input is
+present and only Gold is missing, the standard macro panel should disclose
+`missing_optional_indicators=["Gold"]` but should not mark the entire posture
+read degraded.
 
 Map results into a standard macro panel runtime view:
 
 - `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`
 
 The macro panel must preserve `value`, `change_5d`, `change_20d` when available,
-`threshold`, `source`, and `timestamp`. If Longbridge macrodata is unavailable,
-use official source fallback or mark the macro read degraded.
+`threshold`, `source`, `timestamp`, `missing_required_indicators`, and
+`missing_optional_indicators`. If Longbridge macrodata is unavailable, use
+official source fallback or mark the macro read degraded when required inputs
+are absent.
 
 When an authorized Longbridge macrodata read has been saved or passed into the
 runtime, normalize it with:

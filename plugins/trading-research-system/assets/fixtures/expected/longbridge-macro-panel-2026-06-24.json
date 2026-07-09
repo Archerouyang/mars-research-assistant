@@ -89,6 +89,8 @@
     }
   ],
   "missing_indicators": [],
+  "missing_optional_indicators": [],
+  "missing_required_indicators": [],
   "source_capability": "longbridge_macrodata",
   "source_notes": [
     "Longbridge macrodata is S1 macro/financial data, not a broker account source.",

@@ -57,7 +57,7 @@
 | HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
 | DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |
 | Oil |  |  | spike / breakdown | inflation and volatility pressure |  |  |
-| Gold |  |  | trend confirmation | defensive / easing hedge |  |  |
+| Gold |  |  | trend confirmation | optional defensive / easing hedge confirmation |  |  |
 
 ## Current Holding Impact
 
