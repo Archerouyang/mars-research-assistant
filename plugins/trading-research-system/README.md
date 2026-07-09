@@ -154,6 +154,17 @@ uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
   --as-of 2026-07-06T20:00:00Z
 ```
 
+For official fallback JSON, set the source capability explicitly so official
+values are not mislabeled as Longbridge macrodata:
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date 2026-07-06 \
+  --macrodata-json /tmp/official-macrodata.json \
+  --as-of 2026-07-06T20:00:00Z \
+  --source-capability official_source_fallback
+```
+
 The script consumes saved JSON only. It reports `No live macrodata reads`,
 `not a broker account source`, and `No order actions`, and it keeps an existing
 `macro-panel.json` unless `--overwrite` is passed.

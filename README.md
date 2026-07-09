@@ -169,6 +169,17 @@ uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
   --as-of 2026-07-06T20:00:00Z
 ```
 
+如果输入来自官方 fallback，而不是 Longbridge macrodata，必须显式标注来源，
+避免把官方数据误标为 Longbridge：
+
+```bash
+uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
+  --date 2026-07-06 \
+  --macrodata-json /tmp/official-macrodata.json \
+  --as-of 2026-07-06T20:00:00Z \
+  --source-capability official_source_fallback
+```
+
 ```bash
 uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py \
   --date 2026-07-08 \
@@ -180,7 +191,7 @@ uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py \
 - Broker 数据只读，用于持仓、成交、订单状态、风险和复盘。
 - 安装后首次交易研究日程或初始化 runtime 时询问启用哪些 broker 来源；v1 正式支持 Longbridge skill/plugin/Terminal CLI 和 IBKR connector。手动 CSV 只作为单次运行或 fixture 的降级 fallback。
 - 券商只读来源设置只确认 read-only 来源偏好，不自动读取账户、不自动安装软件、不写 public repo，也不允许任何下单/改单/撤单动作。
-- Longbridge `macrodata` 可作为宏观数据和金融条件读取源；已授权读取到的 macrodata JSON 可用 `longbridge_macrodata_adapter.py` 归一成标准 `macro-panel.json`。政策事实和官方讲话仍需优先用 S0 官方来源确认。该 adapter 只消费已保存 JSON，输出 `No live macrodata reads`，且不是 broker account source。
+- Longbridge `macrodata` 可作为宏观数据和金融条件读取源；已授权读取到的 macrodata JSON 可用 `prepare_macro_panel.py` 归一成标准 `macro-panel.json`，底层 normalizer 是 `longbridge_macrodata_adapter.py`。政策事实和官方讲话仍需优先用 S0 官方来源确认；官方 fallback JSON 需要使用 `--source-capability official_source_fallback`。该 adapter 只消费已保存 JSON，输出 `No live macrodata reads`，且不是 broker account source。
 - Google Drive 可以作为研报、表格或记录来源，但不替代本地 runtime。
 - Google Sheets 是可选摘要展示层，不做双向同步，也不维护交易记录。
 - 研报只能来自公开、授权或用户提供内容；不可访问内容只能标记为 inaccessible。

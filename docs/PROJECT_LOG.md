@@ -44,6 +44,17 @@ Use this shape:
 - Next step: forward-test with a live Longbridge macrodata payload when the
   Longbridge skill is visible in the trading research chat.
 
+- Commit: pending
+- Scope: script, reference, docs, test
+- What changed: tightened macro panel source labeling. Official fallback JSON
+  now uses `--source-capability official_source_fallback`, and item-level
+  `source` values are preserved in `macro-panel.json` instead of being
+  overwritten as Longbridge macrodata.
+- Why it matters: the Source Routing Boundary stays truthful when Longbridge
+  macrodata is unavailable and the panel is built from official fallback values.
+- Next step: forward-test with a live Longbridge macrodata payload or an
+  official fallback payload for today's runtime.
+
 - Commit: f692d5e Add IBKR connector snapshot adapter
 - Scope: script, fixture, reference, docs, test
 - What changed: added the IBKR connector adapter. `ibkr_connector_adapter.py`

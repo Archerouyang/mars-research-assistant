@@ -129,6 +129,10 @@ python3 plugins/trading-research-system/scripts/prepare_macro_panel.py \
   --as-of YYYY-MM-DDTHH:MM:SSZ
 ```
 
+When the source is official fallback JSON rather than Longbridge macrodata, add
+`--source-capability official_source_fallback` so the runtime panel does not
+mislabel the data source.
+
 `prepare_macro_panel.py` is the runtime wrapper around
 `longbridge_macrodata_adapter.py`: it writes the standard
 `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`, keeps existing files by

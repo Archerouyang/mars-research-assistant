@@ -169,7 +169,7 @@ def item_name(item: dict[str, Any]) -> str:
     )
 
 
-def normalize_indicator(item: dict[str, Any], canonical: str, as_of: str) -> dict[str, Any]:
+def normalize_indicator(item: dict[str, Any], canonical: str, as_of: str, source_label: str) -> dict[str, Any]:
     defaults = DEFAULTS[canonical]
     return {
         "name": canonical,
@@ -180,9 +180,26 @@ def normalize_indicator(item: dict[str, Any], canonical: str, as_of: str) -> dic
         "change_20d": decimal_or_text(first_present(item.get("change_20d"), item.get("change20d"), item.get("delta_20d"))),
         "threshold": clean(item.get("threshold")) or defaults["threshold"],
         "strategy_impact": clean(item.get("strategy_impact")) or defaults["strategy_impact"],
-        "source": "Longbridge macrodata",
+        "source": clean(item.get("source")) or source_label,
         "timestamp": clean(item.get("timestamp") or item.get("time") or item.get("as_of")) or as_of,
     }
+
+
+def default_source_notes(source_capability: str, source_label: str) -> list[str]:
+    if source_capability == "longbridge_macrodata":
+        return [
+            "Longbridge macrodata is S1 macro/financial data, not a broker account source.",
+            "Policy facts, official speeches, and release status still require S0 official confirmation.",
+        ]
+    if source_capability == "official_source_fallback":
+        return [
+            "Official source fallback supplies S0 official or primary macro values when Longbridge macrodata is unavailable.",
+            "Market transmission still requires S1 market data confirmation.",
+        ]
+    return [
+        f"{source_label} supplies macro values for this panel, not broker account facts.",
+        "Policy facts, official speeches, and release status still require S0 official confirmation.",
+    ]
 
 
 def normalize_panel(
@@ -191,6 +208,9 @@ def normalize_panel(
     as_of: str,
     data_status: str,
     source_status: str,
+    source_capability: str = "longbridge_macrodata",
+    source_label: str = "Longbridge macrodata",
+    source_notes: list[str] | None = None,
 ) -> dict[str, Any]:
     indexed: dict[str, dict[str, Any]] = {}
     for item in raw_items(payload):
@@ -200,7 +220,7 @@ def normalize_panel(
             indexed[canonical] = item
 
     indicators = [
-        normalize_indicator(indexed[name], name, as_of)
+        normalize_indicator(indexed[name], name, as_of, source_label)
         for name in CANONICAL_INDICATORS
         if name in indexed
     ]
@@ -212,11 +232,8 @@ def normalize_panel(
         "degraded": degraded,
         "indicators": indicators,
         "missing_indicators": missing,
-        "source_capability": "longbridge_macrodata",
-        "source_notes": [
-            "Longbridge macrodata is S1 macro/financial data, not a broker account source.",
-            "Policy facts, official speeches, and release status still require S0 official confirmation.",
-        ],
+        "source_capability": source_capability,
+        "source_notes": source_notes or default_source_notes(source_capability, source_label),
         "source_status": source_status,
         "strategy_posture": infer_strategy_posture(indicators, degraded),
         "summary": summarize_panel(indicators, degraded),

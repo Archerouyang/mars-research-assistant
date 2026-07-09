@@ -70,6 +70,10 @@ python3 plugins/trading-research-system/scripts/prepare_macro_panel.py \
   --as-of YYYY-MM-DDTHH:MM:SSZ
 ```
 
+When using official fallback JSON instead of Longbridge macrodata, call the same
+script with `--source-capability official_source_fallback`. The panel must
+preserve the provided item-level `source` when present.
+
 `prepare_macro_panel.py` wraps `longbridge_macrodata_adapter.py` for the private
 runtime path and reports `No live macrodata reads`; it does not invent values
 when `--macrodata-json` is missing.

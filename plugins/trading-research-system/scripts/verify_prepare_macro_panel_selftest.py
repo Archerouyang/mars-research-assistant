@@ -114,6 +114,62 @@ def main() -> None:
         require(overwrite.returncode == 0, overwrite.stderr or overwrite.stdout)
         require("USER_KEEP" not in target.read_text(encoding="utf-8"), "overwrite should refresh macro panel")
 
+        fallback_json = Path(raw_tmp) / "official-fallback-macrodata.json"
+        fallback_json.write_text(
+            json.dumps(
+                {
+                    "items": [
+                        {
+                            "indicator": "10Y",
+                            "value": "4.51",
+                            "unit": "%",
+                            "source": "Treasury daily rates",
+                        },
+                        {
+                            "indicator": "30Y",
+                            "value": "5.01",
+                            "unit": "%",
+                            "source": "Treasury daily rates",
+                        },
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        fallback_target_date = "2026-06-25"
+        fallback_target = runtime_dir / "daily" / fallback_target_date / "macro-panel.json"
+        fallback = run_command(
+            [
+                str(SCRIPT),
+                "--runtime-dir",
+                str(runtime_dir),
+                "--date",
+                fallback_target_date,
+                "--macrodata-json",
+                str(fallback_json),
+                "--as-of",
+                "2026-06-25T20:00:00Z",
+                "--data-status",
+                "official_fallback",
+                "--source-capability",
+                "official_source_fallback",
+            ]
+        )
+        require(fallback.returncode == 0, fallback.stderr or fallback.stdout)
+        fallback_panel = json.loads(fallback_target.read_text(encoding="utf-8"))
+        require(
+            fallback_panel["source_capability"] == "official_source_fallback",
+            "official fallback must not be labeled as Longbridge macrodata",
+        )
+        require(
+            fallback_panel["indicators"][0]["source"] == "Treasury daily rates",
+            "official fallback should preserve item source when present",
+        )
+        require(
+            "Longbridge macrodata is not a broker account source" not in fallback.stdout,
+            "official fallback CLI output should not say the source is Longbridge",
+        )
+
         health = run_command(
             [
                 str(HEALTH),

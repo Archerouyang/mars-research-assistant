@@ -16,6 +16,12 @@ from longbridge_macrodata_adapter import normalize_panel, read_json, write_panel
 from runtime_state import default_runtime_dir, resolve_daily_dir
 
 
+SOURCE_LABELS = {
+    "longbridge_macrodata": "Longbridge macrodata",
+    "official_source_fallback": "official source fallback",
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Prepare macro-panel.json in the private Daily Ops runtime.")
     parser.add_argument("--date", default=date.today().isoformat(), help="Trading date, YYYY-MM-DD")
@@ -40,6 +46,12 @@ def parse_args() -> argparse.Namespace:
         default="available",
         help="available / unauthorized / not_installed / missing / stale",
     )
+    parser.add_argument(
+        "--source-capability",
+        choices=tuple(SOURCE_LABELS),
+        default="longbridge_macrodata",
+        help="Macro value source used for this panel; default longbridge_macrodata",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print planned action without creating files")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite an existing macro-panel.json")
     return parser.parse_args()
@@ -49,21 +61,27 @@ def target_path(runtime_dir: Path, trading_date: str) -> Path:
     return resolve_daily_dir(runtime_dir, trading_date) / "macro-panel.json"
 
 
-def safety_lines() -> list[str]:
+def source_label(source_capability: str) -> str:
+    return SOURCE_LABELS[source_capability]
+
+
+def safety_lines(source_capability: str) -> list[str]:
+    label = source_label(source_capability)
     return [
-        "No live macrodata reads; this script consumes saved Longbridge macrodata JSON only.",
-        "Longbridge macrodata is not a broker account source.",
+        f"No live macrodata reads; this script consumes saved {label} JSON only.",
+        f"{label} is not a broker account source.",
         "No order actions; this script never creates, modifies, cancels, or submits orders.",
     ]
 
 
-def missing_input_message(target: Path, dry_run: bool) -> list[str]:
+def missing_input_message(target: Path, dry_run: bool, source_capability: str) -> list[str]:
     prefix = "DRY RUN " if dry_run else ""
+    label = source_label(source_capability)
     return [
         f"{prefix}Macro panel target: {target}",
         "macrodata JSON was not supplied; macro-panel.json was not generated.",
-        "Next step: run an authorized Longbridge macrodata read or official fallback collection, save the JSON privately, then rerun with --macrodata-json.",
-    ] + safety_lines()
+        f"Next step: run an authorized {label} read or collection, save the JSON privately, then rerun with --macrodata-json.",
+    ] + safety_lines(source_capability)
 
 
 def prepare_macro_panel(
@@ -74,19 +92,20 @@ def prepare_macro_panel(
     as_of: str,
     data_status: str,
     source_status: str,
+    source_capability: str,
     dry_run: bool,
     overwrite: bool,
 ) -> list[str]:
     output = target_path(runtime_dir, trading_date)
     if not macrodata_json:
-        return missing_input_message(output, dry_run)
+        return missing_input_message(output, dry_run, source_capability)
 
     if output.exists() and not overwrite:
         return [
             f"Macro panel target: {output}",
             f"kept existing {output}",
             "Use --overwrite to refresh the runtime macro panel after confirming the new macrodata snapshot.",
-        ] + safety_lines()
+        ] + safety_lines(source_capability)
 
     payload = read_json(macrodata_json)
     panel = normalize_panel(
@@ -94,6 +113,8 @@ def prepare_macro_panel(
         as_of=as_of,
         data_status=data_status,
         source_status=source_status,
+        source_capability=source_capability,
+        source_label=source_label(source_capability),
     )
 
     if dry_run:
@@ -104,7 +125,7 @@ def prepare_macro_panel(
             f"strategy_posture: {panel['strategy_posture']}",
             f"indicators: {len(panel['indicators'])}",
             f"missing_indicators: {', '.join(panel['missing_indicators']) or 'none'}",
-        ] + safety_lines()
+        ] + safety_lines(source_capability)
 
     write_panel(output, panel)
     return [
@@ -114,7 +135,7 @@ def prepare_macro_panel(
         f"strategy_posture: {panel['strategy_posture']}",
         f"indicators: {len(panel['indicators'])}",
         f"missing_indicators: {', '.join(panel['missing_indicators']) or 'none'}",
-    ] + safety_lines()
+    ] + safety_lines(source_capability)
 
 
 def main() -> int:
@@ -128,6 +149,7 @@ def main() -> int:
         as_of=as_of,
         data_status=args.data_status,
         source_status=args.source_status,
+        source_capability=args.source_capability,
         dry_run=args.dry_run,
         overwrite=args.overwrite,
     )
