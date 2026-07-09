@@ -32,6 +32,21 @@ Use this shape:
 ## 2026-07-09
 
 - Commit: pending
+- Scope: integration, runtime, validation
+- What changed: forward-smoked the Longbridge Terminal CLI read-only broker
+  path. `longbridge check --format json` confirmed a valid token and API
+  connectivity; `longbridge portfolio --format json` saved a private raw JSON
+  snapshot under `/private/tmp`; `longbridge_cli_adapter.py`,
+  `repair_portfolio_snapshot.py`, and `position_daily_report.py` produced a
+  private standard runtime snapshot and position report without copying broker
+  facts into the repository.
+- Why it matters: the 1.0 broker-live runtime-view requirement now has both
+  IBKR and Longbridge evidence through read-only paths. Native Longbridge skill
+  tooling remains a follow-up when the capability is visible in Codex.
+- Next step: rerun the fresh-chat acceptance prompts that depend on broker
+  context, then close the remaining setup-row and real-OHLCV PA blockers.
+
+- Commit: pending
 - Scope: script, reference, docs, test
 - What changed: added Runtime snapshot normalization repair via
   `repair_portfolio_snapshot.py`. The script remaps stale or unmapped
