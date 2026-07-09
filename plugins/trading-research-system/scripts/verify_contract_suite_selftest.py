@@ -38,6 +38,8 @@ def main() -> None:
         raise AssertionError("core suite should include 1.0 acceptance contract")
     if "visual-trigger" not in names:
         raise AssertionError("core suite should include visual trigger contract")
+    if "capital-cycle-industry-research" not in names:
+        raise AssertionError("core suite should include capital-cycle industry research contract")
     if len(names) != len(set(names)):
         raise AssertionError("core suite should not contain duplicate names")
 

@@ -8,6 +8,7 @@ Rank candidates using:
 
 - Macro fit: rates, USD, liquidity, fiscal policy, sector regulation.
 - Industry structure: cycle, competition, pricing power, policy beneficiaries/losers.
+- Capital Cycle Industry Research: supply-side capital intensity, capacity additions, utilization, pricing power, funding pressure, and who may inherit cheap assets after the cycle resets.
 - Company quality: revenue growth, margins, free cash flow, balance sheet, management guidance.
 - Valuation: historical range, peer comparison, growth-adjusted valuation, downside multiple.
 - Catalyst: earnings, guidance, product cycle, buybacks, M&A, index events, policy changes.
@@ -17,6 +18,12 @@ Rank candidates using:
 ## Research-Note Handling
 
 For report-heavy tasks, first use `research-report-intake` and its `Research Report Digest`, `Claim Ledger`, and `Verification Queue`. Equity screening should consume those outputs instead of re-summarizing the full report.
+
+For capital-intensive themes, also use
+`capital-cycle-industry-research.md`. Demand narratives can raise research
+interest, but the screen should ask whether supply-side capital intensity,
+capacity additions, utilization, pricing power, vendor financing, and circular
+financing are improving or pressuring future returns.
 
 When using Seeking Alpha or similar sources:
 
@@ -59,6 +66,7 @@ Use confidence labels:
 This reference feeds two Trade Plan Preparation input reads:
 
 - `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, policy beneficiaries/losers, and industry-level risk.
+- `Supply-Side Cycle Check`: capital cycle phase, capital intensity, capacity additions, utilization, pricing power, and funding pressure when the industry is capital intensive.
 - `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings/guidance, balance sheet, and disconfirming facts.
 
 For each read, output:

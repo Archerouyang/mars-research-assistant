@@ -31,6 +31,22 @@ Use this shape:
 
 ## 2026-07-09
 
+- Commit: pending
+- Scope: reference, skill, template, docs, test
+- What changed: added Capital Cycle Industry Research through
+  `capital-cycle-industry-research.md`. Macro/equity research, weekly planning,
+  research intake, and the macro/industry monitor can now use supply-side
+  capex, capacity, pricing power, vendor/circular financing, and inheritance
+  questions when analyzing AI infrastructure or other capital-intensive themes.
+- Why it matters: user-provided videos, podcasts, or research notes that argue
+  from industry capital cycles now become a structured, verifiable research
+  method instead of a loose narrative. The framework improves industry/cycle
+  research and Cross-Section Candidate Pool triage, but it is not a setup
+  trigger.
+- Next step: use the framework in the next weekly or macro/industry research
+  pass, then verify material claims against filings, transcripts, macro data,
+  and market data before changing the Active Market Plan.
+
 - Commit: 7fcbac6 Add macro panel runtime preparation
 - Scope: script, reference, docs, test
 - What changed: added Macro panel runtime preparation. `prepare_macro_panel.py`

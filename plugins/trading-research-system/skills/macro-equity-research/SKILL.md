@@ -15,6 +15,7 @@ Use this skill to convert current macro/rates information and research claims in
    - `../trading-research/references/macro-data-source-contract.md`
    - `../trading-research/references/research-report-intake.md` when the input is a report, PDF, link, excerpt, Seeking Alpha-style article, or report-discovery request.
    - `../trading-research/references/equity-screening.md`
+   - `../trading-research/references/capital-cycle-industry-research.md` when an industry or theme needs supply-side capital-cycle analysis, especially AI infrastructure, semiconductors, data centers, power, memory, or optical networking.
    - optional external quantitative momentum context only when already
      configured or explicitly provided by the user.
    - `../trading-research/references/price-action-timing.md`
@@ -27,6 +28,9 @@ Use this skill to convert current macro/rates information and research claims in
    - `Financial Conditions`
    - `Policy/Event Risk`
    - `Industry/Sector Strength`
+   - `Supply-Side Cycle Check` when capital intensity, capacity additions,
+     pricing power, vendor financing, or circular financing can change the
+     industry read.
    - `Company Thesis Check`
    - `External Momentum Snapshot` when enabled
 6. Each input read must return `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`.
@@ -70,6 +74,7 @@ Use Chinese Markdown with:
 - `Financial Conditions`
 - `Policy/Event Risk`
 - `Industry/Sector Strength`
+- `Supply-Side Cycle Check`
 - `Company Thesis Check`
 - `External Momentum Snapshot`
 - `Cross-Section Candidate Pool`

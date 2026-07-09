@@ -48,6 +48,10 @@ Generate searches from weekly P0/P1 focus variables. Examples:
   sector regulation;
 - industry: AI hardware, custom chip, AI compute, optical networking, power,
   memory, DRAM, NAND;
+- capital cycle: AI infrastructure capex, capacity additions, utilization,
+  pricing power, vendor financing, circular financing, depreciation, customer
+  concentration, data center power/cooling, GPU/HBM supply, and inheritance
+  candidates;
 - company confirmation: TSMC monthly revenue, Micron pricing, AMD, ARM, GLW,
   MRVL/MVLL, SOXX, QQQ.
 
@@ -63,6 +67,9 @@ Do not search broad market noise unless it maps to a weekly P0/P1 variable.
    - create `Claim Ledger`;
    - create `Verification Queue`;
    - state `Trade Plan Preparation` impact.
+   - when the source uses supply-side capital-cycle logic, also apply
+     `capital-cycle-industry-research.md` and return a `Supply-Side Cycle
+     Check` for AI infrastructure or the relevant capital-intensive industry.
 5. State Active Market Plan impact:
    - supports / pressures / blocks / watch only;
    - affected holdings/plans;

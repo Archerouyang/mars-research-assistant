@@ -20,6 +20,7 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `../trading-research/references/trading-profile.md`.
    - Macro and rates: `../trading-research/references/macro-policy-filter.md`.
    - Equity screening and thesis validation: `../trading-research/references/equity-screening.md`.
+   - Capital-cycle industry research: `../trading-research/references/capital-cycle-industry-research.md` when AI infrastructure, semiconductors, data centers, power, memory, optical networking, or another capital-intensive theme can affect sector posture.
    - optional external quantitative momentum context when already configured
      or explicitly provided by the user.
    - Price action and timeframe rules: `../trading-research/references/price-action-timing.md`.
@@ -40,6 +41,9 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
      including optional external momentum context only when configured or
      explicitly provided, then build the Cross-Section Candidate Pool before
      touching the Setup Pool;
+   - supply-side capital-cycle read: when the week is driven by AI infrastructure
+     or another capital-intensive theme, include a concise `Supply-Side Cycle
+     Check` before candidate promotion;
    - current holding impact: how the week changes add, TP/rebalance, or pause-and-review conditions for existing long-term ETF holdings;
    - new-position impact: whether planned risk such as 0DTE, ETF/2x ETF, LEAP, or post-event continuation should wait for confirmation;
    - strategy posture: decide whether the plan should be defensive, balanced, or high-beta momentum, and explain which conditions would change that posture;
@@ -114,6 +118,7 @@ Use these input reads:
 - `Financial Conditions`: 2Y/10Y/30Y, real yields, credit spreads, VIX, USD, and liquidity pressure.
 - `Policy/Event Risk`: White House / Trump policy, Treasury/fiscal, tariffs, Fed independence, auctions, FOMC, earnings, holidays, and other event risk.
 - `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, and themes that deserve or lose attention.
+- `Supply-Side Cycle Check`: capital cycle phase, capital intensity, capacity additions, demand quality, pricing power, vendor financing, circular financing, and likely inheritance candidates for AI infrastructure or other capital-intensive themes.
 - `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings, guidance, and disconfirming facts.
 - `External Momentum Snapshot`: optional imported model output when the user has
   already provided or configured a separate quantitative model. Treat it as an
@@ -201,6 +206,7 @@ Write concise Chinese Markdown notes with:
 - `宏观/利率`
 - `政策/新闻`
 - `交易计划准备`
+- `Supply-Side Cycle Check`
 - `对当前持仓的总体影响`
 - `策略姿态建议`
 - `当周重点财报`
