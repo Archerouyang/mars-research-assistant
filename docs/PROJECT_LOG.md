@@ -33,16 +33,19 @@ Use this shape:
 
 - Commit: pending
 - Scope: validation, runtime
-- What changed: drafted a private monitor-only setup-row proposal from the
-  Active Market Plan and verified it with `prepare_setup_rows.py --dry-run`
-  against the 2026-07-09 private runtime. A temporary runtime write then proved
-  `intraday_scan.py` can render the proposal as `needs_review` / `candidate`
-  states only.
-- Why it matters: prompt #3 now has a concrete non-writing bridge from the
-  watch-only setup pool to scanner-ready rows. The remaining blocker is user
-  confirmation, not missing tooling.
-- Next step: after user confirmation, write the monitor-only rows to the
-  private runtime and rerun fresh-chat prompt #3.
+- What changed: after user confirmation, wrote the private monitor-only
+  setup-row proposal into the 2026-07-09 runtime with
+  `prepare_setup_rows.py`. Fresh-chat prompt #3 rerun
+  `019f4705-cc23-72a0-94e0-3adec7a42df5` used installed plugin
+  `0.1.0+codex.20260709083506`, read plan/update/macro/watchlist state, ran
+  `intraday_scan.py` read-only, and returned PASS with 4 `needs_review` rows
+  plus 1 `candidate` row.
+- Why it matters: the last local 1.0 acceptance blocker is closed. The plugin
+  can now move from private plan containers to scanner-ready monitor-only rows
+  without inventing trade plans, reading private brokers, or emitting order
+  instructions.
+- Next step: ask the user before any `master` promotion; do not create release
+  tags or public version semantics yet.
 
 - Commit: pending
 - Scope: validation

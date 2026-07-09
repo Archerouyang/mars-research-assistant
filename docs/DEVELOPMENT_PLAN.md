@@ -106,7 +106,7 @@ Use these statuses:
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
-| P1 | in_progress | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 5 PASS, 1 PARTIAL, 0 FAIL; broker runtime views, macro panel, setup row bridge, PA OHLCV bridge, and snapshot repair now have verified paths; a monitor-only setup-row proposal dry-run passed, and the remaining blocker is user confirmation before writing rows to private runtime and rerunning prompt #3. |
+| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL; broker runtime views, macro panel, setup row bridge, PA OHLCV bridge, snapshot repair, and monitor-only setup rows have verified paths. Final `dev` gates passed; promotion to `master` still requires explicit user confirmation. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
 | P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
@@ -153,31 +153,39 @@ Use these statuses:
 
 Date: 2026-07-09
 
-- Main task: continue 1.0 local workflow acceptance by closing the daily runtime
-  package blocker, rerunning prompt 3, and adding the IBKR read-only adapter path.
-- Current stage: the first fresh-chat run remains 4 PASS, 2 PARTIAL, 0 FAIL.
-  The 2026-07-09 daily runtime package now exists as private header-only
-  runtime state, empty intraday scans report a safe "no prepared setup" result,
-  and prompt 3 was rerun as `PARTIAL` because today's watchlist is still
-  header-only and macro/broker sources remain incomplete.
-- Secondary task: keep the remaining gaps explicit: macro-panel live path,
-  Longbridge read-only forward test, PA market-data inputs, snapshot repair,
-  and final fresh-chat acceptance rerun.
-- Definition of done: daily runtime package preparation and IBKR connector
-  adapter are committed, pushed, reinstalled into the personal plugin cache,
-  and documented without copying private runtime data into the repo.
-- Verification: daily runtime package selftest/contract, IBKR connector adapter
-  selftest/contract, plugin validation, `scripts/verify-plugin.sh`,
-  `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
-- End-of-day target: reinstall the updated plugin and verify installed packaged
-  contract path resolution. This has passed for the 1.0 acceptance and IBKR
-  adapter contracts; next choose whether to work on macro-panel live path or
-  Longbridge read-only forward test.
+- Main task: close 1.0 local workflow acceptance by resolving the final
+  setup-row blocker, rerunning fresh-chat prompt 3, and recording the result.
+- Current stage: all six fresh-chat prompts have passed: 6 PASS, 0 PARTIAL,
+  0 FAIL. Prompt 3 passed after user-confirmed monitor-only setup rows were
+  written to the private runtime and `intraday_scan.py` rendered 4
+  `needs_review` setups plus 1 `candidate` setup without broker reads or order
+  actions.
+- Secondary task: keep `master` promotion as a separate user-confirmed
+  decision.
+- Definition of done: acceptance results, roadmap, and project log record the
+  final prompt 3 pass; final gates pass; no private runtime or broker data is
+  committed.
+- Verification: `verify_1_0_acceptance_contract.py`,
+  `bash scripts/verify-plugin.sh`, `bash scripts/verify-mvp.sh`, uv-backed
+  `verify_contract_suite.py core`, and `git diff --check` pass.
 
 ## Progress Log
 
 ### 2026-07-09
 
+- Completed: wrote the user-confirmed monitor-only setup rows to the private
+  2026-07-09 runtime with `prepare_setup_rows.py`. The runtime now has 5
+  scanner-ready rows: DRAM/SOXX/TSMX/GLW as `needs_review` and MAG7 basket as
+  `candidate`.
+- Completed: reran fresh-chat acceptance prompt 3 in thread
+  `019f4705-cc23-72a0-94e0-3adec7a42df5` against installed plugin
+  `0.1.0+codex.20260709083506`. Result: `PASS`; it read plan/update trail,
+  macro-panel, and watchlist state, ran `intraday_scan.py` read-only, reported
+  no `active`, `approaching`, or `triggered` setups, and did not call brokers or
+  write repo/runtime files.
+- Completed: local 1.0 fresh-chat acceptance is now 6 PASS, 0 PARTIAL, 0 FAIL.
+  Final `dev` gates passed; promotion from `dev` to `master` remains a
+  separate user-confirmed step.
 - Completed: added and ran the private 2026-07-09 daily runtime package
   preparation flow. Today's runtime now has header-only `trade-plans.csv`,
   `intraday-watchlist.csv`, `portfolio_snapshot.csv`, `ops-state.md`, and update
