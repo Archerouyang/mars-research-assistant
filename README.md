@@ -110,6 +110,22 @@ uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py 
   --as-of 2026-07-06T20:00:00Z
 ```
 
+### IBKR connector adapter
+
+如果 IBKR connector 已授权，可以先用只读工具读取 positions / balances，
+再把保存下来的 JSON 交给 `ibkr_connector_adapter.py` 转成标准
+`portfolio_snapshot.csv`。这个 adapter 只消费已保存 JSON；契约短语是
+`No live broker reads` 和 `No order actions`，不调用 IBKR、不调用行情、
+不创建或修改订单。
+
+```bash
+uv run python plugins/trading-research-system/scripts/ibkr_connector_adapter.py \
+  --positions-json /tmp/ibkr-positions.json \
+  --balances-json /tmp/ibkr-balances.json \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --as-of 2026-07-06T20:00:00Z
+```
+
 ### Longbridge Terminal CLI adapter
 
 如果本机已经安装并授权 Longbridge Terminal CLI，可以先由用户/agent 在只读边界

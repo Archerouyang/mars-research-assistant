@@ -29,6 +29,32 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-09
+
+- Commit: pending
+- Scope: script, fixture, reference, docs, test
+- What changed: added the IBKR connector adapter. `ibkr_connector_adapter.py`
+  maps saved read-only `get_account_positions` and `get_account_balances` JSON
+  into the standard `portfolio_snapshot.csv` runtime view, with synthetic
+  fixtures, selftest, contract verifier, and core suite registration.
+- Why it matters: the read-only IBKR connector path now has the same adapter
+  boundary as Longbridge and CSV exports. The plugin can produce broker-agnostic
+  position daily reports from authorized IBKR facts without storing raw exports
+  in the public repo or touching broker write actions.
+- Next step: forward-test the adapter with a private runtime snapshot, then
+  render `position_daily_report.py` from that standard view.
+
+- Commit: pending
+- Scope: script, test
+- What changed: fixed packaged contract path resolution in `contract_suite.py`.
+  When contract verifiers run from an installed personal plugin cache while the
+  current working directory is the repo checkout, plugin files are resolved from
+  the installed cache and repo-level docs are resolved from cwd.
+- Why it matters: fresh-chat acceptance can use the installed plugin without
+  contract verifiers looking for `docs/` under the cache parent.
+- Next step: refresh and reinstall the plugin, then verify an installed-cache
+  contract script from the repo cwd.
+
 ## 2026-07-08
 
 - Commit: pending

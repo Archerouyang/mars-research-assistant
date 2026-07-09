@@ -156,6 +156,24 @@ This script consumes read-only broker export files only. It does not perform
 live broker reads, live market data calls, real Codex automations, or order
 actions.
 
+## IBKR connector adapter
+
+When the IBKR connector is installed and authorized, read-only positions and
+balances can be saved as JSON and mapped into the standard
+`portfolio_snapshot.csv` view with `ibkr_connector_adapter.py`.
+
+```bash
+uv run python plugins/trading-research-system/scripts/ibkr_connector_adapter.py \
+  --positions-json /tmp/ibkr-positions.json \
+  --balances-json /tmp/ibkr-balances.json \
+  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
+  --as-of 2026-07-06T20:00:00Z
+```
+
+The adapter consumes saved IBKR connector JSON only. It reports the required
+contract phrases `No live broker reads` and `No order actions`; it never
+creates, modifies, cancels, or submits orders.
+
 ## Longbridge Terminal CLI adapter
 
 When the user has installed and authorized the Longbridge Terminal CLI, a

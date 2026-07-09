@@ -20,6 +20,13 @@ class PluginPaths:
     @classmethod
     def from_script(cls, script_path: str | Path) -> "PluginPaths":
         root = Path(script_path).resolve().parents[1]
+        repo_candidates = (
+            root.parents[1],
+            Path.cwd(),
+        )
+        for candidate in repo_candidates:
+            if is_repo_checkout(candidate):
+                return cls(root=root, repo=candidate.resolve())
         return cls(root=root, repo=root.parents[1])
 
     @property
@@ -49,6 +56,16 @@ class PluginPaths:
     @property
     def fixture_expected(self) -> Path:
         return self.fixtures / "expected"
+
+
+def is_repo_checkout(path: Path) -> bool:
+    """Return true when path looks like the public dailytrades repo checkout."""
+
+    return (
+        (path / "docs").is_dir()
+        and (path / "plugins" / "trading-research-system").is_dir()
+        and (path / "README.md").is_file()
+    )
 
 
 @dataclass(frozen=True)
@@ -89,6 +106,8 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("position-daily-report-contract", "verify_position_daily_report_contract.py"),
     ("broker-snapshot-ingest-selftest", "verify_broker_snapshot_ingest_selftest.py"),
     ("broker-snapshot-ingest-contract", "verify_broker_snapshot_ingest_contract.py"),
+    ("ibkr-connector-adapter-selftest", "verify_ibkr_connector_adapter_selftest.py"),
+    ("ibkr-connector-adapter-contract", "verify_ibkr_connector_adapter_contract.py"),
     ("longbridge-cli-adapter-selftest", "verify_longbridge_cli_adapter_selftest.py"),
     ("longbridge-cli-adapter-contract", "verify_longbridge_cli_adapter_contract.py"),
     ("longbridge-macrodata-adapter-selftest", "verify_longbridge_macrodata_adapter_selftest.py"),

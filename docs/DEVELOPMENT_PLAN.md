@@ -112,6 +112,7 @@ Use these statuses:
 | P1 | done | Deepen Runtime State module | Centralizes private runtime root, daily path, template path, dry-run, and overwrite behavior behind one tested module. | Use `runtime_state.py`, `verify_runtime_state_selftest.py`, and `verify_runtime_state_contract.py` before adding new runtime-aware scripts. |
 | P1 | done | Deepen Contract Suite module | Centralizes plugin path factories and core contract-suite orchestration behind one tested runner. | Use `contract_suite.py` and `verify_contract_suite.py core`; register new core checks in `CORE_SUITE` instead of expanding `verify-plugin.sh`. |
 | P1 | done | Broker snapshot ingest | Maps user-approved read-only IBKR/Longbridge export CSVs into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `broker_snapshot_ingest.py`; live connector reads remain a later adapter layer. |
+| P1 | done | IBKR connector adapter | Maps saved read-only IBKR connector positions/balances JSON into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `ibkr_connector_adapter.py`; live read remains explicit and read-only, while the adapter consumes saved JSON and performs no order actions. |
 | P1 | done | Longbridge Terminal CLI adapter | Maps saved `longbridge portfolio --format json` output into the standard `portfolio_snapshot.csv` view without live broker reads or order actions. | Use `longbridge_cli_adapter.py`; runtime health exposes `longbridge_terminal_cli` separately from Longbridge skill and macrodata. |
 | P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
 | P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
@@ -148,23 +149,24 @@ Use these statuses:
 Date: 2026-07-09
 
 - Main task: continue 1.0 local workflow acceptance by closing the daily runtime
-  package blocker and preparing the next fresh-chat rerun.
+  package blocker, rerunning prompt 3, and adding the IBKR read-only adapter path.
 - Current stage: the first fresh-chat run remains 4 PASS, 2 PARTIAL, 0 FAIL.
   The 2026-07-09 daily runtime package now exists as private header-only
-  runtime state, and empty intraday scans report a safe "no prepared setup"
-  result.
+  runtime state, empty intraday scans report a safe "no prepared setup" result,
+  and prompt 3 was rerun as `PARTIAL` because today's watchlist is still
+  header-only and macro/broker sources remain incomplete.
 - Secondary task: keep the remaining gaps explicit: macro-panel live path,
-  read-only broker adapter forward tests, PA market-data inputs, snapshot repair,
+  Longbridge read-only forward test, PA market-data inputs, snapshot repair,
   and final fresh-chat acceptance rerun.
-- Definition of done: daily runtime package preparation is committed, pushed,
-  reinstalled into the personal plugin cache, and documented without copying
-  private runtime data into the repo.
-- Verification: daily runtime package selftest/contract, plugin validation,
-  `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git
-  diff --check` pass.
-- End-of-day target: rerun acceptance prompt 3 in a fresh chat against the
-  reinstalled plugin, then choose whether to work on macro-panel live path or
-  broker read-only forward tests next.
+- Definition of done: daily runtime package preparation and IBKR connector
+  adapter are committed, pushed, reinstalled into the personal plugin cache,
+  and documented without copying private runtime data into the repo.
+- Verification: daily runtime package selftest/contract, IBKR connector adapter
+  selftest/contract, plugin validation, `scripts/verify-plugin.sh`,
+  `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
+- End-of-day target: reinstall the updated plugin, verify installed packaged
+  contract path resolution, then choose whether to work on macro-panel live path
+  or Longbridge read-only forward test next.
 
 ## Progress Log
 
@@ -180,11 +182,25 @@ Date: 2026-07-09
 - Completed: refreshed the plugin cachebuster to
   `0.1.0+codex.20260709022827`, pushed `dev`, synced the personal plugin source,
   and reinstalled `trading-research-system@personal`.
-- Verification: daily runtime package selftest/contract, `scripts/verify-plugin.sh`,
-  `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
-- Next: rerun fresh-chat acceptance prompt 3 against the newly installed plugin;
-  then continue with macro-panel live path, read-only broker adapter forward
-  tests, PA market-data inputs, and snapshot repair.
+- Completed: added the IBKR connector adapter. `ibkr_connector_adapter.py` maps
+  saved read-only IBKR positions/balances JSON into standard
+  `portfolio_snapshot.csv`, with synthetic fixtures and contract checks.
+- Completed: forward-smoked the IBKR read-only connector path privately:
+  positions/balances/allocation tools were read-only callable, saved JSON was
+  normalized through `ibkr_connector_adapter.py`, and `position_daily_report.py`
+  rendered from the standard view. Temporary private files were deleted.
+- Completed: reran fresh-chat acceptance prompt 3. Result remains `PARTIAL`
+  because today's plan/watchlist files are header-only, `macro-panel.json` is
+  missing, and broker/macrodata sources were unauthorized in that fresh chat.
+- Completed: fixed packaged contract path resolution so installed plugin
+  verifiers can use the project checkout from cwd for repo docs while keeping
+  plugin files rooted in the installed cache.
+- Verification: daily runtime package selftest/contract, IBKR connector adapter
+  selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
+  compileall, and `git diff --check` pass.
+- Next: refresh/reinstall the plugin, verify installed packaged contracts, then
+  continue with macro-panel live path, Longbridge read-only forward test, PA
+  market-data inputs, and snapshot repair.
 
 ### 2026-07-08
 

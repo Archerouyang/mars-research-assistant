@@ -96,6 +96,24 @@ This is an adapter boundary, not broker access. It consumes user-approved local
 exports or connector-produced CSV artifacts and does not perform live broker
 reads, market-data calls, or order actions.
 
+When the IBKR connector is authorized, the IBKR connector adapter can normalize
+saved read-only connector results. Read-only calls such as
+`get_account_positions` and `get_account_balances` can be saved as JSON and
+normalized into the same standard runtime view:
+
+```bash
+python3 plugins/trading-research-system/scripts/ibkr_connector_adapter.py \
+  --positions-json /tmp/ibkr-positions.json \
+  --balances-json /tmp/ibkr-balances.json \
+  --output {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv \
+  --as-of YYYY-MM-DDTHH:MM:SSZ
+```
+
+`ibkr_connector_adapter.py` consumes saved IBKR connector JSON only. No live broker reads.
+It does not call the IBKR connector, perform market-data calls, or create,
+modify, cancel, or submit orders. No order actions. The live read step must stay
+explicit and read-only; the adapter step is just source-shape normalization.
+
 When Longbridge Terminal CLI is user-installed and authorized, a read-only
 portfolio command can produce JSON for a local adapter step:
 
