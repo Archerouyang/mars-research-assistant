@@ -106,9 +106,9 @@ Use these statuses:
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
-| P1 | in_progress | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | First run recorded in `docs/1.0_ACCEPTANCE_RESULTS.md`: 4 PASS, 2 PARTIAL, 0 FAIL; next close daily runtime package, macro panel, read-only broker adapter, PA market-data, and snapshot-repair gaps. |
+| P1 | in_progress | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | First run recorded in `docs/1.0_ACCEPTANCE_RESULTS.md`: 4 PASS, 2 PARTIAL, 0 FAIL; daily runtime package has a 2026-07-09 header-only follow-up and needs fresh-chat rerun; next close macro panel, read-only broker adapter, PA market-data, and snapshot-repair gaps. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
-| P1 | in_progress | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. |
+| P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 still needs fresh-chat rerun. |
 | P1 | done | Deepen Runtime State module | Centralizes private runtime root, daily path, template path, dry-run, and overwrite behavior behind one tested module. | Use `runtime_state.py`, `verify_runtime_state_selftest.py`, and `verify_runtime_state_contract.py` before adding new runtime-aware scripts. |
 | P1 | done | Deepen Contract Suite module | Centralizes plugin path factories and core contract-suite orchestration behind one tested runner. | Use `contract_suite.py` and `verify_contract_suite.py core`; register new core checks in `CORE_SUITE` instead of expanding `verify-plugin.sh`. |
 | P1 | done | Broker snapshot ingest | Maps user-approved read-only IBKR/Longbridge export CSVs into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `broker_snapshot_ingest.py`; live connector reads remain a later adapter layer. |
@@ -145,27 +145,46 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-07-08
+Date: 2026-07-09
 
-- Main task: define the 1.0 local trading research workflow acceptance plan and visual trigger policy.
-- Current stage: the Acceptance Prompts and Visual Trigger Policy are defined
-  and installed; the first fresh-chat run produced 4 PASS, 2 PARTIAL, 0 FAIL.
-  The remaining work is to close runtime/live-source gaps before calling the
-  local workflow complete.
-- Secondary task: keep the scope explicit: no release tag, no hidden KVN model
-  exposure, no option-flow vendor integration, no real automations, and no
-  broker write actions.
-- Definition of done: `docs/1.0_ACCEPTANCE.md`, roadmap, development plan,
-  project log, MVP runbook, visual-trigger-policy.md, and the core contract
-  suite agree on the 1.0 acceptance and visualization trigger gates.
-- Verification: `verify_1_0_acceptance_contract.py`,
-  `verify_visual_trigger_contract.py`, `verify_contract_suite.py core`,
+- Main task: continue 1.0 local workflow acceptance by closing the daily runtime
+  package blocker and preparing the next fresh-chat rerun.
+- Current stage: the first fresh-chat run remains 4 PASS, 2 PARTIAL, 0 FAIL.
+  The 2026-07-09 daily runtime package now exists as private header-only
+  runtime state, and empty intraday scans report a safe "no prepared setup"
+  result.
+- Secondary task: keep the remaining gaps explicit: macro-panel live path,
+  read-only broker adapter forward tests, PA market-data inputs, snapshot repair,
+  and final fresh-chat acceptance rerun.
+- Definition of done: daily runtime package preparation is committed, pushed,
+  reinstalled into the personal plugin cache, and documented without copying
+  private runtime data into the repo.
+- Verification: daily runtime package selftest/contract, plugin validation,
   `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`, compileall, and `git
   diff --check` pass.
-- End-of-day result: acceptance run in progress; `docs/1.0_ACCEPTANCE_RESULTS.md`
-  records the first pass/fail result and the remaining P0 blockers.
+- End-of-day target: rerun acceptance prompt 3 in a fresh chat against the
+  reinstalled plugin, then choose whether to work on macro-panel live path or
+  broker read-only forward tests next.
 
 ## Progress Log
+
+### 2026-07-09
+
+- Completed: added and ran the private 2026-07-09 daily runtime package
+  preparation flow. Today's runtime now has header-only `trade-plans.csv`,
+  `intraday-watchlist.csv`, `portfolio_snapshot.csv`, `ops-state.md`, and update
+  containers outside the public repo.
+- Completed: polished the empty intraday scan output so a header-only watchlist
+  reports `没有已准备的 setup 行` and does not claim `approaching` or `triggered`
+  signals.
+- Completed: refreshed the plugin cachebuster to
+  `0.1.0+codex.20260709022827`, pushed `dev`, synced the personal plugin source,
+  and reinstalled `trading-research-system@personal`.
+- Verification: daily runtime package selftest/contract, `scripts/verify-plugin.sh`,
+  `scripts/verify-mvp.sh`, compileall, and `git diff --check` pass.
+- Next: rerun fresh-chat acceptance prompt 3 against the newly installed plugin;
+  then continue with macro-panel live path, read-only broker adapter forward
+  tests, PA market-data inputs, and snapshot repair.
 
 ### 2026-07-08
 
