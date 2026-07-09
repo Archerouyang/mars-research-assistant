@@ -109,7 +109,7 @@ def render_scan(rows: list[dict[str, str]], date_label: str | None) -> str:
                 "## 结论",
                 "",
                 "- 没有已准备的 setup 行；先从 Active Market Plan 或用户确认的交易想法补齐 `intraday-watchlist.csv`。",
-                "- 如果今天只做盘前/盘中研究，可以继续更新宏观、新闻、持仓风险和候选 setup，但 cannot claim approaching / triggered 信号。",
+                "- 如果今天只做盘前/盘中研究，可以继续更新宏观、新闻、持仓风险和候选 setup，但不能声称有 approaching / triggered 信号。",
                 "",
                 "## 下一步",
                 "",

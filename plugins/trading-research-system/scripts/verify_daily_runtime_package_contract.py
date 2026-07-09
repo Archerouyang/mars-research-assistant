@@ -57,7 +57,7 @@ REQUIRED = {
     "intraday_scan": [
         "没有已准备的 setup 行",
         "这是决策辅助，不是买卖指令",
-        "cannot claim approaching / triggered",
+        "不能声称有 approaching / triggered",
     ],
     "contract_suite": [
         "verify_daily_runtime_package_selftest.py",
