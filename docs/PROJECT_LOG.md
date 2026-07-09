@@ -31,7 +31,7 @@ Use this shape:
 
 ## 2026-07-09
 
-- Commit: pending
+- Commit: 7fcbac6 Add macro panel runtime preparation
 - Scope: script, reference, docs, test
 - What changed: added Macro panel runtime preparation. `prepare_macro_panel.py`
   writes the standard dated `macro-panel.json` from saved Longbridge macrodata

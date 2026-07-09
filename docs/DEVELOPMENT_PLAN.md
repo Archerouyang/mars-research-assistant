@@ -201,6 +201,10 @@ Date: 2026-07-09
   writes the standard dated `macro-panel.json` from saved macrodata JSON,
   preserves existing panels by default, and gives missing-input guidance instead
   of inventing macro values.
+- Completed: refreshed the plugin cachebuster to
+  `0.1.0+codex.20260709052038`, synced the personal plugin source, reinstalled
+  `trading-research-system@personal`, and verified the installed-cache
+  `prepare_macro_panel` contract.
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
   compileall, `git diff --check`, installed-cache 1.0/IBKR contract checks, and
