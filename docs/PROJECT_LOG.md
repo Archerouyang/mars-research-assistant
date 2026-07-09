@@ -32,6 +32,20 @@ Use this shape:
 ## 2026-07-09
 
 - Commit: pending
+- Scope: validation
+- What changed: reran fresh-chat acceptance prompt #5 in thread
+  `019f4613-1145-7783-bc34-73f9f7b276b4` after reinstalling
+  `trading-research-system@personal 0.1.0+codex.20260709083506`. The new chat
+  used saved Longbridge standard OHLCV artifacts for QQQ.US, SOXX.US, and
+  DRAM.US, read runtime prior context, generated rolling PA output with 1D/1H
+  timeframe labels, support/resistance, proportional add/trim/pause zones, cost
+  disclosure, and weekly event mapping, and returned PASS.
+- Why it matters: the rolling PA prompt now has fresh-chat evidence instead of
+  only script-level and forward-smoke evidence.
+- Next step: close the remaining setup-row blocker by user-confirming setup rows
+  before rerunning prompt #3.
+
+- Commit: pending
 - Scope: script, runtime, validation
 - What changed: added the Longbridge OHLCV adapter. `longbridge_ohlcv_adapter.py`
   converts saved Longbridge kline JSON into the standard OHLCV JSON consumed by
@@ -41,8 +55,8 @@ Use this shape:
 - Why it matters: rolling PA no longer depends only on fixture or user-pasted
   OHLCV. The plugin has a tested path from authorized Longbridge kline data to
   timeframe-labeled PA notes.
-- Next step: rerun fresh-chat acceptance prompt 5 with the saved authorized
-  OHLCV artifacts before marking the rolling PA prompt PASS.
+- Next step: keep using saved/authorized OHLCV artifacts for rolling PA; do not
+  invent levels when OHLCV is unavailable.
 
 - Commit: pending
 - Scope: integration, runtime, validation
