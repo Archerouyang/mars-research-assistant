@@ -54,6 +54,38 @@ project documentation.
 - Ask Claude Code to self-check its changes before Codex reviews them.
 - Do not let subagents push, reset, clean, or perform destructive git operations.
 
+## Model-tier Subagents
+
+Use the GPT-5.6 model tiers when the current Codex or API runtime exposes
+explicit subagent model selection. Check capability before dispatch. The agent
+must not claim a model tier was used when it was unavailable; record the
+fallback in the run metadata instead.
+
+The default production path is `Luna -> Terra -> Sol`:
+
+- GPT-5.6 Luna prepares inputs: source collection, normalization, deduplication,
+  schema checks, document chunking, mechanical repo inspection, and other
+  bounded preprocessing. Luna must not make the final trading-research or
+  architecture decision.
+- GPT-5.6 Terra performs the primary analysis, implementation, synthesis, and
+  first self-check. Terra is the default tier for factor research, market and
+  company analysis, price-action classification, code changes, and routine
+  review.
+- GPT-5.6 Sol escalation is reserved for material evidence conflicts, model
+  promotion or rollback, unexplained backtest behavior, difficult architecture
+  decisions, high-impact portfolio-risk questions, or a Terra result that
+  remains low-confidence after verification.
+
+For plugin development, Codex remains the coordinator and final reviewer. Give
+each subagent a narrow work packet, require a self-check, and review the diff or
+artifact before accepting it. Subagents must not push, reset, clean, delete
+shared data, expose credentials, or perform broker/order actions.
+
+For Trading Research System runs, Luna may prepare public or authorized inputs,
+Terra owns the normal user-facing analysis, and Sol only reviews the escalation
+case. Deterministic scripts remain the authority for rankings, model metrics,
+and stored run state; model-tier routing must not silently change those values.
+
 ## Trading Safety Boundary
 
 - The plugin is decision support only.
