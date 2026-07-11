@@ -71,13 +71,13 @@ verification baseline.
 | ID | Status | Scope | Evidence | Cost | Score | Next action | Exit |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TD-20260711-01 | accepted | Canonical record schemas | `docs/DEVELOPMENT_PLAN.md` task "Re-scope canonical record schema registry" | Fixture and compatibility schemas have unclear long-term ownership, making future adapters and migrations harder to change safely. | 6 | Define canonical, compatibility, and deprecated schema ownership before new record adapters are added. | One registry names each schema owner, compatibility policy, and test boundary. |
-| TD-20260711-02 | in_progress | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; final local review against `b752b78` | Shared runtime-selection and source-state semantics now have locally reviewed field-name and branch coverage, but fresh UAT has not confirmed every affected consumer. | 5 | Integrate the reviewed files, re-pin UAT, and run fresh startup/source-state acceptance before deciding whether the debt can exit. | Shared taxonomy has full branch coverage, all affected consumers preserve it, and accepted UAT passes. |
+| TD-20260711-02 | in_progress | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; integrated as `2766c70` after final local review | Shared runtime-selection and source-state semantics now have locally reviewed field-name and branch coverage, but fresh UAT has not confirmed every affected consumer. | 5 | Re-pin UAT and run fresh startup/source-state acceptance before deciding whether the debt can exit. | Shared taxonomy has full branch coverage, all affected consumers preserve it, and accepted UAT passes. |
 | TD-20260711-03 | accepted | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; four corrective review rounds and final dual-axis PASS against `b752b78` | Phrase-presence or incomplete condition/input matrices repeatedly missed broker-agnostic reconciliation, first-start state, exact metadata grammar, state-field taxonomy, and validation-order paths while the full suite remained green. | 5 | After UAT closure, implement the bounded behavior-contract matrix task in `docs/DEVELOPMENT_PLAN.md` before adding capability in the affected workflow. | High-risk behavior fixtures assert required structure, content, state/input matrices, and failure ordering rather than only keyword presence. |
 
 `TD-20260711-03` now meets Architecture Optimization Trigger 3: the same
 contract-depth cause has required multiple corrective patches within 30 days.
 The planned response is a bounded test-seam improvement, not a product rewrite;
-the current P1 defect and UAT remain the immediate priority.
+UAT closure remains the immediate priority.
 
 ## Review Cadence
 

@@ -189,10 +189,10 @@ Review decision: `pass` for local implementation; formal UAT remains pending.
   `bash scripts/verify-plugin.sh`, `bash scripts/verify-mvp.sh`, compileall,
   `git diff --check`, and the cited broker/taxonomy boundary reproductions; all
   passed.
-- All six debug items are `verified`, not `closed`. Closure still requires
-  controlled integration to `dev`, explicit inclusion of both currently
-  untracked weekend fixtures, UAT workspace re-pin, plugin refresh, and the
-  relevant fresh-chat acceptance prompts.
+- All six debug items are `verified`, not `closed`. The reviewed scope and both
+  weekend fixtures were integrated to `dev` in `2766c70`; closure still
+  requires UAT workspace re-pin, plugin refresh, and the relevant fresh-chat
+  acceptance prompts.
 
 ## Weekly Debug Review
 

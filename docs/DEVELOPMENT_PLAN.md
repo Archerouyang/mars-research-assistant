@@ -1,8 +1,22 @@
 # Development Plan
 
-This document is the public source of truth for Dailytrades plugin development planning, daily task planning, and progress. It is used by the weekday development brief and end-of-day progress review automations.
+This document is the public source of truth for Dailytrades feature,
+integration, and approved architecture-optimization planning, daily task
+selection, and progress. It is used by the weekday development brief and
+end-of-day progress review automations.
 
 Do not include private trade records, credentials, account details, unpublished research excerpts, or internal agent prompts. Keep this focused on project execution.
+
+## Plan Boundaries
+
+- Use this document for new product capability, integration work, and an
+  architecture-optimization task that has met a technical-debt trigger.
+- Use `docs/DEBUG_PLAN.md` for reproducible defects, regressions, acceptance
+  failures, their evidence, and closure criteria.
+- Use `docs/TECHNICAL_DEBT.md` for accepted or evidence-backed systemic cost,
+  scoring, and architecture-optimization triggers.
+- Do not convert a debug symptom into a feature task or an architecture rewrite
+  before diagnosis establishes the appropriate scope.
 
 ## Current Development Phase
 
@@ -49,10 +63,15 @@ Development workflow, TDD, CI, worktree policy, and Claude/Codex handoff rules a
 
 Weekday morning brief:
 
-1. Inspect `docs/DEVELOPMENT_PLAN.md`, `docs/ROADMAP.md`, `docs/PROJECT_LOG.md`, `CONTEXT.md`, and current git status.
+1. Inspect `docs/DEVELOPMENT_PLAN.md`, `docs/DEBUG_PLAN.md`,
+   `docs/TECHNICAL_DEBT.md`, `docs/ROADMAP.md`, `docs/PROJECT_LOG.md`,
+   `CONTEXT.md`, and current git status.
 2. Report current development tasks with priority.
 3. Recommend one product-capability main task for today.
-4. Ask the user how to arrange the day:
+4. Check whether an active P0/P1 debug item or a technical-debt architecture
+   trigger changes the task order. A P0 supersedes feature work; a triggered
+   architecture task is planned before further feature work in that subsystem.
+5. Ask the user how to arrange the day:
    - available time;
    - chosen main task;
    - optional secondary task;
@@ -64,8 +83,10 @@ Weekday morning brief:
 End-of-day progress review:
 
 1. Ask what was planned, completed, verified, committed, pushed, blocked, or deferred.
-2. Update the task board and progress log after confirmation.
-3. Update `docs/PROJECT_LOG.md` only when the change affects public project trajectory.
+2. Update the appropriate development, debug, and technical-debt records after
+   confirmation.
+3. Update `docs/PROJECT_LOG.md` only when the change affects public project
+   trajectory.
 4. Do not invent progress.
 
 ## Priority Rules
@@ -95,6 +116,7 @@ Use these statuses:
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
+| P0 | done | Separate development, debug, and technical-debt planning | Keeps product delivery, reproducible defects, and systemic maintenance cost independently visible. | Use `docs/DEVELOPMENT_PLAN.md`, `docs/DEBUG_PLAN.md`, and `docs/TECHNICAL_DEBT.md`; trigger bounded architecture work only through the debt policy. |
 | P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
 | P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
 | P0 | done | Accept plugin design contract | Locks the product shape around natural-language task UX, internal focused skills, private runtime boundaries, draft-mode automations, broker source configuration, KVN snapshot consumption, and chart artifact behavior. | Use `docs/PLUGIN_DESIGN.md` as the source for the next implementation issues. |
@@ -107,6 +129,8 @@ Use these statuses:
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL; broker runtime views, macro panel, setup row bridge, PA OHLCV bridge, snapshot repair, and monitor-only setup rows have verified paths. Final `dev` gates passed; promotion to `master` still requires explicit user confirmation. |
+| P0 | review | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Integrated to `dev` in `2766c70`; re-pin `/Users/archer/Documents/交易想法-1-0-uat`, refresh the plugin, then rerun the targeted fresh-chat checks before closure. |
+| P1 | planned | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | After UAT closure, use `b752b78` plus the focused tests, `verify-plugin`, and `verify-mvp` as the regression baseline; add bounded matrices for reconciliation modes, startup states/doc surfaces, and validation ordering. No ADR is required unless the public contract changes. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
 | P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
@@ -151,25 +175,30 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-07-09
+Date: 2026-07-11
 
-- Main task: close 1.0 local workflow acceptance by resolving the final
-  setup-row blocker, rerunning fresh-chat prompt 3, and recording the result.
-- Current stage: all six fresh-chat prompts have passed: 6 PASS, 0 PARTIAL,
-  0 FAIL. Prompt 3 passed after user-confirmed monitor-only setup rows were
-  written to the private runtime and `intraday_scan.py` rendered 4
-  `needs_review` setups plus 1 `candidate` setup without broker reads or order
-  actions.
-- Secondary task: keep `master` promotion as a separate user-confirmed
-  decision.
-- Definition of done: acceptance results, roadmap, and project log record the
-  final prompt 3 pass; final gates pass; no private runtime or broker data is
-  committed.
-- Verification: `verify_1_0_acceptance_contract.py`,
-  `bash scripts/verify-plugin.sh`, `bash scripts/verify-mvp.sh`, uv-backed
-  `verify_contract_suite.py core`, and `git diff --check` pass.
+- Main task: finish non-quant 1.0 stabilization after forward debugging.
+- Current stage: the reviewed debug scope and both weekend fixtures are
+  integrated to `dev` in `2766c70`; governance rules are integrated in
+  `7d91010`. Local plugin and MVP gates pass in the pure `dev` worktree.
+- Next task: re-pin the detached 1.0 UAT workspace, refresh the installed
+  plugin, and rerun the targeted fresh-chat acceptance prompts.
+- Definition of done: all six debug items move from `verified` to `closed` only
+  after accepted UAT evidence; no private runtime or broker data enters Git.
+- Verification: `bash scripts/verify-plugin.sh`, `bash scripts/verify-mvp.sh`,
+  compileall, and `git diff --check origin/dev..HEAD` pass on integrated `dev`.
 
 ## Progress Log
+
+### 2026-07-11
+
+- Integrated the final dual-axis-reviewed non-quant behavior correction to
+  `dev` as `2766c70`, including both weekend fixtures.
+- Integrated the UAT, planning-record, and Sol Ultra review rules as `7d91010`.
+- Resolved two runtime-health conflicts by preserving the non-quant `dev`
+  surface while keeping startup checks separate from broker capability checks.
+- Verified the integrated worktree with the plugin validator, fixture-backed
+  MVP smoke, compileall, and diff checks. Formal UAT remains pending.
 
 ### 2026-07-09
 

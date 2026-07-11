@@ -29,6 +29,23 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-11
+
+- Commit: `2766c70`, `7d91010`
+- Scope: runtime, broker safety, Daily Ops, PA, validation, governance
+- What changed: integrated the final reviewed non-quant 1.0 behavior correction
+  and its UAT/review workflow rules to `dev`. Runtime health now distinguishes
+  startup completeness from source capability, preserves degraded broker
+  states, and fails closed on unsupported multi-broker aggregation. Daily Ops,
+  PA setup-key gating, and weekend-first-start fixtures carry matching
+  contracts.
+- Why it matters: the pure non-quant development branch now contains the fixes
+  that passed local Standards/Spec review and deterministic plugin/MVP checks,
+  without importing the concurrent Alpha implementation.
+- Next step: re-pin the detached 1.0 UAT workspace, refresh the installed
+  plugin, and run targeted fresh-chat acceptance before closing the debug items
+  or making a 1.0 release claim.
+
 ## 2026-07-09
 
 - Commit: pending
