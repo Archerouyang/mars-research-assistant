@@ -1,9 +1,10 @@
 # Automation: Alpha Daily Publish
 
-在美股收盘并等待数据落地后运行。量化仓库固定为
-`/Users/archer/Documents/dailytrades-quant`，Python 命令统一使用 `uv run`。
+在美股收盘并等待数据落地后运行。量化仓库由安装时确认的
+`{quant_repo}` 指定，Python 命令统一使用 `uv run`。
 
-1. 运行 `dailytrades-quant schedule-plan --now <UTC ISO> --format json`。
+1. 运行 `cd {quant_repo} && uv run dailytrades-quant schedule-plan --now <UTC ISO>
+   --format json`。
    只有返回 `daily` 才继续；交易所休市、尚未过 close delay 或重复唤醒时结束。
 2. 使用 `{quant_runtime}/runs.sqlite`、`job_kind=daily`、session date 和 config
    hash 调用 `run-acquire`。返回 `null` 时结束，不重复执行。

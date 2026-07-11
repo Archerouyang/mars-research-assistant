@@ -24,7 +24,9 @@ REQUIRED_RUN_COLUMNS = {
     "snapshot_hash",
     "model_role",
     "publication_status",
+    "quality_status",
     "row_count",
+    "published_at",
 }
 REQUIRED_ROW_FIELDS = {
     "as_of",
@@ -136,7 +138,8 @@ def run_metadata(
     row = connection.execute(
         """
         SELECT model_run_id, input_fingerprint, snapshot_hash,
-               model_role, publication_status, row_count
+               model_role, publication_status, quality_status, row_count,
+               published_at
         FROM alpha_runs WHERE as_of = ?
         """,
         (snapshot_date,),
@@ -158,6 +161,10 @@ def run_metadata(
         raise ValueError(f"Alpha snapshot {snapshot_date} has invalid snapshot hash")
     if int(metadata["row_count"]) <= 0:
         raise ValueError(f"Alpha snapshot {snapshot_date} has invalid row count")
+    if metadata["quality_status"] not in {"valid", "stale"}:
+        raise ValueError(f"Alpha snapshot {snapshot_date} has invalid quality status")
+    if not str(metadata["published_at"]).strip():
+        raise ValueError(f"Alpha snapshot {snapshot_date} has no publication time")
     return metadata
 
 
@@ -242,20 +249,22 @@ def render_show(
     if top <= 0:
         raise ValueError("top must be positive")
     rows = fetch_rows(connection, snapshot_date)[:top]
+    metadata = run_metadata(connection, snapshot_date)
     lines = [
         "# 多因子 Alpha 榜",
         "",
         f"- 数据日期: `{snapshot_date}`",
         f"- Champion run: `{run_metadata(connection, snapshot_date)['model_run_id']}`",
+        f"- Freshness: `{metadata['quality_status']}` (published `{metadata['published_at']}`)",
         "- 说明: 严格保留脚本生成的 Alpha Rank；仅用于研究优先级，不是买入名单。",
         "- 概率成熟度: `Experimental`；必须同时读取预测不确定性。",
         "",
-        "| Alpha Rank | Ticker | Alpha Score | 历史分位 | P(20D超额>0) | 预测不确定性 | Rank vs S&P500 | 轨迹 | 连续Top10 | 近20日Top10 | 上次Top10 |",
-        "| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- |",
+        "| Alpha Rank | Ticker | Alpha Score | 历史分位 | P(20D超额>0) | 预测不确定性 | Rank vs S&P500 | 轨迹 | 连续Top10 | 近20日Top10 | 上次Top10 | Candidate | Deep research |",
+        "| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
     ]
     for row in rows:
         lines.append(
-            "| {rank} | `{ticker}` | {score:.4f} | {percentile} | {probability} | {uncertainty:.4f} | {rank_sp} | {trajectory} | {consecutive} | {recent} | {last_date} |".format(
+            "| {rank} | `{ticker}` | {score:.4f} | {percentile} | {probability} | {uncertainty:.4f} | {rank_sp} | {trajectory} | {consecutive} | {recent} | {last_date} | {candidate} | {deep} |".format(
                 rank=int(row["alpha_rank"]),
                 ticker=row["ticker"],
                 score=float(row["alpha_score"]),
@@ -267,6 +276,8 @@ def render_show(
                 consecutive=int(row.get("consecutive_top_display_days", 0)),
                 recent=int(row.get("recent_top_display_count", 0)),
                 last_date=short_date(row.get("last_top_display_date")),
+                candidate=yes_no(row.get("candidate_pool")),
+                deep=yes_no(row.get("deep_research_priority")),
             )
         )
     return "\n".join(lines)
@@ -346,6 +357,10 @@ def short_date(value: Any) -> str:
 
 def ticker_list(values: list[str]) -> str:
     return "-" if not values else ", ".join(f"`{value}`" for value in values)
+
+
+def yes_no(value: Any) -> str:
+    return "yes" if bool(value) else "no"
 
 
 def main() -> int:

@@ -15,6 +15,10 @@ Collect and confirm:
 - timezone: the user's scheduling timezone and the market calendar assumption.
 - runtime_dir: the private runtime root, defaulting to
   `~/Documents/dailytrades-runtime` unless the user overrides it.
+- quant_repo: the installed private Alpha Lab repository path. Never assume an
+  author-specific absolute path in the reusable plugin template.
+- quant_runtime: the private Alpha Lab data/model/run root, separate from both
+  the public plugin repository and `runtime_dir`.
 - enabled automations: which prompts should be scheduled now.
 - cadence: exact local time, weekdays/weekends, event-window exceptions, and
   whether intraday monitors should run only when active setups exist.
@@ -69,7 +73,8 @@ State what the user is trying to enable and whether setup is complete.
 ### Confirmed Configuration
 
 List confirmed thread, timezone, runtime_dir, enabled automations, cadence,
-allowed sources, runtime write policy, and broker-read policy.
+quant_repo, quant_runtime, allowed sources, runtime write policy, and
+broker-read policy.
 
 ### Missing Decisions
 

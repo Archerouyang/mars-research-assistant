@@ -31,6 +31,10 @@ def main() -> int:
             "model_run_id",
         }:
             raise AssertionError("adapter changed the allowed metadata surface")
+        if "FULL_UNIVERSE" in payload["subject"] or "FULL_UNIVERSE" in payload["body"]:
+            raise AssertionError("adapter must reconstruct outbound prose from fixed fields")
+        if payload["subject"] != "Alpha daily run success":
+            raise AssertionError("adapter did not construct the fixed audit subject")
 
         with sqlite3.connect(db_path) as connection:
             connection.execute(
@@ -47,16 +51,22 @@ def main() -> int:
 
         with sqlite3.connect(db_path) as connection:
             connection.execute(
-                "UPDATE notification_outbox SET metadata_json = ?, body = ? WHERE event_id = ?",
+                "UPDATE notification_outbox SET metadata_json = ? WHERE event_id = ?",
                 (
-                    json.dumps({"status": "success"}),
-                    "Bearer secret-token",
+                    json.dumps(
+                        {
+                            "job_kind": "daily",
+                            "session_date": "2026-07-10",
+                            "status": "success",
+                            "next_action": "Bearer secret-token",
+                        }
+                    ),
                     "daily:2026-07-10:config-a",
                 ),
             )
             connection.commit()
         failed = run(db_path)
-        if failed.returncode == 0 or "forbidden notification content" not in failed.stderr:
+        if failed.returncode == 0 or "invalid notification next_action" not in failed.stderr:
             raise AssertionError("secret-like notification content must fail closed")
 
     print("alpha notification adapter selftest ok")
@@ -91,8 +101,8 @@ def create_fixture(path: Path) -> None:
             (
                 "daily:2026-07-10:config-a",
                 "alpha_run_audit",
-                "Alpha daily run succeeded",
-                "session=2026-07-10 status=success rows=3124 model=bayes-1",
+                "FULL_UNIVERSE A,B,C",
+                "FULL_UNIVERSE A,B,C raw market payload",
                 json.dumps(metadata),
                 "{}",
                 "pending",

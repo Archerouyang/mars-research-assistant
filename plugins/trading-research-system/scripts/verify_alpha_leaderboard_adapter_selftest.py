@@ -30,6 +30,8 @@ def main() -> int:
                 "0.9000",
                 "71.0%",
                 "strengthening",
+                "Freshness: `valid`",
+                "yes | yes",
                 "研究优先级，不是买入名单",
             ],
         )
@@ -132,7 +134,9 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             snapshot_hash TEXT NOT NULL,
             model_role TEXT NOT NULL,
             publication_status TEXT NOT NULL,
-            row_count INTEGER NOT NULL
+            quality_status TEXT NOT NULL,
+            row_count INTEGER NOT NULL,
+            published_at TEXT NOT NULL
         );
         CREATE TABLE alpha_rows (
             as_of TEXT NOT NULL,
@@ -160,7 +164,7 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         connection.execute(
-            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 as_of,
                 "bayes-1",
@@ -168,7 +172,9 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
                 snapshot_hash,
                 "champion",
                 "published",
+                "valid",
                 len(rows),
+                f"{as_of}T22:30:00Z",
             ),
         )
         connection.executemany(

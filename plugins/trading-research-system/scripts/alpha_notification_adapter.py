@@ -23,7 +23,21 @@ ALLOWED_METADATA = {
     "report_fingerprint",
     "promotion_blockers",
     "next_action",
-    "error_code",
+}
+REQUIRED_METADATA = {"job_kind", "session_date", "status"}
+ALLOWED_JOB_KINDS = {"daily", "weekly", "monthly"}
+ALLOWED_STATUSES = {"success", "failed"}
+ALLOWED_PROMOTION_BLOCKERS = {
+    "point-in-time universe unavailable",
+    "fewer than 20 shadow trading days",
+    "Sol review not approved",
+}
+ALLOWED_NEXT_ACTIONS = {
+    "none",
+    "review_failed_run",
+    "configure_point_in_time_universe",
+    "review_promotion_blockers",
+    "approve_or_reject_promotion",
 }
 FORBIDDEN_CONTENT = (
     re.compile(r"api[_-]?key", re.IGNORECASE),
@@ -85,15 +99,13 @@ def next_validated(connection: sqlite3.Connection) -> dict[str, Any] | None:
     ).fetchone()
     if row is None:
         return None
-    event = {
+    stored = {
         "event_id": str(row["event_id"]),
         "kind": str(row["kind"]),
-        "subject": str(row["subject"]),
-        "body": str(row["body"]),
         "metadata": json.loads(row["metadata_json"]),
     }
-    validate_event(event)
-    return event
+    validate_event(stored)
+    return build_outbound_event(stored)
 
 
 def validate_event(event: dict[str, Any]) -> None:
@@ -101,28 +113,92 @@ def validate_event(event: dict[str, Any]) -> None:
         raise ValueError(f"non-allowlisted event kind: {event['kind']}")
     if not event["event_id"].strip() or len(event["event_id"]) > 200:
         raise ValueError("invalid notification event id")
-    if not event["subject"].strip() or len(event["subject"]) > 200:
-        raise ValueError("invalid notification subject")
-    if not event["body"].strip() or len(event["body"]) > 4000:
-        raise ValueError("invalid notification body")
     metadata = event["metadata"]
     if not isinstance(metadata, dict):
         raise ValueError("notification metadata must be an object")
     extra = sorted(set(metadata) - ALLOWED_METADATA)
     if extra:
         raise ValueError(f"non-allowlisted metadata: {', '.join(extra)}")
-    for key, value in metadata.items():
-        if not valid_metadata_value(value):
-            raise ValueError(f"invalid notification metadata value: {key}")
+    missing = sorted(REQUIRED_METADATA - set(metadata))
+    if missing:
+        raise ValueError(f"notification metadata missing fields: {', '.join(missing)}")
+    validate_metadata(metadata)
     searchable = json.dumps(event, ensure_ascii=False, sort_keys=True)
     if any(pattern.search(searchable) for pattern in FORBIDDEN_CONTENT):
         raise ValueError("forbidden notification content")
 
 
-def valid_metadata_value(value: Any) -> bool:
-    if value is None or isinstance(value, (str, int, bool)):
-        return True
-    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+def validate_metadata(metadata: dict[str, Any]) -> None:
+    if metadata["job_kind"] not in ALLOWED_JOB_KINDS:
+        raise ValueError("invalid notification job_kind")
+    if metadata["status"] not in ALLOWED_STATUSES:
+        raise ValueError("invalid notification status")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(metadata["session_date"])):
+        raise ValueError("invalid notification session_date")
+    if "row_count" in metadata and (
+        isinstance(metadata["row_count"], bool)
+        or not isinstance(metadata["row_count"], int)
+        or metadata["row_count"] < 0
+    ):
+        raise ValueError("invalid notification row_count")
+    if "model_run_id" in metadata and not safe_token(metadata["model_run_id"]):
+        raise ValueError("invalid notification model_run_id")
+    if "report_path" in metadata:
+        report_path = str(metadata["report_path"])
+        if (
+            report_path.startswith("/")
+            or ".." in Path(report_path).parts
+            or not re.fullmatch(r"[A-Za-z0-9._/\-]{1,200}", report_path)
+        ):
+            raise ValueError("invalid notification report_path")
+    if "report_fingerprint" in metadata and not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", str(metadata["report_fingerprint"])
+    ):
+        raise ValueError("invalid notification report_fingerprint")
+    if "promotion_blockers" in metadata:
+        blockers = metadata["promotion_blockers"]
+        if not isinstance(blockers, list) or any(
+            blocker not in ALLOWED_PROMOTION_BLOCKERS for blocker in blockers
+        ):
+            raise ValueError("invalid notification promotion_blockers")
+    if "next_action" in metadata and metadata["next_action"] not in ALLOWED_NEXT_ACTIONS:
+        raise ValueError("invalid notification next_action")
+
+
+def safe_token(value: Any) -> bool:
+    return isinstance(value, str) and bool(
+        re.fullmatch(r"[A-Za-z0-9._:\-]{1,128}", value)
+    )
+
+
+def build_outbound_event(event: dict[str, Any]) -> dict[str, Any]:
+    metadata = event["metadata"]
+    subject = f"Alpha {metadata['job_kind']} run {metadata['status']}"
+    labels = (
+        ("job kind", "job_kind"),
+        ("session date", "session_date"),
+        ("status", "status"),
+        ("row count", "row_count"),
+        ("model run id", "model_run_id"),
+        ("report path", "report_path"),
+        ("report fingerprint", "report_fingerprint"),
+        ("promotion blockers", "promotion_blockers"),
+        ("next action", "next_action"),
+    )
+    lines: list[str] = []
+    for label, key in labels:
+        if key not in metadata:
+            continue
+        value = metadata[key]
+        rendered = "; ".join(value) if isinstance(value, list) else str(value)
+        lines.append(f"{label}: {rendered}")
+    return {
+        "event_id": event["event_id"],
+        "kind": event["kind"],
+        "subject": subject,
+        "body": "\n".join(lines),
+        "metadata": metadata,
+    }
 
 
 def main() -> int:

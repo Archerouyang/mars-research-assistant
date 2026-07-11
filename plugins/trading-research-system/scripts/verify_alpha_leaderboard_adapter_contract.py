@@ -30,6 +30,8 @@ def build_spec() -> ContractSpec:
                     "agent 不重排",
                     "研究优先级，不是买入名单",
                     "publication_status",
+                    "quality_status",
+                    "published_at",
                     "snapshot hash mismatch",
                     "ranks are not contiguous",
                 ),
@@ -68,6 +70,8 @@ def build_spec() -> ContractSpec:
                     "model_role=champion",
                     "publication_status=published",
                     "snapshot_hash",
+                    "freshness status",
+                    "candidate/deep-research flags",
                 ),
             ),
             "runtime_health": FileContract(
