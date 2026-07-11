@@ -8,8 +8,16 @@ from dataclasses import asdict, dataclass
 from datetime import date
 import json
 from pathlib import Path
+import sqlite3
 import time
 
+from alpha_leaderboard_adapter import (
+    MAX_LATEST_AGE_DAYS,
+    connect_read_only,
+    ensure_fresh_snapshot,
+    fetch_rows,
+    resolve_date,
+)
 from runtime_state import default_runtime_dir, resolve_daily_dir
 
 
@@ -127,7 +135,7 @@ def build_runtime_health(
         ),
         path_check("macro_panel", "Macro panel", daily_dir / "macro-panel.json", stale_after_days),
         path_check("kvn_store", "KVN store", runtime_dir / "momentum" / "kvn.sqlite", stale_after_days),
-        path_check(
+        alpha_readiness_check(
             "alpha_leaderboard_store",
             "Alpha Leaderboard store",
             runtime_dir / "alpha" / "leaderboard.sqlite",
@@ -169,6 +177,37 @@ def path_check(
         )
 
     return RuntimeCheck(check_id, label, "available", str(path), "exists")
+
+
+def alpha_readiness_check(
+    check_id: str,
+    label: str,
+    path: Path,
+    stale_after_days: int | None,
+) -> RuntimeCheck:
+    basic = path_check(check_id, label, path, stale_after_days)
+    if basic.status != "available":
+        return basic
+    try:
+        with connect_read_only(path) as connection:
+            snapshot_date = resolve_date(connection, None, allow_uat=False)
+            ensure_fresh_snapshot(snapshot_date, MAX_LATEST_AGE_DAYS)
+            fetch_rows(connection, snapshot_date, allow_uat=False)
+    except (ValueError, sqlite3.Error, json.JSONDecodeError) as error:
+        return RuntimeCheck(
+            check_id,
+            label,
+            "stale",
+            str(path),
+            f"Alpha readiness failed: {error}",
+        )
+    return RuntimeCheck(
+        check_id,
+        label,
+        "available",
+        str(path),
+        f"production snapshot {snapshot_date} passed integrity and activation checks",
+    )
 
 
 def is_stale(path: Path, stale_after_days: int) -> bool:
@@ -435,7 +474,7 @@ def render_markdown(payload: dict[str, object]) -> str:
         lines.append(f"| {item['label']} | `{item['status']}` | {path_text} | {item['note']} |")
 
     lines.append("")
-    lines.append("No file contents were read.")
+    lines.append("No private broker, plan, note, or credential contents were read.")
     return "\n".join(lines)
 
 

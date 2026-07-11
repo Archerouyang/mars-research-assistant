@@ -7,9 +7,12 @@
 2. 运行 `governance-report`，必须包含 Rank IC、ICIR、Top5/Top10/Top20 excess
    return、top-minus-bottom spread、turnover、estimated transaction cost、max
    drawdown、tail loss、Brier score 和 regime stability。
-3. 明确记录 `data_scope` 与 `point_in_time_status`。若只有 current-universe
-   fallback 或缺少 delisting/symbol history，写 `unavailable` 并阻断 promotion；
-   不把 survivorship-biased 结果描述为 full-universe validation。
+3. `governance-report` 必须读取与训练相同的 `--universe` 和
+   `--universe-manifest`，从内容绑定的 manifest 派生 `data_scope`、
+   `point_in_time_status`、knowledge cutoff 和 universe fingerprint；不得由
+   prompt 或调用者手工声明。若只有 current-universe fallback 或缺少
+   delisting/symbol history，阻断 promotion；不把 survivorship-biased 结果
+   描述为 full-universe validation。
 4. 报告写入私有 immutable report directory。同 report id 内容变化必须失败。
 5. 默认 `sol_review=pending`。只有确定性门禁通过后才升级到 GPT-5.6 Sol；
    未获得 `approved` 不得调用 model registry promotion。

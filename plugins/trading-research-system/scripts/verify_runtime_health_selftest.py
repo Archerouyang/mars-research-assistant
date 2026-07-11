@@ -9,6 +9,8 @@ import subprocess
 import sys
 import tempfile
 
+from verify_alpha_leaderboard_adapter_selftest import create_fixture
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "runtime_health.py"
@@ -26,9 +28,7 @@ def main() -> int:
         (runtime_dir / "momentum").mkdir()
         (runtime_dir / "momentum" / "kvn.sqlite").write_bytes(b"not a real sqlite fixture")
         (runtime_dir / "alpha").mkdir()
-        (runtime_dir / "alpha" / "leaderboard.sqlite").write_bytes(
-            b"not a real sqlite fixture"
-        )
+        create_fixture(runtime_dir / "alpha" / "leaderboard.sqlite", current=True)
         (runtime_dir / "knowledge").mkdir()
         (runtime_dir / "knowledge" / "analysis.sqlite").write_bytes(
             b"not a real sqlite fixture"
@@ -77,6 +77,10 @@ def main() -> int:
         assert_status(checks, "macro_panel", "missing")
         assert_status(checks, "kvn_store", "available")
         assert_status(checks, "alpha_leaderboard_store", "available")
+        if "passed integrity and activation checks" not in checks[
+            "alpha_leaderboard_store"
+        ]["note"]:
+            raise AssertionError("Alpha runtime readiness was not verified")
         assert_status(checks, "analysis_store", "available")
         assert_status(checks, "longbridge_broker_source", "unauthorized")
         assert_status(checks, "ibkr_broker_source", "unauthorized")

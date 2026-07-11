@@ -32,6 +32,22 @@ Use this shape:
 ## 2026-07-11
 
 - Commit: pending
+- Scope: data, safety, runtime, validation
+- What changed: added a provider-neutral point-in-time security-master and
+  production activation boundary for the private Alpha Lab. Training now joins
+  dated membership by stable security identity, ticker changes preserve model
+  history, governance derives PIT scope from a content-bound manifest, and
+  production publication records immutable provider/leakage/pilot/rollback
+  evidence fingerprints. The public plugin rejects stale, UAT, unactivated,
+  non-PIT, or integrity-invalid Alpha stores by default.
+- Why it matters: a current-only or synthetic universe can no longer silently
+  become the user-facing Alpha leaderboard, and runtime health now proves the
+  stored snapshot instead of treating a SQLite file's existence as readiness.
+- Next step: choose and authorize the production PIT provider, run the small
+  live pilot and full eligible universe, approve the activation manifest, then
+  enable the paused Alpha automations.
+
+- Commit: pending
 - Scope: automation, quant integration, safety, test
 - What changed: added stable Alpha daily publish, weekly LightGBM shadow,
   monthly governance, and Gmail audit-dispatch prompt contracts. The private

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 import hashlib
 import json
 import math
@@ -17,6 +18,7 @@ from runtime_state import default_runtime_dir
 
 
 DEFAULT_TOP = 10
+MAX_LATEST_AGE_DAYS = 7
 REQUIRED_RUN_COLUMNS = {
     "as_of",
     "model_run_id",
@@ -27,9 +29,15 @@ REQUIRED_RUN_COLUMNS = {
     "quality_status",
     "row_count",
     "published_at",
+    "publication_environment",
+    "activation_id",
+    "activation_fingerprint",
+    "universe_fingerprint",
+    "point_in_time_status",
 }
 REQUIRED_ROW_FIELDS = {
     "as_of",
+    "security_id",
     "ticker",
     "alpha_rank",
     "alpha_score",
@@ -69,6 +77,11 @@ def parse_args() -> argparse.Namespace:
 def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--db", default=str(default_db_path()))
     parser.add_argument("--date", default=None)
+    parser.add_argument(
+        "--allow-uat",
+        action="store_true",
+        help="Allow an explicitly tagged isolated UAT snapshot; never use for normal research output.",
+    )
 
 
 def connect_read_only(db_path: Path) -> sqlite3.Connection:
@@ -101,7 +114,9 @@ def connect_read_only(db_path: Path) -> sqlite3.Connection:
     return connection
 
 
-def resolve_date(connection: sqlite3.Connection, requested: str | None) -> str:
+def resolve_date(
+    connection: sqlite3.Connection, requested: str | None, *, allow_uat: bool = False
+) -> str:
     if requested:
         row = connection.execute(
             "SELECT as_of FROM alpha_runs WHERE as_of = ?", (requested,)
@@ -111,7 +126,12 @@ def resolve_date(connection: sqlite3.Connection, requested: str | None) -> str:
             """
             SELECT MAX(as_of) AS as_of FROM alpha_runs
             WHERE model_role = 'champion' AND publication_status = 'published'
-            """
+              AND (
+                    publication_environment = 'production'
+                    OR (? = 1 AND publication_environment = 'uat')
+                  )
+            """,
+            (int(allow_uat),),
         ).fetchone()
     if row is None or row["as_of"] is None:
         label = requested or "latest"
@@ -119,29 +139,43 @@ def resolve_date(connection: sqlite3.Connection, requested: str | None) -> str:
     return str(row["as_of"])
 
 
-def previous_date(connection: sqlite3.Connection, snapshot_date: str) -> str | None:
+def previous_date(
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    *,
+    allow_uat: bool = False,
+) -> str | None:
     row = connection.execute(
         """
         SELECT as_of FROM alpha_runs
         WHERE as_of < ?
           AND model_role = 'champion'
           AND publication_status = 'published'
+          AND (
+                publication_environment = 'production'
+                OR (? = 1 AND publication_environment = 'uat')
+              )
         ORDER BY as_of DESC
         LIMIT 1
         """,
-        (snapshot_date,),
+        (snapshot_date, int(allow_uat)),
     ).fetchone()
     return None if row is None else str(row["as_of"])
 
 
 def run_metadata(
-    connection: sqlite3.Connection, snapshot_date: str
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    *,
+    allow_uat: bool = False,
 ) -> dict[str, Any]:
     row = connection.execute(
         """
         SELECT model_run_id, input_fingerprint, snapshot_hash,
                model_role, publication_status, quality_status, row_count,
-               published_at
+               published_at, publication_environment, activation_id,
+               activation_fingerprint, universe_fingerprint,
+               point_in_time_status
         FROM alpha_runs WHERE as_of = ?
         """,
         (snapshot_date,),
@@ -163,15 +197,45 @@ def run_metadata(
         raise ValueError(f"Alpha snapshot {snapshot_date} has invalid snapshot hash")
     if int(metadata["row_count"]) <= 0:
         raise ValueError(f"Alpha snapshot {snapshot_date} has invalid row count")
-    if metadata["quality_status"] not in {"valid", "stale"}:
-        raise ValueError(f"Alpha snapshot {snapshot_date} has invalid quality status")
+    if metadata["quality_status"] != "valid":
+        raise ValueError(f"Alpha snapshot {snapshot_date} is not valid/current")
     if not str(metadata["published_at"]).strip():
         raise ValueError(f"Alpha snapshot {snapshot_date} has no publication time")
+    environment = str(metadata["publication_environment"])
+    if environment == "uat" and allow_uat:
+        if not str(metadata["activation_id"]).strip():
+            raise ValueError(f"Alpha UAT snapshot {snapshot_date} has no fixture id")
+        if (
+            metadata["activation_fingerprint"] != "synthetic-fixture"
+            or metadata["universe_fingerprint"] != "synthetic-fixture"
+            or metadata["point_in_time_status"] != "unavailable"
+        ):
+            raise ValueError(f"Alpha UAT snapshot {snapshot_date} has invalid isolation metadata")
+        return metadata
+    if environment != "production":
+        raise ValueError(f"Alpha snapshot {snapshot_date} is not production activated")
+    if metadata["point_in_time_status"] != "available":
+        raise ValueError(f"Alpha snapshot {snapshot_date} has no PIT universe approval")
+    if not str(metadata["activation_id"]).strip():
+        raise ValueError(f"Alpha snapshot {snapshot_date} has no activation id")
+    activation_fingerprint = str(metadata["activation_fingerprint"])
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", activation_fingerprint):
+        raise ValueError(
+            f"Alpha snapshot {snapshot_date} has invalid activation fingerprint"
+        )
+    universe_fingerprint = str(metadata["universe_fingerprint"])
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", universe_fingerprint):
+        raise ValueError(f"Alpha snapshot {snapshot_date} has invalid universe fingerprint")
     return metadata
 
 
-def fetch_rows(connection: sqlite3.Connection, snapshot_date: str) -> list[dict[str, Any]]:
-    metadata = run_metadata(connection, snapshot_date)
+def fetch_rows(
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    *,
+    allow_uat: bool = False,
+) -> list[dict[str, Any]]:
+    metadata = run_metadata(connection, snapshot_date, allow_uat=allow_uat)
     rows = connection.execute(
         """
         SELECT ticker, alpha_rank, payload_json
@@ -213,6 +277,8 @@ def validate_payload(payload: dict[str, Any], snapshot_date: str) -> None:
     ticker = str(payload["ticker"]).upper()
     if not TICKER_PATTERN.fullmatch(ticker):
         raise ValueError(f"invalid Alpha ticker: {ticker}")
+    if not str(payload["security_id"]).strip():
+        raise ValueError(f"invalid Alpha security identity for {ticker}")
     if str(payload["as_of"])[:10] != snapshot_date:
         raise ValueError(f"Alpha payload as_of mismatch for {ticker}")
     rank = int(payload["alpha_rank"])
@@ -248,18 +314,35 @@ def finite_float(value: Any, field: str, ticker: str) -> float:
     return number
 
 
+def ensure_fresh_snapshot(snapshot_date: str, max_age_days: int) -> None:
+    if max_age_days < 0:
+        raise ValueError("max-age-days cannot be negative")
+    age_days = (date.today() - date.fromisoformat(snapshot_date)).days
+    if age_days < 0:
+        raise ValueError(f"Alpha snapshot {snapshot_date} is future-dated")
+    if age_days > max_age_days:
+        raise ValueError(
+            f"Alpha snapshot {snapshot_date} is stale ({age_days} days old)"
+        )
+
+
 def render_show(
-    connection: sqlite3.Connection, snapshot_date: str, top: int
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    top: int,
+    *,
+    allow_uat: bool = False,
 ) -> str:
     if top <= 0:
         raise ValueError("top must be positive")
-    rows = fetch_rows(connection, snapshot_date)[:top]
-    metadata = run_metadata(connection, snapshot_date)
+    rows = fetch_rows(connection, snapshot_date, allow_uat=allow_uat)[:top]
+    metadata = run_metadata(connection, snapshot_date, allow_uat=allow_uat)
     lines = [
         "# 多因子 Alpha 榜",
         "",
         f"- 数据日期: `{snapshot_date}`",
-        f"- Champion run: `{run_metadata(connection, snapshot_date)['model_run_id']}`",
+        f"- Champion run: `{metadata['model_run_id']}`",
+        f"- Activation: `{metadata['activation_id']}` / `{metadata['publication_environment']}`",
         f"- Freshness: `{metadata['quality_status']}` (published `{metadata['published_at']}`)",
         "- 说明: 严格保留脚本生成的 Alpha Rank；仅用于研究优先级，不是买入名单。",
         "- 概率成熟度: `Experimental`；必须同时读取预测不确定性。",
@@ -289,12 +372,20 @@ def render_show(
 
 
 def render_query(
-    connection: sqlite3.Connection, snapshot_date: str, ticker: str
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    ticker: str,
+    *,
+    allow_uat: bool = False,
 ) -> str:
     ticker = ticker.upper()
-    metadata = run_metadata(connection, snapshot_date)
+    metadata = run_metadata(connection, snapshot_date, allow_uat=allow_uat)
     row = next(
-        (item for item in fetch_rows(connection, snapshot_date) if item["ticker"].upper() == ticker),
+        (
+            item
+            for item in fetch_rows(connection, snapshot_date, allow_uat=allow_uat)
+            if item["ticker"].upper() == ticker
+        ),
         None,
     )
     if row is None:
@@ -321,24 +412,54 @@ def render_query(
 
 
 def render_changes(
-    connection: sqlite3.Connection, snapshot_date: str, top: int
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    top: int,
+    *,
+    allow_uat: bool = False,
 ) -> str:
     if top <= 0:
         raise ValueError("top must be positive")
-    previous = previous_date(connection, snapshot_date)
-    metadata = run_metadata(connection, snapshot_date)
+    previous = previous_date(connection, snapshot_date, allow_uat=allow_uat)
+    metadata = run_metadata(connection, snapshot_date, allow_uat=allow_uat)
     previous_metadata = (
-        None if previous is None else run_metadata(connection, previous)
+        None
+        if previous is None
+        else run_metadata(connection, previous, allow_uat=allow_uat)
     )
-    current = [str(row["ticker"]) for row in fetch_rows(connection, snapshot_date)[:top]]
-    prior = [] if previous is None else [
-        str(row["ticker"]) for row in fetch_rows(connection, previous)[:top]
+    current_rows = fetch_rows(
+        connection, snapshot_date, allow_uat=allow_uat
+    )[:top]
+    prior_rows = (
+        []
+        if previous is None
+        else fetch_rows(connection, previous, allow_uat=allow_uat)[:top]
+    )
+    current_by_identity = {
+        str(row["security_id"]): str(row["ticker"]) for row in current_rows
+    }
+    prior_by_identity = {
+        str(row["security_id"]): str(row["ticker"]) for row in prior_rows
+    }
+    entered = [
+        ticker
+        for security_id, ticker in current_by_identity.items()
+        if security_id not in prior_by_identity
     ]
-    current_set = set(current)
-    prior_set = set(prior)
-    entered = [ticker for ticker in current if ticker not in prior_set]
-    dropped = [ticker for ticker in prior if ticker not in current_set]
-    continued = [ticker for ticker in current if ticker in prior_set]
+    dropped = [
+        ticker
+        for security_id, ticker in prior_by_identity.items()
+        if security_id not in current_by_identity
+    ]
+    continued = [
+        (
+            current_ticker
+            if prior_by_identity[security_id] == current_ticker
+            else f"{prior_by_identity[security_id]} -> {current_ticker}"
+        )
+        for security_id, current_ticker in current_by_identity.items()
+        if security_id in prior_by_identity
+    ]
     return "\n".join(
         [
             "# Alpha 榜变化",
@@ -384,13 +505,26 @@ def main() -> int:
     args = parse_args()
     try:
         with connect_read_only(Path(args.db)) as connection:
-            snapshot_date = resolve_date(connection, args.date)
+            snapshot_date = resolve_date(
+                connection, args.date, allow_uat=args.allow_uat
+            )
+            if args.date is None and not args.allow_uat:
+                ensure_fresh_snapshot(snapshot_date, MAX_LATEST_AGE_DAYS)
             if args.command == "show":
-                output = render_show(connection, snapshot_date, args.top)
+                output = render_show(
+                    connection, snapshot_date, args.top, allow_uat=args.allow_uat
+                )
             elif args.command == "query":
-                output = render_query(connection, snapshot_date, args.ticker)
+                output = render_query(
+                    connection,
+                    snapshot_date,
+                    args.ticker,
+                    allow_uat=args.allow_uat,
+                )
             else:
-                output = render_changes(connection, snapshot_date, args.top)
+                output = render_changes(
+                    connection, snapshot_date, args.top, allow_uat=args.allow_uat
+                )
     except (ValueError, sqlite3.Error, json.JSONDecodeError) as error:
         print(f"alpha leaderboard error: {error}", file=sys.stderr)
         return 1

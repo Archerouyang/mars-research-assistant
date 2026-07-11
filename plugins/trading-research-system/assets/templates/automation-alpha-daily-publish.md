@@ -8,18 +8,25 @@
    只有返回 `daily` 才继续；交易所休市、尚未过 close delay 或重复唤醒时结束。
 2. 使用 `{quant_runtime}/runs.sqlite`、`job_kind=daily`、session date 和 config
    hash 调用 `run-acquire`。返回 `null` 时结束，不重复执行。
-3. 运行 `provider-probe --format json`。调整后 OHLCV 等 required capability
-   不可用时失败关闭；current-universe fallback 不能冒充 PIT 历史 universe。
-4. 运行 `refresh-prices`，输入 `{quant_runtime}/inputs/universe.csv`，输出
+3. 运行 `provider-probe --format json`，再运行
+   `security-master-check --data {quant_runtime}/inputs/security-master.parquet
+   --manifest {quant_runtime}/inputs/security-master.manifest.json
+   --require-training-ready`。任一 required capability、PIT、delisting、symbol
+   history、指纹或 future-leakage gate 不通过时失败关闭。
+4. 读取 `{quant_runtime}/production-activation.json`；必须是 `approved`，且
+   provider probe、future leakage、pilot run、rollback pointer 和 universe
+   fingerprint 全部匹配，并记录四类证据 artifact 的 SHA-256。否则不得写插件运行库。
+5. 运行 `refresh-prices`，输入已验证 universe，输出
    `{quant_runtime}/data/prices.parquet`，额外读取 SPY 与配置的行业/主题 ETF。
-5. 运行 `train-champion`，只使用已成熟的 20D 标签，模型写入私有
+6. 运行 `train-champion`，只使用逐日 PIT universe 和已成熟的 20D 标签，模型写入私有
    `{quant_runtime}/models/champion.json`。
-6. 运行 `publish-daily`：Parquet 写入 quant runtime，规范化 SQLite 写入
-   `{plugin_runtime}/alpha/leaderboard.sqlite`。不得写 public repo。
-7. 成功后把 allowlisted 摘要写入 `{quant_runtime}/outbox.sqlite`：session、
+7. 运行 `publish-daily --activation-manifest
+   {quant_runtime}/production-activation.json`：Parquet 写入 quant runtime，
+   规范化 SQLite 写入 `{plugin_runtime}/alpha/leaderboard.sqlite`。不得写 public repo。
+8. 成功后把 allowlisted 摘要写入 `{quant_runtime}/outbox.sqlite`：session、
    status、row count、model run id、report path、fingerprint。不得包含 API key、
    broker account、positions、holdings、executions 或原始数据。
-8. 调用 `run-complete --status success`。任何失败都使用短错误分类完成为
+9. 调用 `run-complete --status success`。任何失败都使用短错误分类完成为
    `failed` 并写失败 audit event；通知失败不得回滚已发布 Alpha。
 
 禁止 broker/order create、submit、modify、cancel。默认只输出精炼中文运行摘要。

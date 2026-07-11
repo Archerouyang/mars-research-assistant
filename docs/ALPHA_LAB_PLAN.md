@@ -38,11 +38,13 @@ The default private code/runtime split is:
 ~/Documents/dailytrades-runtime/        # plugin-consumable current state/cache
 ```
 
-FMP is the primary 1.0 provider for the symbol master, daily adjusted OHLCV,
-delisted companies, symbol changes, historical constituents, financial
-statements, and supported bulk datasets. The implementation reads its secret
-only from `FMP_API_KEY`, redacts it from URLs/errors/logs, probes endpoint
-capability, and records provider/plan limitations.
+FMP is the primary 1.0 provider for daily adjusted OHLCV and financial
+statements. The implementation reads its secret only from `FMP_API_KEY`,
+redacts it from URLs/errors/logs, probes endpoint capability, and records
+provider/plan limitations. Historical universe identity is supplied through a
+provider-neutral PIT security-master contract. Production training requires
+dated ticker identity, delistings, symbol history, knowledge cutoffs, and a
+content-bound manifest; the current FMP plan does not satisfy that gate.
 
 SEC EDGAR submissions and company facts verify CIK mappings, filing dates, and
 source financial facts. Nasdaq Trader verifies current listing metadata.
@@ -244,6 +246,10 @@ Alpha Lab 1.0 is accepted only when:
    real automations and Gmail notifications enabled.
 9. Both repositories pass their focused tests, full verification suites,
    secret scans, and fresh-chat acceptance before release promotion.
+10. Production publication requires a verified PIT security-master manifest,
+    successful provider/future-leakage/pilot gates, an approved activation
+    manifest bound to the universe fingerprint, and a rollback pointer. UAT or
+    current-only snapshots cannot appear as the normal production leaderboard.
 
 The active runtime starts clean with only the approved private trading profile.
 Old runtime artifacts remain outside the active retrieval root and are not an

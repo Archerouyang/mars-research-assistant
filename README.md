@@ -33,6 +33,13 @@ codex plugin list
 `codex plugin marketplace upgrade dailytrades`，再重新执行
 `codex plugin add trading-research-system@dailytrades`，然后新开 task。
 
+## 可选的私有 Alpha Lab
+
+多因子 Alpha 模型不打包在这个公开插件中。正常 Alpha 榜只有在私有
+`dailytrades-quant` 安装通过 provider capability、授权 PIT security master、
+small pilot、full-universe 验证和 production activation 后才可用。合成 UAT
+必须显式使用 `--allow-uat`，不会显示为正常生产榜单。
+
 ## 核心闭环
 
 ```text

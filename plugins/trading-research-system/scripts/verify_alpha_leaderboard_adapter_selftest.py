@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date, timedelta
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -38,6 +39,11 @@ def main() -> int:
         if show.index("`C`") > show.index("`A`"):
             raise AssertionError("adapter changed stored Alpha Rank order")
 
+        require_failure(
+            ["show", "--db", str(db_path)],
+            "is stale",
+        )
+
         query = run(["query", "B", "--db", str(db_path), "--date", "2026-01-07"])
         require_terms(
             query,
@@ -64,6 +70,14 @@ def main() -> int:
             ],
         )
 
+        identity_changes = run(
+            ["changes", "--db", str(db_path), "--date", "2026-01-07", "--top", "3"]
+        )
+        require_terms(
+            identity_changes,
+            ["新进入 Top3: -", "滑出 Top3: -", "COLD -> C"],
+        )
+
         missing = Path(tmp) / "missing.sqlite"
         result = subprocess.run(
             [sys.executable, str(SCRIPT), "show", "--db", str(missing)],
@@ -82,6 +96,51 @@ def main() -> int:
         require_failure(
             ["show", "--db", str(db_path), "--date", "2026-01-07"],
             "not a published champion",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(
+                "UPDATE alpha_runs SET publication_environment = 'unverified' WHERE as_of = '2026-01-07'"
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "not production activated",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(
+                "UPDATE alpha_runs SET quality_status = 'stale' WHERE as_of = '2026-01-07'"
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "not valid/current",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(
+                """
+                UPDATE alpha_runs
+                SET publication_environment = 'uat',
+                    activation_fingerprint = 'not-synthetic'
+                WHERE as_of = '2026-01-07'
+                """
+            )
+            connection.commit()
+        require_failure(
+            [
+                "show",
+                "--db",
+                str(db_path),
+                "--date",
+                "2026-01-07",
+                "--allow-uat",
+            ],
+            "invalid isolation metadata",
         )
 
         create_fixture(db_path, replace=True)
@@ -167,7 +226,9 @@ def main() -> int:
     return 0
 
 
-def create_fixture(path: Path, *, replace: bool = False) -> None:
+def create_fixture(
+    path: Path, *, replace: bool = False, current: bool = False
+) -> None:
     if replace and path.exists():
         path.unlink()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -183,7 +244,12 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             publication_status TEXT NOT NULL,
             quality_status TEXT NOT NULL,
             row_count INTEGER NOT NULL,
-            published_at TEXT NOT NULL
+            published_at TEXT NOT NULL,
+            publication_environment TEXT NOT NULL,
+            activation_id TEXT NOT NULL,
+            activation_fingerprint TEXT NOT NULL,
+            universe_fingerprint TEXT NOT NULL,
+            point_in_time_status TEXT NOT NULL
         );
         CREATE TABLE alpha_rows (
             as_of TEXT NOT NULL,
@@ -194,16 +260,29 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
         );
         """
     )
+    latest_date = date.today().isoformat() if current else "2026-01-07"
+    previous_date = (
+        (date.today() - timedelta(days=1)).isoformat()
+        if current
+        else "2026-01-06"
+    )
     snapshots = {
-        "2026-01-06": [
-            row("2026-01-06", "A", 1, 0.8, "persistent"),
-            row("2026-01-06", "B", 2, 0.6, "persistent"),
-            row("2026-01-06", "C", 3, 0.5, "new"),
+        previous_date: [
+            row(previous_date, "A", 1, 0.8, "persistent"),
+            row(previous_date, "B", 2, 0.6, "persistent"),
+            row(
+                previous_date,
+                "COLD",
+                3,
+                0.5,
+                "new",
+                security_id="sec-c",
+            ),
         ],
-        "2026-01-07": [
-            row("2026-01-07", "C", 1, 0.9, "strengthening"),
-            row("2026-01-07", "A", 2, 0.7, "persistent"),
-            row("2026-01-07", "B", 3, 0.4, "persistent"),
+        latest_date: [
+            row(latest_date, "C", 1, 0.9, "strengthening"),
+            row(latest_date, "A", 2, 0.7, "persistent"),
+            row(latest_date, "B", 3, 0.4, "persistent"),
         ],
     }
     for as_of, rows in snapshots.items():
@@ -211,7 +290,7 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         connection.execute(
-            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 as_of,
                 "bayes-1",
@@ -222,6 +301,11 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
                 "valid",
                 len(rows),
                 f"{as_of}T22:30:00Z",
+                "production",
+                "fixture-activation",
+                "sha256:" + "2" * 64,
+                "sha256:" + "1" * 64,
+                "available",
             ),
         )
         connection.executemany(
@@ -236,10 +320,17 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
 
 
 def row(
-    as_of: str, ticker: str, rank: int, score: float, trajectory: str
+    as_of: str,
+    ticker: str,
+    rank: int,
+    score: float,
+    trajectory: str,
+    *,
+    security_id: str | None = None,
 ) -> dict[str, object]:
     return {
         "as_of": as_of,
+        "security_id": security_id or f"sec-{ticker.lower()}",
         "ticker": ticker,
         "alpha_rank": rank,
         "alpha_score": score,

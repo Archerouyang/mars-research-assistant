@@ -4,7 +4,9 @@ Use this reference before plan updates, trading-operation automations, broker
 reconciliation, setup scans, KVN reads, or review flows that depend on private
 runtime state.
 
-Runtime health is a status check, not a content read. Do not read or copy private file contents into public repo files or public documentation.
+Runtime health is a status check, not a research-content read. Do not read or copy private broker, plan, note, or credential contents into public repo files or public documentation. The Alpha check may read its run metadata and ranked
+row payloads only to verify production activation, PIT provenance, row count,
+contiguous ranks, and snapshot hash; it returns status, not the rows.
 
 ## Status Values
 

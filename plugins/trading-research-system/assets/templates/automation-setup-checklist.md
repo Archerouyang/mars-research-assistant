@@ -19,6 +19,14 @@ Collect and confirm:
   author-specific absolute path in the reusable plugin template.
 - quant_runtime: the private Alpha Lab data/model/run root, separate from both
   the public plugin repository and `runtime_dir`.
+- quant commit: the reviewed private Alpha Lab commit used by every scheduled
+  command; do not run an unpinned working tree as production.
+- PIT security master: authorized provider, canonical data path, content-bound
+  manifest path, knowledge cutoff, delisting coverage, and symbol-history
+  coverage.
+- production activation: approved manifest path bound to the PIT universe
+  fingerprint, successful provider/future-leakage/pilot gates, and rollback
+  pointer.
 - enabled automations: which prompts should be scheduled now.
 - cadence: exact local time, weekdays/weekends, event-window exceptions, and
   whether intraday monitors should run only when active setups exist.
@@ -75,7 +83,7 @@ Then verify both public read-only boundaries against the generated fixture:
 
 ```bash
 python3 scripts/alpha_leaderboard_adapter.py show \
-  --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite
+  --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite --allow-uat
 python3 scripts/alpha_notification_adapter.py next \
   --db {uat_runtime}/outbox.sqlite
 ```
@@ -97,8 +105,8 @@ State what the user is trying to enable and whether setup is complete.
 ### Confirmed Configuration
 
 List confirmed thread, timezone, runtime_dir, enabled automations, cadence,
-quant_repo, quant_runtime, allowed sources, runtime write policy, and
-broker-read policy.
+quant_repo, pinned quant commit, quant_runtime, PIT security master, production
+activation, allowed sources, runtime write policy, and broker-read policy.
 
 ### Missing Decisions
 
