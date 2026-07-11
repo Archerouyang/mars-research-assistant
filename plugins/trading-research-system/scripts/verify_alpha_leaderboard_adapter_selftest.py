@@ -39,7 +39,16 @@ def main() -> int:
             raise AssertionError("adapter changed stored Alpha Rank order")
 
         query = run(["query", "B", "--db", str(db_path), "--date", "2026-01-07"])
-        require_terms(query, ["# Alpha 标的查询", "`B`", "Alpha Rank: `3`", "candidate pool: `yes`"])
+        require_terms(
+            query,
+            [
+                "# Alpha 标的查询",
+                "`B`",
+                "Alpha Rank: `3`",
+                "Freshness: `valid`",
+                "candidate pool: `yes`",
+            ],
+        )
 
         changes = run(
             ["changes", "--db", str(db_path), "--date", "2026-01-07", "--top", "2"]
@@ -51,6 +60,7 @@ def main() -> int:
                 "新进入 Top2: `C`",
                 "滑出 Top2: `B`",
                 "继续留在 Top2: `A`",
+                "当前 Freshness: `valid`",
             ],
         )
 
@@ -114,6 +124,43 @@ def main() -> int:
         require_failure(
             ["show", "--db", str(db_path), "--date", "2026-01-07"],
             "snapshot hash mismatch",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            payload = json.loads(
+                connection.execute(
+                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                ).fetchone()[0]
+            )
+            payload["candidate_pool"] = "false"
+            connection.execute(
+                """
+                UPDATE alpha_rows SET payload_json = ?
+                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                """,
+                (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
+            )
+            rows = [
+                json.loads(row[0])
+                for row in connection.execute(
+                    """
+                    SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07'
+                    ORDER BY alpha_rank, ticker
+                    """
+                )
+            ]
+            snapshot_hash = hashlib.sha256(
+                json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            connection.execute(
+                "UPDATE alpha_runs SET snapshot_hash = ? WHERE as_of = '2026-01-07'",
+                (snapshot_hash,),
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "must be Boolean",
         )
 
     print("alpha leaderboard adapter selftest ok")

@@ -36,6 +36,8 @@ REQUIRED_ROW_FIELDS = {
     "probability_positive",
     "predictive_std",
     "rank_vs_sp500",
+    "candidate_pool",
+    "deep_research_priority",
 }
 TICKER_PATTERN = re.compile(r"^[A-Z][A-Z0-9.\-]{0,14}$")
 
@@ -224,6 +226,9 @@ def validate_payload(payload: dict[str, Any], snapshot_date: str) -> None:
     uncertainty = finite_float(payload["predictive_std"], "predictive_std", ticker)
     if not math.isfinite(score) or not 0.0 <= probability <= 1.0 or uncertainty < 0.0:
         raise ValueError(f"invalid Alpha numeric range for {ticker}")
+    for field in ("candidate_pool", "deep_research_priority"):
+        if not isinstance(payload[field], bool):
+            raise ValueError(f"Alpha {field} must be Boolean for {ticker}")
     percentile = payload.get("historical_percentile")
     if percentile is not None:
         percentile_value = finite_float(
@@ -287,6 +292,7 @@ def render_query(
     connection: sqlite3.Connection, snapshot_date: str, ticker: str
 ) -> str:
     ticker = ticker.upper()
+    metadata = run_metadata(connection, snapshot_date)
     row = next(
         (item for item in fetch_rows(connection, snapshot_date) if item["ticker"].upper() == ticker),
         None,
@@ -299,6 +305,7 @@ def render_query(
             "",
             f"- 数据日期: `{snapshot_date}`",
             f"- Ticker: `{ticker}`",
+            f"- Freshness: `{metadata['quality_status']}` (published `{metadata['published_at']}`)",
             f"- Alpha Rank: `{int(row['alpha_rank'])}`",
             f"- Alpha Score: `{float(row['alpha_score']):.4f}`",
             f"- 历史分位: `{percent(row.get('historical_percentile'))}`",
@@ -319,6 +326,10 @@ def render_changes(
     if top <= 0:
         raise ValueError("top must be positive")
     previous = previous_date(connection, snapshot_date)
+    metadata = run_metadata(connection, snapshot_date)
+    previous_metadata = (
+        None if previous is None else run_metadata(connection, previous)
+    )
     current = [str(row["ticker"]) for row in fetch_rows(connection, snapshot_date)[:top]]
     prior = [] if previous is None else [
         str(row["ticker"]) for row in fetch_rows(connection, previous)[:top]
@@ -334,6 +345,12 @@ def render_changes(
             "",
             f"- 当前日期: `{snapshot_date}`",
             f"- 上次日期: `{previous or '-'}`",
+            f"- 当前 Freshness: `{metadata['quality_status']}` (published `{metadata['published_at']}`)",
+            "- 上次 Freshness: `{}`".format(
+                "-"
+                if previous_metadata is None
+                else f"{previous_metadata['quality_status']} (published {previous_metadata['published_at']})"
+            ),
             f"- 新进入 Top{top}: {ticker_list(entered)}",
             f"- 滑出 Top{top}: {ticker_list(dropped)}",
             f"- 继续留在 Top{top}: {ticker_list(continued)}",

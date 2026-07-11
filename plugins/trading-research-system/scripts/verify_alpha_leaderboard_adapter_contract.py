@@ -45,6 +45,7 @@ def build_spec() -> ContractSpec:
                     "missing Alpha store must fail without being created",
                     "not a published champion",
                     "invalid Alpha numeric range",
+                    "must be Boolean",
                     "alpha leaderboard adapter selftest ok",
                 ),
             ),
