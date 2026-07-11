@@ -62,6 +62,30 @@ Use only the automations with stable prompt contracts:
 - `alpha_gmail_dispatch`: sends only sanitized audit events from the private
   outbox after a completed Alpha job.
 
+## Isolated Alpha Dry-Run Procedure
+
+Before activation, use a new empty `{uat_runtime}` and run:
+
+```bash
+cd {quant_repo} && uv run dailytrades-quant uat-dry-run \
+  --root {uat_runtime} --format json
+```
+
+Then verify both public read-only boundaries against the generated fixture:
+
+```bash
+python3 scripts/alpha_leaderboard_adapter.py show \
+  --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite
+python3 scripts/alpha_notification_adapter.py next \
+  --db {uat_runtime}/outbox.sqlite
+```
+
+The report must show daily, weekly, and monthly `success`, Gmail `not_sent`,
+broker/network `not_used`, promotion blocked for the non-PIT fixture, a pending
+sanitized outbox event, and immutable artifact fingerprints. This evidence
+tests orchestration only; it does not replace the live provider capability
+probe or PIT-universe acceptance.
+
 ## Output Contract
 
 Return these sections:
