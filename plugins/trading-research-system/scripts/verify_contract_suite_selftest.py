@@ -29,6 +29,8 @@ def main() -> None:
         raise AssertionError("core suite should include Alpha Leaderboard adapter contract")
     if "analysis-delta-adapter-contract" not in names:
         raise AssertionError("core suite should include analysis delta adapter contract")
+    if "alpha-automations" not in names:
+        raise AssertionError("core suite should include Alpha automation contract")
     if "longbridge-skill-adapter" not in names:
         raise AssertionError("core suite should include longbridge-skill-adapter")
     if "broker-snapshot-ingest-contract" not in names:

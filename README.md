@@ -262,7 +262,8 @@ uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py \
 | 已可用 | AI-native 设计契约、router intent fixtures/verifier、runtime health 脚本/契约、Runtime bootstrap、Active Market Plan fixture package、内部 focused skills、Active Market Plan 契约、Trade Plan Preparation 契约、研报摄取契约、本地 daily 模板、风险/统计基础脚本、chart artifact |
 | 已可用的量化输入 | 私有 Alpha Lab 生成多因子 Alpha 榜；plugin 只读消费 Top10/Top20/Top5、历史分位、概率/不确定性和变化，不在 agent 内重排 |
 | 兼容输入 | 用户配置的旧外部量化 snapshot 仅作 disclosed fallback，不与 Alpha 分数混合 |
-| 开发中 | Alpha 自动化发布、broker-live adapter live read、盘中 scan data adapter |
+| 自动化就绪 | Alpha daily/weekly/monthly 调度 prompt、XNYS 日历/run lease、治理报告与 Gmail audit outbox 合同；真实 scheduled tasks 仍需本机路径/收件地址确认 |
+| 开发中 | PIT security-master 数据源、broker-live adapter live read、盘中 scan data adapter |
 | 后续 | Codex 持仓日报 automation、异常期权数据源、可视化快照 |
 
 ## 开发验证

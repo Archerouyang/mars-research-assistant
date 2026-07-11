@@ -46,6 +46,13 @@ Use only the automations with stable prompt contracts:
   weekly P0/P1 variables.
 - `broker_reconciliation_prompt`: optional read-only broker fact alignment when
   the user chooses a broker source.
+- `alpha_daily_publish`: private `dailytrades-quant` price refresh, Bayesian
+  update, and immutable Alpha snapshot publication after the US close.
+- `alpha_weekly_shadow`: purged LightGBM shadow retraining; never changes the
+  production rank directly.
+- `alpha_monthly_governance`: purged walk-forward report and promotion blockers.
+- `alpha_gmail_dispatch`: sends only sanitized audit events from the private
+  outbox after a completed Alpha job.
 
 ## Output Contract
 
