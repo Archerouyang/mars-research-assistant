@@ -32,6 +32,20 @@ Use this shape:
 ## 2026-07-11
 
 - Commit: pending
+- Scope: automation, quant integration, safety, test
+- What changed: added stable Alpha daily publish, weekly LightGBM shadow,
+  monthly governance, and Gmail audit-dispatch prompt contracts. The private
+  quant CLI now exposes exchange-calendar due checks, run leases, incremental
+  FMP price refresh, Bayesian/LightGBM artifact persistence, purged
+  walk-forward evaluation, governance reports, and a sanitized notification
+  outbox.
+- Why it matters: scheduled work now has deterministic commands, duplicate-run
+  protection, retry-safe audit notifications, and explicit promotion blockers
+  instead of relying on a conversational agent to remember process state.
+- Next step: confirm the production universe/security-master scope and Gmail
+  recipient, then create real Codex automations and run clean-runtime UAT.
+
+- Commit: pending
 - Scope: architecture, script, skill, runtime, test
 - What changed: connected the public plugin to the separate private Alpha Lab
   through a read-only SQLite adapter. Added Top10 display, full-universe ticker
