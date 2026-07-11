@@ -10,6 +10,7 @@ from runtime_state import (
     RuntimeWriter,
     default_runtime_dir,
     resolve_daily_dir,
+    resolve_runtime_selection,
     template_dir_from_script,
 )
 
@@ -24,6 +25,16 @@ def main() -> None:
 
         if default_runtime_dir({}) != Path.home() / "Documents" / "dailytrades-runtime":
             raise AssertionError("default runtime dir should use ~/Documents/dailytrades-runtime")
+
+        explicit_selection = resolve_runtime_selection(configured_runtime, {})
+        if explicit_selection.path != configured_runtime or explicit_selection.origin != "explicit_argument":
+            raise AssertionError("explicit runtime selection should win")
+        env_selection = resolve_runtime_selection(None, {"TRADING_RESEARCH_RUNTIME_DIR": str(configured_runtime)})
+        if env_selection.path != configured_runtime or env_selection.origin != "environment":
+            raise AssertionError("environment runtime selection should be disclosed")
+        default_selection = resolve_runtime_selection(None, {})
+        if default_selection.origin != "default":
+            raise AssertionError("default runtime selection should be disclosed")
 
         runtime_dir = tmp / "runtime"
         date = "2026-07-06"

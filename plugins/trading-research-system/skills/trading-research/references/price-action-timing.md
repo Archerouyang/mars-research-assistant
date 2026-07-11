@@ -61,6 +61,24 @@ When authorized or user-provided OHLCV JSON is available, use
 adding judgement. The script is local-only: it does not fetch market data, read
 broker accounts, or create orders.
 
+The script requires an explicitly confirmed complete setup key:
+`ticker + trade_horizon + instrument`. Do not infer ticker confirmation from the
+OHLCV payload symbol. If any key field is missing, return `Price Action Watch-only`
+with the missing fields and confirmation request before opening or parsing the
+OHLCV input; do not normalize or expose concrete OHLCV levels,
+trigger/invalidation/add/TP zones, or a visual board. Malformed, missing, or
+non-JSON OHLCV must not block this confirmation-only path because the input is
+not read until the setup key is complete.
+For that reason, `--ohlcv-json` may be omitted while the setup key is incomplete.
+Once the complete key is confirmed, missing `--ohlcv-json` is a clear
+missing-data failure; only then may the script open and parse the supplied file.
+
+If the confirmed horizon is `medium-term swing`, or the user asks for position reassessment,
+pass the confirmed instrument and OHLCV provenance to
+`price_action_rollforward.py` and automatically attach its visible
+`PA Scenario Board`. This is a display-first transient artifact, not permission
+to save private chart state into runtime.
+
 When the available market input is saved Longbridge kline JSON, run
 `longbridge_ohlcv_adapter.py` first. It converts Longbridge kline saved JSON
 into the standard OHLCV JSON consumed by `price_action_rollforward.py` without

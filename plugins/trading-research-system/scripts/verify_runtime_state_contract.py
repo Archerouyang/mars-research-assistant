@@ -29,9 +29,12 @@ FILES = {
 REQUIRED = {
     "runtime_state": [
         "default_runtime_dir",
+        "resolve_runtime_selection",
+        "RuntimeSelection",
         "template_dir_from_script",
         "resolve_daily_root",
         "resolve_daily_dir",
+        "resolve_runtime_selection",
         "RuntimeWriter",
         "dry_run",
         "overwrite",

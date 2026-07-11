@@ -27,7 +27,7 @@ or portfolio risk.
 | Daily Ops startup | Macro Regime Mini-Panel | `macro-panel.json` is available and the answer discusses strategy posture, rates pressure, risk-on/risk-off, or financial conditions | macro panel is missing/stale or the answer is only a runtime setup prompt |
 | Weekly plan | Macro Regime Mini-Panel | Weekly plan includes macro/rates/financial-condition reads that can change strategy posture, risk budget, or add/TP/pause decisions | macro values were not read; output is only an event calendar draft |
 | Daily quick update | Macro Regime Mini-Panel | 10Y, 30Y, VIX, DXY, HYG/LQD, oil, gold, or liquidity crosses or approaches a threshold | no actual macro values were read |
-| Rolling PA / 盘面分析 | PA Scenario Board | 用户直接要求图表, rolling PA analysis, or key levels are hard to inspect in text | no authorized OHLCV/chart data is available |
+| Rolling PA / 盘面分析 | PA Scenario Board | 用户直接要求图表, rolling PA analysis, key levels are hard to inspect in text, or authorized OHLCV is available for `medium-term swing` / position reassessment | no authorized OHLCV/chart data is available |
 | Intraday setup scan | PA Scenario Board | setup state becomes `approaching`, `triggered`, `invalidated`, or `needs_review` and chart data is available | all setups are far from key levels or the scan is a status-only fixture run |
 | Position daily report | Position Risk Visual | `portfolio_snapshot.csv` shows concentration, leveraged ETF exposure, broker/account imbalance, cash constraint, or theme crowding | holdings are unavailable or no risk changed |
 | Trade review | PA Scenario Board | post-order or post-exit review depends on signal K, failed follow-through, exit timing, or chart context | review is only capturing text rationale and no chart data is available |
@@ -68,6 +68,13 @@ available, for symbol-level price action reads. The board should show:
 
 Trigger it when the user asks for a chart, when 关键点位接近, or when PA levels
 are easier to compare visually than in text.
+
+When authorized or user-provided OHLCV is already available and the confirmed
+`ticker + trade_horizon + instrument` describes a `medium-term swing`, or the
+user asks for position reassessment, automatically attach a visible
+`PA Scenario Board`. Do not stop at “可以生成图表” and do not require a second
+chart request. Use transient chat display by default; this does not authorize a
+durable runtime save.
 
 ### Position Risk Visual
 

@@ -30,6 +30,31 @@ Live broker adapters should map read-only broker facts into
 reporting layer only; it does not connect to brokers, save raw exports, or place
 orders.
 
+Before rendering a multi-broker total, use runtime health
+`portfolio_reconciliation`. If IBKR is NAV-only or otherwise `partial_data`,
+pass `--portfolio-reconciliation not_confirmed --excluded-source IBKR:partial_data`
+and feed
+the renderer only sources with confirmed position detail. The renderer must
+reject a snapshot that still contains an excluded source; show NAV-only account
+context separately instead of merging it into exposure.
+`not_confirmed` requires at least one `--excluded-source`; omitted or blank
+exclusion metadata is an error, never permission to relabel an unfiltered
+multi-broker snapshot as confirmed-source assets.
+Each exclusion must use `SOURCE:STATUS`, where source is `IBKR` or `Longbridge`
+and status is a non-confirmed runtime-health state. A single optional annotation
+may use the exact balanced form `SOURCE:STATUS(annotation)`. Unbalanced or nested
+parentheses, leading/trailing raw whitespace, empty or whitespace-only
+annotations, missing source/status, unknown/bogus sources, `available`,
+`confirmed`, `missing`, and exclusions still present in the snapshot are errors.
+Exclusion metadata is valid only with `portfolio_reconciliation=not_confirmed`;
+if supplied in any other reconciliation mode, validate its grammar first and
+then reject the inconsistent mode combination.
+If `portfolio_reconciliation=unavailable` and the snapshot contains more than
+one distinct non-empty broker label after whitespace and case normalization,
+fail closed before rendering aggregate assets. This is broker-agnostic and
+includes manual or future third-party sources. A single arbitrary broker source
+remains renderable because it does not imply a confirmed cross-broker merge.
+
 Read `visual-trigger-policy.md` before deciding whether the report should show a
 `Position Risk Visual`. Use the visual only when the standard
 `portfolio_snapshot.csv` view or authorized broker facts show concentration,

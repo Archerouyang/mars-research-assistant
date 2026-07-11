@@ -43,8 +43,11 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 Before workflows that depend on private runtime state, use
 `references/runtime-health.md` and `../../scripts/runtime_health.py` to check
-whether required state is available, missing, stale, or unauthorized. Do not read
-private file contents just to perform the health check.
+whether required state is available, missing, stale, unauthorized,
+`partial_data`, `upstream_error`, `empty_positions_unverified`, or
+`needs_review`. Preserve the returned status; do not translate a partial/error
+result into unauthorized. Do not read private file contents just to perform the
+health check.
 
 Before repeating a ticker/scope analysis, read `references/analysis-delta.md`
 and use `../../scripts/analysis_delta_adapter.py` with the exact symbol/scope,
@@ -70,16 +73,36 @@ Use the formal runtime as the only active Daily Ops state root:
 Repo fixtures, bundled templates, and example plans are development inputs only;
 do not treat them as the current Active Market Plan in a new chat.
 
-If runtime health reports broker sources as missing or unauthorized, do not stop
-at a passive warning. Enter `券商只读来源设置`: ask whether to enable
-Longbridge read-only, IBKR read-only, both, or continue without broker facts for
-this run. `券商只读来源设置` configures read intent only; it must not read
-accounts, install software, or call broker write actions.
+On every Daily Ops first start, enter `券商只读来源设置`, including when
+unspecified live broker sources default to `needs_review`. On later turns, enter
+it only when a broker source is `unauthorized`. Ask
+whether to enable Longbridge read-only, IBKR read-only, both, or continue without
+broker facts for this run. `券商只读来源设置` configures read intent only; it
+must not read accounts, install software, or call broker write actions.
+
+If a source is `partial_data`, `upstream_error`,
+`empty_positions_unverified`, or `needs_review`, report that exact state and ask
+for the matching verification/retry. On later turns, `needs_review` asks for matching verification/retry
+and does not repeat authorization setup; only `unauthorized` re-enters
+`券商只读来源设置`.
 
 If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or
 exit triggers. Ask for the intended `ticker + trade_horizon + instrument`
 grouping first. If trade horizon is missing, the correct output is a compact
 blocking question, not a forced setup.
+
+Apply this gate before deep research on a specific tradable idea: confirm the complete
+`ticker + trade_horizon + instrument` key. A brief watch-only or reduced-scope
+research summary may still be useful while the key is missing, but do not start
+expensive company/setup research or produce entry/exit levels until the user
+confirms it.
+
+For a weekend first start with a missing or partial runtime, do not make runtime
+initialization or broker authorization a prerequisite for all value. First
+return a current, public-source reduced-scope research summary that clearly
+states what cannot be personalized; then ask for the smallest confirmations
+needed for broker reads, the setup key, and optional runtime initialization.
+Do not write runtime during this first response.
 
 Before macro regime, financial-conditions, rates/liquidity, or strategy posture
 claims, read `references/macro-data-source-contract.md`. Use Longbridge
