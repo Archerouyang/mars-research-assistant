@@ -4,6 +4,35 @@
 
 它不是自动交易系统，不下单，不保证收益，也不会绕过付费研报或 broker 权限。
 
+## 30 秒安装
+
+前提：终端中可以运行 `codex`。首次安装只需复制并执行这一条命令：
+
+```bash
+codex plugin marketplace add Archerouyang/dailytrades && codex plugin add trading-research-system@dailytrades
+```
+
+看到安装成功后，新开一个 Codex task。已打开的旧 task 不应视为已加载新插件。
+
+第一句直接输入：
+
+```text
+开始今天的交易研究。先只做 dry-run，不读 broker，不 web search，不写 runtime。
+```
+
+首次 dry-run 不需要 clone 本仓库、安装 `uv`、初始化本地 runtime，或授权券商。
+需要持仓事实、实时数据或本地保存计划时，agent 会说明缺少的来源并在读取或写入前请求确认。
+
+确认安装状态：
+
+```bash
+codex plugin list
+```
+
+列表中应出现 `trading-research-system@dailytrades`。更新插件时，先执行
+`codex plugin marketplace upgrade dailytrades`，再重新执行
+`codex plugin add trading-research-system@dailytrades`，然后新开 task。
+
 ## 核心闭环
 
 ```text
@@ -18,7 +47,7 @@
 
 ## 快速开始
 
-在 Codex 里直接说你要完成的交易研究任务。普通使用者不需要记住
+安装后，在 Codex 里直接说你要完成的交易研究任务。普通使用者不需要记住
 focused skill 名称；agent 会根据任务自动选择内部工作流。
 
 ```text

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 
 from contract_suite import PluginPaths
@@ -21,6 +22,7 @@ FILES = {
     "plugin_manifest": PATHS.root / ".codex-plugin" / "plugin.json",
     "router_fixture": PATHS.fixture_input / "router-intents.json",
     "router_contract": PATHS.scripts / "verify_router_contract.py",
+    "marketplace": PATHS.repo / ".agents" / "plugins" / "marketplace.json",
 }
 
 HIDDEN_QUANT_TERMS = [
@@ -39,12 +41,26 @@ SPEC = ContractSpec(
     success_message="release surface contract ok",
     failure_header="release surface contract failed:",
     files={
-        key: FileContract(
-            path=path,
+        **{
+            key: FileContract(
+                path=path,
+                forbidden_terms=HIDDEN_QUANT_TERMS,
+                forbidden_label="hidden quant module exposed",
+            )
+            for key, path in FILES.items()
+            if key != "root_readme"
+        },
+        "root_readme": FileContract(
+            path=FILES["root_readme"],
+            required_terms=(
+                "codex plugin marketplace add Archerouyang/dailytrades",
+                "codex plugin add trading-research-system@dailytrades",
+                "trading-research-system@dailytrades",
+                "新开一个 Codex task",
+            ),
             forbidden_terms=HIDDEN_QUANT_TERMS,
             forbidden_label="hidden quant module exposed",
-        )
-        for key, path in FILES.items()
+        ),
     },
 )
 
@@ -58,6 +74,35 @@ def main() -> int:
     contract_status = run_contract(SPEC)
     if contract_status != 0:
         return contract_status
+
+    marketplace_path = FILES["marketplace"]
+    try:
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        plugins = marketplace["plugins"]
+        entry = plugins[0]
+    except (OSError, json.JSONDecodeError, KeyError, IndexError, TypeError) as error:
+        failures.append(f"invalid Dailytrades marketplace manifest: {error}")
+    else:
+        expected = {
+            "marketplace_name": marketplace.get("name"),
+            "plugin_count": len(plugins),
+            "plugin_name": entry.get("name"),
+            "source": entry.get("source"),
+            "installation": entry.get("policy", {}).get("installation"),
+            "authentication": entry.get("policy", {}).get("authentication"),
+        }
+        if expected != {
+            "marketplace_name": "dailytrades",
+            "plugin_count": 1,
+            "plugin_name": "trading-research-system",
+            "source": {
+                "source": "local",
+                "path": "./plugins/trading-research-system",
+            },
+            "installation": "AVAILABLE",
+            "authentication": "ON_INSTALL",
+        }:
+            failures.append(f"unexpected Dailytrades marketplace shape: {expected}")
 
     if failures:
         print("release surface contract failed:")
