@@ -38,6 +38,58 @@ When a task uses a repo skill, plugin skill, connector, or Claude Code worker, C
 
 If an obvious skill is not used, state the reason briefly. Do not imply Claude Code was used unless the `claude` CLI, a Claude Code worktree session, or an explicitly delegated Claude Code worker actually ran.
 
+## Sol Ultra Review Pipeline
+
+When Codex is GPT-5.6 Sol Ultra, review defaults to the smallest agent topology:
+
+1. Sol uses a few read-only commands to pin the implementation baseline,
+   originating spec, task-owned tracked/untracked files, commit list, and concise
+   verification evidence.
+2. For a formal `review` skill run, spawn exactly two explicit GPT-5.6 Terra
+   agents for the required Standards and Spec axes. Do not add Luna by default.
+3. Sol receives only structured findings, reads the cited code hotspots, reruns
+   the smallest useful verification, and makes the final
+   `accept / changes_requested / reject` decision.
+
+Use Luna before Terra only when mechanical preparation is itself substantial:
+large source sets, ambiguous file ownership across branches/worktrees, or a
+scope that cannot be recovered cheaply with a small number of read-only Git and
+thread queries. Luna does not make quality decisions.
+
+Review subagents must use `fork_context: false`. Their input must not include an
+entire development/debug conversation or an unbounded repository diff. Each
+review output should stay under roughly 400 words and include only:
+
+- severity and confidence;
+- file and line;
+- violated standard or spec requirement;
+- minimal reproduction or failure path;
+- missing verification evidence.
+
+Close review agents after aggregation. Keep the full diff and verbose test logs
+in the worker task or temporary artifacts; do not copy them into the Sol
+coordinator context.
+
+Outside a formal review, use zero subagents for normal documentation, planning,
+status checks, narrow fixes, and direct verification. Use one bounded subagent
+only when it provides real parallelism or protects substantial Sol context;
+additional agents require independent, non-overlapping work.
+
+Sol directly reviews the full critical path when any of these applies:
+
+- P0 safety, trading-decision correctness, private-data, credential, or order
+  boundary risk;
+- architecture optimization trigger or hard-to-reverse cross-module contract;
+- reviewer disagreement, unexplained test/backtest behavior, or low confidence;
+- model promotion/rollback or another decision explicitly reserved for Sol;
+- explicit user request for direct Sol review.
+
+For low-risk routine changes that do not require formal review, Sol may inspect
+and verify directly without spawning an agent. For formal review, passing
+deterministic tests plus clean Terra axes is sufficient for Sol to perform a
+targeted sample rather than rereading the full diff. Worker self-review remains
+evidence, not final approval.
+
 ## Worktree Policy
 
 Use the current worktree for:
