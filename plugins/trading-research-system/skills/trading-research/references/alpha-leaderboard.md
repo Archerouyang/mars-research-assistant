@@ -28,6 +28,12 @@ The adapter opens SQLite with `mode=ro`. A missing store is a capability gap;
 the adapter must not create an empty database or rebuild the model from public
 market data.
 
+Every readable run must declare `model_role=champion`,
+`publication_status=published`, a positive `row_count`, and a SHA-256
+`snapshot_hash`. The adapter recomputes the hash from the complete ranked rows,
+requires contiguous ranks, and rejects incomplete, shadow, stale-schema, or
+out-of-range payloads instead of displaying them as production output.
+
 The full eligible universe remains queryable. Normal output shows Top10. Top20
 forms the Cross-Section Candidate Pool. Deep research starts with Top5 plus
 persistent or rapidly strengthening names inside Top20.

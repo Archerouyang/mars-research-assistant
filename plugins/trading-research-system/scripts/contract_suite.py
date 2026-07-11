@@ -97,6 +97,7 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("trade-plan-preparation", "verify_trade_plan_preparation_contract.py"),
     ("automation-setup", "verify_automation_setup_contract.py"),
     ("alpha-automations", "verify_alpha_automation_contract.py"),
+    ("alpha-notification-adapter-selftest", "verify_alpha_notification_adapter_selftest.py"),
     ("router", "verify_router_contract.py"),
     ("contract-suite-selftest", "verify_contract_suite_selftest.py"),
     ("contract-suite-contract", "verify_contract_suite_contract.py"),

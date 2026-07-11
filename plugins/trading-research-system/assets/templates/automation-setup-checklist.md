@@ -32,6 +32,10 @@ Collect and confirm:
   for the Research Report Intake queue.
 - output style: concise Chinese note-style output, focused on changes,
   invalidations, required decisions, and next checks instead of news dumps.
+- isolated dry-run evidence: every enabled Alpha daily/weekly/monthly job and
+  Gmail dispatcher has passed its prompt contract in a clean runtime with
+  fixture inputs, no live broker reads, no emails sent, and no public-repo
+  writes. Record the command, result, runtime path, and artifact fingerprints.
 
 ## Supported Automation Set
 
@@ -91,4 +95,6 @@ Always include:
 ### Next Action
 
 If setup is incomplete, ask for the missing confirmations. If setup is complete,
-ask whether to create the real Codex automations.
+ask whether to create the real Codex automations. Setup is not complete until
+the isolated dry-run evidence from a clean runtime is present for every enabled
+Alpha automation.

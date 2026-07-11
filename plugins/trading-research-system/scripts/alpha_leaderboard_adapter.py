@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
 from pathlib import Path
+import re
 import sqlite3
 import sys
 from typing import Any
@@ -14,6 +17,25 @@ from runtime_state import default_runtime_dir
 
 
 DEFAULT_TOP = 10
+REQUIRED_RUN_COLUMNS = {
+    "as_of",
+    "model_run_id",
+    "input_fingerprint",
+    "snapshot_hash",
+    "model_role",
+    "publication_status",
+    "row_count",
+}
+REQUIRED_ROW_FIELDS = {
+    "as_of",
+    "ticker",
+    "alpha_rank",
+    "alpha_score",
+    "probability_positive",
+    "predictive_std",
+    "rank_vs_sp500",
+}
+TICKER_PATTERN = re.compile(r"^[A-Z][A-Z0-9.\-]{0,14}$")
 
 
 def default_db_path() -> Path:
@@ -62,6 +84,16 @@ def connect_read_only(db_path: Path) -> sqlite3.Connection:
     if missing:
         connection.close()
         raise ValueError(f"Alpha Leaderboard schema missing tables: {missing}")
+    run_columns = {
+        str(row[1])
+        for row in connection.execute("PRAGMA table_info(alpha_runs)").fetchall()
+    }
+    missing_columns = sorted(REQUIRED_RUN_COLUMNS - run_columns)
+    if missing_columns:
+        connection.close()
+        raise ValueError(
+            f"Alpha Leaderboard run metadata missing columns: {missing_columns}"
+        )
     return connection
 
 
@@ -71,7 +103,12 @@ def resolve_date(connection: sqlite3.Connection, requested: str | None) -> str:
             "SELECT as_of FROM alpha_runs WHERE as_of = ?", (requested,)
         ).fetchone()
     else:
-        row = connection.execute("SELECT MAX(as_of) AS as_of FROM alpha_runs").fetchone()
+        row = connection.execute(
+            """
+            SELECT MAX(as_of) AS as_of FROM alpha_runs
+            WHERE model_role = 'champion' AND publication_status = 'published'
+            """
+        ).fetchone()
     if row is None or row["as_of"] is None:
         label = requested or "latest"
         raise ValueError(f"Alpha Leaderboard snapshot not found: {label}")
@@ -83,6 +120,8 @@ def previous_date(connection: sqlite3.Connection, snapshot_date: str) -> str | N
         """
         SELECT as_of FROM alpha_runs
         WHERE as_of < ?
+          AND model_role = 'champion'
+          AND publication_status = 'published'
         ORDER BY as_of DESC
         LIMIT 1
         """,
@@ -91,14 +130,39 @@ def previous_date(connection: sqlite3.Connection, snapshot_date: str) -> str | N
     return None if row is None else str(row["as_of"])
 
 
-def model_run_id(connection: sqlite3.Connection, snapshot_date: str) -> str:
+def run_metadata(
+    connection: sqlite3.Connection, snapshot_date: str
+) -> dict[str, Any]:
     row = connection.execute(
-        "SELECT model_run_id FROM alpha_runs WHERE as_of = ?", (snapshot_date,)
+        """
+        SELECT model_run_id, input_fingerprint, snapshot_hash,
+               model_role, publication_status, row_count
+        FROM alpha_runs WHERE as_of = ?
+        """,
+        (snapshot_date,),
     ).fetchone()
-    return "unknown" if row is None else str(row["model_run_id"])
+    if row is None:
+        raise ValueError(f"Alpha Leaderboard snapshot not found: {snapshot_date}")
+    metadata = dict(row)
+    if (
+        metadata["model_role"] != "champion"
+        or metadata["publication_status"] != "published"
+    ):
+        raise ValueError(f"Alpha snapshot {snapshot_date} is not a published champion")
+    if not str(metadata["model_run_id"]).strip() or not str(
+        metadata["input_fingerprint"]
+    ).strip():
+        raise ValueError(f"Alpha snapshot {snapshot_date} has incomplete run identity")
+    snapshot_hash = str(metadata["snapshot_hash"])
+    if not re.fullmatch(r"[0-9a-f]{64}", snapshot_hash):
+        raise ValueError(f"Alpha snapshot {snapshot_date} has invalid snapshot hash")
+    if int(metadata["row_count"]) <= 0:
+        raise ValueError(f"Alpha snapshot {snapshot_date} has invalid row count")
+    return metadata
 
 
 def fetch_rows(connection: sqlite3.Connection, snapshot_date: str) -> list[dict[str, Any]]:
+    metadata = run_metadata(connection, snapshot_date)
     rows = connection.execute(
         """
         SELECT ticker, alpha_rank, payload_json
@@ -117,10 +181,59 @@ def fetch_rows(connection: sqlite3.Connection, snapshot_date: str) -> list[dict[
             raise ValueError(f"Alpha payload ticker mismatch for {row['ticker']}")
         if int(payload.get("alpha_rank", -1)) != int(row["alpha_rank"]):
             raise ValueError(f"Alpha payload rank mismatch for {row['ticker']}")
+        validate_payload(payload, snapshot_date)
         result.append(payload)
     if not result:
         raise ValueError(f"Alpha Leaderboard has no rows for {snapshot_date}")
+    if len(result) != int(metadata["row_count"]):
+        raise ValueError(f"Alpha snapshot {snapshot_date} row count mismatch")
+    ranks = [int(payload["alpha_rank"]) for payload in result]
+    if ranks != list(range(1, len(result) + 1)):
+        raise ValueError(f"Alpha snapshot {snapshot_date} ranks are not contiguous")
+    canonical = json.dumps(result, sort_keys=True, separators=(",", ":"))
+    actual_hash = hashlib.sha256(canonical.encode()).hexdigest()
+    if actual_hash != metadata["snapshot_hash"]:
+        raise ValueError(f"Alpha snapshot {snapshot_date} snapshot hash mismatch")
     return result
+
+
+def validate_payload(payload: dict[str, Any], snapshot_date: str) -> None:
+    missing = sorted(REQUIRED_ROW_FIELDS - payload.keys())
+    if missing:
+        raise ValueError(f"Alpha payload missing fields: {missing}")
+    ticker = str(payload["ticker"]).upper()
+    if not TICKER_PATTERN.fullmatch(ticker):
+        raise ValueError(f"invalid Alpha ticker: {ticker}")
+    if str(payload["as_of"])[:10] != snapshot_date:
+        raise ValueError(f"Alpha payload as_of mismatch for {ticker}")
+    rank = int(payload["alpha_rank"])
+    rank_vs_sp500 = int(payload["rank_vs_sp500"])
+    if rank <= 0 or rank_vs_sp500 <= 0:
+        raise ValueError(f"invalid Alpha rank for {ticker}")
+    score = finite_float(payload["alpha_score"], "alpha_score", ticker)
+    probability = finite_float(
+        payload["probability_positive"], "probability_positive", ticker
+    )
+    uncertainty = finite_float(payload["predictive_std"], "predictive_std", ticker)
+    if not math.isfinite(score) or not 0.0 <= probability <= 1.0 or uncertainty < 0.0:
+        raise ValueError(f"invalid Alpha numeric range for {ticker}")
+    percentile = payload.get("historical_percentile")
+    if percentile is not None:
+        percentile_value = finite_float(
+            percentile, "historical_percentile", ticker
+        )
+        if not 0.0 <= percentile_value <= 1.0:
+            raise ValueError(f"invalid Alpha historical percentile for {ticker}")
+
+
+def finite_float(value: Any, field: str, ticker: str) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"invalid Alpha {field} for {ticker}") from error
+    if not math.isfinite(number):
+        raise ValueError(f"invalid Alpha {field} for {ticker}")
+    return number
 
 
 def render_show(
@@ -133,7 +246,7 @@ def render_show(
         "# 多因子 Alpha 榜",
         "",
         f"- 数据日期: `{snapshot_date}`",
-        f"- Champion run: `{model_run_id(connection, snapshot_date)}`",
+        f"- Champion run: `{run_metadata(connection, snapshot_date)['model_run_id']}`",
         "- 说明: 严格保留脚本生成的 Alpha Rank；仅用于研究优先级，不是买入名单。",
         "- 概率成熟度: `Experimental`；必须同时读取预测不确定性。",
         "",

@@ -44,6 +44,13 @@ def connect_read_only(path: Path) -> sqlite3.Connection:
     if exists is None:
         connection.close()
         raise ValueError("analysis store missing analysis_runs table")
+    columns = {
+        str(row[1])
+        for row in connection.execute("PRAGMA table_info(analysis_runs)").fetchall()
+    }
+    if "status" not in columns:
+        connection.close()
+        raise ValueError("analysis store missing success status metadata")
     return connection
 
 
@@ -63,8 +70,8 @@ def fetch_latest(connection: sqlite3.Connection, key: str) -> dict[str, Any]:
                rule_version, input_fingerprint, payload_json, delta_json,
                comparison_mode
         FROM analysis_runs
-        WHERE stable_key = ?
-        ORDER BY sequence_id DESC
+        WHERE stable_key = ? AND status = 'success'
+        ORDER BY as_of DESC, sequence_id DESC
         LIMIT 1
         """,
         (key,),
@@ -75,6 +82,28 @@ def fetch_latest(connection: sqlite3.Connection, key: str) -> dict[str, Any]:
     delta = json.loads(row["delta_json"])
     if not isinstance(snapshot, dict) or not isinstance(delta, dict):
         raise ValueError(f"invalid analysis payload for {key}")
+    comparison_mode = str(row["comparison_mode"])
+    if comparison_mode not in {"baseline", "incremental", "full_recompute"}:
+        raise ValueError(f"invalid analysis comparison mode for {key}")
+    predecessor = connection.execute(
+        """
+        SELECT model_version, rule_version
+        FROM analysis_runs
+        WHERE stable_key = ? AND status = 'success' AND run_id != ?
+          AND (as_of < ? OR (as_of = ? AND sequence_id < (
+              SELECT sequence_id FROM analysis_runs WHERE run_id = ?
+          )))
+        ORDER BY as_of DESC, sequence_id DESC
+        LIMIT 1
+        """,
+        (key, row["run_id"], row["as_of"], row["as_of"], row["run_id"]),
+    ).fetchone()
+    if predecessor is not None and (
+        predecessor["model_version"] != row["model_version"]
+        or predecessor["rule_version"] != row["rule_version"]
+    ):
+        comparison_mode = "full_recompute"
+        delta = {field: "updated" for field in sorted(snapshot)}
     return {
         "run_id": row["run_id"],
         "stable_key": row["stable_key"],
@@ -86,7 +115,7 @@ def fetch_latest(connection: sqlite3.Connection, key: str) -> dict[str, Any]:
         "model_version": row["model_version"],
         "rule_version": row["rule_version"],
         "input_fingerprint": row["input_fingerprint"],
-        "comparison_mode": row["comparison_mode"],
+        "comparison_mode": comparison_mode,
         "snapshot": snapshot,
         "delta": delta,
     }

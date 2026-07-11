@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import sqlite3
@@ -61,12 +62,66 @@ def main() -> int:
         if result.returncode == 0 or missing.exists():
             raise AssertionError("missing Alpha store must fail without being created")
 
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(
+                "UPDATE alpha_runs SET publication_status = 'shadow' WHERE as_of = '2026-01-07'"
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "not a published champion",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            payload = json.loads(
+                connection.execute(
+                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                ).fetchone()[0]
+            )
+            payload["probability_positive"] = 1.5
+            connection.execute(
+                """
+                UPDATE alpha_rows SET payload_json = ?
+                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                """,
+                (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "invalid Alpha numeric range",
+        )
+
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            payload = json.loads(
+                connection.execute(
+                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                ).fetchone()[0]
+            )
+            payload["alpha_score"] = 0.91
+            connection.execute(
+                """
+                UPDATE alpha_rows SET payload_json = ?
+                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                """,
+                (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "snapshot hash mismatch",
+        )
+
     print("alpha leaderboard adapter selftest ok")
     return 0
 
 
-def create_fixture(path: Path) -> None:
-    path.parent.mkdir(parents=True)
+def create_fixture(path: Path, *, replace: bool = False) -> None:
+    if replace and path.exists():
+        path.unlink()
+    path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
     connection.executescript(
         """
@@ -74,7 +129,10 @@ def create_fixture(path: Path) -> None:
             as_of TEXT PRIMARY KEY,
             model_run_id TEXT NOT NULL,
             input_fingerprint TEXT NOT NULL,
-            snapshot_hash TEXT NOT NULL
+            snapshot_hash TEXT NOT NULL,
+            model_role TEXT NOT NULL,
+            publication_status TEXT NOT NULL,
+            row_count INTEGER NOT NULL
         );
         CREATE TABLE alpha_rows (
             as_of TEXT NOT NULL,
@@ -87,20 +145,31 @@ def create_fixture(path: Path) -> None:
     )
     snapshots = {
         "2026-01-06": [
-            row("A", 1, 0.8, "persistent"),
-            row("B", 2, 0.6, "persistent"),
-            row("C", 3, 0.5, "new"),
+            row("2026-01-06", "A", 1, 0.8, "persistent"),
+            row("2026-01-06", "B", 2, 0.6, "persistent"),
+            row("2026-01-06", "C", 3, 0.5, "new"),
         ],
         "2026-01-07": [
-            row("C", 1, 0.9, "strengthening"),
-            row("A", 2, 0.7, "persistent"),
-            row("B", 3, 0.4, "persistent"),
+            row("2026-01-07", "C", 1, 0.9, "strengthening"),
+            row("2026-01-07", "A", 2, 0.7, "persistent"),
+            row("2026-01-07", "B", 3, 0.4, "persistent"),
         ],
     }
     for as_of, rows in snapshots.items():
+        snapshot_hash = hashlib.sha256(
+            json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
         connection.execute(
-            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?)",
-            (as_of, "bayes-1", f"input-{as_of}", f"hash-{as_of}"),
+            "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                as_of,
+                "bayes-1",
+                f"input-{as_of}",
+                snapshot_hash,
+                "champion",
+                "published",
+                len(rows),
+            ),
         )
         connection.executemany(
             "INSERT INTO alpha_rows VALUES (?, ?, ?, ?)",
@@ -113,9 +182,11 @@ def create_fixture(path: Path) -> None:
     connection.close()
 
 
-def row(ticker: str, rank: int, score: float, trajectory: str) -> dict[str, object]:
+def row(
+    as_of: str, ticker: str, rank: int, score: float, trajectory: str
+) -> dict[str, object]:
     return {
-        "as_of": "2026-01-07",
+        "as_of": as_of,
         "ticker": ticker,
         "alpha_rank": rank,
         "alpha_score": score,
@@ -149,6 +220,19 @@ def require_terms(text: str, terms: list[str]) -> None:
     missing = [term for term in terms if term not in text]
     if missing:
         raise AssertionError(f"missing terms {missing!r} in:\n{text}")
+
+
+def require_failure(args: list[str], term: str) -> None:
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), *args],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode == 0 or term not in result.stderr:
+        raise AssertionError(
+            f"expected failure containing {term!r}:\n{result.stdout}\n{result.stderr}"
+        )
 
 
 if __name__ == "__main__":

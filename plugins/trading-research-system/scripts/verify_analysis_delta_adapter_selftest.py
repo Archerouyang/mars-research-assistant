@@ -53,6 +53,10 @@ def main() -> int:
         if payload["snapshot"]["decision"] != "research":
             raise AssertionError("adapter did not return full latest snapshot")
 
+        version_change = run_latest(db_path, "QQQ")
+        if version_change["comparison_mode"] != "full_recompute":
+            raise AssertionError("model/rule change must force full_recompute")
+
         missing = Path(tmp) / "missing.sqlite"
         failed = subprocess.run(
             [sys.executable, str(SCRIPT), "latest", "--db", str(missing), "--symbol", "SOXX"],
@@ -86,13 +90,18 @@ def create_fixture(path: Path) -> None:
             input_fingerprint TEXT NOT NULL,
             payload_json TEXT NOT NULL,
             delta_json TEXT NOT NULL,
-            comparison_mode TEXT NOT NULL
+            comparison_mode TEXT NOT NULL,
+            status TEXT NOT NULL
         )
         """
     )
     rows = [
-        ("run-1", "2026-07-10", {"decision": "wait", "support": 550}, {"decision": "added", "support": "added"}, "baseline"),
-        ("run-2", "2026-07-11", {"decision": "research", "support": 550}, {"decision": "updated", "support": "unchanged"}, "incremental"),
+        ("run-1", "SOXX", "2026-07-10", "bayes-1", "decision-card-1", {"decision": "wait", "support": 550}, {"decision": "added", "support": "added"}, "baseline", "success"),
+        ("run-2", "SOXX", "2026-07-11", "bayes-1", "decision-card-1", {"decision": "research", "support": 550}, {"decision": "updated", "support": "unchanged"}, "incremental", "success"),
+        ("run-late", "SOXX", "2026-07-09", "bayes-1", "decision-card-1", {"decision": "backfill"}, {"decision": "updated"}, "incremental", "success"),
+        ("run-failed", "SOXX", "2026-07-12", "bayes-1", "decision-card-1", {"decision": "failed"}, {"decision": "updated"}, "incremental", "failed"),
+        ("run-q1", "QQQ", "2026-07-10", "bayes-1", "decision-card-1", {"decision": "wait"}, {"decision": "added"}, "baseline", "success"),
+        ("run-q2", "QQQ", "2026-07-11", "bayes-2", "decision-card-2", {"decision": "research"}, {"decision": "updated"}, "incremental", "success"),
     ]
     connection.executemany(
         """
@@ -100,30 +109,53 @@ def create_fixture(path: Path) -> None:
             run_id, stable_key, symbol_or_scope, analysis_type,
             primary_timeframe, strategy_horizon, as_of, model_version,
             rule_version, input_fingerprint, payload_json, delta_json,
-            comparison_mode
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            comparison_mode, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
                 run_id,
-                "SOXX|decision_card|1D|swing",
-                "SOXX",
+                f"{symbol}|decision_card|1D|swing",
+                symbol,
                 "decision_card",
                 "1D",
                 "swing",
                 as_of,
-                "bayes-1",
-                "decision-card-1",
+                model_version,
+                rule_version,
                 f"input-{as_of}",
                 json.dumps(snapshot),
                 json.dumps(delta),
                 mode,
+                status,
             )
-            for run_id, as_of, snapshot, delta, mode in rows
+            for run_id, symbol, as_of, model_version, rule_version, snapshot, delta, mode, status in rows
         ],
     )
     connection.commit()
     connection.close()
+
+
+def run_latest(path: Path, symbol: str) -> dict[str, object]:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "latest",
+            "--db",
+            str(path),
+            "--symbol",
+            symbol,
+            "--format",
+            "json",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stderr or result.stdout)
+    return json.loads(result.stdout)
 
 
 if __name__ == "__main__":

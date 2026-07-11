@@ -69,6 +69,28 @@ SPEC = ContractSpec(
                 "发送失败不回滚 Alpha",
                 "API key",
                 "positions",
+                "alpha_notification_adapter.py",
+                "fail closed",
+            ),
+        ),
+        "notification_adapter": FileContract(
+            PATHS.scripts / "alpha_notification_adapter.py",
+            required_terms=(
+                "connect_read_only",
+                "?mode=ro",
+                "ALLOWED_KINDS",
+                "ALLOWED_METADATA",
+                "FORBIDDEN_CONTENT",
+                "non-allowlisted metadata",
+            ),
+            forbidden_terms=("UPDATE notification_outbox", "DELETE FROM"),
+        ),
+        "notification_selftest": FileContract(
+            PATHS.scripts / "verify_alpha_notification_adapter_selftest.py",
+            required_terms=(
+                "private outbox metadata must fail closed",
+                "secret-like notification content must fail closed",
+                "alpha notification adapter selftest ok",
             ),
         ),
         "setup": FileContract(
@@ -79,6 +101,8 @@ SPEC = ContractSpec(
                 "alpha_monthly_governance",
                 "alpha_gmail_dispatch",
                 "dailytrades-quant",
+                "isolated dry-run evidence",
+                "clean runtime",
             ),
         ),
     },

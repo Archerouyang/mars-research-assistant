@@ -33,6 +33,7 @@ REQUIRED = {
         "verify_analysis_delta_adapter_selftest.py",
         "verify_analysis_delta_adapter_contract.py",
         "verify_alpha_automation_contract.py",
+        "verify_alpha_notification_adapter_selftest.py",
         "verify_macro_data_source_contract.py",
         "verify_longbridge_skill_adapter_contract.py",
         "verify_contract_suite_selftest.py",
