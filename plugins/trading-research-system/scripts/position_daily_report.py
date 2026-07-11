@@ -8,12 +8,26 @@ import csv
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 from typing import Callable
 
 
 LEVERAGED_PRODUCT_ROOTS = {"KORU", "MVLL", "MUU", "NVDL", "SOXL", "SQQQ", "TQQQ", "TSLL", "TSMX"}
 LEVERAGED_PRODUCT_MARKERS = ("2X", "3X", "LEVERAGED", "BULL", "BEAR")
+RECONCILABLE_BROKER_SOURCES = {"ibkr", "longbridge"}
+EXCLUDED_SOURCE_PATTERN = re.compile(
+    r"^(?P<source>[A-Za-z]+):(?P<status>[A-Za-z_]+)(?:\((?P<annotation>[^()]+)\))?$"
+)
+UNCONFIRMED_SOURCE_STATUSES = {
+    "unauthorized",
+    "partial_data",
+    "upstream_error",
+    "empty_positions_unverified",
+    "needs_review",
+    "not_installed",
+    "stale",
+}
 
 
 @dataclass(frozen=True)
@@ -45,6 +59,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--coverage", default=None, help="Broker/account coverage disclosure")
     parser.add_argument("--data-status", default="fixture", help="live / delayed / prior close / partial / fixture")
     parser.add_argument("--snapshot-saved", default="fixture", help="yes / no / fixture")
+    parser.add_argument(
+        "--portfolio-reconciliation",
+        choices=("confirmed", "not_confirmed", "unavailable"),
+        default=None,
+        help="Cross-broker position-detail reconciliation status from runtime health",
+    )
+    parser.add_argument(
+        "--excluded-source",
+        action="append",
+        default=[],
+        help="Broker source excluded from confirmed combined exposure, e.g. IBKR",
+    )
     return parser.parse_args()
 
 
@@ -113,6 +139,54 @@ def coverage_text(positions: list[Position], requested: str | None) -> str:
         return requested
     accounts = sorted({f"{position.broker}:{position.account_id}" for position in positions})
     return f"{len(accounts)} broker/account source(s): {', '.join(accounts)}"
+
+
+def validate_reconciliation(
+    positions: list[Position],
+    reconciliation: str | None,
+    excluded_sources: list[str],
+) -> None:
+    provided = list(excluded_sources)
+    excluded = {parse_excluded_source(source)[0] for source in provided}
+    if reconciliation != "not_confirmed":
+        if provided:
+            raise SystemExit("--excluded-source requires --portfolio-reconciliation not_confirmed")
+        if reconciliation == "unavailable":
+            present_sources = {
+                position.broker.strip().casefold()
+                for position in positions
+                if position.broker.strip()
+            }
+            if len(present_sources) > 1:
+                raise SystemExit("unavailable reconciliation cannot aggregate multiple broker sources")
+        return
+    if not provided:
+        raise SystemExit("not_confirmed requires at least one --excluded-source")
+    present = {position.broker.strip().lower(): position.broker for position in positions}
+    overlap = sorted(excluded & present.keys())
+    if overlap:
+        labels = ", ".join(present[source] for source in overlap)
+        raise SystemExit(f"excluded broker source present in snapshot: {labels}")
+
+
+def parse_excluded_source(value: str) -> tuple[str, str]:
+    if value != value.strip():
+        raise SystemExit("excluded-source must use exact SOURCE:STATUS metadata")
+    match = EXCLUDED_SOURCE_PATTERN.fullmatch(value)
+    if match is None:
+        raise SystemExit("excluded-source must use exact SOURCE:STATUS metadata")
+    annotation = match.group("annotation")
+    if annotation is not None and not annotation.strip():
+        raise SystemExit("excluded-source must use exact SOURCE:STATUS metadata")
+    source_id = match.group("source").lower()
+    if source_id not in RECONCILABLE_BROKER_SOURCES:
+        raise SystemExit("excluded-source must name IBKR or Longbridge")
+    status = match.group("status").lower()
+    if status in {"available", "confirmed", "missing"}:
+        raise SystemExit("excluded-source status cannot be available, confirmed, or missing")
+    if status not in UNCONFIRMED_SOURCE_STATUSES:
+        raise SystemExit("excluded-source must include a non-confirmed source status")
+    return source_id, status
 
 
 def money(value: float) -> str:
@@ -187,6 +261,8 @@ def render_report(
     coverage: str,
     data_status: str,
     snapshot_saved: str,
+    portfolio_reconciliation: str | None = None,
+    excluded_sources: list[str] | None = None,
 ) -> str:
     total_assets = sum(abs(position.market_value) for position in positions)
     invested = sum(abs(position.market_value) for position in non_cash_positions(positions))
@@ -200,6 +276,7 @@ def render_report(
     leveraged_product_weight = leveraged_weight(non_cash_positions(positions), total_assets)
     top_theme, top_theme_weight = top_item(theme_weights)
     top_symbol, top_symbol_weight = top_item(symbol_weights)
+    asset_label = "已确认来源资产" if portfolio_reconciliation == "not_confirmed" else "总资产"
 
     lines = [
         f"# 持仓日报 - {date}",
@@ -209,19 +286,31 @@ def render_report(
         f"Coverage: {coverage}",
         f"Data status: {data_status}",
         f"Snapshot saved: {snapshot_saved}",
-        "",
-        "## 结论",
-        "",
-        f"- 总资产 {money(total_assets)}；已投资 {pct(invested / total_assets) if total_assets else '0.0%'}；现金 {pct(cash / total_assets) if total_assets else '0.0%'}。",
-        f"- 最大主题 `{top_theme}` 为 {pct(top_theme_weight)}；最大单一持仓 `{top_symbol}` 为 {pct(top_symbol_weight)}。",
-        f"- 产品暴露：{format_weights(instrument_weights)}；杠杆/单股 ETF {pct(leveraged_product_weight)}。",
-        f"- 未实现盈亏合计 {money(unrealized_pnl)}；本报告只提示复核项，不生成任何订单动作。",
-        "",
-        "## 需要用户决策",
-        "",
-        "| 优先级 | 持仓/主题 | 问题 | 可选动作 | 需要确认 |",
-        "| --- | --- | --- | --- | --- |",
     ]
+    if portfolio_reconciliation:
+        excluded_text = ", ".join(excluded_sources or []) or "none"
+        lines.extend(
+            [
+                f"Portfolio reconciliation: {portfolio_reconciliation}",
+                f"Excluded broker sources: {excluded_text}",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## 结论",
+            "",
+            f"- {asset_label} {money(total_assets)}；已投资 {pct(invested / total_assets) if total_assets else '0.0%'}；现金 {pct(cash / total_assets) if total_assets else '0.0%'}。",
+            f"- 最大主题 `{top_theme}` 为 {pct(top_theme_weight)}；最大单一持仓 `{top_symbol}` 为 {pct(top_symbol_weight)}。",
+            f"- 产品暴露：{format_weights(instrument_weights)}；杠杆/单股 ETF {pct(leveraged_product_weight)}。",
+            f"- 未实现盈亏合计 {money(unrealized_pnl)}；本报告只提示复核项，不生成任何订单动作。",
+            "",
+            "## 需要用户决策",
+            "",
+            "| 优先级 | 持仓/主题 | 问题 | 可选动作 | 需要确认 |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
     for row in decision_rows(
         top_theme,
         top_theme_weight,
@@ -370,6 +459,11 @@ def main() -> int:
         positions = load_positions(Path(args.portfolio_snapshot_csv))
         if not positions:
             raise ValueError("no positions found in portfolio snapshot")
+        validate_reconciliation(
+            positions,
+            args.portfolio_reconciliation,
+            args.excluded_source,
+        )
         print(
             render_report(
                 positions,
@@ -379,6 +473,8 @@ def main() -> int:
                 coverage=coverage_text(positions, args.coverage),
                 data_status=args.data_status,
                 snapshot_saved=args.snapshot_saved,
+                portfolio_reconciliation=args.portfolio_reconciliation,
+                excluded_sources=args.excluded_source,
             )
         )
     except (OSError, ValueError) as error:

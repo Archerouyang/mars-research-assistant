@@ -12,19 +12,49 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from chart_artifact import ema_points, normalize_candles, normalize_levels, normalize_zones
+from chart_artifact import (
+    build_chart_payload,
+    ema_points,
+    normalize_candles,
+    normalize_levels,
+    normalize_zones,
+    render_svg,
+)
+from visual_artifacts import default_display_output, slugify, write_text_artifact
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate OHLCV-backed rolling PA note.")
-    parser.add_argument("--ohlcv-json", required=True, help="Authorized or fixture OHLCV JSON")
-    parser.add_argument("--ticker", default=None, help="Ticker label; defaults to JSON symbol")
+    parser.add_argument("--ohlcv-json", default=None, help="Authorized or fixture OHLCV JSON")
+    parser.add_argument(
+        "--ticker",
+        default=None,
+        help="Explicitly confirmed ticker required by the complete setup key",
+    )
     parser.add_argument("--date", default=None, help="Analysis date label")
     parser.add_argument("--main-timeframe", required=True, help="Main background timeframe, e.g. 1D/4H/1W")
     parser.add_argument("--aux-timeframe", required=True, help="Auxiliary execution timeframe, e.g. 1H/15m")
     parser.add_argument("--prior-analysis", default="", help="Prior PA note or concise prior-level summary")
     parser.add_argument("--cost-context", default="", help="Cost/buy-record context from holdings or user input")
     parser.add_argument("--event-context", default="", help="Macro/news/event context mapped to this PA read")
+    parser.add_argument("--trade-horizon", default="", help="Confirmed trade horizon, e.g. medium-term swing")
+    parser.add_argument("--instrument", default="", help="Confirmed instrument, e.g. equity or ETF")
+    parser.add_argument(
+        "--analysis-intent",
+        default="rolling_pa",
+        help="Analysis intent, e.g. rolling_pa or position_reassessment",
+    )
+    parser.add_argument(
+        "--ohlcv-status",
+        choices=("authorized", "user_provided", "fixture", "needs_review"),
+        default="needs_review",
+        help="Provenance gate for automatic PA Scenario Board generation",
+    )
+    parser.add_argument(
+        "--display-output",
+        default=None,
+        help="Transient SVG path for an automatically generated PA Scenario Board",
+    )
     parser.add_argument("--output", default=None, help="Optional Markdown output path")
     return parser.parse_args()
 
@@ -205,11 +235,122 @@ def render_note(
     return "\n".join(lines)
 
 
+def missing_setup_key_fields(
+    ticker: str | None,
+    trade_horizon: str,
+    instrument: str,
+) -> list[str]:
+    fields = (
+        ("ticker", ticker or ""),
+        ("trade_horizon", trade_horizon),
+        ("instrument", instrument),
+    )
+    return [name for name, value in fields if not value.strip()]
+
+
+def render_watch_only_confirmation(
+    *,
+    ticker_label: str,
+    missing_fields: list[str],
+) -> str:
+    missing_text = ", ".join(f"`{field}`" for field in missing_fields)
+    return "\n".join(
+        [
+            f"# Price Action Watch-only - {ticker_label}",
+            "",
+            "This is decision support only. It is not a buy/sell instruction.",
+            "这是决策辅助，不是买卖指令。",
+            "",
+            "## 缺失确认",
+            "",
+            "- setup key incomplete; 当前只能保持 watch-only。",
+            f"- 缺失字段: {missing_text}",
+            "- 必须确认: `ticker + trade_horizon + instrument`。",
+            "- OHLCV 未读取：complete setup key missing；未访问输入文件或具体点位。",
+            "",
+            "## 建议下一步",
+            "",
+            "请补充：`ticker=<...>; trade_horizon=<...>; instrument=<...>`。",
+            "",
+            "## 确认后我会执行",
+            "",
+            "确认完整 setup key 后，再生成主/辅助时间框架、支撑压力、触发/失效区；符合视觉触发条件时再附图。",
+            "",
+            "## 安全边界",
+            "",
+            "- 本次没有生成具体 entry/exit trigger、加减仓区或图表。",
+            "- 不读取 broker 账户，不创建、修改、取消或提交订单。",
+            "",
+        ]
+    )
+
+
+def should_generate_scenario_board(
+    *,
+    trade_horizon: str,
+    instrument: str,
+    analysis_intent: str,
+    ohlcv_status: str,
+) -> bool:
+    """Return whether authorized OHLCV must produce a visible scenario board."""
+
+    normalized_horizon = trade_horizon.strip().lower().replace("_", "-")
+    normalized_intent = analysis_intent.strip().lower().replace("-", "_")
+    authorized = ohlcv_status in {"authorized", "user_provided", "fixture"}
+    medium_term = normalized_horizon in {"medium-term swing", "中期波段"}
+    position_reassessment = normalized_intent in {
+        "position_reassessment",
+        "reassess_position",
+        "重新评估仓位",
+    }
+    return authorized and bool(instrument.strip()) and (medium_term or position_reassessment)
+
+
+def write_scenario_board(
+    payload: dict[str, Any],
+    *,
+    ticker: str,
+    trade_horizon: str,
+    instrument: str,
+    display_output: str | None,
+) -> Path:
+    chart_payload = build_chart_payload(payload, f"{ticker} PA Scenario Board")
+    chart_payload["subtitle"] = f"{trade_horizon} / {instrument} / decision support only"
+    repo_root = Path(__file__).resolve().parents[3]
+    target = (
+        Path(display_output).expanduser()
+        if display_output
+        else default_display_output(repo_root, f"{slugify(ticker)}-pa-scenario-board")
+    )
+    write_text_artifact(target, render_svg(chart_payload))
+    return target.resolve()
+
+
 def main() -> int:
     args = parse_args()
+    missing_fields = missing_setup_key_fields(
+        args.ticker,
+        args.trade_horizon,
+        args.instrument,
+    )
+    if missing_fields:
+        note = render_watch_only_confirmation(
+            ticker_label=args.ticker or "UNCONFIRMED",
+            missing_fields=missing_fields,
+        )
+        if args.output:
+            output = Path(args.output).expanduser()
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(note, encoding="utf-8")
+        else:
+            print(note)
+        return 0
+
+    if not args.ohlcv_json:
+        raise SystemExit("complete setup key requires --ohlcv-json authorized or fixture OHLCV data")
     payload = load_payload(Path(args.ohlcv_json).expanduser())
+    ticker = args.ticker.strip()
     candles = normalize_candles(payload)
-    ticker = args.ticker or str(payload.get("symbol") or "UNKNOWN")
     date_label = args.date or str(payload.get("data_as_of") or payload.get("as_of") or candles[-1]["time"])
     note = render_note(
         payload=payload,
@@ -222,6 +363,24 @@ def main() -> int:
         cost_context=args.cost_context,
         event_context=args.event_context,
     )
+    if should_generate_scenario_board(
+        trade_horizon=args.trade_horizon,
+        instrument=args.instrument,
+        analysis_intent=args.analysis_intent,
+        ohlcv_status=args.ohlcv_status,
+    ):
+        board_path = write_scenario_board(
+            payload,
+            ticker=ticker,
+            trade_horizon=args.trade_horizon,
+            instrument=args.instrument,
+            display_output=args.display_output,
+        )
+        note += (
+            "\n## PA Scenario Board\n\n"
+            f"![PA Scenario Board]({board_path})\n\n"
+            "该图使用同一份已授权/用户提供 OHLCV 自动生成；仅作情景与点位复核，不是下单指令。\n"
+        )
     if args.output:
         output = Path(args.output).expanduser()
         output.parent.mkdir(parents=True, exist_ok=True)

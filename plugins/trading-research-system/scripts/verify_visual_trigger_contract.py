@@ -51,6 +51,9 @@ REQUIRED = {
         ".scratch/visual-artifacts",
         "No broker write actions",
         "Do Not Trigger",
+        "medium-term swing",
+        "position reassessment",
+        "automatically attach",
     ],
     "output_templates": [
         "visual-trigger-policy.md",
@@ -68,6 +71,9 @@ REQUIRED = {
         "visual-trigger-policy.md",
         "PA Scenario Board",
         "关键点位接近",
+        "medium-term swing",
+        "position reassessment",
+        "automatically attach",
     ],
     "intraday_reference": [
         "visual-trigger-policy.md",

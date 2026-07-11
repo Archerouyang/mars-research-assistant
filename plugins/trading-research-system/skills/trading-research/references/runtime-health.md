@@ -17,6 +17,15 @@ Use only these status values:
 - `unauthorized`: broker or external source is not authorized for this run.
 - `not_installed`: broker source, connector, skill, or local terminal is not
   installed or visible in the current Codex session.
+- `partial_data`: authorization succeeded and some data arrived, but required
+  fields or position detail are incomplete. A NAV-only account response belongs
+  here until positions are verified.
+- `upstream_error`: authorization is not the problem; the authorized connector
+  or its upstream request failed.
+- `empty_positions_unverified`: the source returned no positions, but the system
+  cannot yet distinguish a truly empty account from an incomplete response.
+- `needs_review`: status was not supplied or evidence conflicts. Do not infer
+  `unauthorized` from absence of status.
 
 `not_installed` is broker-source health only. File/runtime path checks should
 continue to use `missing`.
@@ -26,12 +35,14 @@ continue to use `missing`.
 The health check should cover:
 
 - `{runtime_dir}/market-plan.md`
+- `{runtime_dir}/ops-state.md`
 - `{runtime_dir}/trading-profile.md`
 - `{runtime_dir}/updates/`
 - `{runtime_dir}/daily/YYYY-MM-DD/`
 - `{runtime_dir}/daily/YYYY-MM-DD/trade-plans.csv`
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`
 - `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`
+- `{runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv`
 - `{runtime_dir}/momentum/kvn.sqlite`
 - `Longbridge` broker source
 - `IBKR` broker source
@@ -46,12 +57,29 @@ The health check should cover:
 
 The JSON payload must include:
 
+- `runtime_origin`: `explicit_argument`, `environment`, or `default`, so UAT,
+  private runtime, and repo fixtures cannot be confused.
+- `startup_status`: `ready`, `partial`, or `uninitialized`, derived only from
+  runtime path availability.
 - `current_mode`: `live read-only`, `manual snapshot`, or `dry-run`.
 - `source_capability_health`: per-capability status rows for Longbridge broker
   skill, Longbridge Terminal CLI, Longbridge macrodata, Official source
   fallback, IBKR connector, and Manual snapshot.
 - `broker_source_health`: per-source status rows for Longbridge, IBKR, and
   Manual snapshot.
+- `portfolio_reconciliation`: whether detailed broker positions are confirmed
+  enough to combine, plus `confirmed_sources` and `excluded_sources`.
+
+`unauthorized`, `available`, `partial_data`, `upstream_error`,
+`empty_positions_unverified`, and `needs_review` are distinct observations and
+must never be collapsed into one another. In particular, an authorized source
+that returns NAV but fails to return positions is `partial_data`, not
+`unauthorized`.
+
+If IBKR is NAV-only while Longbridge has detailed positions,
+`portfolio_reconciliation.status` must be `not_confirmed`. Show IBKR NAV as
+account-level context only, exclude IBKR from confirmed combined exposure, and
+do not add IBKR NAV to Longbridge position market value.
 
 ## Script
 

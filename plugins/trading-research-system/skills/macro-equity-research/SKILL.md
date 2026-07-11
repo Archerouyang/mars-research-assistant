@@ -7,6 +7,11 @@ description: Run macro-to-equity trading research covering market-moving policy,
 
 Use this skill to convert current macro/rates information and research claims into Trade Plan Preparation inputs and a Cross-Section Candidate Pool. It should prepare candidates for the Active Market Plan; it should not jump directly to intraday triggers.
 
+Apply this gate before deep research on a specific tradable idea: confirm
+`ticker + trade_horizon + instrument`. If any part is missing, provide only a
+concise watch-only summary and ask one focused confirmation question; do not
+spend the deep-research pass or generate concrete entry/exit levels yet.
+
 ## Workflow
 
 1. Use current sources for policy, Treasury/rates/yields, prices, filings, earnings, and market state. When available and authorized, Longbridge `macrodata` can be used for macro and financial-condition reads, while official policy facts still need S0 confirmation.

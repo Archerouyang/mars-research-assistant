@@ -45,9 +45,12 @@ are not needed yet.
 
 | source | status | effect |
 | --- | --- | --- |
-| Longbridge | available / unauthorized / not_installed / missing / stale |  |
-| IBKR | available / unauthorized / not_installed / missing / stale |  |
+| Longbridge | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
+| IBKR | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
+
+Do not collapse `partial_data`, `upstream_error`,
+`empty_positions_unverified`, or `needs_review` into `unauthorized`.
 
 当前模式: `live read-only` / `manual snapshot` / `dry-run`
 
@@ -57,9 +60,14 @@ List only confirmations that block useful output. If none, write `无阻塞确�
 
 ## 券商只读来源设置
 
-Include this section when broker source is `missing`, `stale`, or
-`unauthorized`, or when the next recommended action needs holdings, executions,
-orders/status, margin, cash, or position risk.
+Include this section on every Daily Ops first start, including when unspecified
+live broker sources default to `needs_review`. On later turns, include it only
+when a broker source is `unauthorized`.
+
+On later turns, `needs_review` asks for matching verification/retry and
+does not repeat authorization setup; only `unauthorized` re-enters this section.
+For other non-authorized-health states, preserve the exact status and put the
+matching availability or verification action under `缺失确认` / `下一步指引`.
 
 Ask one concise question:
 
@@ -85,6 +93,19 @@ or exit triggers.
 | ticker | trade_horizon | instrument | status | needed confirmation |
 | --- | --- | --- | --- | --- |
 |  |  |  |  |  |
+
+## 周末首次启动
+
+当 `startup_status=partial / uninitialized` 时，保持只读并按以下顺序输出：
+
+1. `可用研究摘要`：用当前公开/授权的非账户信源概括市场环境、下周 P0/P1
+   事件和主题影响。
+2. `降级范围`：明确未读取 broker、未验证组合暴露、未读取保存计划，且不生成
+   具体 entry/exit trigger。
+3. `下一步确认`：再请求 broker read-only、
+   `ticker + trade_horizon + instrument` 和 runtime dry-run/初始化选择。
+
+先摘要，后授权/初始化；本轮不会写 runtime。
 
 ## 建议下一步
 

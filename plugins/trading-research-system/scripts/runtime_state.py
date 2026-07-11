@@ -13,6 +13,14 @@ from typing import Mapping
 DEFAULT_RUNTIME_RELATIVE = Path("Documents") / "dailytrades-runtime"
 
 
+@dataclass(frozen=True)
+class RuntimeSelection:
+    """Resolved private runtime path plus the source of that selection."""
+
+    path: Path
+    origin: str
+
+
 def default_runtime_dir(env: Mapping[str, str] | None = None) -> Path:
     """Return the configured private runtime directory."""
 
@@ -21,6 +29,20 @@ def default_runtime_dir(env: Mapping[str, str] | None = None) -> Path:
     if configured:
         return Path(configured).expanduser()
     return Path.home() / DEFAULT_RUNTIME_RELATIVE
+
+
+def resolve_runtime_selection(
+    explicit_runtime_dir: str | Path | None = None,
+    env: Mapping[str, str] | None = None,
+) -> RuntimeSelection:
+    """Resolve explicit, environment, and default runtime selection in order."""
+
+    if explicit_runtime_dir is not None:
+        return RuntimeSelection(Path(explicit_runtime_dir).expanduser(), "explicit_argument")
+    source = os.environ if env is None else env
+    if source.get("TRADING_RESEARCH_RUNTIME_DIR"):
+        return RuntimeSelection(default_runtime_dir(source), "environment")
+    return RuntimeSelection(default_runtime_dir(source), "default")
 
 
 def template_dir_from_script(script_path: str | Path) -> Path:

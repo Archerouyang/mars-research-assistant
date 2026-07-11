@@ -9,6 +9,12 @@ Use this skill for a `deep_update` of the Active Market Plan. It should update t
 
 This is decision support, not automated trading. Separate facts, assumptions, long case, short case, invalidation, and risk controls.
 
+For a weekend first start with a partial or uninitialized runtime, first provide
+a current public-source reduced-scope research summary, then ask for runtime or
+broker authorization. In that first response, do not write runtime. Before deep
+research or setup work on a specific symbol, confirm
+`ticker + trade_horizon + instrument`; otherwise keep symbol comments watch-only.
+
 This is an AI-native workflow. Read broadly across market, macro, rates, policy, news, events, momentum, and user records, but show the user only the distilled plan changes, high-impact evidence, setup pool changes, and next checks.
 
 The weekly note must be a decision-support memo tied to holdings and planned risk. Do not output a plain macro calendar. Every high-impact event should answer: why it matters, source priority, transmission path, affected holdings/plans, confirmation to watch, and what strategy posture it supports.

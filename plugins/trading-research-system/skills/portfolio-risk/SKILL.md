@@ -17,7 +17,11 @@ Use this skill to keep trade ideas and actual trades inside portfolio constraint
 6. Use `../../scripts/repair_portfolio_snapshot.py` first when a standard `portfolio_snapshot.csv` has stale or unmapped product/theme fields before rendering exposure summaries.
 7. Use `../../scripts/portfolio_risk.py` when a broader holdings, portfolio, or broker-live fixture snapshot risk summary is needed.
 8. Use live account/position data only when an authorized connector is available and the user asks for current exposure.
-9. Check:
+9. Read `portfolio_reconciliation` before any cross-broker total. A NAV-only
+   source is `partial_data`, not confirmed position exposure. Keep it separate,
+   pass excluded sources to `position_daily_report.py`, and never merge a
+   NAV-only account total with another broker's detailed positions.
+10. Check:
    - directional exposure;
    - total exposure across brokers;
    - broker/account breakdown;

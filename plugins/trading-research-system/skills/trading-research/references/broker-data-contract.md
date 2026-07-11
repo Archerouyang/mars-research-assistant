@@ -167,6 +167,15 @@ Required columns:
 
 Default risk view is total portfolio exposure across all brokers, with broker/account breakdowns preserved.
 
+That default applies only after position-detail coverage is confirmed. An IBKR
+response containing NAV/account totals but no verified positions is
+`partial_data`; it may be shown as account-level context, but it must be excluded
+from confirmed combined exposure. If Longbridge has detailed positions while
+IBKR is NAV-only, mark `portfolio_reconciliation=not_confirmed`, keep the two
+coverage levels separate, and do not add IBKR NAV to Longbridge position values.
+Use `empty_positions_unverified` when a zero-row positions response cannot yet
+be distinguished from an actually empty account.
+
 ## Execution Schema
 
 Required columns:

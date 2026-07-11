@@ -99,10 +99,10 @@ source health:
 
 | capability | status | effect |
 | --- | --- | --- |
-| Longbridge broker skill | available / unauthorized / not_installed / missing / stale |  |
-| Longbridge Terminal CLI | available / unauthorized / not_installed / missing / stale |  |
-| Longbridge macrodata | available / unauthorized / not_installed / missing / stale |  |
-| IBKR connector | available / unauthorized / not_installed / missing / stale |  |
+| Longbridge broker skill | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
+| Longbridge Terminal CLI | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
+| Longbridge macrodata | available / unauthorized / partial_data / upstream_error / needs_review / not_installed / missing / stale |  |
+| IBKR connector | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
 
 If the user says Longbridge worked in another chat but the current chat cannot
@@ -113,9 +113,15 @@ Then show broker source health:
 
 | source | status | effect |
 | --- | --- | --- |
-| Longbridge | available / unauthorized / not_installed / missing / stale |  |
-| IBKR | available / unauthorized / not_installed / missing / stale |  |
+| Longbridge | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
+| IBKR | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
+
+Preserve source semantics exactly. `partial_data` means authorization succeeded
+but required detail is incomplete; `upstream_error` is a transport/provider
+failure; `empty_positions_unverified` is not proof of an empty account; and
+`needs_review` means evidence is missing or conflicting. None of these is
+`unauthorized`.
 
 Use `current_mode` from `runtime_health.py` when available:
 
@@ -146,12 +152,23 @@ After the startup health block, apply `visual-trigger-policy.md`:
 
 ## 券商只读来源设置
 
-When runtime health reports broker-source status as `missing` or
-`unauthorized`, enter `券商只读来源设置` instead of only reporting the gap.
-This setup is a one-question read-only authorization preference check; it is not
-plugin installation and not broker authentication by itself.
+Enter `券商只读来源设置` on every Daily Ops first start. This includes the
+default `needs_review` state when no live broker status was supplied. On later
+turns, enter it only when runtime health reports `unauthorized`. This setup is a one-question
+read-only authorization preference check; it is not plugin installation and not
+broker authentication by itself.
+
+On later turns, `needs_review` asks for matching verification/retry and
+does not repeat authorization setup; only `unauthorized` re-enters
+`券商只读来源设置`. Treat `missing`, `stale`, `partial_data`, `upstream_error`,
+and `empty_positions_unverified` as their own availability or verification
+paths rather than authorization setup.
 
 Ask the user which broker facts source to enable for Daily Ops:
+
+```text
+是否启用只读 broker 数据？选项：Longbridge read-only / IBKR read-only / 两者都启用 / 暂不启用。
+```
 
 1. `Longbridge read-only` for positions, executions/trades, orders/status, and
    authorized market data when the Longbridge skill/plugin is installed.
@@ -241,6 +258,29 @@ The same ticker may have multiple setups. Keep them separate:
 - `QQQ + 0DTE + option`;
 - `TSM + LEAP + call`;
 - `GLW + watch only + equity`.
+
+Apply this gate before deep research, not only before setup promotion. While the
+key is missing, a short watch-only summary is allowed, but deep company/setup
+research, concrete levels, and instrument-specific risk work must wait.
+
+## Weekend First Start
+
+On a weekend first start, `startup_status=partial` or `uninitialized` does not
+mean the response must stop at setup questions. Follow this order:
+
+1. Run status-only health checks and do not write runtime.
+2. Use current public/authorized non-account sources to give a concise
+   reduced-scope research summary: market regime, the next week's highest-impact
+   events, broad sector/theme implications, and what remains unverified.
+3. Clearly label broker exposure, personalized sizing, saved-plan deltas, and
+   setup triggers as unavailable until confirmed.
+4. Then request the smallest next confirmation: broker read-only preference,
+   `ticker + trade_horizon + instrument`, and whether to dry-run or initialize
+   the private runtime.
+
+The user-facing order is “先摘要，后授权/初始化”. The summary must not imply
+that missing runtime or broker facts were read, and must not contain buy/sell
+instructions.
 
 ## Workflow Routing
 

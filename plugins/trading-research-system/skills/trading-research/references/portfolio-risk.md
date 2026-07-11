@@ -38,6 +38,12 @@ Review:
 
 When broker-live data or fixture broker files exist, prefer the current position view for exposure and keep `broker` and `account_id` visible in the output when that does not expose private details unnecessarily. The default view should be total portfolio exposure, then broker/account breakdown.
 
+Before presenting total exposure, read `portfolio_reconciliation`. Do not merge
+NAV-only account totals with position-detail snapshots. Show a NAV-only IBKR
+result separately as `partial_data`; if Longbridge has detailed positions,
+describe Longbridge exposure as confirmed for that source only and the combined
+portfolio as `not_confirmed`.
+
 ## Scenario Tests
 
 At minimum consider:
