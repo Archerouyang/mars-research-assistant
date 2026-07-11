@@ -104,6 +104,16 @@ def main() -> int:
         }:
             failures.append(f"unexpected Dailytrades marketplace shape: {expected}")
 
+    manifest_path = FILES["plugin_manifest"]
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        default_prompts = manifest["interface"]["defaultPrompt"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
+        failures.append(f"invalid plugin interface manifest: {error}")
+    else:
+        if not isinstance(default_prompts, list) or not 1 <= len(default_prompts) <= 3:
+            failures.append("plugin defaultPrompt must contain 1..3 prompts")
+
     if failures:
         print("release surface contract failed:")
         for failure in failures:

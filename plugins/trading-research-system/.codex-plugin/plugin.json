@@ -1,6 +1,6 @@
 {
   "name": "trading-research-system",
-  "version": "0.1.0+codex.20260711105641",
+  "version": "0.1.0+codex.20260711110038",
   "description": "Focused trading research skills for report intake, Active Market Plan updates, setup scans, trade review, broker reconciliation, and risk checks.",
   "author": {
     "name": "Archer"
@@ -27,9 +27,7 @@
     "defaultPrompt": [
       "Deep-update my Active Market Plan for next week.",
       "Read this research report and extract the plan impact.",
-      "Quick-update today's market plan and setup levels.",
-      "Screen stocks for a falling-rate environment.",
-      "Review my latest broker execution interactively."
+      "Quick-update today's market plan and setup levels."
     ],
     "brandColor": "#2563EB"
   }
