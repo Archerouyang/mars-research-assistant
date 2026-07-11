@@ -127,6 +127,18 @@ def build_runtime_health(
         ),
         path_check("macro_panel", "Macro panel", daily_dir / "macro-panel.json", stale_after_days),
         path_check("kvn_store", "KVN store", runtime_dir / "momentum" / "kvn.sqlite", stale_after_days),
+        path_check(
+            "alpha_leaderboard_store",
+            "Alpha Leaderboard store",
+            runtime_dir / "alpha" / "leaderboard.sqlite",
+            stale_after_days,
+        ),
+        path_check(
+            "analysis_store",
+            "Analysis snapshot store",
+            runtime_dir / "knowledge" / "analysis.sqlite",
+            stale_after_days,
+        ),
     ] + capability_health["checks"] + broker_health["checks"]
     return {
         "runtime_dir": str(runtime_dir),

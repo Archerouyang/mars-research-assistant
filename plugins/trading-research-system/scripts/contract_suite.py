@@ -79,6 +79,10 @@ class ContractScript:
 CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("source-routing", "verify_source_routing_contract.py"),
     ("alpha-lab", "verify_alpha_lab_contract.py"),
+    ("alpha-leaderboard-adapter-selftest", "verify_alpha_leaderboard_adapter_selftest.py"),
+    ("alpha-leaderboard-adapter-contract", "verify_alpha_leaderboard_adapter_contract.py"),
+    ("analysis-delta-adapter-selftest", "verify_analysis_delta_adapter_selftest.py"),
+    ("analysis-delta-adapter-contract", "verify_analysis_delta_adapter_contract.py"),
     ("macro-data-source", "verify_macro_data_source_contract.py"),
     ("longbridge-skill-adapter", "verify_longbridge_skill_adapter_contract.py"),
     ("daily-ops-orchestrator", "verify_daily_ops_orchestrator_contract.py"),

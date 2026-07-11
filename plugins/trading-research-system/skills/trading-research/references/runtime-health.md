@@ -33,6 +33,8 @@ The health check should cover:
 - `{runtime_dir}/daily/YYYY-MM-DD/intraday-watchlist.csv`
 - `{runtime_dir}/daily/YYYY-MM-DD/macro-panel.json`
 - `{runtime_dir}/momentum/kvn.sqlite`
+- `{runtime_dir}/alpha/leaderboard.sqlite`
+- `{runtime_dir}/knowledge/analysis.sqlite`
 - `Longbridge` broker source
 - `IBKR` broker source
 - `Manual snapshot` source

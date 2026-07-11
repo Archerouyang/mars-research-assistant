@@ -25,6 +25,14 @@ def main() -> int:
         (daily_dir / "trade-plans.csv").write_text("PRIVATE TRADE PLAN SECRET\n", encoding="utf-8")
         (runtime_dir / "momentum").mkdir()
         (runtime_dir / "momentum" / "kvn.sqlite").write_bytes(b"not a real sqlite fixture")
+        (runtime_dir / "alpha").mkdir()
+        (runtime_dir / "alpha" / "leaderboard.sqlite").write_bytes(
+            b"not a real sqlite fixture"
+        )
+        (runtime_dir / "knowledge").mkdir()
+        (runtime_dir / "knowledge" / "analysis.sqlite").write_bytes(
+            b"not a real sqlite fixture"
+        )
 
         result = subprocess.run(
             [
@@ -68,6 +76,8 @@ def main() -> int:
         assert_status(checks, "daily_dir", "available")
         assert_status(checks, "macro_panel", "missing")
         assert_status(checks, "kvn_store", "available")
+        assert_status(checks, "alpha_leaderboard_store", "available")
+        assert_status(checks, "analysis_store", "available")
         assert_status(checks, "longbridge_broker_source", "unauthorized")
         assert_status(checks, "ibkr_broker_source", "unauthorized")
         assert_status(checks, "broker_sources", "unauthorized")

@@ -29,6 +29,24 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-11
+
+- Commit: pending
+- Scope: architecture, script, skill, runtime, test
+- What changed: connected the public plugin to the separate private Alpha Lab
+  through a read-only SQLite adapter. Added Top10 display, full-universe ticker
+  lookup, snapshot changes, runtime health, Alpha-first daily/weekly routing,
+  a fixed Decision Card, and explicit legacy KVN fallback semantics. The
+  private lab now owns point-in-time data, factors, Bayesian champion,
+  LightGBM shadow challenger, purged walk-forward evaluation, immutable model
+  governance, Parquet snapshots, SQLite history, and FTS5 retrieval.
+- Why it matters: the agent can consume a deterministic quantitative ranking
+  without inventing scores or hiding uncertainty, while the public plugin stays
+  reusable and contains no credentials, raw data, model binaries, or private
+  trading records.
+- Next step: add scheduled daily/weekly/monthly Alpha jobs and Gmail audit
+  notifications, then complete plugin packaging and fresh-chat acceptance.
+
 ## 2026-07-09
 
 - Commit: pending

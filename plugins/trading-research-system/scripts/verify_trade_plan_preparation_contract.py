@@ -18,11 +18,11 @@ FILES = {
     "active_plan": ROOT / "skills" / "trading-research" / "references" / "active-market-plan.md",
     "macro_filter": ROOT / "skills" / "trading-research" / "references" / "macro-policy-filter.md",
     "equity_screening": ROOT / "skills" / "trading-research" / "references" / "equity-screening.md",
-    "momentum_leaderboard": ROOT
+    "alpha_leaderboard": ROOT
     / "skills"
     / "trading-research"
     / "references"
-    / "momentum-leaderboard.md",
+    / "alpha-leaderboard.md",
     "output_templates": ROOT
     / "skills"
     / "trading-research"
@@ -47,8 +47,9 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "External Momentum Snapshot",
-        "optional external snapshot",
+        "Alpha Leaderboard",
+        "Top20",
+        "Top5",
         "4H",
         "1D",
         "1W",
@@ -65,8 +66,8 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "动量候选池",
-        "optional external snapshot",
+        "Alpha Leaderboard",
+        "多因子候选池",
     ],
     "active_plan": [
         "Trade Plan Preparation",
@@ -76,7 +77,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "External Momentum Snapshot",
+        "Alpha Leaderboard",
         "higher-timeframe regime",
         "price_structure",
         "risk_context",
@@ -96,14 +97,14 @@ REQUIRED_TERMS = {
         "next_check",
         "Cross-Section Candidate Pool",
     ],
-    "momentum_leaderboard": [
-        "KVN is an imported snapshot",
-        "research priority only, not a buy list",
-        "Feed KVN names into Trade Plan Preparation",
-        "macro/financial",
-        "industry strength",
-        "company thesis",
-        "price structure",
+    "alpha_leaderboard": [
+        "# Alpha Leaderboard",
+        "research priority",
+        "Top20",
+        "Top5",
+        "P(20D excess return > 0)",
+        "predictive uncertainty",
+        "must not re-rank",
         "portfolio risk",
     ],
     "equity_screening": [
@@ -125,7 +126,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "External Momentum Snapshot",
+        "Alpha Leaderboard",
         "Cross-Section Candidate Pool",
         "截面候选池",
         "price_structure / risk_context",
@@ -139,7 +140,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "External Momentum Snapshot",
+        "Alpha Leaderboard",
         "Price structure / risk context",
     ],
     "weekly_template": [
@@ -151,7 +152,7 @@ REQUIRED_TERMS = {
         "Policy/Event Risk",
         "Industry/Sector Strength",
         "Company Thesis Check",
-        "External Momentum Snapshot",
+        "Alpha Leaderboard",
         "Price structure / risk context",
     ],
     "fixture": [

@@ -25,6 +25,10 @@ def main() -> None:
         raise AssertionError(f"core suite should start with source-routing, got {names[0]!r}")
     if "macro-data-source" not in names:
         raise AssertionError("core suite should include macro-data-source")
+    if "alpha-leaderboard-adapter-contract" not in names:
+        raise AssertionError("core suite should include Alpha Leaderboard adapter contract")
+    if "analysis-delta-adapter-contract" not in names:
+        raise AssertionError("core suite should include analysis delta adapter contract")
     if "longbridge-skill-adapter" not in names:
         raise AssertionError("core suite should include longbridge-skill-adapter")
     if "broker-snapshot-ingest-contract" not in names:
