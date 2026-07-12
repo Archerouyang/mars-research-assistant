@@ -177,8 +177,8 @@ Each symbol analysis uses the same Decision Card:
 
 1. delta from the prior run;
 2. explicit decision state;
-3. Alpha rank, persistence, factor attribution, model probability, and
-   uncertainty;
+3. Alpha rank, persistence, model-owned positive/negative factor attribution,
+   model probability, and uncertainty;
 4. large-timeframe regime using 1W/1D/4H as appropriate;
 5. 1H-or-lower execution context;
 6. Al Brooks-style PA plus 20/50/200 EMA;

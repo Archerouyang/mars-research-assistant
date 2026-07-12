@@ -178,12 +178,14 @@ Use this only for forward-looking events that need preparation but are not alrea
 
 ## Alpha Leaderboard
 
-| Alpha Rank | Ticker | Alpha Score / historical percentile | P(20D excess > 0) + uncertainty | Trajectory | Factor attribution | Research next step |
+| Alpha Rank | Ticker | Alpha Score / historical percentile | P(20D excess > 0) + uncertainty | Trajectory | Model top factor | Research next step |
 | ---: | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |
 
 Use Top20 for the Cross-Section Candidate Pool. Start deep research with Top5
 plus persistent or rapidly strengthening Top20 names. Never re-rank stored rows.
+Only show model-published attribution. Put the detailed positive/negative
+contribution split in the ticker Decision Card, not in the full ranking table.
 
 ## External Momentum Snapshot (Legacy Fallback)
 

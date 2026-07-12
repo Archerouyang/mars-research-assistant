@@ -32,6 +32,19 @@ Use this shape:
 ## 2026-07-11
 
 - Commit: pending
+- Scope: data, model, runtime, plugin contract, validation
+- What changed: connected dated industry ETF relatives, FMP filing-aligned
+  fundamentals, SEC Company Facts verification, and PIT macro vintages to the
+  Bayesian/LightGBM feature panel. Added Factor Registry hashes, reconstructable
+  Bayesian attribution, public positive/negative factor explanation, and a
+  persistent dependency DAG for minimal recomputation.
+- Why it matters: the Alpha ranking is no longer a price-only shell, the agent
+  can explain model-owned drivers without re-ranking, and unchanged inputs can
+  be reused while model/rule/schema changes force a full rebuild.
+- Next step: obtain enough production PIT security-master and fundamental
+  history, run the small live pilot and full universe, then approve activation.
+
+- Commit: pending
 - Scope: data, safety, runtime, validation
 - What changed: added a provider-neutral point-in-time security-master and
   production activation boundary for the private Alpha Lab. Training now joins

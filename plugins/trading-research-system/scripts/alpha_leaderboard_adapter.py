@@ -41,8 +41,12 @@ REQUIRED_ROW_FIELDS = {
     "ticker",
     "alpha_rank",
     "alpha_score",
+    "expected_excess_return",
     "probability_positive",
     "predictive_std",
+    "model_intercept",
+    "factor_attribution",
+    "top_factor",
     "rank_vs_sp500",
     "candidate_pool",
     "deep_research_priority",
@@ -290,8 +294,29 @@ def validate_payload(payload: dict[str, Any], snapshot_date: str) -> None:
         payload["probability_positive"], "probability_positive", ticker
     )
     uncertainty = finite_float(payload["predictive_std"], "predictive_std", ticker)
+    expected_return = finite_float(
+        payload["expected_excess_return"], "expected_excess_return", ticker
+    )
+    intercept = finite_float(payload["model_intercept"], "model_intercept", ticker)
     if not math.isfinite(score) or not 0.0 <= probability <= 1.0 or uncertainty < 0.0:
         raise ValueError(f"invalid Alpha numeric range for {ticker}")
+    attribution = payload["factor_attribution"]
+    if not isinstance(attribution, dict) or not attribution:
+        raise ValueError(f"Alpha requires nonempty factor_attribution for {ticker}")
+    contributions: dict[str, float] = {}
+    for raw_name, raw_value in attribution.items():
+        name = str(raw_name).strip()
+        if not name:
+            raise ValueError(f"invalid Alpha factor name for {ticker}")
+        contributions[name] = finite_float(
+            raw_value, f"factor_attribution[{name}]", ticker
+        )
+    top_factor = str(payload["top_factor"]).strip()
+    if top_factor not in contributions:
+        raise ValueError(f"Alpha top_factor is not in factor_attribution for {ticker}")
+    reconstructed = intercept + sum(contributions.values())
+    if not math.isclose(reconstructed, expected_return, rel_tol=1e-8, abs_tol=1e-10):
+        raise ValueError(f"Alpha factor attribution does not reconstruct prediction for {ticker}")
     for field in ("candidate_pool", "deep_research_priority"):
         if not isinstance(payload[field], bool):
             raise ValueError(f"Alpha {field} must be Boolean for {ticker}")
@@ -347,18 +372,19 @@ def render_show(
         "- 说明: 严格保留脚本生成的 Alpha Rank；仅用于研究优先级，不是买入名单。",
         "- 概率成熟度: `Experimental`；必须同时读取预测不确定性。",
         "",
-        "| Alpha Rank | Ticker | Alpha Score | 历史分位 | P(20D超额>0) | 预测不确定性 | Rank vs S&P500 | 轨迹 | 连续Top10 | 近20日Top10 | 上次Top10 | Candidate | Deep research |",
-        "| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
+        "| Alpha Rank | Ticker | Alpha Score | 历史分位 | P(20D超额>0) | 预测不确定性 | 主因子 | Rank vs S&P500 | 轨迹 | 连续Top10 | 近20日Top10 | 上次Top10 | Candidate | Deep research |",
+        "| ---: | --- | ---: | ---: | ---: | ---: | --- | ---: | --- | ---: | ---: | --- | --- | --- |",
     ]
     for row in rows:
         lines.append(
-            "| {rank} | `{ticker}` | {score:.4f} | {percentile} | {probability} | {uncertainty:.4f} | {rank_sp} | {trajectory} | {consecutive} | {recent} | {last_date} | {candidate} | {deep} |".format(
+            "| {rank} | `{ticker}` | {score:.4f} | {percentile} | {probability} | {uncertainty:.4f} | {top_factor} | {rank_sp} | {trajectory} | {consecutive} | {recent} | {last_date} | {candidate} | {deep} |".format(
                 rank=int(row["alpha_rank"]),
                 ticker=row["ticker"],
                 score=float(row["alpha_score"]),
                 percentile=percent(row.get("historical_percentile")),
                 probability=percent(row.get("probability_positive")),
                 uncertainty=float(row["predictive_std"]),
+                top_factor=format_top_factor(row),
                 rank_sp=int(row["rank_vs_sp500"]),
                 trajectory=row.get("trajectory_state") or "-",
                 consecutive=int(row.get("consecutive_top_display_days", 0)),
@@ -390,6 +416,7 @@ def render_query(
     )
     if row is None:
         raise ValueError(f"{ticker} not found in Alpha snapshot {snapshot_date}")
+    positive, negative = attribution_extremes(row["factor_attribution"])
     return "\n".join(
         [
             "# Alpha 标的查询",
@@ -402,6 +429,9 @@ def render_query(
             f"- 历史分位: `{percent(row.get('historical_percentile'))}`",
             f"- P(20D超额>0): `{percent(row.get('probability_positive'))}` (`Experimental`)",
             f"- 预测不确定性: `{float(row['predictive_std']):.4f}`",
+            f"- 模型基线: `{float(row['model_intercept']):+.4f}`",
+            f"- 主要正向因子: {positive}",
+            f"- 主要负向因子: {negative}",
             f"- 轨迹: `{row.get('trajectory_state') or '-'}`",
             f"- candidate pool: `{'yes' if row.get('candidate_pool') else 'no'}`",
             f"- deep research priority: `{'yes' if row.get('deep_research_priority') else 'no'}`",
@@ -499,6 +529,31 @@ def ticker_list(values: list[str]) -> str:
 
 def yes_no(value: Any) -> str:
     return "yes" if bool(value) else "no"
+
+
+def format_top_factor(row: dict[str, Any]) -> str:
+    name = str(row["top_factor"])
+    value = float(row["factor_attribution"][name])
+    return f"`{name} {value:+.4f}`"
+
+
+def attribution_extremes(attribution: dict[str, Any], limit: int = 3) -> tuple[str, str]:
+    values = [(str(name), float(value)) for name, value in attribution.items()]
+    positive = sorted(
+        (item for item in values if item[1] > 0),
+        key=lambda item: (-item[1], item[0]),
+    )[:limit]
+    negative = sorted(
+        (item for item in values if item[1] < 0),
+        key=lambda item: (item[1], item[0]),
+    )[:limit]
+    return format_attribution(positive), format_attribution(negative)
+
+
+def format_attribution(values: list[tuple[str, float]]) -> str:
+    if not values:
+        return "-"
+    return ", ".join(f"`{name} {value:+.4f}`" for name, value in values)
 
 
 def main() -> int:

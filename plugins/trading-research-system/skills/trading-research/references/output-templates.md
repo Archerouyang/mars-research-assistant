@@ -240,7 +240,7 @@ probability.
 | 决策状态 | 深挖 / 等确认 / 保持观察 / 暂停新增风险 / setup候选 |
 | Alpha Rank / trajectory | rank / new / strengthening / persistent / fading；model run + as of |
 | P(20D超额>0) / predictive uncertainty | 概率必须标 Experimental，并紧邻不确定性；非模型分析不得改写 |
-| 因子归因 | momentum / volume / volatility / liquidity / industry-theme / fundamental |
+| 因子归因 | 模型基线；主要正向/负向贡献（最多各3项）；model-owned，agent不得重算或改写 |
 | 主分析时间框架 | 1W / 1D / 4H；明确上涨 / 震荡 / 下跌与策略偏见 |
 | 执行观察时间框架 | 1H 或更小；只用于触发观察，不覆盖大周期判断 |
 | PA + EMA | Al Brooks-style context；20 / 50 / 200 EMA；事实、判断、失效分开 |

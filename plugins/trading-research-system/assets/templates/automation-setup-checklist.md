@@ -27,6 +27,11 @@ Collect and confirm:
 - production activation: approved manifest path bound to the PIT universe
   fingerprint, successful provider/future-leakage/pilot gates, and rollback
   pointer.
+- factor inputs: canonical PIT fundamentals, dated industry mapping, macro
+  vintage panel, and factor-registry paths; record each source, knowledge
+  cutoff, schema version, and fingerprint.
+- dependency state: private SQLite path and versioned DAG-manifest path; only a
+  successful run may advance the recorded state.
 - enabled automations: which prompts should be scheduled now.
 - cadence: exact local time, weekdays/weekends, event-window exceptions, and
   whether intraday monitors should run only when active setups exist.
@@ -86,6 +91,8 @@ python3 scripts/alpha_leaderboard_adapter.py show \
   --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite --allow-uat
 python3 scripts/alpha_notification_adapter.py next \
   --db {uat_runtime}/outbox.sqlite
+python3 scripts/verify_alpha_cross_repo_uat.py \
+  --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite
 ```
 
 The report must show daily, weekly, and monthly `success`, Gmail `not_sent`,

@@ -51,7 +51,9 @@ persistent or rapidly strengthening names inside Top20.
   re-score, reorder, or replace ticker rows using news, charts, macro views, or
   personal preference.
 - The Bayesian champion owns `Alpha Score`, historical percentile,
-  `P(20D excess return > 0)`, and predictive uncertainty.
+  `P(20D excess return > 0)`, predictive uncertainty, model intercept, and
+  per-factor attribution. The agent must not recalculate, rename, or edit these
+  model-owned values.
 - Probability maturity remains `Experimental`; always display predictive
   uncertainty beside the probability.
 - A LightGBM challenger may appear as shadow metadata. Challenger output cannot
@@ -69,15 +71,29 @@ For a standalone leaderboard request, return the stored rows and a short delta:
 - Alpha Rank, ticker, Alpha Score;
 - historical percentile (own-history comparison, not cross-sectional rank);
 - `P(20D excess return > 0)` plus predictive uncertainty;
+- the model-published top factor; for a ticker query, up to three largest
+  positive and negative factor contributions plus the model intercept;
 - Rank vs S&P500 and current S&P500 membership when present;
 - trajectory, consecutive Top10 days, recent Top10 count, and prior Top10 date;
 - candidate/deep-research flags;
 - model run id, snapshot date, and freshness status.
 
+Factor attribution must be a nonempty finite map. Its contributions plus the
+model intercept must reconstruct the published expected excess return. A
+malformed attribution makes the snapshot unreadable; the adapter must not
+silently omit it.
+
 For Trade Plan Preparation, use the Alpha snapshot as one input read. Send Top20
 to cross-sectional research, then require macro/financial conditions, industry
 or company evidence, higher-timeframe structure, portfolio risk, and a defined
 next check before creating a candidate setup.
+
+A compact rank-only ticker lookup can stop after `query`. A ticker analysis or
+decision request must continue into the fixed `Alpha Decision Card` from
+`output-templates.md`. Read the prior matching analysis, macro/industry/company
+evidence, higher-timeframe PA/EMA, events, and portfolio exposure. If any input
+is unavailable, preserve the card and label that field unavailable rather than
+inventing a value.
 
 ## Legacy KVN Compatibility
 

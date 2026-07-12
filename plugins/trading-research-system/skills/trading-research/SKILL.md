@@ -34,6 +34,13 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
   If the Alpha store is unavailable, disclose the gap; use a legacy snapshot only when
   an explicitly configured legacy snapshot exists, and never rebuild or
   re-rank a private model inside the plugin.
+  A rank-only lookup may return the compact adapter result. When the user asks
+  to analyze, decide, plan, add, trim, or research one ticker, continue from
+  the adapter result into the fixed `Alpha Decision Card` in
+  `references/output-templates.md`: read the matching prior analysis delta,
+  macro/industry/company evidence, higher-timeframe PA/EMA, relevant events,
+  and portfolio risk. Mark unavailable inputs explicitly; never fill the card
+  by inventing model or market data.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:

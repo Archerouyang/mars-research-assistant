@@ -53,6 +53,8 @@ def main() -> int:
                 "Alpha Rank: `3`",
                 "Freshness: `valid`",
                 "candidate pool: `yes`",
+                "主要正向因子: `return_20d +0.0400`",
+                "主要负向因子: `hy_oas -0.0100`",
             ],
         )
 
@@ -222,6 +224,43 @@ def main() -> int:
             "must be Boolean",
         )
 
+        create_fixture(db_path, replace=True)
+        with sqlite3.connect(db_path) as connection:
+            payload = json.loads(
+                connection.execute(
+                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                ).fetchone()[0]
+            )
+            payload["factor_attribution"] = {}
+            connection.execute(
+                """
+                UPDATE alpha_rows SET payload_json = ?
+                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                """,
+                (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
+            )
+            rows = [
+                json.loads(row[0])
+                for row in connection.execute(
+                    """
+                    SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07'
+                    ORDER BY alpha_rank, ticker
+                    """
+                )
+            ]
+            snapshot_hash = hashlib.sha256(
+                json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            connection.execute(
+                "UPDATE alpha_runs SET snapshot_hash = ? WHERE as_of = '2026-01-07'",
+                (snapshot_hash,),
+            )
+            connection.commit()
+        require_failure(
+            ["show", "--db", str(db_path), "--date", "2026-01-07"],
+            "nonempty factor_attribution",
+        )
+
     print("alpha leaderboard adapter selftest ok")
     return 0
 
@@ -337,6 +376,10 @@ def row(
         "historical_percentile": 0.71,
         "probability_positive": 0.63,
         "predictive_std": 0.18,
+        "expected_excess_return": 0.05,
+        "model_intercept": 0.02,
+        "factor_attribution": {"return_20d": 0.04, "hy_oas": -0.01},
+        "top_factor": "return_20d",
         "rank_vs_sp500": rank,
         "trajectory_state": trajectory,
         "consecutive_top_display_days": 2,

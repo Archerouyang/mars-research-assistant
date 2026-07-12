@@ -16,6 +16,13 @@
 4. 报告写入私有 immutable report directory。同 report id 内容变化必须失败。
 5. 默认 `sol_review=pending`。只有确定性门禁通过后才升级到 GPT-5.6 Sol；
    未获得 `approved` 不得调用 model registry promotion。
-6. 将 allowlisted 报告摘要写入 outbox，并完成 run lease。通知失败不回滚报告。
+6. Model Registry promotion 必须同时比较 champion/challenger 的 Rank IC、
+   ICIR、Precision@5、Top5/10/20 return、top-bottom spread、turnover、transaction
+   cost、max drawdown、tail loss、Brier score 和逐 regime Rank IC。任一缺失、
+   非有限或退化都 fail closed；月报本身不能绕过该相对门禁。
+   PromotionEvidence 还必须绑定 immutable report fingerprint、rollback
+   artifact path 和 rollback artifact fingerprint；Model Registry 必须重新读取
+   两个本地文件并计算 SHA-256，不能只接受格式正确的字符串。
+7. 将 allowlisted 报告摘要写入 outbox，并完成 run lease。通知失败不回滚报告。
 
 此任务只做研究治理，不读取 broker 私有仓位，不创建任何订单。
