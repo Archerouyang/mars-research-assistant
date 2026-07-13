@@ -16,6 +16,78 @@ confirmation structure; run it only after Daily Ops routes to a quick update.
 
 This is an AI-native workflow. Read current tape, macro/rates, policy/news, event calendar, momentum, and existing setup files, then return only what changed, which setup statuses moved, and what the user should inspect next.
 
+## Rolling PA Setup-Key Gate
+
+For the exact acceptance request `做 DRAM/SOXX/QQQ 的滚动盘面分析`, and for any
+rolling PA, 盘面分析, point-update, or add/reduce-level request, apply this gate
+before prior-level, OHLCV, or deep-research work. Bare tickers trigger this
+lookup; they are not automatically unresolved.
+
+Resolve each ticker's complete `ticker + trade_horizon + instrument` setup key
+in this bounded order:
+
+1. Use an explicit confirmation in the current request or current chat.
+2. Otherwise, read only `ticker`, `trade_horizon`, and `instrument_type` from
+   structured setup records in today's formal runtime
+   `daily/YYYY-MM-DD/trade-plans.csv`, then
+   `daily/YYYY-MM-DD/intraday-watchlist.csv`; map `instrument_type` to the
+   setup key's `instrument` component.
+3. An Active Plan Markdown row is a final fallback only when it explicitly
+   carries all three canonical fields: `ticker`, `trade_horizon`, and
+   `instrument_type`. Do not infer a missing horizon from `Symbol` or
+   `Instrument` labels.
+
+Apply this order independently for each ticker. Fall through only when a
+higher-priority source has no row for that ticker. Once a source has rows, one
+unique complete key wins and lower-priority rows do not override it; incomplete
+or conflicting rows stay unresolved and do not fall through.
+
+Never use a repo fixture, bundled example, or stale example plan as current plan
+state. The formal runtime structured-record lookup is allowed only to resolve
+the setup key; do not use it as prior PA evidence. Do not read prior levels or
+OHLCV, and do not begin deep research, until key resolution completes.
+
+If exactly one unambiguous complete key exists for every requested ticker,
+continue the normal rolling PA workflow. If any ticker has zero, incomplete, or
+multiple conflicting keys, return only a concise `watch-only` / reduced-scope
+summary, ask one focused confirmation question covering the unresolved
+`trade_horizon + instrument`, and stop before the workflow below.
+
+When the request supplies ticker names only, label each as an unconfirmed watch
+ticker and assert no structure, direction, or risk role. Do not add theme,
+volatility, breadth, index-anchor, or instrument classifications that the input
+did not provide.
+
+While resolution is incomplete, do not output concrete levels, triggers,
+invalidations, sizing, or instrument-specific risk advice, including
+support/resistance and add/trim/pause zones.
+
+### Unresolved Setup Key + Formal Runtime Unavailable
+
+Apply this exact five-section, exact-two-action special case only when the
+current request is exactly `做 DRAM/SOXX/QQQ 的滚动盘面分析` and its setup keys
+remain unresolved and formal runtime is unavailable. Render exactly these
+sections in order:
+
+1. `运行状态`
+2. `当前范围`
+3. `Watch-only 摘要`
+4. `可执行下一步`
+5. `聚焦确认问题`
+
+Primary status: `待复核`; keep `watch-only` only as a secondary qualifier. Under
+`可执行下一步`, render exactly these two actions:
+
+- 初始化今日运行包：仅在用户明确授权 runtime 写入后执行。
+- 生成盘中观察清单：先确认 DRAM、SOXX、QQQ 各自完整 setup key，并在用户明确授权 runtime 写入后再生成。
+
+Ask exactly one focused confirmation question. This special case overrides the
+general Runtime Guidance Contract choice of 2-4 executable next actions only for
+this state. Outside this state, keep the general Runtime Guidance Contract
+unchanged. For every other ticker request, use the generic dynamic Runtime
+Guidance Contract, adapt ticker names and actions, and never inherit
+DRAM/SOXX/QQQ from this acceptance-only block.
+
 ## Workflow
 
 1. Load the active `market-plan.md`, or ask for the current plan state if it is unavailable.
@@ -142,6 +214,10 @@ Use Chinese Markdown with:
 Keep the note operational: what changed, what matters today, and what the user should inspect first. Avoid long intraday commentary; collapse repeated headlines and price noise into changed variables, setup transitions, and explicit invalidations.
 
 ## Price Action Rolling Output
+
+Only enter this section after every ticker has a complete confirmed setup key.
+If the setup key is incomplete, use the watch-only gate above and do not render
+this section.
 
 When the user asks for PA, 盘面分析, point updates, or add/reduce levels, include
 `Price Action 滚动盘面分析` even in a quick update.
