@@ -13,7 +13,10 @@ without specifying every internal workflow.
 
 - runtime health:
 - runtime_dir:
+- runtime_origin:
 - formal runtime:
+- startup_status:
+- startup_reason:
 - 当前模式:
 - `ops-state.md`:
 - `market-plan.md`:
@@ -32,10 +35,16 @@ Do not treat repo fixtures, templates, or example plans as active runtime state.
 | item | status | note |
 | --- | --- | --- |
 | runtime_dir |  |  |
+| runtime_origin |  |  |
 | formal runtime |  |  |
+| startup_status |  |  |
+| startup_reason |  |  |
+| current_mode |  | 当前模式 |
 | ops-state.md |  |  |
 | market-plan.md |  |  |
 | trading-profile.md |  |  |
+| macro-panel.json |  | status only; keep the separate macro source section below |
+| portfolio_snapshot.csv |  | status only; do not render private rows |
 | daily/YYYY-MM-DD/ |  |  |
 
 ### 券商来源健康
@@ -43,31 +52,60 @@ Do not treat repo fixtures, templates, or example plans as active runtime state.
 Always include this table during a new Daily Ops chat, even when broker facts
 are not needed yet.
 
+Render `source_capability_health` before `broker_source_health`. Capability
+availability and broker authorization are separate facts.
+
+| capability | status | effect |
+| --- | --- | --- |
+| Longbridge broker skill | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale | preserve the exact runtime-health capability status; do not infer broker authorization |
+| Longbridge Terminal CLI | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale | preserve the exact runtime-health capability status; do not infer broker authorization |
+| Longbridge macrodata | available / unauthorized / partial_data / upstream_error / needs_review / not_installed / missing / stale | macro-data capability, not a broker account source |
+| Official source fallback | available / partial_data / upstream_error / needs_review / missing / stale | official/public macro fallback capability |
+| IBKR connector | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale | preserve the exact runtime-health capability status; do not infer broker authorization |
+| Manual snapshot | available / needs_review / missing / stale | saved-input capability, not live authorization |
+
 | source | status | effect |
 | --- | --- | --- |
 | Longbridge | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | IBKR | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
+| portfolio_reconciliation | confirmed / not_confirmed / unavailable | include excluded sources and missing confirmation when not confirmed |
+
+If `portfolio_reconciliation=unavailable`, preserve the exact status, list
+excluded sources, and state that combined portfolio exposure is fail-closed.
 
 Do not collapse `partial_data`, `upstream_error`,
 `empty_positions_unverified`, or `needs_review` into `unauthorized`.
 
-当前模式: `live read-only` / `manual snapshot` / `dry-run`
+### 宏观数据来源状态
+
+Keep this separate from runtime and broker health.
+
+| item | source status | effect |
+| --- | --- | --- |
+| macro-panel.json | available / missing / stale / needs_review |  |
+| authorized/current macro values | available / missing / needs_review |  |
+
+Disclose fixture/debug inputs explicitly. If no authorized/current macro values
+exist, do not invent actual macro readings.
 
 ## 缺失确认
 
 List only confirmations that block useful output. If none, write `无阻塞确认`.
+When reconciliation is unavailable, include the exact
+`portfolio_reconciliation=unavailable` status and keep combined exposure
+fail-closed until the missing broker-source confirmation is resolved.
 
 ## 券商只读来源设置
 
 Include this section on every Daily Ops first start, including when unspecified
-live broker sources default to `needs_review`. On later turns, include it only
-when a broker source is `unauthorized`.
+live broker sources default to `needs_review`. On later turns, `missing` or
+`unauthorized` enters `券商只读来源设置`.
 
 On later turns, `needs_review` asks for matching verification/retry and
-does not repeat authorization setup; only `unauthorized` re-enters this section.
-For other non-authorized-health states, preserve the exact status and put the
-matching availability or verification action under `缺失确认` / `下一步指引`.
+does not repeat authorization setup. `stale`, `partial_data`, `upstream_error`,
+and `empty_positions_unverified` retain distinct availability or verification paths;
+preserve the exact status and put the matching action under `缺失确认` / `下一步指引`.
 
 Ask one concise question:
 

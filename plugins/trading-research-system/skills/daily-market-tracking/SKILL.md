@@ -7,6 +7,13 @@ description: Quick-update the Active Market Plan during weekday premarket or int
 
 Use this skill for `quick_update` or light `trigger_update` work against the same Active Market Plan. The goal is to answer what changed, which setup statuses or levels changed, and what the user should inspect next.
 
+## Daily Ops First-Start Guard
+
+If the user says the exact generic start phrase `开始今天的交易研究`, route through
+the Daily Ops Orchestrator and its fixed startup health block before using this
+skill. Do not let Daily Market Tracking replace the first-start status and
+confirmation structure; run it only after Daily Ops routes to a quick update.
+
 This is an AI-native workflow. Read current tape, macro/rates, policy/news, event calendar, momentum, and existing setup files, then return only what changed, which setup statuses moved, and what the user should inspect next.
 
 ## Workflow

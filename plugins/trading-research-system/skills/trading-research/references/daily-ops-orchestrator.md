@@ -26,7 +26,8 @@ health, and available state:
 
 - `weekly_deep_update`: weekend, week reset, or user asks for next-week plan.
 - `premarket_quick_update`: weekday premarket or user says "start today",
-  "begin daily ops", "开始今天的交易研究日程", "盘前", or "今天怎么安排".
+  "begin daily ops", "开始今天的交易研究", "开始今天的交易研究日程", "盘前", or
+  "今天怎么安排".
 - `intraday_trigger_monitor`: market hours and prepared active/approaching
   setups exist.
 - `post_market_review`: after market close or user asks to summarize today.
@@ -81,15 +82,20 @@ In `读取状态`, include:
 
 ### 运行状态检查
 
-- `runtime_dir`: the formal runtime path or `unknown`.
-- `formal runtime`: `available`, `missing`, `stale`, or `unauthorized`.
-- `ops-state.md`: status only.
-- `market-plan.md`: status only.
-- `trading-profile.md`: status only.
-- `macro-panel.json`: status only.
-- `portfolio_snapshot.csv`: status only.
-- `daily/YYYY-MM-DD/`: status only.
-- `current_mode` / `当前模式`: one of `live read-only`, `manual snapshot`, or `dry-run`.
+| item | status | note |
+| --- | --- | --- |
+| runtime_dir | exact runtime-health status | formal runtime path; do not substitute a repo fixture |
+| runtime_origin | explicit_argument / environment / default | preserve the deterministic value from `runtime_health.py` without rewriting it |
+| formal runtime | available / missing / stale / unauthorized | runtime availability axis |
+| startup_status | ready / partial / uninitialized | startup completeness axis |
+| startup_reason | exact reason / not_provided | render the deterministic reason only when runtime health provides it |
+| current_mode | live read-only / manual snapshot / dry-run | 当前模式；do not infer broker facts |
+| ops-state.md | status only | no file contents in the startup block |
+| market-plan.md | status only | no file contents in the startup block |
+| trading-profile.md | status only | no file contents in the startup block |
+| macro-panel.json | status only | no file contents in the startup block |
+| portfolio_snapshot.csv | status only | no private rows in the startup block |
+| daily/YYYY-MM-DD/ | status only | daily package status |
 
 ### 券商来源健康
 
@@ -102,8 +108,15 @@ source health:
 | Longbridge broker skill | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Longbridge Terminal CLI | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Longbridge macrodata | available / unauthorized / partial_data / upstream_error / needs_review / not_installed / missing / stale |  |
+| Official source fallback | available / partial_data / upstream_error / needs_review / missing / stale | official/public macro fallback capability |
 | IBKR connector | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
+
+Show `portfolio_reconciliation` separately with its exact runtime-health status:
+`confirmed`, `not_confirmed`, or `unavailable`. When it is `unavailable`, list
+the excluded broker sources, state that combined exposure is fail-closed, and
+include reconciliation in missing confirmations rather than saying only that
+broker sources are unconfirmed.
 
 If the user says Longbridge worked in another chat but the current chat cannot
 see the capability, say: `当前 chat 未暴露 Longbridge skill capability；这不代表
@@ -116,6 +129,7 @@ Then show broker source health:
 | Longbridge | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | IBKR | available / unauthorized / partial_data / upstream_error / empty_positions_unverified / needs_review / not_installed / missing / stale |  |
 | Manual snapshot | available / missing / stale |  |
+| portfolio_reconciliation | confirmed / not_confirmed / unavailable | when unavailable list excluded sources, keep combined exposure fail-closed, and repeat the exact status in missing confirmations |
 
 Preserve source semantics exactly. `partial_data` means authorization succeeded
 but required detail is incomplete; `upstream_error` is a transport/provider
@@ -134,7 +148,18 @@ If `current_mode` is `dry-run`, the next step can still proceed with public data
 and plan context, but portfolio sizing, broker facts, and execution review must
 be marked as reduced confidence.
 
-### 宏观图触发判断
+### 宏观数据来源状态
+
+| item | source status | effect |
+| --- | --- | --- |
+| macro-panel.json | available / missing / stale / needs_review | keep separate from runtime and broker health |
+| authorized/current macro values | available / missing / needs_review | if unavailable, state that no actual readings were verified |
+
+Preserve fixture/debug disclosure. When no authorized/current macro values are
+available, state that no actual macro readings were verified instead of
+inventing a macro view.
+
+#### 宏观图触发判断
 
 After the startup health block, apply `visual-trigger-policy.md`:
 
@@ -154,15 +179,14 @@ After the startup health block, apply `visual-trigger-policy.md`:
 
 Enter `券商只读来源设置` on every Daily Ops first start. This includes the
 default `needs_review` state when no live broker status was supplied. On later
-turns, enter it only when runtime health reports `unauthorized`. This setup is a one-question
+turns, `missing` or `unauthorized` enters `券商只读来源设置`. This setup is a one-question
 read-only authorization preference check; it is not plugin installation and not
 broker authentication by itself.
 
 On later turns, `needs_review` asks for matching verification/retry and
-does not repeat authorization setup; only `unauthorized` re-enters
-`券商只读来源设置`. Treat `missing`, `stale`, `partial_data`, `upstream_error`,
-and `empty_positions_unverified` as their own availability or verification
-paths rather than authorization setup.
+does not repeat authorization setup. `stale`, `partial_data`, `upstream_error`,
+and `empty_positions_unverified` retain distinct availability or verification paths
+rather than entering authorization setup.
 
 Ask the user which broker facts source to enable for Daily Ops:
 

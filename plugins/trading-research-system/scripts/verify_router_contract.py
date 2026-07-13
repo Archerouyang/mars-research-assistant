@@ -149,6 +149,20 @@ def verify_router_contract(path: Path) -> list[str]:
     if missing_coverage:
         failures.append(f"missing workflow coverage: {sorted(missing_coverage)!r}")
 
+    exact_start_fixtures = [
+        fixture
+        for fixture in fixtures
+        if isinstance(fixture, dict) and fixture.get("prompt") == "开始今天的交易研究"
+    ]
+    if len(exact_start_fixtures) != 1:
+        failures.append("exact acceptance prompt '开始今天的交易研究' must have one router fixture")
+    else:
+        workflows = exact_start_fixtures[0].get("expected_workflows")
+        if workflows != ["runtime_health", "daily_ops_orchestrator"]:
+            failures.append(
+                "exact acceptance prompt must route through runtime_health and Daily Ops Orchestrator only"
+            )
+
     return failures
 
 

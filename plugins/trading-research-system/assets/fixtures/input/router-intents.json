@@ -2,7 +2,7 @@
   "router_intents": [
     {
       "id": "daily-ops-start-today",
-      "prompt": "开始今天的交易研究日程。先判断现在该做什么，我不想一个个 call out 模块。",
+      "prompt": "开始今天的交易研究",
       "expected_public_route_label": "Daily Ops 主动日程引导",
       "expected_workflows": ["runtime_health", "daily_ops_orchestrator"],
       "required_reads": ["ops-state.md", "market-plan.md", "trading-profile.md", "runtime health", "optional external momentum snapshot availability", "broker source availability"],

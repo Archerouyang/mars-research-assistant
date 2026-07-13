@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Verify Daily Ops Orchestrator contract and fixtures."""
 
+import json
+import re
 import sys
 
 from contract_suite import PluginPaths
@@ -13,6 +15,7 @@ REPO = PATHS.repo
 REFERENCES = PATHS.references
 TEMPLATES = PATHS.templates
 FIXTURES = PATHS.fixtures
+ROUTER_INTENTS = FIXTURES / "input" / "router-intents.json"
 
 FILES = {
     "context": REPO / "CONTEXT.md",
@@ -20,6 +23,7 @@ FILES = {
     "orchestrator_reference": REFERENCES / "daily-ops-orchestrator.md",
     "active_plan": REFERENCES / "active-market-plan.md",
     "orchestrator_template": TEMPLATES / "daily-ops-orchestrator.md",
+    "daily_tracking_skill": ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
     "ops_state_template": TEMPLATES / "ops-state.md",
     "fixture_input": FIXTURES / "input" / "daily-ops-orchestrator-start-today.md",
     "fixture_expected": FIXTURES / "expected" / "daily-ops-orchestrator-start-today.md",
@@ -139,6 +143,9 @@ REQUIRED = {
         "needs_review",
         "是否启用只读 broker 数据？",
     ],
+    "daily_tracking_skill": [
+        "Daily Market Tracking",
+    ],
     "ops_state_template": [
         "Daily Ops State",
         "current_stage",
@@ -153,7 +160,7 @@ REQUIRED = {
         "instrument",
     ],
     "fixture_input": [
-        "开始今天的交易研究日程",
+        "开始今天的交易研究",
         "QQQ",
         "MU",
         "TSM",
@@ -282,6 +289,33 @@ def main() -> int:
         FILES["weekend_fixture_expected"],
     )
     print("daily ops first-start broker setup behavior ok")
+    verify_exact_start_route(
+        FILES["router_skill"],
+        FILES["orchestrator_reference"],
+        FILES["daily_tracking_skill"],
+        FILES["fixture_input"],
+        ROUTER_INTENTS,
+    )
+    print("daily ops exact start route behavior ok")
+    verify_fixed_first_start_status(
+        FILES["router_skill"],
+        FILES["orchestrator_reference"],
+        FILES["orchestrator_template"],
+        FILES["fixture_expected"],
+    )
+    print("daily ops fixed first-start status behavior ok")
+    verify_capability_before_broker_tables(
+        FILES["orchestrator_template"],
+        FILES["fixture_expected"],
+    )
+    print("daily ops capability-before-broker behavior ok")
+    verify_runtime_origin_taxonomy(
+        FILES["orchestrator_reference"],
+        FILES["fixture_input"],
+        FILES["fixture_expected"],
+        FILES["weekend_fixture_expected"],
+    )
+    print("daily ops runtime origin taxonomy ok")
     verify_later_turn_broker_behavior(
         FILES["router_skill"],
         FILES["orchestrator_reference"],
@@ -395,17 +429,379 @@ def verify_first_start_broker_setup(router_path, reference_path, template_path, 
             raise AssertionError(f"weekend first-start broker interview missing {term!r}")
 
 
+def verify_exact_start_route(
+    router_path, reference_path, daily_tracking_path, fixture_input_path, router_intents_path
+) -> None:
+    exact_prompt = "开始今天的交易研究"
+    payload = json.loads(router_intents_path.read_text(encoding="utf-8"))
+    fixtures = payload.get("router_intents")
+    if not isinstance(fixtures, list):
+        raise AssertionError("router intent fixture must contain router_intents list")
+    exact_routes = [item for item in fixtures if item.get("prompt") == exact_prompt]
+    if len(exact_routes) != 1:
+        raise AssertionError("exact acceptance prompt must have exactly one router intent")
+    if exact_routes[0].get("expected_workflows") != ["runtime_health", "daily_ops_orchestrator"]:
+        raise AssertionError(
+            "exact acceptance chain must be runtime_health -> daily_ops_orchestrator only"
+        )
+
+    router_text = router_path.read_text(encoding="utf-8")
+    routing = markdown_section(router_text, "## Routing")
+    route_item = list_item_containing(routing, exact_prompt)
+    if "read `references/daily-ops-orchestrator.md` first" not in route_item:
+        raise AssertionError("exact acceptance prompt must route to Daily Ops first")
+    exact_start = markdown_section(router_text, "### Exact Generic First Start")
+    for term in (exact_prompt, "before analysis", "daily-market-tracking", "fixed Daily Ops startup block"):
+        if term not in exact_start:
+            raise AssertionError(f"structured exact-start router rule missing {term!r}")
+
+    stage_detection = markdown_section(
+        reference_path.read_text(encoding="utf-8"), "## Stage Detection"
+    )
+    stage_item = list_item_containing(stage_detection, exact_prompt)
+    if not stage_item.startswith("- `premarket_quick_update`"):
+        raise AssertionError("exact acceptance prompt must enter Daily Ops stage detection")
+
+    guard = markdown_section(
+        daily_tracking_path.read_text(encoding="utf-8"), "## Daily Ops First-Start Guard"
+    )
+    normalized_guard = " ".join(guard.split())
+    for term in (
+        exact_prompt,
+        "Daily Ops Orchestrator",
+        "fixed startup health block",
+        "before using this skill",
+        "only after Daily Ops",
+    ):
+        if term not in normalized_guard:
+            raise AssertionError(f"daily tracking first-start guard missing {term!r}")
+
+    fixture_input = fixture_input_path.read_text(encoding="utf-8")
+    match = re.search(r"User prompt:\n\n```text\n([^\n]+)\n```", fixture_input)
+    if not match or match.group(1) != exact_prompt:
+        raise AssertionError("Daily Ops input fixture must contain only the exact acceptance prompt")
+
+
+def verify_fixed_first_start_status(router_path, reference_path, template_path, expected_path) -> None:
+    router_text = router_path.read_text(encoding="utf-8")
+    router_contract = markdown_section(router_text, "### Exact Generic First Start")
+    ordered_headings_in_text(
+        router_contract,
+        ("#### 运行状态检查", "#### 券商来源健康", "#### 宏观数据来源状态"),
+    )
+
+    for path in (reference_path, template_path, expected_path):
+        text = path.read_text(encoding="utf-8")
+        headings = ("### 运行状态检查", "### 券商来源健康", "### 宏观数据来源状态")
+        ordered_headings_in_text(text, headings)
+
+        runtime_block = markdown_section(text, headings[0])
+        runtime_table = table_with_headers(runtime_block, ("item", "status", "note"))
+        required_runtime_rows = (
+            "runtime_dir",
+            "runtime_origin",
+            "formal runtime",
+            "startup_status",
+            "startup_reason",
+            "current_mode",
+            "ops-state.md",
+            "market-plan.md",
+            "trading-profile.md",
+            "macro-panel.json",
+            "portfolio_snapshot.csv",
+            "daily/YYYY-MM-DD/",
+        )
+        assert_ordered_row_keys(runtime_table, required_runtime_rows, f"runtime table in {path}")
+        runtime_rows = rows_by_key(runtime_table)
+        for row_key in required_runtime_rows:
+            if row_key not in runtime_rows:
+                raise AssertionError(f"first-start runtime row missing {row_key!r} in {path}")
+
+        broker_block = markdown_section(text, headings[1])
+        capability_table = table_with_headers(broker_block, ("capability", "status", "effect"))
+        broker_table = table_with_headers(broker_block, ("source", "status", "effect"))
+        if capability_table["start"] >= broker_table["start"]:
+            raise AssertionError(f"capability table must precede broker table in {path}")
+        assert_ordered_row_keys(
+            capability_table,
+            (
+                "Longbridge broker skill",
+                "Longbridge Terminal CLI",
+                "Longbridge macrodata",
+                "Official source fallback",
+                "IBKR connector",
+                "Manual snapshot",
+            ),
+            f"capability table in {path}",
+        )
+        required_broker_rows = ("Longbridge", "IBKR", "Manual snapshot", "portfolio_reconciliation")
+        assert_ordered_row_keys(broker_table, required_broker_rows, f"broker table in {path}")
+        broker_rows = rows_by_key(broker_table)
+        for row_key in required_broker_rows:
+            if row_key not in broker_rows:
+                raise AssertionError(f"first-start broker row missing {row_key!r} in {path}")
+
+        macro_block = markdown_section(text, headings[2])
+        macro_table = table_with_headers(macro_block, ("item", "source status", "effect"))
+        required_macro_rows = ("macro-panel.json", "authorized/current macro values")
+        assert_ordered_row_keys(macro_table, required_macro_rows, f"macro table in {path}")
+        macro_rows = rows_by_key(macro_table)
+        for row_key in required_macro_rows:
+            if row_key not in macro_rows:
+                raise AssertionError(f"first-start macro row missing {row_key!r} in {path}")
+
+    template_missing = markdown_section(
+        template_path.read_text(encoding="utf-8"), "## 缺失确认"
+    )
+    if "`portfolio_reconciliation=unavailable`" not in template_missing:
+        raise AssertionError("template must instruct exact unavailable status in missing confirmations")
+
+    expected_text = expected_path.read_text(encoding="utf-8")
+    expected_broker = markdown_section(expected_text, "### 券商来源健康")
+    expected_broker_rows = rows_by_key(
+        table_with_headers(expected_broker, ("source", "status", "effect"))
+    )
+    reconciliation = expected_broker_rows["portfolio_reconciliation"]
+    if reconciliation[1] != "unavailable":
+        raise AssertionError("expected broker row must render portfolio_reconciliation=unavailable")
+    for term in ("longbridge", "ibkr", "excluded", "fail-closed"):
+        if term not in reconciliation[2]:
+            raise AssertionError(f"expected reconciliation row missing {term!r}")
+
+    expected_missing = markdown_section(expected_text, "## 缺失确认")
+    if "`portfolio_reconciliation=unavailable`" not in expected_missing:
+        raise AssertionError("missing confirmations must repeat exact reconciliation status")
+
+    expected_macro = markdown_section(expected_text, "### 宏观数据来源状态")
+    expected_macro_rows = rows_by_key(
+        table_with_headers(expected_macro, ("item", "source status", "effect"))
+    )
+    if expected_macro_rows["authorized/current macro values"][1] != "missing":
+        raise AssertionError("expected fixture must not claim authorized/current macro values")
+    for term in ("synthetic fixture/debug input", "没有已授权/当前宏观数值", "不输出或虚构"):
+        if term not in expected_macro:
+            raise AssertionError(f"expected macro section missing {term!r}")
+
+
+def markdown_section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    matches = [index for index, line in enumerate(lines) if line == heading]
+    if len(matches) != 1:
+        raise AssertionError(f"expected exactly one {heading!r} heading")
+    start = matches[0]
+    level = len(heading) - len(heading.lstrip("#"))
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        match = re.match(r"^(#{1,6})\s", lines[index])
+        if match and len(match.group(1)) <= level:
+            end = index
+            break
+    return "\n".join(lines[start:end])
+
+
+def ordered_headings_in_text(text: str, headings: tuple[str, ...]) -> None:
+    lines = text.splitlines()
+    positions: list[int] = []
+    for heading in headings:
+        matches = [index for index, line in enumerate(lines) if line == heading]
+        if len(matches) != 1:
+            raise AssertionError(f"expected exactly one structured heading {heading!r}")
+        positions.append(matches[0])
+    if positions != sorted(positions):
+        raise AssertionError(f"structured headings out of order: {headings!r}")
+
+
+def list_item_containing(section: str, term: str) -> str:
+    items: list[str] = []
+    current: list[str] = []
+    for line in section.splitlines()[1:]:
+        if line.startswith("- "):
+            if current:
+                items.append(" ".join(current))
+            current = [line]
+        elif current and line.strip():
+            current.append(line.strip())
+    if current:
+        items.append(" ".join(current))
+    matches = [item for item in items if term in item]
+    if len(matches) != 1:
+        raise AssertionError(f"expected exactly one list item containing {term!r}")
+    return matches[0]
+
+
+def markdown_tables(section: str) -> list[dict[str, object]]:
+    lines = section.splitlines()
+    tables: list[dict[str, object]] = []
+    index = 0
+    while index < len(lines):
+        if not lines[index].startswith("|"):
+            index += 1
+            continue
+        start = index
+        table_lines: list[str] = []
+        while index < len(lines) and lines[index].startswith("|"):
+            table_lines.append(lines[index])
+            index += 1
+        if len(table_lines) < 2:
+            continue
+
+        parsed = [
+            tuple(cell.strip() for cell in line.strip().strip("|").split("|"))
+            for line in table_lines
+        ]
+        if not all(re.fullmatch(r":?-{3,}:?", cell) for cell in parsed[1]):
+            continue
+        if any(len(row) != len(parsed[0]) for row in parsed):
+            raise AssertionError("malformed markdown table")
+        tables.append({"start": start, "headers": parsed[0], "rows": parsed[2:]})
+    return tables
+
+
+def table_with_headers(section: str, headers: tuple[str, ...]) -> dict[str, object]:
+    matches = [table for table in markdown_tables(section) if table["headers"] == headers]
+    if len(matches) != 1:
+        raise AssertionError(f"expected exactly one table with headers {headers!r}")
+    return matches[0]
+
+
+def rows_by_key(table: dict[str, object]) -> dict[str, tuple[str, ...]]:
+    rows = table["rows"]
+    assert isinstance(rows, list)
+    keyed: dict[str, tuple[str, ...]] = {}
+    for row in rows:
+        assert isinstance(row, tuple)
+        if row[0] in keyed:
+            raise AssertionError(f"duplicate table row {row[0]!r}")
+        keyed[row[0]] = row
+    return keyed
+
+
+def assert_ordered_row_keys(
+    table: dict[str, object], required_keys: tuple[str, ...], label: str
+) -> None:
+    rows = table["rows"]
+    assert isinstance(rows, list)
+    actual_keys = [row[0] for row in rows]
+    positions: list[int] = []
+    for key in required_keys:
+        if key not in actual_keys:
+            raise AssertionError(f"{label} missing ordered row {key!r}")
+        positions.append(actual_keys.index(key))
+    if positions != sorted(positions):
+        raise AssertionError(
+            f"{label} row order mismatch: required {required_keys!r}, actual {tuple(actual_keys)!r}"
+        )
+
+
+def verify_capability_before_broker_tables(template_path, expected_path) -> None:
+    required_capabilities = (
+        "Longbridge broker skill",
+        "Longbridge Terminal CLI",
+        "Longbridge macrodata",
+        "Official source fallback",
+        "IBKR connector",
+        "Manual snapshot",
+    )
+    for path in (template_path, expected_path):
+        section = markdown_section(path.read_text(encoding="utf-8"), "### 券商来源健康")
+        capability = table_with_headers(section, ("capability", "status", "effect"))
+        broker = table_with_headers(section, ("source", "status", "effect"))
+        if capability["start"] >= broker["start"]:
+            raise AssertionError(f"source capability table must precede broker source table in {path}")
+        capability_rows = rows_by_key(capability)
+        for label in required_capabilities:
+            if label not in capability_rows:
+                raise AssertionError(f"source capability row {label!r} missing in {path}")
+
+    expected_section = markdown_section(
+        expected_path.read_text(encoding="utf-8"), "### 券商来源健康"
+    )
+    expected_rows = rows_by_key(
+        table_with_headers(expected_section, ("capability", "status", "effect"))
+    )
+    expected_statuses = {
+        "Longbridge broker skill": "needs_review",
+        "Longbridge Terminal CLI": "needs_review",
+        "Longbridge macrodata": "needs_review",
+        "Official source fallback": "missing",
+        "IBKR connector": "needs_review",
+        "Manual snapshot": "missing",
+    }
+    for label, status in expected_statuses.items():
+        row = expected_rows[label]
+        if row[1] != status:
+            raise AssertionError(f"{label} capability status must be {status!r}")
+        if status == "needs_review" and "authorization is not inferred" not in row[2]:
+            raise AssertionError(f"{label} capability must stay distinct from broker authorization")
+
+
+def verify_runtime_origin_taxonomy(reference_path, input_path, expected_path, weekend_path) -> None:
+    reference = reference_path.read_text(encoding="utf-8")
+    reference_runtime = markdown_section(reference, "### 运行状态检查")
+    reference_rows = rows_by_key(
+        table_with_headers(reference_runtime, ("item", "status", "note"))
+    )
+    origin_row = reference_rows.get("runtime_origin")
+    if origin_row is None:
+        raise AssertionError("Daily Ops reference must define runtime_origin row")
+    if origin_row[1] != "explicit_argument / environment / default":
+        raise AssertionError("runtime_origin taxonomy must match runtime_state.py exactly")
+    for obsolete in ("env_override", "user_confirmed", "unknown"):
+        if obsolete in " ".join(origin_row):
+            raise AssertionError(f"runtime_origin taxonomy retains obsolete value {obsolete!r}")
+
+    fixture_input = input_path.read_text(encoding="utf-8")
+    for line in (
+        "- runtime_origin: explicit_argument",
+        "- startup_status: ready",
+        "- macro-panel.json: missing; authorized/current macro values: missing; no actual macro values",
+        "- portfolio_snapshot.csv: available; status only; no private rows read",
+    ):
+        if line not in fixture_input.splitlines():
+            raise AssertionError(f"exact-start input fixture missing deterministic line {line!r}")
+
+    expected_runtime = markdown_section(
+        expected_path.read_text(encoding="utf-8"), "### 运行状态检查"
+    )
+    expected_rows = rows_by_key(table_with_headers(expected_runtime, ("item", "status", "note")))
+    if expected_rows.get("runtime_origin", (None, None))[1] != "explicit_argument":
+        raise AssertionError("exact-start expected fixture must preserve runtime_origin=explicit_argument")
+    if expected_rows.get("startup_status", (None, None))[1] != "ready":
+        raise AssertionError("exact-start expected fixture must preserve startup_status=ready")
+    if expected_rows.get("macro-panel.json", (None, None))[1] != "missing":
+        raise AssertionError("exact-start expected fixture must preserve Macro panel=missing")
+    portfolio_row = expected_rows.get("portfolio_snapshot.csv", (None, None, ""))
+    if portfolio_row[1] != "available" or "status only" not in portfolio_row[2]:
+        raise AssertionError(
+            "exact-start expected fixture must preserve Portfolio snapshot=available as status-only"
+        )
+    if "不读取私有持仓行" not in portfolio_row[2]:
+        raise AssertionError("exact-start portfolio snapshot status must not expose private rows")
+
+    weekend_runtime = markdown_section(
+        weekend_path.read_text(encoding="utf-8"), "## 读取状态"
+    )
+    weekend_rows = rows_by_key(table_with_headers(weekend_runtime, ("item", "status", "effect")))
+    if weekend_rows.get("runtime_origin", (None, None))[1] != "default":
+        raise AssertionError("weekend fixture must retain runtime_origin=default coverage")
+
+
 def verify_later_turn_broker_behavior(router_path, reference_path, template_path) -> None:
     required_later_turn_terms = (
+        "On later turns, `missing` or `unauthorized` enters `券商只读来源设置`.",
         "On later turns, `needs_review` asks for matching verification/retry",
         "does not repeat authorization setup",
-        "only `unauthorized` re-enters",
+        "`stale`, `partial_data`, `upstream_error`, and `empty_positions_unverified`",
+        "distinct availability or verification paths",
     )
     for path in (router_path, reference_path, template_path):
         text = path.read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
         for term in required_later_turn_terms:
-            if term not in text:
+            if term not in normalized:
                 raise AssertionError(f"later-turn broker behavior missing {term!r} in {path}")
+        if "only `unauthorized` re-enters" in normalized:
+            raise AssertionError(f"later-turn broker behavior excludes missing in {path}")
 
 
 def verify_startup_status_taxonomy(template_path) -> None:

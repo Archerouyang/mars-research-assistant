@@ -1,54 +1,86 @@
 # 当前日程阶段
 
 - stage: 盘前快速更新
-- reason: 用户说“开始今天的交易研究日程”，当前上下文是 weekday premarket，且已有 `market-plan.md` 和 `trading-profile.md` 可读。
-- confidence: medium，因为 `ops-state.md` 缺失且 KVN snapshot stale。
+- reason: 用户说“开始今天的交易研究”，当前上下文是 weekday premarket，且已有 `market-plan.md` 和 `trading-profile.md` fixture 可读。
+- confidence: medium，因为 broker capability/source 仍需复核且 KVN snapshot missing。
 
 ## 读取状态
 
 - runtime health: available
-- runtime_dir: `~/Documents/dailytrades-runtime`
+- runtime_dir: `/private/tmp/dailytrades-uat-runtime-9a24200`
+- runtime_origin: `explicit_argument`
 - formal runtime: available，正式 runtime 可用；不要把 repo fixture 当作当前 Active Market Plan
+- startup_status: `ready`
+- startup_reason: runtime_health.py 未提供；不得另行推断
 - 当前模式: `dry-run`
 - `ops-state.md`: missing，需要建议初始化但不会写 runtime
 - `market-plan.md`: available
 - `trading-profile.md`: available
-- `daily/YYYY-MM-DD/`: missing
-- KVN snapshot: stale，本次不能把公开行情重建成 KVN
-- broker source: unauthorized，本次不会读取 broker
+- `daily/YYYY-MM-DD/`: available
+- KVN snapshot: missing，本次不能把公开行情重建成 KVN
+- broker source: needs_review，本次不会读取 broker facts
+- portfolio_reconciliation: `unavailable`，Longbridge 与 IBKR 均 excluded；组合暴露 fail-closed
 - missing data: ticker 交易周期未知，不能生成具体 entry / exit trigger
 
 ### 运行状态检查
 
 | item | status | note |
 | --- | --- | --- |
-| runtime_dir | available | `~/Documents/dailytrades-runtime` |
+| runtime_dir | available | `/private/tmp/dailytrades-uat-runtime-9a24200` |
+| runtime_origin | explicit_argument | `--runtime-dir` 的确定性结果；不得改写为 default 或 environment |
 | formal runtime | available | 正式 runtime 可用；只读取状态，不复制私有内容 |
+| startup_status | ready | 保留 runtime_health.py 的确定性状态；不因 `ops-state.md` 缺失而改写 |
+| startup_reason | not_provided | runtime_health.py 未提供 reason；不得另行推断 |
+| current_mode | dry-run | 当前模式；不假设 broker、持仓、订单或成交事实 |
 | ops-state.md | missing | 可建议初始化草稿，但需要用户确认 |
 | market-plan.md | available | 只作为当前状态读取 |
 | trading-profile.md | available | 用于交易周期和工具偏好 |
-| daily/YYYY-MM-DD/ | missing | 今日运行包尚未初始化 |
+| macro-panel.json | missing | 只显示状态；宏观来源详情见独立区块 |
+| portfolio_snapshot.csv | available | status only；仅确认文件存在，不读取私有持仓行 |
+| daily/YYYY-MM-DD/ | available | 当日运行包存在；只读取状态 |
 
 ### 券商来源健康
 
+`source_capability_health` 先于 `broker_source_health` 展示；capability 状态不等同于 broker 授权状态。
+
+| capability | status | effect |
+| --- | --- | --- |
+| Longbridge broker skill | needs_review | capability status not confirmed; authorization is not inferred |
+| Longbridge Terminal CLI | needs_review | capability status not confirmed; authorization is not inferred |
+| Longbridge macrodata | needs_review | capability status not confirmed; authorization is not inferred；这是宏观数据能力，不是 broker account source |
+| Official source fallback | missing | capability output missing |
+| IBKR connector | needs_review | capability status not confirmed; authorization is not inferred |
+| Manual snapshot | missing | capability output missing |
+
 | source | status | effect |
 | --- | --- | --- |
-| Longbridge | unauthorized | 不能读取持仓、成交、订单状态或授权行情 |
-| IBKR | unauthorized | 不能读取持仓、成交、订单状态或授权行情 |
+| Longbridge | needs_review | 未提供本轮只读来源状态；不能读取 broker facts |
+| IBKR | needs_review | 未提供本轮只读来源状态；不能读取 broker facts |
 | Manual snapshot | missing | 本轮没有用户确认的 broker snapshot |
+| portfolio_reconciliation | unavailable | longbridge、ibkr 均 excluded；合并组合暴露 fail-closed |
 
 当前模式: `dry-run`，可以做公开数据和计划状态 quick update，但持仓 sizing、成交事实和组合风险只能降级处理。
+
+### 宏观数据来源状态
+
+| item | source status | effect |
+| --- | --- | --- |
+| macro-panel.json | missing | 不能生成已验证的 Macro Regime Mini-Panel |
+| authorized/current macro values | missing | 本 fixture 没有已授权/当前宏观数值，不输出或虚构实际宏观指标读数 |
+
+状态来源是 synthetic fixture/debug input，不代表 fresh-session 已完成实时核验。
 
 ## 缺失确认
 
 - 确认是否允许初始化 `ops-state.md` 草稿。
+- `portfolio_reconciliation=unavailable`：确认 broker read-only 来源后再复核；此前组合合并暴露保持 fail-closed。
 - 选择券商只读来源设置：Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。
 - 确认 QQQ、MU、TSM、GLW 分别是什么交易周期和工具。
 - 确认是否需要在后续正式运行中允许 web/current-source 检查。
 
 ## 券商只读来源设置
 
-当前券商来源状态是 unauthorized，所以不能只报告缺口，需要询问只读来源偏好。
+这是 Daily Ops first start；Longbridge 与 IBKR 当前均为 needs_review，所以需要询问只读来源偏好，但不能误报 unauthorized。
 
 是否启用只读 broker 数据？选项：
 
@@ -77,14 +109,14 @@
 ## 下一步指引
 
 - 默认建议: 本轮先不读 broker，先确认 QQQ、MU、TSM、GLW 的 `ticker + trade_horizon + instrument`，并允许初始化 `ops-state.md` 草稿；确认后再做盘前快速更新。
-- 可选路径: 1. 先做券商只读来源设置；2. 先初始化今天 runtime package；3. 不写 runtime，只做 reduced-scope dry-run；4. 先补 KVN snapshot 后再更新计划。
+- 可选路径: 1. 先做券商只读来源设置；2. 只提出 `ops-state.md` 初始化草稿；3. 不写 runtime，只做 reduced-scope dry-run；4. 先补 KVN snapshot 后再更新计划。
 - 你只需要回复: `券商来源暂不启用；QQQ=长期持有 ETF + 0DTE option；MU=中期正股；TSM=LEAP call；GLW=watch only；允许初始化 ops-state 草稿。`
 - 我会执行: 按确认后的分组读取 Active Market Plan，输出今日变化、需要盯的 setup、哪些接近触发、哪些暂停或复核；若允许写入，只生成 proposed write package，不直接写 runtime。
 
 ## 为什么现在做这一步
 
 - 盘前快速更新需要知道每个标的是长期配置、波段、日内、0DTE、LEAP 还是观察，否则时间框架和触发严格度会错。
-- KVN stale 和 broker unauthorized 不阻止流程开始，但会降低动量和持仓风险判断的置信度。
+- KVN missing、broker needs_review 和 portfolio reconciliation unavailable 不阻止 reduced-scope 流程开始，但会降低动量和持仓风险判断的置信度。
 
 ## 确认后我会执行
 
