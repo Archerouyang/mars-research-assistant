@@ -27,9 +27,7 @@
     "defaultPrompt": [
       "Deep-update my Active Market Plan for next week.",
       "Read this research report and extract the plan impact.",
-      "Quick-update today's market plan and setup levels.",
-      "Screen stocks for a falling-rate environment.",
-      "Review my latest broker execution interactively."
+      "Quick-update today's market plan and setup levels."
     ],
     "brandColor": "#2563EB"
   }
