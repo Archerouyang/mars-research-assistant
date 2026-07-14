@@ -36,5 +36,7 @@ uv_run() {
   uv run --python "$PYTHON_BIN" "$@"
 }
 
+uv_run python scripts/verify_plugin_distribution_selftest.py
+uv_run python scripts/verify_plugin_distribution.py
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
 uv_run python plugins/trading-research-system/scripts/verify_contract_suite.py core

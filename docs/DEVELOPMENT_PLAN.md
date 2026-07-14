@@ -126,6 +126,7 @@ Use these statuses:
 | P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
 | P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
+| P0 | review | Add Git-backed cross-device plugin distribution | Gives each device one public repository marketplace while keeping account login, plugin installation, connector authorization, and private runtime setup as separate operations. | Local contract and docs are complete. After integration and publication, the coordinator must run a clean install from `Archerouyang/dailytrades@master`, open a new task, and record remote UAT evidence. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
@@ -173,6 +174,39 @@ Use these statuses:
 | P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
+## Cross-device Git-backed Plugin Distribution
+
+Status: local implementation complete; remote clean-install UAT pending after
+the accepted change reaches `master`.
+
+Scope for this tracer bullet:
+
+- make `.agents/plugins/marketplace.json` the only repository distribution
+  source for `trading-research-system`;
+- keep `plugins/trading-research-system/.codex-plugin/plugin.json` as the single
+  source of truth for the published version;
+- reject marketplace source/name/display metadata drift, invalid manifest
+  versions, nested marketplace copies, and README install-command drift;
+- document installation without implying that Codex account login synchronizes
+  plugins, connector grants, credentials, or private runtime data.
+
+Local acceptance gate:
+
+- `python3 scripts/verify_plugin_distribution_selftest.py` passes;
+- `bash scripts/verify-plugin.sh` and `bash scripts/verify-mvp.sh` pass;
+- plugin scripts compile and `git diff --check` passes;
+- an isolated temporary-repository smoke resolves the root marketplace to the
+  in-repository plugin source without writing global Codex configuration.
+
+Coordinator follow-up after integration and publication:
+
+1. On a clean device or isolated Codex home, add
+   `Archerouyang/dailytrades@master` as a marketplace.
+2. Install `trading-research-system` from Codex `/plugins` or desktop Plugins.
+3. Open a new task and confirm the installed version and expected skills load.
+4. Confirm no account-login step is presented as plugin, connector, credential,
+   or private-runtime synchronization.
+
 ## Today
 
 Date: 2026-07-14
@@ -194,6 +228,10 @@ Date: 2026-07-14
 
 ### 2026-07-14
 
+- Added the local Git-backed distribution contract for the repository-root
+  marketplace, manifest-owned versioning, README installation flow, and
+  nested-marketplace drift prevention. Remote clean-install UAT remains a
+  coordinator gate after the change is integrated and published to `master`.
 - Closed all six 2026-07-11 behavior debug items after dual-axis review and
   targeted fresh-chat UAT.
 - Verified both Prompt 5 branches: unresolved setup keys stay watch-only, while

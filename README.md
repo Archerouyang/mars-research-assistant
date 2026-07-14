@@ -18,8 +18,44 @@
 
 ## 快速开始
 
-在 Codex 里直接说你要完成的交易研究任务。普通使用者不需要记住
-focused skill 名称；agent 会根据任务自动选择内部工作流。
+### 1. 安装前提
+
+先安装并登录 Codex CLI 或 Codex 桌面端，并确保当前设备可以访问 GitHub。
+登录 Codex 账号不会自动把 plugin、connector 授权、private runtime 或凭据同步到
+另一台设备；每台设备都要单独完成下面的安装和私有配置。
+
+### 2. 添加 Dailytrades marketplace
+
+在终端执行这一条命令；发布目标固定为 `Archerouyang/dailytrades@master`：
+
+```bash
+codex plugin marketplace add Archerouyang/dailytrades --ref master
+```
+
+### 3. 安装 plugin
+
+打开 Codex 的 `/plugins`，或桌面端的 **Plugins** 页面，在 `dailytrades`
+marketplace 中找到并安装 `trading-research-system`。以后升级 plugin 也从这个
+marketplace 完成。
+
+安装或升级后必须新开一个 task，让新 task 重新加载 plugin 的 skills 和工具。
+
+### 4. 分别完成私有设置
+
+下面四件事彼此独立，不要把“同账号登录”理解成自动同步：
+
+1. **Codex 账号登录**：只建立当前设备上的 Codex 会话。
+2. **Plugin 安装**：从 Git-backed marketplace 获取公开的 plugin 代码和文档。
+3. **Connector 授权**：在需要使用某个 connector 的设备上单独授权。
+4. **Private runtime setup**：在本机单独初始化并维护私有 runtime 数据。
+
+禁止复制 `~/.codex/auth.json`，禁止把 broker 凭据或 private runtime 提交到公开仓库；
+跨设备时应在新设备上重新登录、重新授权，并单独恢复或初始化私有数据。
+
+### 5. 开始使用
+
+在新 task 里直接说你要完成的交易研究任务。普通使用者不需要记住 focused skill
+名称；agent 会根据任务自动选择内部工作流。
 
 ```text
 帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。

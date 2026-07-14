@@ -1,7 +1,7 @@
 {
-  "name": "trading-research",
+  "name": "dailytrades",
   "interface": {
-    "displayName": "Trading Research"
+    "displayName": "Trading Research System"
   },
   "plugins": [
     {
