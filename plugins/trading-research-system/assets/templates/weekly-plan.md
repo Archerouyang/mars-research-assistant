@@ -1,5 +1,8 @@
 # Deep Active Market Plan Update
 
+Blank user-owned template; plugin install provides no ticker, setup, position,
+or risk defaults.
+
 ## Week
 
 - Week start:
@@ -63,10 +66,7 @@
 
 | Holding | Macro/news impact | This week's action | Pause/review condition |
 | --- | --- | --- | --- |
-| QQQ |  | add / TP-rebalance / pause add |  |
-| VOO |  | add / TP-rebalance / pause add |  |
-| DRAM |  | add / TP-rebalance / pause add |  |
-| SOXX |  | add / TP-rebalance / pause add |  |
+|  |  | add / TP-rebalance / pause add |  |
 
 ## Strategy Posture
 
@@ -82,7 +82,7 @@ Only include earnings that can affect current holdings, index/sector beta, momen
 
 | Priority | Time | Ticker/theme | Source priority | Why it matters | Affected holdings/plans | Post-earnings confirmation | Strategy posture implication |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| P0/P1/P2 | Date + premarket/after close/ET |  | S0/S1/S2 | index weight / sector leadership / watchlist setup / gap risk | QQQ/VOO/DRAM/SOXX/new plans | guidance / gap hold / breadth / relative strength | Defensive / Balanced / High-beta momentum |
+| P0/P1/P2 | Date + premarket/after close/ET |  | S0/S1/S2 | index weight / sector leadership / watchlist setup / gap risk | user-confirmed private plan | guidance / gap hold / breadth / relative strength | user-defined posture |
 
 ## Macro / Rates
 
@@ -163,16 +163,13 @@ Use this only for forward-looking events that need preparation but are not alrea
 
 | Holding | Add impact | TP/rebalance impact | Pause/review trigger |
 | --- | --- | --- | --- |
-| QQQ |  |  |  |
-| VOO |  |  |  |
-| DRAM |  |  |  |
-| SOXX |  |  |  |
+|  |  |  |  |
 
 ## New Position Plan Impact
 
 | Plan / product | Risk allowed now? | Event confirmation needed | Crowding risk |
 | --- | --- | --- | --- |
-| QQQ 0DTE | yes / wait |  | short-dated / QQQ beta |
+| User-defined same-day-expiry option | yes / wait |  | short-dated / underlying beta |
 | ETF / 2x ETF | yes / wait |  | leveraged beta |
 | LEAP | yes / wait |  | rate-sensitive duration |
 

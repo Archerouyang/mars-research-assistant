@@ -13,8 +13,75 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 ## Routing
 
-- General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究日程", "现在该做什么", or any request where the user wants active process guidance:
+- General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究", "开始今天的交易研究日程", "周末首次启动，先看看下周", "现在该做什么", or any request where the user wants active process guidance:
   read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
+
+### Exact Generic First Start
+
+For the exact generic first-start request `开始今天的交易研究`, return the
+fixed Daily Ops startup block before analysis or `daily-market-tracking`.
+
+#### 运行状态检查
+
+Render `runtime_dir`, `runtime_origin`, `formal runtime`, `startup_status`,
+`startup_reason` when available, `current_mode`, and status-only runtime files.
+
+#### 券商来源健康
+
+Render `source_capability_health` before `broker_source_health`, then show the
+exact `portfolio_reconciliation` status. If it is `unavailable`, list excluded
+sources, preserve fail-closed wording, and include the missing confirmation.
+
+#### 宏观数据来源状态
+
+Render `macro-panel.json` and its source status, with fixture/debug disclosure
+and no invented macro values.
+
+Then ask the first-start broker read-only question and route to a focused
+workflow. Do not replace this structure with a generic market-update status
+table.
+
+### Exact Weekend First Start
+
+For the exact request `周末首次启动，先看看下周`, run a first-start status-only
+runtime health check before analysis and route through Daily Ops before weekly
+analysis.
+
+#### 运行状态检查
+
+Before analytical claims, explicitly render `runtime_origin`, formal runtime,
+and startup status. Preserve the deterministic `runtime_origin` value from
+`runtime_health.py` (`environment` when `TRADING_RESEARCH_RUNTIME_DIR` selects
+the empty formal path). When that selected path does not exist, render
+`formal runtime=missing` and `startup_status=uninitialized`; keep formal-runtime
+availability and startup completeness as independent axes. Do not read private
+runtime file contents during this status-only check.
+
+#### 可用研究摘要
+
+After the status-only block, keep the user-facing order “先摘要，后授权/初始化”:
+give a concise current public-source weekly summary before requesting any
+authorization or initialization. Clearly label missing personalization and do
+not turn the summary into a setup or trading instruction.
+
+#### 摘要后缺失确认
+
+After the summary, request all three missing choices:
+
+- broker read-only preference; this records read intent only and does not read
+  an account;
+- the complete `ticker + trade_horizon + instrument` key;
+- whether to dry-run or initialize the private runtime.
+
+Initializing the private runtime requires separate explicit runtime-write
+authorization. Broker read-only preference, a setup-key confirmation, or a
+dry-run choice never authorizes a runtime write.
+
+#### 安全边界
+
+Do not write runtime. Do not read broker or private account data. Do not
+generate setups or buy/sell instructions in this first response.
+
 - Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, optional external momentum context, and setup discovery:
   use `weekly-trading-plan`.
 - Daily quick update against `market-plan.md`: macro/policy/news/event delta, momentum change, setup status changes, and level updates:
@@ -31,9 +98,9 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
   full-universe ticker query:
   read `references/alpha-leaderboard.md`, check runtime health, and use
   `../../scripts/alpha_leaderboard_adapter.py`. Preserve the stored Alpha Rank.
-  If the Alpha store is unavailable, disclose the gap; use a legacy snapshot only when
-  an explicitly configured legacy snapshot exists, and never rebuild or
-  re-rank a private model inside the plugin.
+  If the Alpha store is unavailable, disclose the gap; use a legacy snapshot
+  only when an explicitly configured legacy snapshot exists, and never rebuild
+  or re-rank a private model inside the plugin.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:
@@ -74,17 +141,16 @@ Repo fixtures, bundled templates, and example plans are development inputs only;
 do not treat them as the current Active Market Plan in a new chat.
 
 On every Daily Ops first start, enter `券商只读来源设置`, including when
-unspecified live broker sources default to `needs_review`. On later turns, enter
-it only when a broker source is `unauthorized`. Ask
+unspecified live broker sources default to `needs_review`. On later turns,
+`missing` or `unauthorized` enters `券商只读来源设置`. Ask
 whether to enable Longbridge read-only, IBKR read-only, both, or continue without
 broker facts for this run. `券商只读来源设置` configures read intent only; it
 must not read accounts, install software, or call broker write actions.
 
-If a source is `partial_data`, `upstream_error`,
-`empty_positions_unverified`, or `needs_review`, report that exact state and ask
-for the matching verification/retry. On later turns, `needs_review` asks for matching verification/retry
-and does not repeat authorization setup; only `unauthorized` re-enters
-`券商只读来源设置`.
+On later turns, `needs_review` asks for matching verification/retry and does not
+repeat authorization setup. `stale`, `partial_data`, `upstream_error`, and
+`empty_positions_unverified` retain distinct availability or verification paths;
+report the exact state instead of routing them through authorization setup.
 
 If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or
 exit triggers. Ask for the intended `ticker + trade_horizon + instrument`

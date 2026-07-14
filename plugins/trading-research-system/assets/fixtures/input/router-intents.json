@@ -2,7 +2,7 @@
   "router_intents": [
     {
       "id": "daily-ops-start-today",
-      "prompt": "开始今天的交易研究日程。先判断现在该做什么，我不想一个个 call out 模块。",
+      "prompt": "开始今天的交易研究",
       "expected_public_route_label": "Daily Ops 主动日程引导",
       "expected_workflows": ["runtime_health", "daily_ops_orchestrator"],
       "required_reads": ["ops-state.md", "market-plan.md", "trading-profile.md", "runtime health", "optional external momentum snapshot availability", "broker source availability"],
@@ -14,6 +14,14 @@
       "expected_public_route_label": "多因子 Alpha 榜读取",
       "expected_workflows": ["runtime_health", "alpha_leaderboard"],
       "required_reads": ["alpha/leaderboard.sqlite", "latest immutable Alpha snapshot", "previous successful snapshot", "model run metadata"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
+      "id": "daily-ops-weekend-first-start",
+      "prompt": "周末首次启动，先看看下周",
+      "expected_public_route_label": "Daily Ops 周末首次启动",
+      "expected_workflows": ["runtime_health", "daily_ops_orchestrator"],
+      "required_reads": ["runtime health status-only", "public/official sources", "broker source availability"],
       "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
     },
     {

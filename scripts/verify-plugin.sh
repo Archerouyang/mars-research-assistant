@@ -29,6 +29,7 @@ fi
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$ROOT/.scratch/uv-cache}"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$ROOT/.scratch/uv-venv}"
 export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-$ROOT/.scratch/uv-python}"
+export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
 
 cd "$ROOT"
 
@@ -36,5 +37,9 @@ uv_run() {
   uv run --python "$PYTHON_BIN" "$@"
 }
 
+uv_run python scripts/verify_plugin_compile_gate_selftest.py
+PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-plugin-compile.sh
+uv_run python scripts/verify_plugin_distribution_selftest.py
+uv_run python scripts/verify_plugin_distribution.py
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
 uv_run python plugins/trading-research-system/scripts/verify_contract_suite.py core

@@ -14,7 +14,21 @@ from contract_suite import PluginPaths
 def main() -> None:
     paths = PluginPaths.from_script(__file__)
     script = paths.scripts / "price_action_rollforward.py"
-    fixture = paths.templates / "chart-ohlcv-qqq-sample.json"
+    fixture = paths.fixture_input / "chart-ohlcv-qqq-sample.json"
+
+    help_result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if help_result.returncode != 0:
+        raise AssertionError(help_result.stderr or help_result.stdout)
+    normalized_help = " ".join(help_result.stdout.split())
+    if "Explicitly confirmed ticker required by the complete setup key" not in normalized_help:
+        raise AssertionError("--ticker help must describe the explicit pre-payload setup-key requirement")
+    if "defaults to JSON symbol" in normalized_help:
+        raise AssertionError("--ticker help must not imply ticker can be inferred from the OHLCV payload")
 
     help_result = subprocess.run(
         [sys.executable, str(script), "--help"],

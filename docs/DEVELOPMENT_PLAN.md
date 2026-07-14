@@ -128,11 +128,13 @@ Use these statuses:
 | P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
 | P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
+| P0 | review | Add Git-backed cross-device plugin distribution | Gives each device one public repository marketplace while keeping account login, plugin installation, connector authorization, and private runtime setup as separate operations. | Local contract and docs are complete. After integration and publication, the coordinator must run a clean install from `Archerouyang/dailytrades@master`, open a new task, and record remote UAT evidence. |
+| P0 | ready | Ship command-first portable Agent Skill and newcomer README | Makes one cross-agent command the primary install path while native Codex/Claude plugins remain optional wrappers; gives newcomers reproducible synthetic output evidence instead of a script-heavy README. | Execute `docs/DISTRIBUTION_AND_README_PLAN.md` as two bounded work packages, then review each against the pinned plan before integration. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
-| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL; broker runtime views, macro panel, setup row bridge, PA OHLCV bridge, snapshot repair, and monitor-only setup rows have verified paths. Final `dev` gates passed; promotion to `master` still requires explicit user confirmation. |
-| P0 | review | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and NAV-only accounts being merged into confirmed exposure. | Local dual-axis review passed. Integrate the reviewed scope to `dev` with both weekend fixtures, re-pin `/Users/archer/Documents/交易想法-1-0-uat`, refresh the plugin, then rerun fresh-chat checks before closure. |
-| P1 | planned | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites have missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | After the current debug items are locally verified, use `b752b78` plus the focused tests, `verify-plugin`, and `verify-mvp` as the regression baseline; add bounded matrices for reconciliation modes, startup states/doc surfaces, and validation ordering. No ADR is required unless the public contract changes. |
+| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
+| P0 | done | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Final targeted fresh-chat UAT passed at `19ca4ae` with plugin `0.1.0+codex.20260714041242`; all six debug items are closed. |
+| P1 | planned | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | After UAT closure, use `b752b78` plus the focused tests, `verify-plugin`, and `verify-mvp` as the regression baseline; add bounded matrices for reconciliation modes, startup states/doc surfaces, and validation ordering. No ADR is required unless the public contract changes. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
 | P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
@@ -175,29 +177,152 @@ Use these statuses:
 | P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
+## Cross-device Git-backed Plugin Distribution
+
+Status: local implementation complete; remote clean-install UAT pending after
+the accepted change reaches `master`.
+
+Scope for this tracer bullet:
+
+- make `.agents/plugins/marketplace.json` the only repository distribution
+  source for `trading-research-system`;
+- keep `plugins/trading-research-system/.codex-plugin/plugin.json` as the single
+  source of truth for the published version;
+- reject marketplace source/name/display metadata drift, invalid manifest
+  versions, nested marketplace copies, package paths outside the public
+  allowlist, and structured README install-contract drift;
+- document installation without implying that Codex account login synchronizes
+  plugins, connector grants, credentials, or private runtime data.
+
+Public/private product boundary:
+
+- the public plugin may package only generic skills, references, scripts, blank
+  templates, explicitly synthetic sanitized fixtures, and generic contracts;
+- private user state includes stock pools/watchlists, `trading-profile.md`,
+  Active Market Plans, setups, positions, executions, reviews, broker data,
+  runtime files, account/connector authorization, personal risk parameters, and
+  research history;
+- marketplace add, plugin install, and upgrade must never copy, package, commit,
+  restore, or imply synchronization of private user state;
+- every user initializes a blank local runtime independently; the repository
+  does not supply a personal profile, plan, default watchlist, or preferred
+  ticker list;
+- any future preference-sync capability is separate, private, explicitly
+  opt-in, and outside this public plugin distribution task.
+
+Local acceptance gate:
+
+- `python3 scripts/verify_plugin_distribution_selftest.py` passes;
+- `bash scripts/verify-plugin-compile.sh` compiles every plugin script while
+  directing bytecode to `.scratch/plugin-compile-cache`; do not use bare
+  `python3 -m compileall -q plugins/trading-research-system/scripts` as a gate,
+  because bare `compileall` writes `__pycache__` into the public package;
+- `bash scripts/verify-plugin.sh` and `bash scripts/verify-mvp.sh` pass;
+- `git diff --check` passes;
+- an isolated Codex home smoke resolves the root marketplace, lists version
+  `0.1.1`, and installs the plugin into that temporary home without writing
+  global Codex configuration;
+- the distribution contract enforces top-level Python-only scripts,
+  `SKILL.md`/Markdown-only skill trees, explicit fixture/template asset shapes,
+  rejection of symlinks and generated/cache artifacts, header-only CSV runtime
+  templates, and structured Markdown install/boundary sections.
+
+Reproducible local marketplace resolution and install smoke:
+
+```bash
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ISOLATED_ROOT="$(mktemp -d /tmp/dailytrades-marketplace-review.XXXXXX)"
+mkdir -p "$ISOLATED_ROOT/home" "$ISOLATED_ROOT/codex" \
+  "$ISOLATED_ROOT/config" "$ISOLATED_ROOT/cache"
+export HOME="$ISOLATED_ROOT/home"
+export CODEX_HOME="$ISOLATED_ROOT/codex"
+export XDG_CONFIG_HOME="$ISOLATED_ROOT/config"
+export XDG_CACHE_HOME="$ISOLATED_ROOT/cache"
+export PYTHONDONTWRITEBYTECODE=1
+codex plugin marketplace add "$REPO_ROOT" --json
+codex plugin marketplace list --json
+codex plugin list --marketplace dailytrades --available --json
+codex plugin add trading-research-system@dailytrades --json
+codex plugin list --marketplace dailytrades --json
+```
+
+The 2026-07-14 review rerun resolved `dailytrades`, exposed
+`trading-research-system` version `0.1.1` from the repository source, and
+installed it under the temporary `CODEX_HOME`; the real home, global
+marketplace, plugin cache, credentials, and private runtime were not used.
+This is local-equivalent evidence only. It does not prove GitHub `master`
+fetching, desktop Plugins behavior, process restart, or a fresh task loading
+the installed version.
+
+Coordinator follow-up after integration and publication:
+
+1. On a clean device or isolated Codex home, add
+   `Archerouyang/dailytrades@master` as a marketplace.
+2. Install `trading-research-system` from Codex `/plugins` or desktop Plugins.
+3. Open a new task and confirm the installed version and expected skills load.
+4. Confirm no account-login step is presented as plugin, connector, credential,
+   or private-runtime synchronization.
+
+These remote GitHub and restart/new-task checks remain pending and must not be
+marked passed until the coordinator runs them after integration to `master`.
+
 ## Today
 
-Date: 2026-07-11
+Date: 2026-07-14
 
-- Main development task: turn the approved autonomous-factor-research direction
-  into an implementation-ready private `dailytrades-quant` Campaign Contract
-  and Factor Candidate Spec, without running factors or touching public plugin
-  behavior.
-- Debug track: final local Standards/Spec review passed and all six items are
-  `verified`. They are not `closed`: controlled `dev` integration must include
-  both untracked weekend fixtures, followed by UAT re-pin, plugin refresh, and
-  fresh-chat acceptance. See `docs/DEBUG_PLAN.md`.
-- Secondary task: review the resulting debug evidence, update the technical
-  debt register only for demonstrated cross-cutting causes, and prepare a
-  bounded 1.0 stabilization/release-readiness decision.
-- Definition of done: the private quant implementation contract names the
-  fixed harness inputs, permitted candidate surface, ledger schema, gates, and
-  budget; debug conclusions are recorded in their own plan; no private
-  data/runtime artifact enters this repository.
-- Verification: planning docs are internally consistent, `git diff --check`
-  passes, and any later implementation has its own focused test plan.
+- Main task: implement command-first Agent Skill distribution and the
+  newcomer-first bilingual README/visual gallery.
+- Current stage: requirements are user-approved and recorded in
+  `docs/DISTRIBUTION_AND_README_PLAN.md`; implementation has not started.
+- Next task: create the development goal and dispatch the portable-distribution
+  and README/visual work packages with non-overlapping ownership.
+- Definition of done: one `npx skills` command installs a self-contained public
+  Skill; optional native wrappers remain available; bilingual READMEs and
+  reproducible synthetic visuals pass contract checks; the Drive development
+  journal is created; no private runtime or broker data enters Git.
+- Verification: focused install/visual/doc contracts, `verify-plugin`,
+  `verify-mvp`, isolated homes, diff checks, generated-artifact scans, and
+  coordinator review pass.
 
 ## Progress Log
+
+### 2026-07-14
+
+- Added the local Git-backed distribution contract for the repository-root
+  marketplace, manifest-owned versioning, README installation flow, and
+  nested-marketplace drift prevention. Remote clean-install UAT remains a
+  coordinator gate after the change is integrated and published to `master`.
+- Hardened the review fix with a strict recursive public package allowlist,
+  structured Markdown contracts, first-screen install and upgrade guidance,
+  two Mermaid diagrams, and an isolated temporary-`CODEX_HOME` CLI install.
+  GitHub/ref resolution and restart/new-task UAT remain coordinator-owned.
+- Replaced the polluting bare-`compileall` acceptance step with
+  `scripts/verify-plugin-compile.sh`, which sends bytecode to the ignored
+  `.scratch/plugin-compile-cache` before the distribution verifier confirms the
+  public package remains clean.
+- Closed all six 2026-07-11 behavior debug items after dual-axis review and
+  targeted fresh-chat UAT.
+- Verified both Prompt 5 branches: unresolved setup keys stay watch-only, while
+  an authorized synthetic-OHLCV positive case renders the visible PA Scenario
+  Board without broker reads or writes.
+- Diagnosed Prompt 7 beyond fixture checks: the exact request directly activated
+  `weekly-trading-plan`, bypassing a router-only guard. Added direct-entry
+  assembly coverage and a repo-cwd subprocess check for the status command.
+- Final Prompt 7 session `019f5ed4-9994-7832-bcef-82f6681a34fd` passed with an
+  absent environment-selected runtime and no private read or write.
+- Recorded the remaining contract-depth and behavior-ownership costs in
+  `docs/TECHNICAL_DEBT.md`; broad feature work in this subsystem follows the
+  bounded architecture-optimization task.
+
+### 2026-07-11
+
+- Integrated the final dual-axis-reviewed non-quant behavior correction to
+  `dev` as `2766c70`, including both weekend fixtures.
+- Integrated the UAT, planning-record, and Sol Ultra review rules as `7d91010`.
+- Resolved two runtime-health conflicts by preserving the non-quant `dev`
+  surface while keeping startup checks separate from broker capability checks.
+- Verified the integrated worktree with the plugin validator, fixture-backed
+  MVP smoke, compileall, and diff checks. Formal UAT remains pending.
 
 ### 2026-07-09
 
