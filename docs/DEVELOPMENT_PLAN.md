@@ -127,6 +127,7 @@ Use these statuses:
 | P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
 | P0 | review | Add Git-backed cross-device plugin distribution | Gives each device one public repository marketplace while keeping account login, plugin installation, connector authorization, and private runtime setup as separate operations. | Local contract and docs are complete. After integration and publication, the coordinator must run a clean install from `Archerouyang/dailytrades@master`, open a new task, and record remote UAT evidence. |
+| P0 | ready | Ship command-first portable Agent Skill and newcomer README | Makes one cross-agent command the primary install path while native Codex/Claude plugins remain optional wrappers; gives newcomers reproducible synthetic output evidence instead of a script-heavy README. | Execute `docs/DISTRIBUTION_AND_README_PLAN.md` as two bounded work packages, then review each against the pinned plan before integration. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
@@ -267,18 +268,19 @@ marked passed until the coordinator runs them after integration to `master`.
 
 Date: 2026-07-14
 
-- Main task: complete the user-authorized non-quant 1.0 release promotion.
-- Current stage: all six debug items are closed; exact Prompt 5 and Prompt 7
-  targeted UAT passed at `19ca4ae` with the installed plugin cache matching its
-  personal source.
-- Next task: run the final repository gates, promote the accepted release to
-  `dev` and `master`, then begin the bounded high-risk behavior-contract
-  architecture task before adding capability in the affected workflow.
-- Definition of done: final gates and fast-forward promotion succeed; the dirty
-  Alpha development workspace remains untouched; no private runtime or broker
-  data enters Git.
-- Verification: focused contracts and targeted fresh-chat UAT pass. Final core,
-  plugin, MVP, compileall, and diff checks remain the promotion gate.
+- Main task: implement command-first Agent Skill distribution and the
+  newcomer-first bilingual README/visual gallery.
+- Current stage: requirements are user-approved and recorded in
+  `docs/DISTRIBUTION_AND_README_PLAN.md`; implementation has not started.
+- Next task: create the development goal and dispatch the portable-distribution
+  and README/visual work packages with non-overlapping ownership.
+- Definition of done: one `npx skills` command installs a self-contained public
+  Skill; optional native wrappers remain available; bilingual READMEs and
+  reproducible synthetic visuals pass contract checks; the Drive development
+  journal is created; no private runtime or broker data enters Git.
+- Verification: focused install/visual/doc contracts, `verify-plugin`,
+  `verify-mvp`, isolated homes, diff checks, generated-artifact scans, and
+  coordinator review pass.
 
 ## Progress Log
 

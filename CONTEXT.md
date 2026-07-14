@@ -4,6 +4,26 @@
 
 ## Language
 
+**DailyTrades**:
+The public project, repository, and distribution brand for Trading Research System.
+_Avoid_: plugin name, private runtime
+
+**Trading Research System**:
+The user-facing trading research product delivered as a portable Agent Skill with optional native plugin wrappers.
+_Avoid_: Codex plugin, Claude plugin
+
+**Agent Skill package**:
+The single self-contained `trading-research-system` package installed across compatible coding agents; it includes every public workflow resource required to run without partial focused-skill selection.
+_Avoid_: partial skill set, native plugin
+
+**Native Plugin wrapper**:
+An optional Codex or Claude managed-install container for the same public Agent Skill behavior; it is a distribution surface, not the product identity or private-state store.
+_Avoid_: primary product, account sync
+
+**Command-first distribution**:
+The default installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill; official directory submission and native plugin commands are secondary paths.
+_Avoid_: marketplace-first distribution, per-agent main install commands
+
 **交易投研系统**:
 一套从信息收集到交易复盘的研究与决策支持系统。它服务于主动交易，不是自动下单系统，也不是保证收益的荐股系统。
 _Avoid_: 自动交易系统, 荐股系统
@@ -13,8 +33,8 @@ _Avoid_: 自动交易系统, 荐股系统
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
-Trading Research System 作为一个 plugin 保持统一产品边界，但内部拆成多个 focused skills。`trading-research` 是路由入口；Active Market Plan 深度更新、快速更新、盘中 setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘分别由小 skill 承担。
-_Avoid_: 一个巨型提示词, 多个互不相干的 plugin
+Trading Research System 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘。
+_Avoid_: 多个可被部分安装的公开 skills, 多个互不相干的 plugin
 
 **Daily Ops Orchestrator**:
 Trading Research System 的主动日程引导层。它在 `trading-research` 路由入口之后、focused skills 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代 focused skills。
