@@ -48,8 +48,8 @@ Generate searches from weekly P0/P1 focus variables. Examples:
   sector regulation;
 - industry: AI hardware, custom chip, AI compute, optical networking, power,
   memory, DRAM, NAND;
-- company confirmation: TSMC monthly revenue, Micron pricing, AMD, ARM, GLW,
-  MRVL/MVLL, SOXX, QQQ.
+- company confirmation: only user-confirmed companies, sectors, or themes from
+  the private Active Market Plan; the public template provides no default list.
 
 Do not search broad market noise unless it maps to a weekly P0/P1 variable.
 

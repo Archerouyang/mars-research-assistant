@@ -14,7 +14,7 @@ from contract_suite import PluginPaths
 def main() -> None:
     paths = PluginPaths.from_script(__file__)
     script = paths.scripts / "price_action_rollforward.py"
-    fixture = paths.templates / "chart-ohlcv-qqq-sample.json"
+    fixture = paths.fixture_input / "chart-ohlcv-qqq-sample.json"
 
     help_result = subprocess.run(
         [sys.executable, str(script), "--help"],

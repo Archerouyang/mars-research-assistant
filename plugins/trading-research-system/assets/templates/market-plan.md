@@ -1,5 +1,8 @@
 # Active Market Plan
 
+Blank user-owned template; plugin install provides no ticker, setup, position,
+or risk defaults.
+
 ## State
 
 - As of:

@@ -16,12 +16,46 @@ MARKETPLACE_PATH = Path(".agents/plugins/marketplace.json")
 README_MARKETPLACE_COMMAND = (
     "codex plugin marketplace add Archerouyang/dailytrades --ref master"
 )
+README_PUBLIC_PRIVATE_TERMS = (
+    "Public plugin（公开能力）",
+    "Private user state（私有用户状态）",
+    "安装或升级只分发公开 plugin 能力，不复制、打包、提交或同步任何 private user state。",
+    "每个用户必须在本机从空白模板独立初始化 private runtime；repo 不会自动恢复个人 profile 或 Active Market Plan。",
+    "未来的用户偏好同步必须是独立、私有、显式 opt-in 的能力，不属于本次 public plugin 分发。",
+)
+MISLEADING_SYNC_CLAIMS = (
+    "同账号登录会自动同步用户状态",
+    "account login automatically syncs user state",
+)
+FIXTURE_DISCLOSURE_TERMS = (
+    "All files under this directory are synthetic, sanitized test fixtures.",
+    "Ticker symbols are examples for contract tests, not a recommendation list, default watchlist, or user profile.",
+    "Fixtures must never be populated from private runtime, broker exports, credentials, or research history.",
+)
+PLUGIN_README_BOUNDARY_TERMS = (
+    "Public plugin:",
+    "Private user state:",
+    "Installation and upgrades distribute public plugin capability only.",
+    "initializes a blank private runtime locally",
+    "Preference synchronization is not part of this",
+)
+TEMPLATE_DISCLOSURE_TERMS = (
+    "These templates define empty schemas and prompts",
+    "They contain no default watchlist, portfolio, setup, trading profile,",
+    "Each user initializes a private runtime locally.",
+)
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)"
     r"(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?"
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
+PUBLIC_PLUGIN_FILES = {
+    Path(".codex-plugin/plugin.json"),
+    Path("README.md"),
+}
+PUBLIC_PLUGIN_DIRS = {"assets", "scripts", "skills"}
+PUBLIC_ASSET_DIRS = {"fixtures", "templates"}
 
 
 class ContractError(ValueError):
@@ -47,6 +81,70 @@ def require_string(mapping: dict[str, Any], key: str, label: str) -> str:
     value = mapping.get(key)
     require(isinstance(value, str) and bool(value.strip()), f"{label}.{key} is required")
     return value
+
+
+def validate_public_package_paths(plugin_root: Path) -> None:
+    for path in sorted(plugin_root.rglob("*")):
+        relative = path.relative_to(plugin_root)
+        if "__pycache__" in relative.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
+            continue
+        if path.is_symlink():
+            raise ContractError(f"plugin package must not contain symlink: {relative}")
+        if path.is_dir():
+            if relative == Path(".codex-plugin"):
+                continue
+            if relative.parts[0] in {"scripts", "skills"}:
+                continue
+            if relative.parts[0] == "assets" and (
+                len(relative.parts) == 1 or relative.parts[1] in PUBLIC_ASSET_DIRS
+            ):
+                continue
+            raise ContractError(f"plugin package contains non-public path: {relative}")
+        if not path.is_file():
+            continue
+        if relative in PUBLIC_PLUGIN_FILES:
+            continue
+        if relative.parts[0] not in PUBLIC_PLUGIN_DIRS:
+            raise ContractError(f"plugin package contains non-public path: {relative}")
+        if relative.parts[0] == "assets" and (
+            len(relative.parts) < 2 or relative.parts[1] not in PUBLIC_ASSET_DIRS
+        ):
+            raise ContractError(f"plugin package contains non-public asset path: {relative}")
+
+    fixture_readme = plugin_root / "assets" / "fixtures" / "README.md"
+    require(fixture_readme.is_file(), f"fixture disclosure missing: {fixture_readme}")
+    fixture_disclosure = fixture_readme.read_text(encoding="utf-8")
+    for term in FIXTURE_DISCLOSURE_TERMS:
+        require(term in fixture_disclosure, f"fixture disclosure missing: {term}")
+
+    for template in sorted((plugin_root / "assets" / "templates").glob("*.csv")):
+        rows = [line for line in template.read_text(encoding="utf-8").splitlines() if line.strip()]
+        require(
+            len(rows) == 1,
+            f"public CSV template must be header-only: {template.name}",
+        )
+
+    template_readme = plugin_root / "assets" / "templates" / "README.md"
+    require(template_readme.is_file(), f"blank template disclosure missing: {template_readme}")
+    template_disclosure = template_readme.read_text(encoding="utf-8")
+    for term in TEMPLATE_DISCLOSURE_TERMS:
+        require(term in template_disclosure, f"blank template disclosure missing: {term}")
+
+    for template_name in ("market-plan.md", "trading-profile.md", "weekly-plan.md"):
+        template = plugin_root / "assets" / "templates" / template_name
+        if template.is_file():
+            require(
+                "Blank user-owned template; plugin install provides no ticker"
+                in template.read_text(encoding="utf-8"),
+                f"private runtime template is not explicitly blank: {template_name}",
+            )
+
+    plugin_readme = (plugin_root / "README.md").read_text(encoding="utf-8")
+    for term in PLUGIN_README_BOUNDARY_TERMS:
+        require(
+            term in plugin_readme,
+            f"plugin README public/private boundary missing: {term}",
+        )
 
 
 def validate(repo_root: Path) -> tuple[str, str]:
@@ -94,6 +192,17 @@ def validate(repo_root: Path) -> tuple[str, str]:
         plugin_root.is_dir(),
         f"marketplace plugin source does not exist: {source_path}",
     )
+    nested_marketplaces = sorted(
+        path.relative_to(repo_root)
+        for path in repo_root.glob("**/.agents/plugins/marketplace.json")
+        if path.resolve() != marketplace_path.resolve()
+    )
+    require(
+        not nested_marketplaces,
+        "nested marketplace files conflict with the root distribution source: "
+        + ", ".join(str(path) for path in nested_marketplaces),
+    )
+    validate_public_package_paths(plugin_root)
 
     policy = entry.get("policy")
     require(isinstance(policy, dict), "marketplace plugin policy is required")
@@ -155,17 +264,6 @@ def validate(repo_root: Path) -> tuple[str, str]:
         "marketplace and plugin categories differ",
     )
 
-    nested_marketplaces = sorted(
-        path.relative_to(repo_root)
-        for path in repo_root.glob("**/.agents/plugins/marketplace.json")
-        if path.resolve() != marketplace_path.resolve()
-    )
-    require(
-        not nested_marketplaces,
-        "nested marketplace files conflict with the root distribution source: "
-        + ", ".join(str(path) for path in nested_marketplaces),
-    )
-
     readme_path = repo_root / "README.md"
     require(readme_path.is_file(), f"README missing: {readme_path}")
     readme = readme_path.read_text(encoding="utf-8")
@@ -176,6 +274,12 @@ def validate(repo_root: Path) -> tuple[str, str]:
     require(
         f"`{plugin_name}`" in readme,
         f"README must name the installable plugin as `{plugin_name}`",
+    )
+    for term in README_PUBLIC_PRIVATE_TERMS:
+        require(term in readme, f"README public/private boundary missing: {term}")
+    require(
+        not any(claim in readme for claim in MISLEADING_SYNC_CLAIMS),
+        "README must not claim that account login syncs user state",
     )
     return plugin_name, version
 

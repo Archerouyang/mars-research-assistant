@@ -1,5 +1,8 @@
 # Trading Profile
 
+Blank user-owned template; plugin install provides no ticker, strategy, account,
+or risk defaults.
+
 ## Purpose
 
 - Primary trading objective:
@@ -93,13 +96,11 @@ Crowding examples to track:
 - Typical trigger timeframe:
 - Notes:
 
-### Large-Cap Lower-Elasticity Stocks
+### User-Defined Single-Stock Expression
 
-Examples:
+User examples:
 
-- NVDA
-- GOOGL
-- TSM
+-
 
 Rules:
 
@@ -125,7 +126,7 @@ Rules:
 | 2x ETF |  |  |  |  |
 | Common stock |  |  |  |  |
 | LEAP call |  |  |  |  |
-| 0DTE QQQ option |  |  |  |  |
+| Same-day-expiry option (optional) |  |  |  |  |
 
 ## Personal Avoid Rules
 

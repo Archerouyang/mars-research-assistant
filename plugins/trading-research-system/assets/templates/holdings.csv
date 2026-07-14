@@ -1,2 +1,1 @@
 ticker,direction,weight,market_value,asset_class,sector,beta,rate_sensitivity,usd_sensitivity,policy_sensitivity,notes
-NVDA,long,8%,,Equity,Semiconductors,1.8,medium,medium,medium,AI growth exposure

@@ -35,7 +35,7 @@ def assert_contains(path: Path, terms: list[str]) -> None:
 
 def main() -> None:
     paths = PluginPaths.from_script(__file__)
-    chart_input = paths.templates / "chart-ohlcv-qqq-sample.json"
+    chart_input = paths.fixture_input / "chart-ohlcv-qqq-sample.json"
     macro_input = paths.fixture_input / "macro-regime-mini-panel-2026-06-24.json"
 
     with tempfile.TemporaryDirectory() as raw_tmp:

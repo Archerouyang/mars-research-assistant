@@ -1,6 +1,6 @@
 {
   "title": "QQQ / VIX Plan View",
-  "subtitle": "Sample local fixture for lightweight-charts artifact generation",
+  "subtitle": "Synthetic sanitized fixture for lightweight-charts contract tests",
   "symbol": "QQQ",
   "source": "fixture",
   "data_as_of": "2026-06-12",
@@ -73,6 +73,6 @@
   ],
   "notes": [
     "Fixture only; use authorized OHLCV data for live analysis.",
-    "QQQ is treated as a long-term core holding; profit/rebalance levels are not automatic exit instructions."
+    "QQQ is a synthetic fixture symbol here, not a recommendation, default holding, or watchlist entry."
   ]
 }

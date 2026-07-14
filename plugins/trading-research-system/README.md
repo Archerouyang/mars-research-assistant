@@ -6,6 +6,25 @@ It is designed for research, screening, risk review, and decision support. It do
 
 It is AI-native: the agent should read broadly, verify current facts, compare conflicting signals, and tell the user only the compressed decision-useful result. User-facing output should prioritize conclusions, changed variables, invalidations, setup status, portfolio constraints, and next checks over raw article summaries or long narrative.
 
+## Public plugin / private user state boundary
+
+**Public plugin:** generic skills, references, scripts, blank templates,
+synthetic sanitized fixtures, and generic validation contracts. Tickers in
+fixtures or documentation are test examples only, not recommendations, a
+default watchlist, or a user profile.
+
+**Private user state:** stock pools and watchlists, `trading-profile.md`, Active
+Market Plans, setups, positions, executions, reviews, broker data, runtime
+files, account or connector authorization, personal risk parameters, and
+research history.
+
+Installation and upgrades distribute public plugin capability only. They never
+copy, package, commit, restore, or synchronize private user state. Each user
+initializes a blank private runtime locally; the repository does not restore a
+personal profile or market plan. Preference synchronization is not part of this
+public plugin distribution. Any future design must be separate, private, and
+explicitly opt-in.
+
 ## Capabilities
 
 - Macro and policy filtering focused on market-moving variables.
@@ -101,6 +120,9 @@ Use a private runtime directory as the first source of truth. By default:
 
 This can be overridden with `TRADING_RESEARCH_RUNTIME_DIR` or script-level
 `--runtime-dir`.
+
+The directory is created independently for each user from blank templates. A
+plugin install or upgrade does not copy, restore, or synchronize runtime state.
 
 The runtime directory should contain:
 
@@ -340,7 +362,7 @@ uv run python plugins/trading-research-system/scripts/update_trade_record.py --d
 uv run python plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-LEGACY --fields-json /path/to/legacy-fields.json --review-file /path/to/review.md --allow-unknown-execution-fields
 uv run python plugins/trading-research-system/scripts/import_legacy_active_csv.py plugins/trading-research-system/assets/fixtures/input/legacy-active-trades.csv --runtime-dir ~/Documents/dailytrades-runtime
 uv run python plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
-uv run python plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/templates/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
+uv run python plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/fixtures/input/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
 uv run python plugins/trading-research-system/scripts/intraday_scan.py ~/Documents/dailytrades-runtime/daily/2026-06-12/intraday-watchlist.csv --date 2026-06-12
 ```
 

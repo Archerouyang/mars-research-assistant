@@ -66,6 +66,27 @@ def main() -> None:
         require((runtime_dir / "momentum").is_dir(), "momentum dir missing")
         require((runtime_dir / "charts").is_dir(), "charts dir missing")
         require((runtime_dir / "daily" / DATE / "intraday-watchlist.csv").is_file(), "daily templates missing")
+        require(
+            "Blank user-owned template; plugin install provides no ticker"
+            in (runtime_dir / "market-plan.md").read_text(encoding="utf-8"),
+            "market plan must start blank without plugin-owned ticker defaults",
+        )
+        require(
+            "Blank user-owned template; plugin install provides no ticker"
+            in (runtime_dir / "trading-profile.md").read_text(encoding="utf-8"),
+            "trading profile must start blank without plugin-owned preferences",
+        )
+        for csv_path in sorted((runtime_dir / "daily" / DATE).glob("*.csv")):
+            rows = [
+                line
+                for line in csv_path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            require(len(rows) == 1, f"daily runtime template must be header-only: {csv_path.name}")
+        require(
+            not (runtime_dir / "assets").exists(),
+            "runtime bootstrap must not copy public fixtures into private state",
+        )
 
         user_text = "USER PLAN MUST STAY\n"
         (runtime_dir / "market-plan.md").write_text(user_text, encoding="utf-8")

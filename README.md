@@ -52,7 +52,23 @@ marketplace 完成。
 禁止复制 `~/.codex/auth.json`，禁止把 broker 凭据或 private runtime 提交到公开仓库；
 跨设备时应在新设备上重新登录、重新授权，并单独恢复或初始化私有数据。
 
-### 5. 开始使用
+### 5. Public/Private boundary
+
+**Public plugin（公开能力）**只包含通用 skills、references、scripts、空白模板、
+脱敏 fixtures 和通用契约。fixtures 中的 ticker 仅用于公开契约测试，不是推荐池、
+默认 watchlist，也不是任何用户的 profile。
+
+**Private user state（私有用户状态）**包括选股池/观察列表、`trading-profile.md`、
+Active Market Plan、setup、持仓、成交、复盘、broker 数据、runtime、账户和 connector
+授权、个人风险参数及研究历史。
+
+安装或升级只分发公开 plugin 能力，不复制、打包、提交或同步任何 private user state。
+
+每个用户必须在本机从空白模板独立初始化 private runtime；repo 不会自动恢复个人 profile 或 Active Market Plan。
+
+未来的用户偏好同步必须是独立、私有、显式 opt-in 的能力，不属于本次 public plugin 分发。
+
+### 6. 开始使用
 
 在新 task 里直接说你要完成的交易研究任务。普通使用者不需要记住 focused skill
 名称；agent 会根据任务自动选择内部工作流。

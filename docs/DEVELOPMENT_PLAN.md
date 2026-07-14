@@ -190,6 +190,22 @@ Scope for this tracer bullet:
 - document installation without implying that Codex account login synchronizes
   plugins, connector grants, credentials, or private runtime data.
 
+Public/private product boundary:
+
+- the public plugin may package only generic skills, references, scripts, blank
+  templates, explicitly synthetic sanitized fixtures, and generic contracts;
+- private user state includes stock pools/watchlists, `trading-profile.md`,
+  Active Market Plans, setups, positions, executions, reviews, broker data,
+  runtime files, account/connector authorization, personal risk parameters, and
+  research history;
+- marketplace add, plugin install, and upgrade must never copy, package, commit,
+  restore, or imply synchronization of private user state;
+- every user initializes a blank local runtime independently; the repository
+  does not supply a personal profile, plan, default watchlist, or preferred
+  ticker list;
+- any future preference-sync capability is separate, private, explicitly
+  opt-in, and outside this public plugin distribution task.
+
 Local acceptance gate:
 
 - `python3 scripts/verify_plugin_distribution_selftest.py` passes;
@@ -197,6 +213,8 @@ Local acceptance gate:
 - plugin scripts compile and `git diff --check` passes;
 - an isolated temporary-repository smoke resolves the root marketplace to the
   in-repository plugin source without writing global Codex configuration.
+- the distribution contract enforces a public package allowlist, fixture
+  disclosure, header-only CSV runtime templates, and non-sync README language.
 
 Coordinator follow-up after integration and publication:
 
