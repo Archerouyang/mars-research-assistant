@@ -581,7 +581,7 @@ def verify_exact_weekend_first_start_route(
     normalized_guard = " ".join(weekly_guard.split())
     for term in (
         exact_prompt,
-        "`python3 ../../scripts/runtime_health.py --format json`",
+        "`python3 plugins/trading-research-system/scripts/runtime_health.py --format json`",
         "Daily Ops Orchestrator",
         "before this weekly workflow",
         "`runtime_origin`",
@@ -601,14 +601,17 @@ def verify_exact_weekend_first_start_route(
             raise AssertionError(
                 f"weekly direct-entry exact Prompt 7 guard missing {term!r}"
             )
-    obsolete_runtime_health_command = (
-        "`../../scripts/runtime_health.py --format json`"
+    obsolete_runtime_health_commands = (
+        "`../../scripts/runtime_health.py --format json`",
+        "`python3 ../../scripts/runtime_health.py --format json`",
     )
-    if obsolete_runtime_health_command in weekly_guard:
-        raise AssertionError(
-            "weekly direct-entry guard must invoke non-executable runtime_health.py "
-            "through python3"
-        )
+    for obsolete_runtime_health_command in obsolete_runtime_health_commands:
+        if obsolete_runtime_health_command in weekly_guard:
+            raise AssertionError(
+                "weekly direct-entry guard retains cwd-unsafe runtime_health command "
+                f"{obsolete_runtime_health_command!r}"
+            )
+    verify_weekly_runtime_health_repo_command(REPO)
     ordered_headings_in_text(
         weekly_guard,
         (
@@ -618,6 +621,52 @@ def verify_exact_weekend_first_start_route(
             "### 安全边界",
         ),
     )
+
+
+def verify_weekly_runtime_health_repo_command(repo_path) -> None:
+    with tempfile.TemporaryDirectory(prefix="weekly-runtime-health-repo-cwd-") as tmp:
+        runtime_dir = Path(tmp) / "nonexistent-private-runtime"
+        env = os.environ.copy()
+        env["TRADING_RESEARCH_RUNTIME_DIR"] = str(runtime_dir)
+        result = subprocess.run(
+            [
+                "python3",
+                "plugins/trading-research-system/scripts/runtime_health.py",
+                "--format",
+                "json",
+            ],
+            cwd=repo_path,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                "weekly repo-cwd runtime health command failed: "
+                f"{result.stderr or result.stdout}"
+            )
+        payload = json.loads(result.stdout)
+        checks = {item["id"]: item for item in payload["checks"]}
+        actual_state = {
+            "runtime_origin": payload.get("runtime_origin"),
+            "formal runtime": checks.get("runtime_dir", {}).get("status"),
+            "startup_status": payload.get("startup_status"),
+        }
+        expected_state = {
+            "runtime_origin": "environment",
+            "formal runtime": "missing",
+            "startup_status": "uninitialized",
+        }
+        if actual_state != expected_state:
+            raise AssertionError(
+                "weekly repo-cwd runtime health state mismatch: "
+                f"expected {expected_state!r}, got {actual_state!r}"
+            )
+        if payload.get("runtime_dir") != str(runtime_dir):
+            raise AssertionError("weekly repo-cwd command ignored environment runtime path")
+        if runtime_dir.exists():
+            raise AssertionError("weekly repo-cwd status check must not create runtime")
 
 
 def verify_empty_environment_weekend_first_response(runtime_health_path, expected_path) -> None:

@@ -12,7 +12,7 @@ This is decision support, not automated trading. Separate facts, assumptions, lo
 ## Exact Weekend First-Start Daily Ops Guard
 
 For the exact request `周末首次启动，先看看下周`, do not begin the normal weekly
-analysis directly. Run `python3 ../../scripts/runtime_health.py --format json` as a
+analysis directly. Run `python3 plugins/trading-research-system/scripts/runtime_health.py --format json` as a
 status-only check, then follow the Daily Ops Orchestrator before this weekly
 workflow.
 
