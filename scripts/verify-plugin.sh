@@ -37,6 +37,8 @@ uv_run() {
   uv run --python "$PYTHON_BIN" "$@"
 }
 
+uv_run python scripts/verify_plugin_compile_gate_selftest.py
+PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-plugin-compile.sh
 uv_run python scripts/verify_plugin_distribution_selftest.py
 uv_run python scripts/verify_plugin_distribution.py
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"

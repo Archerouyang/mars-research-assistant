@@ -210,8 +210,12 @@ Public/private product boundary:
 Local acceptance gate:
 
 - `python3 scripts/verify_plugin_distribution_selftest.py` passes;
+- `bash scripts/verify-plugin-compile.sh` compiles every plugin script while
+  directing bytecode to `.scratch/plugin-compile-cache`; do not use bare
+  `python3 -m compileall -q plugins/trading-research-system/scripts` as a gate,
+  because bare `compileall` writes `__pycache__` into the public package;
 - `bash scripts/verify-plugin.sh` and `bash scripts/verify-mvp.sh` pass;
-- plugin scripts compile and `git diff --check` passes;
+- `git diff --check` passes;
 - an isolated Codex home smoke resolves the root marketplace, lists version
   `0.1.1`, and installs the plugin into that temporary home without writing
   global Codex configuration;
@@ -288,6 +292,10 @@ Date: 2026-07-14
   structured Markdown contracts, first-screen install and upgrade guidance,
   two Mermaid diagrams, and an isolated temporary-`CODEX_HOME` CLI install.
   GitHub/ref resolution and restart/new-task UAT remain coordinator-owned.
+- Replaced the polluting bare-`compileall` acceptance step with
+  `scripts/verify-plugin-compile.sh`, which sends bytecode to the ignored
+  `.scratch/plugin-compile-cache` before the distribution verifier confirms the
+  public package remains clean.
 - Closed all six 2026-07-11 behavior debug items after dual-axis review and
   targeted fresh-chat UAT.
 - Verified both Prompt 5 branches: unresolved setup keys stay watch-only, while
