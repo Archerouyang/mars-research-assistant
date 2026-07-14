@@ -27,6 +27,19 @@ The smoke sets temporary `HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, and
 Skill, scans for private configuration and absolute user paths, and removes the
 temporary directory on exit.
 
+For release or manual visual acceptance, require a fresh browser capture:
+
+```bash
+python3 scripts/verify_readme_gallery_contract_selftest.py
+python3 scripts/verify_readme_gallery_contract.py --require-browser-capture
+```
+
+The required-browser command rebuilds the gallery in a new temporary directory
+with `generate_readme_gallery.py --browser-mode required`. It validates the HTML
+and newly captured PNG from that run; the committed README PNG is not accepted
+as browser-capture evidence. Cross-version Chrome pixel identity is not
+required.
+
 ## Branch Model
 
 Use the lightweight branch model documented in `docs/ROADMAP.md`:

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import re
 import struct
@@ -131,11 +132,51 @@ def validate_readme(path: Path, *, chinese: bool) -> None:
         require(f"docs/assets/readme/{filename}" in text, f"{path.name} missing gallery asset {filename}")
 
 
-def validate_gallery() -> None:
+def validate_fresh_browser_capture(generator: Path, browser_path: str | None) -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        rebuilt = Path(tmp) / "browser-gallery"
+        require(not rebuilt.exists(), "fresh browser output directory must start empty")
+        command = [
+            sys.executable,
+            str(generator),
+            "--output-dir",
+            str(rebuilt),
+            "--browser-mode",
+            "required",
+        ]
+        if browser_path:
+            command.extend(("--browser-path", browser_path))
+        result = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        require(
+            result.returncode == 0,
+            f"required browser capture failed: {result.stderr or result.stdout}",
+        )
+
+        html_path = rebuilt / "price-action-panel.html"
+        png_path = rebuilt / "price-action-panel.png"
+        require(html_path.is_file(), "fresh browser run did not generate PA HTML")
+        require(png_path.is_file(), "fresh browser run did not generate PA PNG")
+        html = html_path.read_text(encoding="utf-8")
+        require("5.2.0" in html, "fresh PA HTML must use Lightweight Charts v5.2.0")
+        require("TradingView" in html, "fresh PA HTML attribution missing")
+        require("Synthetic fixture" in html, "fresh PA HTML synthetic label missing")
+        require(png_path.stat().st_size > 10_000, "fresh PA browser screenshot appears blank")
+        validate_png_pixels(png_path)
+
+
+def validate_gallery(
+    *,
+    require_browser_capture: bool = False,
+    browser_path: str | None = None,
+) -> None:
     expected = (
         "macro-regime-panel.svg",
         "price-action-panel.html",
-        "price-action-panel.png",
         "position-risk-panel.svg",
     )
     for filename in expected:
@@ -191,16 +232,38 @@ def validate_gallery() -> None:
                 f"gallery artifact drift; rebuild it with generate_readme_gallery.py: {filename}",
             )
 
-    png_path = GALLERY / "price-action-panel.png"
-    require(png_path.stat().st_size > 10_000, "PA browser screenshot appears blank")
-    validate_png_pixels(png_path)
+    if require_browser_capture:
+        validate_fresh_browser_capture(generator, browser_path)
+    else:
+        png_path = GALLERY / "price-action-panel.png"
+        require(png_path.is_file(), f"gallery artifact missing: {png_path}")
+        require(png_path.stat().st_size > 10_000, "PA browser screenshot appears blank")
+        validate_png_pixels(png_path)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-browser-capture",
+        action="store_true",
+        help="regenerate the gallery in a fresh directory and require a browser PA capture",
+    )
+    parser.add_argument(
+        "--browser-path",
+        help="explicit Chrome/Chromium executable for the required browser capture",
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
+    args = parse_args()
     try:
         validate_readme(REPO / "README.md", chinese=False)
         validate_readme(REPO / "README.zh-CN.md", chinese=True)
-        validate_gallery()
+        validate_gallery(
+            require_browser_capture=args.require_browser_capture,
+            browser_path=args.browser_path,
+        )
     except (ContractError, OSError) as exc:
         print(f"README gallery contract failed: {exc}", file=sys.stderr)
         return 1

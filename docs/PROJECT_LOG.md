@@ -29,6 +29,23 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-14
+
+- Commit: `c50c315` `Distribute trading research as one portable skill`
+- Scope: distribution, skill, documentation, visualization, validation
+- What changed: established one self-contained portable
+  `trading-research-system` Skill as the behavior source, generated optional
+  Codex/Claude native wrappers from it, added complete English/Chinese newcomer
+  READMEs, and added reproducible synthetic macro, price-action, and position
+  risk visuals. Local distribution, plugin, MVP, visual, and isolated install
+  gates passed.
+- Why it matters: newcomers now have one command-first product surface without
+  coupling public installation to private runtime, broker state, or account
+  data.
+- Next step: after the branch is published, run the exact remote GitHub install
+  smoke against `Archerouyang/dailytrades`; this entry does not claim the change
+  is published or remotely verified.
+
 ## 2026-07-11
 
 - Commit: `2766c70`, `7d91010`

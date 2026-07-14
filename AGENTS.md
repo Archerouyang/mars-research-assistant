@@ -5,8 +5,12 @@ Keep it limited to reusable plugin assets and user-readable project docs.
 
 ## Repository Boundary
 
-- Plugin source lives under `plugins/`; project docs live under `docs/`,
-  `CONTEXT.md`, and top-level Markdown files.
+- The only canonical portable Skill behavior source is
+  `skills/trading-research-system/`.
+- `plugins/trading-research-system/` is the Codex/Claude native wrapper,
+  generated deterministically from the canonical Skill by
+  `scripts/sync_native_plugin.py`; do not maintain duplicate behavior there.
+- Project docs live under `docs/`, `CONTEXT.md`, and top-level Markdown files.
 - Never commit private trading records, watchlists, profiles, broker exports,
   runtime plans, credentials, account data, or user-generated charts.
 - Private runtime state belongs outside this repository.

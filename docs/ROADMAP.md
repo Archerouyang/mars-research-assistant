@@ -2,14 +2,22 @@
 
 ## Project Goal
 
-Trading Research System is a plugin-first trading research and risk decision-support system for Codex. It turns market information into a daily KVN momentum leaderboard, an overwriteable Active Market Plan, append-only update notes, setup-level trade plans, intraday setup scans, broker-live position daily reports, review context, visualization snapshots, and statistics for improving a discretionary trading system.
+Trading Research System is a command-first portable Agent Skill for trading
+research and risk decision support. It turns market information into a daily
+KVN momentum leaderboard, an overwriteable Active Market Plan, append-only
+update notes, setup-level trade plans, intraday setup scans, broker-live
+position daily reports, review context, visualization snapshots, and statistics
+for improving a discretionary trading system.
 
 Daily Ops Orchestrator is the active process guide on top of those modules. It
 uses `ops-state.md`, runtime health, Active Market Plan, and Trading Profile to
 recommend the next workflow, ask for missing confirmations, and prevent users
 from manually calling out every part of the system.
 
-The first product surface is a Codex plugin with skills, references, scripts, templates, and local records. A standalone frontend is deferred.
+The primary distribution surface is the portable `trading-research-system`
+Agent Skill installed through the command-first path. Codex and Claude Code
+native plugins are optional generated wrappers over the same capability. A
+standalone frontend remains deferred.
 
 The product is AI-native. Its core value is not producing long reports; it is making the agent read broadly, verify facts, filter noise, and return concise decision-useful notes to the user.
 
