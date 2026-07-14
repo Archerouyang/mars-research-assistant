@@ -9,6 +9,44 @@ Use this skill for a `deep_update` of the Active Market Plan. It should update t
 
 This is decision support, not automated trading. Separate facts, assumptions, long case, short case, invalidation, and risk controls.
 
+## Exact Weekend First-Start Daily Ops Guard
+
+For the exact request `周末首次启动，先看看下周`, do not begin the normal weekly
+analysis directly. Run `python3 ../../scripts/runtime_health.py --format json` as a
+status-only check, then follow the Daily Ops Orchestrator before this weekly
+workflow.
+
+### 运行状态检查
+
+Before analysis, explicitly render the returned `runtime_origin`, formal
+runtime availability, and `startup_status`. Preserve the deterministic values
+without reinterpretation. When `TRADING_RESEARCH_RUNTIME_DIR` selects a path
+that does not exist, render `runtime_origin=environment`,
+`formal runtime=missing`, and `startup_status=uninitialized`. Keep runtime
+availability and startup completeness as independent axes.
+
+### 可用研究摘要
+
+After the status block, give a concise current public-source reduced-scope
+weekly summary. Keep the user-facing order “先摘要，后授权/初始化”, label the
+missing personalization, and do not turn the summary into a setup or trading
+instruction.
+
+### 摘要后缺失确认
+
+After the summary, request all three choices: broker read-only preference, the
+complete `ticker + trade_horizon + instrument` key, and whether to stay in
+`dry-run` or initialize the private runtime. A broker preference records intent
+only and does not read an account. Initialization requires separate explicit
+runtime-write authorization; neither broker preference nor setup-key
+confirmation authorizes a write.
+
+### 安全边界
+
+Do not write runtime in this first response. Do not read private runtime file
+contents. Do not read broker or private account data. Do not generate setups or
+buy/sell instructions.
+
 For a weekend first start with a partial or uninitialized runtime, first provide
 a current public-source reduced-scope research summary, then ask for runtime or
 broker authorization. In that first response, do not write runtime. Before deep

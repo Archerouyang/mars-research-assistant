@@ -307,9 +307,11 @@ def main() -> int:
     print("daily ops exact start route behavior ok")
     verify_exact_weekend_first_start_route(
         FILES["router_skill"],
+        FILES["weekly_skill"],
         ROUTER_INTENTS,
     )
-    print("daily ops exact weekend first-start route behavior ok")
+    print("daily ops exact weekend injected-route assembly contract ok")
+    print("fresh-chat UAT remains a separate required gate")
     verify_empty_environment_weekend_first_response(
         RUNTIME_HEALTH_SCRIPT,
         EMPTY_RUNTIME_WEEKEND_EXPECTED,
@@ -500,7 +502,9 @@ def verify_exact_start_route(
         raise AssertionError("Daily Ops input fixture must contain only the exact acceptance prompt")
 
 
-def verify_exact_weekend_first_start_route(router_path, router_intents_path) -> None:
+def verify_exact_weekend_first_start_route(
+    router_path, weekly_path, router_intents_path
+) -> None:
     exact_prompt = "周末首次启动，先看看下周"
     payload = json.loads(router_intents_path.read_text(encoding="utf-8"))
     fixtures = payload.get("router_intents")
@@ -538,6 +542,7 @@ def verify_exact_weekend_first_start_route(router_path, router_intents_path) -> 
         "dry-run or initialize the private runtime",
         "separate explicit runtime-write authorization",
         "Do not write runtime",
+        "Do not read private runtime file contents",
         "Do not read broker or private account data",
         "Do not generate setups or buy/sell instructions",
     ):
@@ -551,6 +556,66 @@ def verify_exact_weekend_first_start_route(router_path, router_intents_path) -> 
             "#### 可用研究摘要",
             "#### 摘要后缺失确认",
             "#### 安全边界",
+        ),
+    )
+
+    weekly_text = weekly_path.read_text(encoding="utf-8")
+    front_matter_end = weekly_text.find("\n---\n", 4)
+    if front_matter_end < 0:
+        raise AssertionError("weekly skill must retain YAML front matter")
+    weekly_front_matter = weekly_text[:front_matter_end]
+    for term in ("weekend prep", "next-week outlook"):
+        if term not in weekly_front_matter:
+            raise AssertionError(
+                f"weekly skill direct-activation surface missing {term!r}"
+            )
+
+    guard_heading = "## Exact Weekend First-Start Daily Ops Guard"
+    guard_position = weekly_text.find(guard_heading)
+    workflow_position = weekly_text.find("## Workflow")
+    if guard_position < 0 or workflow_position < 0 or guard_position >= workflow_position:
+        raise AssertionError(
+            "weekly skill must assemble the exact Prompt 7 guard before its workflow"
+        )
+    weekly_guard = markdown_section(weekly_text, guard_heading)
+    normalized_guard = " ".join(weekly_guard.split())
+    for term in (
+        exact_prompt,
+        "`python3 ../../scripts/runtime_health.py --format json`",
+        "Daily Ops Orchestrator",
+        "before this weekly workflow",
+        "`runtime_origin`",
+        "`formal runtime=missing`",
+        "`startup_status=uninitialized`",
+        "public-source reduced-scope weekly summary",
+        "broker read-only",
+        "`ticker + trade_horizon + instrument`",
+        "`dry-run` or initialize the private runtime",
+        "separate explicit runtime-write authorization",
+        "Do not write runtime",
+        "Do not read private runtime file contents",
+        "Do not read broker or private account data",
+        "Do not generate setups or buy/sell instructions",
+    ):
+        if term not in normalized_guard:
+            raise AssertionError(
+                f"weekly direct-entry exact Prompt 7 guard missing {term!r}"
+            )
+    obsolete_runtime_health_command = (
+        "`../../scripts/runtime_health.py --format json`"
+    )
+    if obsolete_runtime_health_command in weekly_guard:
+        raise AssertionError(
+            "weekly direct-entry guard must invoke non-executable runtime_health.py "
+            "through python3"
+        )
+    ordered_headings_in_text(
+        weekly_guard,
+        (
+            "### 运行状态检查",
+            "### 可用研究摘要",
+            "### 摘要后缺失确认",
+            "### 安全边界",
         ),
     )
 
