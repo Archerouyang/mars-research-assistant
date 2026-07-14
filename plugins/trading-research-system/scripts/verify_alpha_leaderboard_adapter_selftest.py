@@ -19,7 +19,9 @@ SCRIPT = ROOT / "scripts" / "alpha_leaderboard_adapter.py"
 def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "alpha" / "leaderboard.sqlite"
+        analysis_db = Path(tmp) / "knowledge" / "analysis.sqlite"
         create_fixture(db_path)
+        create_analysis_fixture(analysis_db)
 
         show = run(["show", "--db", str(db_path), "--date", "2026-01-07"])
         require_terms(
@@ -37,6 +39,38 @@ def main() -> int:
         )
         if show.index("`C`") > show.index("`A`"):
             raise AssertionError("adapter changed stored Alpha Rank order")
+        if "SHADOW" in show:
+            raise AssertionError("adapter mixed same-date shadow rows into champion output")
+
+        card = run(
+            [
+                "decision-card",
+                "C",
+                "--db",
+                str(db_path),
+                "--analysis-db",
+                str(analysis_db),
+                "--date",
+                "2026-01-07",
+            ]
+        )
+        require_terms(
+            card,
+            [
+                "## C 决策卡",
+                "上次运行增量",
+                "Alpha Rank / trajectory",
+                "1 / strengthening",
+                "P(20D超额>0) / predictive uncertainty",
+                "Experimental: 63.0% / 0.1800",
+                "主分析时间框架",
+                "执行观察时间框架",
+                "PA + EMA",
+                "加仓区 / TP或再平衡区",
+                "比例式仓位语言",
+                "模型字段来自 published champion，不得由分析层改写",
+            ],
+        )
 
         query = run(["query", "B", "--db", str(db_path), "--date", "2026-01-07"])
         require_terms(
@@ -76,7 +110,10 @@ def main() -> int:
 
         with sqlite3.connect(db_path) as connection:
             connection.execute(
-                "UPDATE alpha_runs SET publication_status = 'shadow' WHERE as_of = '2026-01-07'"
+                """
+                UPDATE alpha_runs SET publication_status = 'shadow'
+                WHERE as_of = '2026-01-07' AND model_run_id = 'bayes-1'
+                """
             )
             connection.commit()
         require_failure(
@@ -88,14 +125,19 @@ def main() -> int:
         with sqlite3.connect(db_path) as connection:
             payload = json.loads(
                 connection.execute(
-                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                    """
+                    SELECT payload_json FROM alpha_rows
+                    WHERE as_of = '2026-01-07'
+                      AND model_run_id = 'bayes-1' AND ticker = 'C'
+                    """
                 ).fetchone()[0]
             )
             payload["probability_positive"] = 1.5
             connection.execute(
                 """
                 UPDATE alpha_rows SET payload_json = ?
-                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                WHERE as_of = '2026-01-07'
+                  AND model_run_id = 'bayes-1' AND ticker = 'C'
                 """,
                 (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
             )
@@ -109,14 +151,19 @@ def main() -> int:
         with sqlite3.connect(db_path) as connection:
             payload = json.loads(
                 connection.execute(
-                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                    """
+                    SELECT payload_json FROM alpha_rows
+                    WHERE as_of = '2026-01-07'
+                      AND model_run_id = 'bayes-1' AND ticker = 'C'
+                    """
                 ).fetchone()[0]
             )
             payload["alpha_score"] = 0.91
             connection.execute(
                 """
                 UPDATE alpha_rows SET payload_json = ?
-                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                WHERE as_of = '2026-01-07'
+                  AND model_run_id = 'bayes-1' AND ticker = 'C'
                 """,
                 (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
             )
@@ -130,14 +177,19 @@ def main() -> int:
         with sqlite3.connect(db_path) as connection:
             payload = json.loads(
                 connection.execute(
-                    "SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07' AND ticker = 'C'"
+                    """
+                    SELECT payload_json FROM alpha_rows
+                    WHERE as_of = '2026-01-07'
+                      AND model_run_id = 'bayes-1' AND ticker = 'C'
+                    """
                 ).fetchone()[0]
             )
             payload["candidate_pool"] = "false"
             connection.execute(
                 """
                 UPDATE alpha_rows SET payload_json = ?
-                WHERE as_of = '2026-01-07' AND ticker = 'C'
+                WHERE as_of = '2026-01-07'
+                  AND model_run_id = 'bayes-1' AND ticker = 'C'
                 """,
                 (json.dumps(payload, sort_keys=True, separators=(",", ":")),),
             )
@@ -145,7 +197,8 @@ def main() -> int:
                 json.loads(row[0])
                 for row in connection.execute(
                     """
-                    SELECT payload_json FROM alpha_rows WHERE as_of = '2026-01-07'
+                    SELECT payload_json FROM alpha_rows
+                    WHERE as_of = '2026-01-07' AND model_run_id = 'bayes-1'
                     ORDER BY alpha_rank, ticker
                     """
                 )
@@ -154,7 +207,10 @@ def main() -> int:
                 json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
             ).hexdigest()
             connection.execute(
-                "UPDATE alpha_runs SET snapshot_hash = ? WHERE as_of = '2026-01-07'",
+                """
+                UPDATE alpha_runs SET snapshot_hash = ?
+                WHERE as_of = '2026-01-07' AND model_run_id = 'bayes-1'
+                """,
                 (snapshot_hash,),
             )
             connection.commit()
@@ -175,7 +231,7 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
     connection.executescript(
         """
         CREATE TABLE alpha_runs (
-            as_of TEXT PRIMARY KEY,
+            as_of TEXT NOT NULL,
             model_run_id TEXT NOT NULL,
             input_fingerprint TEXT NOT NULL,
             snapshot_hash TEXT NOT NULL,
@@ -183,14 +239,16 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             publication_status TEXT NOT NULL,
             quality_status TEXT NOT NULL,
             row_count INTEGER NOT NULL,
-            published_at TEXT NOT NULL
+            published_at TEXT NOT NULL,
+            PRIMARY KEY (as_of, model_run_id)
         );
         CREATE TABLE alpha_rows (
             as_of TEXT NOT NULL,
+            model_run_id TEXT NOT NULL,
             ticker TEXT NOT NULL,
             alpha_rank INTEGER NOT NULL,
             payload_json TEXT NOT NULL,
-            PRIMARY KEY (as_of, ticker)
+            PRIMARY KEY (as_of, model_run_id, ticker)
         );
         """
     )
@@ -225,12 +283,40 @@ def create_fixture(path: Path, *, replace: bool = False) -> None:
             ),
         )
         connection.executemany(
-            "INSERT INTO alpha_rows VALUES (?, ?, ?, ?)",
+            "INSERT INTO alpha_rows VALUES (?, ?, ?, ?, ?)",
             [
-                (as_of, item["ticker"], item["alpha_rank"], json.dumps(item))
+                (as_of, "bayes-1", item["ticker"], item["alpha_rank"], json.dumps(item))
                 for item in rows
             ],
         )
+    shadow = row("2026-01-07", "SHADOW", 1, 0.99, "new")
+    shadow_hash = hashlib.sha256(
+        json.dumps([shadow], sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    connection.execute(
+        "INSERT INTO alpha_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            "2026-01-07",
+            "lightgbm-shadow-1",
+            "input-shadow-2026-01-07",
+            shadow_hash,
+            "challenger",
+            "shadow",
+            "valid",
+            1,
+            "2026-01-07T22:35:00Z",
+        ),
+    )
+    connection.execute(
+        "INSERT INTO alpha_rows VALUES (?, ?, ?, ?, ?)",
+        (
+            "2026-01-07",
+            "lightgbm-shadow-1",
+            shadow["ticker"],
+            shadow["alpha_rank"],
+            json.dumps(shadow),
+        ),
+    )
     connection.commit()
     connection.close()
 
@@ -254,7 +340,81 @@ def row(
         "candidate_pool": True,
         "deep_research_priority": rank == 1,
         "challenger_rank": 4 - rank,
+        "factor_attribution": {
+            "momentum": 0.4,
+            "volume": 0.2,
+            "volatility": -0.1,
+        },
     }
+
+
+def create_analysis_fixture(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot = {
+        "decision_state": "setup候选",
+        "primary_regime": "1D 上涨，4H 整理",
+        "execution_context": "1H 等待 reclaim 确认",
+        "pa_ema": "bull flag; above 20/50/200 EMA",
+        "levels": ["1D support 95", "1D resistance 105"],
+        "zones": ["add 98-100", "trim 108-110"],
+        "events": ["weekly earnings review"],
+        "invalidation": "1D close below 95",
+        "next_check": "next 1H close",
+        "sizing_language": "少量，确认后最多增加 1/5",
+    }
+    delta = {
+        "decision_state": "updated",
+        "levels": "updated",
+        "pa_ema": "unchanged",
+    }
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            """
+            CREATE TABLE analysis_runs (
+                sequence_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL UNIQUE,
+                stable_key TEXT NOT NULL,
+                symbol_or_scope TEXT NOT NULL,
+                analysis_type TEXT NOT NULL,
+                primary_timeframe TEXT NOT NULL,
+                strategy_horizon TEXT NOT NULL,
+                as_of TEXT NOT NULL,
+                model_version TEXT NOT NULL,
+                rule_version TEXT NOT NULL,
+                input_fingerprint TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                delta_json TEXT NOT NULL,
+                comparison_mode TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO analysis_runs (
+                run_id, stable_key, symbol_or_scope, analysis_type,
+                primary_timeframe, strategy_horizon, as_of, model_version,
+                rule_version, input_fingerprint, payload_json, delta_json,
+                comparison_mode, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "decision-card-c-2026-01-07",
+                "C|decision_card|1D|swing",
+                "C",
+                "decision_card",
+                "1D",
+                "swing",
+                "2026-01-07",
+                "bayes-1",
+                "decision-card-1",
+                "analysis-input-2026-01-07",
+                json.dumps(snapshot),
+                json.dumps(delta),
+                "incremental",
+                "success",
+            ),
+        )
 
 
 def run(args: list[str]) -> str:

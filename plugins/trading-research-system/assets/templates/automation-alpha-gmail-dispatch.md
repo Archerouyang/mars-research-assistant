@@ -3,8 +3,9 @@
 这是 outbox sender，不运行模型，也不改变 Alpha release。
 
 1. 先在公开 plugin 运行 `python3 scripts/alpha_notification_adapter.py next
-   --db {quant_runtime}/outbox.sqlite`。适配器以 SQLite `mode=ro` 重新验证 kind、
-   subject、body 和 allowlisted metadata；不得直接信任 `outbox-next` 原始输出。
+   --db {quant_runtime}/outbox.sqlite`。适配器以 SQLite `mode=ro` 重新验证 kind 和
+   allowlisted metadata，完全忽略 producer 写入的 subject/body，再从固定字段重建
+   outbound subject/body；不得直接信任 `outbox-next` 原始输出。
 2. 返回 `null` 时结束。否则只使用验证后 event 中的 `subject`、`body` 和
    allowlisted metadata，通过已授权 Gmail connector 发给用户确认的收件地址。
 3. 邮件正文不得补充 API key、token、broker account、positions、holdings、

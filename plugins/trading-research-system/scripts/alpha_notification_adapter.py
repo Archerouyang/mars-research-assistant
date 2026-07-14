@@ -90,7 +90,7 @@ def connect_read_only(path: Path) -> sqlite3.Connection:
 def next_validated(connection: sqlite3.Connection) -> dict[str, Any] | None:
     row = connection.execute(
         """
-        SELECT event_id, kind, subject, body, metadata_json
+        SELECT event_id, kind, metadata_json
         FROM notification_outbox
         WHERE status = 'pending'
         ORDER BY created_at, event_id

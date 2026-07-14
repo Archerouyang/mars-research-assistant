@@ -31,7 +31,7 @@ def main() -> int:
             "model_run_id",
         }:
             raise AssertionError("adapter changed the allowed metadata surface")
-        if "FULL_UNIVERSE" in payload["subject"] or "FULL_UNIVERSE" in payload["body"]:
+        if "secret-token" in payload["subject"] or "positions" in payload["body"]:
             raise AssertionError("adapter must reconstruct outbound prose from fixed fields")
         if payload["subject"] != "Alpha daily run success":
             raise AssertionError("adapter did not construct the fixed audit subject")
@@ -101,8 +101,8 @@ def create_fixture(path: Path) -> None:
             (
                 "daily:2026-07-10:config-a",
                 "alpha_run_audit",
-                "FULL_UNIVERSE A,B,C",
-                "FULL_UNIVERSE A,B,C raw market payload",
+                "Bearer secret-token",
+                "positions holdings raw market payload",
                 json.dumps(metadata),
                 "{}",
                 "pending",

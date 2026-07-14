@@ -13,6 +13,7 @@ import sqlite3
 import sys
 from typing import Any
 
+import analysis_delta_adapter
 from runtime_state import default_runtime_dir
 
 
@@ -28,6 +29,13 @@ REQUIRED_RUN_COLUMNS = {
     "row_count",
     "published_at",
 }
+REQUIRED_ROW_COLUMNS = {
+    "as_of",
+    "model_run_id",
+    "ticker",
+    "alpha_rank",
+    "payload_json",
+}
 REQUIRED_ROW_FIELDS = {
     "as_of",
     "ticker",
@@ -38,6 +46,19 @@ REQUIRED_ROW_FIELDS = {
     "rank_vs_sp500",
     "candidate_pool",
     "deep_research_priority",
+    "factor_attribution",
+}
+REQUIRED_DECISION_FIELDS = {
+    "decision_state",
+    "primary_regime",
+    "execution_context",
+    "pa_ema",
+    "levels",
+    "zones",
+    "events",
+    "invalidation",
+    "next_check",
+    "sizing_language",
 }
 TICKER_PATTERN = re.compile(r"^[A-Z][A-Z0-9.\-]{0,14}$")
 
@@ -63,6 +84,17 @@ def parse_args() -> argparse.Namespace:
     changes = subparsers.add_parser("changes", help="Compare stored leaderboard snapshots")
     add_common_args(changes)
     changes.add_argument("--top", type=int, default=DEFAULT_TOP)
+
+    card = subparsers.add_parser(
+        "decision-card", help="Render a fixed card from champion and analysis stores"
+    )
+    card.add_argument("ticker")
+    add_common_args(card)
+    card.add_argument(
+        "--analysis-db", default=str(analysis_delta_adapter.default_db_path())
+    )
+    card.add_argument("--primary-timeframe", default="1D")
+    card.add_argument("--strategy-horizon", default="swing")
     return parser.parse_args()
 
 
@@ -98,14 +130,41 @@ def connect_read_only(db_path: Path) -> sqlite3.Connection:
         raise ValueError(
             f"Alpha Leaderboard run metadata missing columns: {missing_columns}"
         )
+    row_columns = {
+        str(row[1])
+        for row in connection.execute("PRAGMA table_info(alpha_rows)").fetchall()
+    }
+    missing_row_columns = sorted(REQUIRED_ROW_COLUMNS - row_columns)
+    if missing_row_columns:
+        connection.close()
+        raise ValueError(
+            f"Alpha Leaderboard rows missing columns: {missing_row_columns}"
+        )
     return connection
 
 
 def resolve_date(connection: sqlite3.Connection, requested: str | None) -> str:
     if requested:
-        row = connection.execute(
-            "SELECT as_of FROM alpha_runs WHERE as_of = ?", (requested,)
-        ).fetchone()
+        rows = connection.execute(
+            """
+            SELECT as_of, model_role, publication_status FROM alpha_runs
+            WHERE as_of = ?
+            """,
+            (requested,),
+        ).fetchall()
+        eligible = [
+            row
+            for row in rows
+            if row["model_role"] == "champion"
+            and row["publication_status"] == "published"
+        ]
+        if not rows:
+            raise ValueError(f"Alpha Leaderboard snapshot not found: {requested}")
+        if not eligible:
+            raise ValueError(f"Alpha snapshot {requested} is not a published champion")
+        if len(eligible) != 1:
+            raise ValueError(f"Alpha snapshot {requested} has ambiguous published champions")
+        row = eligible[0]
     else:
         row = connection.execute(
             """
@@ -137,17 +196,25 @@ def previous_date(connection: sqlite3.Connection, snapshot_date: str) -> str | N
 def run_metadata(
     connection: sqlite3.Connection, snapshot_date: str
 ) -> dict[str, Any]:
-    row = connection.execute(
+    rows = connection.execute(
         """
         SELECT model_run_id, input_fingerprint, snapshot_hash,
                model_role, publication_status, quality_status, row_count,
                published_at
-        FROM alpha_runs WHERE as_of = ?
+        FROM alpha_runs
+        WHERE as_of = ?
+          AND model_role = 'champion'
+          AND publication_status = 'published'
         """,
         (snapshot_date,),
-    ).fetchone()
-    if row is None:
+    ).fetchall()
+    if not rows:
         raise ValueError(f"Alpha Leaderboard snapshot not found: {snapshot_date}")
+    if len(rows) != 1:
+        raise ValueError(
+            f"Alpha snapshot {snapshot_date} has ambiguous published champions"
+        )
+    row = rows[0]
     metadata = dict(row)
     if (
         metadata["model_role"] != "champion"
@@ -176,10 +243,10 @@ def fetch_rows(connection: sqlite3.Connection, snapshot_date: str) -> list[dict[
         """
         SELECT ticker, alpha_rank, payload_json
         FROM alpha_rows
-        WHERE as_of = ?
+        WHERE as_of = ? AND model_run_id = ?
         ORDER BY alpha_rank ASC, ticker ASC
         """,
-        (snapshot_date,),
+        (snapshot_date, metadata["model_run_id"]),
     ).fetchall()
     result: list[dict[str, Any]] = []
     for row in rows:
@@ -229,6 +296,10 @@ def validate_payload(payload: dict[str, Any], snapshot_date: str) -> None:
     for field in ("candidate_pool", "deep_research_priority"):
         if not isinstance(payload[field], bool):
             raise ValueError(f"Alpha {field} must be Boolean for {ticker}")
+    if not isinstance(payload["factor_attribution"], dict) or not payload[
+        "factor_attribution"
+    ]:
+        raise ValueError(f"Alpha factor_attribution must be a non-empty object for {ticker}")
     percentile = payload.get("historical_percentile")
     if percentile is not None:
         percentile_value = finite_float(
@@ -360,6 +431,103 @@ def render_changes(
     )
 
 
+def render_decision_card(
+    connection: sqlite3.Connection,
+    snapshot_date: str,
+    ticker: str,
+    analysis_db: Path,
+    primary_timeframe: str,
+    strategy_horizon: str,
+) -> str:
+    ticker = ticker.upper()
+    metadata = run_metadata(connection, snapshot_date)
+    alpha_row = next(
+        (
+            item
+            for item in fetch_rows(connection, snapshot_date)
+            if str(item["ticker"]).upper() == ticker
+        ),
+        None,
+    )
+    if alpha_row is None:
+        raise ValueError(f"{ticker} not found in Alpha snapshot {snapshot_date}")
+    key = analysis_delta_adapter.stable_key(
+        ticker, "decision_card", primary_timeframe, strategy_horizon
+    )
+    with analysis_delta_adapter.connect_read_only(analysis_db) as analysis_connection:
+        analysis = analysis_delta_adapter.fetch_latest(analysis_connection, key)
+    if str(analysis["as_of"])[:10] != snapshot_date:
+        raise ValueError(
+            f"Decision Card analysis date does not match Alpha snapshot {snapshot_date}"
+        )
+    snapshot = analysis["snapshot"]
+    missing = sorted(REQUIRED_DECISION_FIELDS - snapshot.keys())
+    if missing:
+        raise ValueError(f"Decision Card analysis missing fields: {missing}")
+    empty = sorted(field for field in REQUIRED_DECISION_FIELDS if not snapshot[field])
+    if empty:
+        raise ValueError(f"Decision Card analysis has empty fields: {empty}")
+    changed = [
+        f"{field}={status}"
+        for field, status in sorted(analysis["delta"].items())
+        if status != "unchanged"
+    ]
+    delta = "; ".join(changed) or "unchanged"
+    probability = percent(alpha_row["probability_positive"])
+    uncertainty = float(alpha_row["predictive_std"])
+    rows = (
+        ("上次运行增量", f"{analysis['comparison_mode']}: {delta}"),
+        ("决策状态", snapshot["decision_state"]),
+        (
+            "Alpha Rank / trajectory",
+            f"{int(alpha_row['alpha_rank'])} / {alpha_row.get('trajectory_state') or '-'}; "
+            f"run={metadata['model_run_id']}; as_of={snapshot_date}",
+        ),
+        (
+            "P(20D超额>0) / predictive uncertainty",
+            f"Experimental: {probability} / {uncertainty:.4f}",
+        ),
+        ("因子归因", alpha_row["factor_attribution"]),
+        ("主分析时间框架", snapshot["primary_regime"]),
+        ("执行观察时间框架", snapshot["execution_context"]),
+        ("PA + EMA", snapshot["pa_ema"]),
+        ("走势强弱参考点位", snapshot["levels"]),
+        ("加仓区 / TP或再平衡区", snapshot["zones"]),
+        ("当周事件与新闻", snapshot["events"]),
+        (
+            "失效与下一次检查",
+            f"{render_cell(snapshot['invalidation'])}; {render_cell(snapshot['next_check'])}",
+        ),
+        ("比例式仓位语言", snapshot["sizing_language"]),
+    )
+    lines = [
+        f"## {ticker} 决策卡",
+        "",
+        "| 模块 | 当前读数 |",
+        "| --- | --- |",
+    ]
+    lines.extend(f"| {label} | {render_cell(value)} |" for label, value in rows)
+    lines.extend(
+        [
+            "",
+            "- 模型字段来自 published champion，不得由分析层改写。",
+            "- 概率为 Experimental，必须与 predictive uncertainty 相邻解释。",
+            "- 研究优先级，不是买入名单；不创建或批准订单。",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_cell(value: Any) -> str:
+    if isinstance(value, dict):
+        text = "; ".join(f"{key}={value[key]}" for key in sorted(value))
+    elif isinstance(value, list):
+        text = "; ".join(str(item) for item in value)
+    else:
+        text = str(value)
+    return text.replace("|", "\\|").replace("\n", "<br>")
+
+
 def percent(value: Any) -> str:
     if value is None:
         return "-"
@@ -389,6 +557,15 @@ def main() -> int:
                 output = render_show(connection, snapshot_date, args.top)
             elif args.command == "query":
                 output = render_query(connection, snapshot_date, args.ticker)
+            elif args.command == "decision-card":
+                output = render_decision_card(
+                    connection,
+                    snapshot_date,
+                    args.ticker,
+                    Path(args.analysis_db),
+                    args.primary_timeframe,
+                    args.strategy_horizon,
+                )
             else:
                 output = render_changes(connection, snapshot_date, args.top)
     except (ValueError, sqlite3.Error, json.JSONDecodeError) as error:

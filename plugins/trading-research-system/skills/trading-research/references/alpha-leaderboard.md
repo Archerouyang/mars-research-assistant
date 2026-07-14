@@ -22,6 +22,7 @@ Run `runtime_health.py` first, then use:
 python3 ../../scripts/alpha_leaderboard_adapter.py show --top 10
 python3 ../../scripts/alpha_leaderboard_adapter.py query NVDA
 python3 ../../scripts/alpha_leaderboard_adapter.py changes --top 10
+python3 ../../scripts/alpha_leaderboard_adapter.py decision-card NVDA
 ```
 
 The adapter opens SQLite with `mode=ro`. A missing store is a capability gap;
@@ -31,8 +32,10 @@ market data.
 Every readable run must declare `model_role=champion`,
 `publication_status=published`, a positive `row_count`, and a SHA-256
 `snapshot_hash`. The adapter recomputes the hash from the complete ranked rows,
-requires contiguous ranks, and rejects incomplete, shadow, stale-schema, or
-out-of-range payloads instead of displaying them as production output.
+requires every row to carry the immutable `model_run_id`, binds reads to the
+single published champion run for that date, requires contiguous ranks, and
+rejects incomplete, shadow, stale-schema, ambiguous-champion, or out-of-range
+payloads instead of displaying them as production output.
 
 The full eligible universe remains queryable. Normal output shows Top10. Top20
 forms the Cross-Section Candidate Pool. Deep research starts with Top5 plus
@@ -71,6 +74,13 @@ For Trade Plan Preparation, use the Alpha snapshot as one input read. Send Top20
 to cross-sectional research, then require macro/financial conditions, industry
 or company evidence, higher-timeframe structure, portfolio risk, and a defined
 next check before creating a candidate setup.
+
+For a ticker Decision Card, the adapter combines the published champion row
+with the matching successful `decision_card` analysis snapshot. Alpha Rank,
+factor attribution, model probability, and predictive uncertainty always come
+from the champion row; the analysis store supplies delta, decision state,
+timeframes, PA/EMA, levels, zones, events, invalidation, next check, and
+proportional sizing language. The two snapshots must share the same date.
 
 ## Legacy KVN Compatibility
 
