@@ -8,15 +8,10 @@ It is AI-native: the agent should read broadly, verify current facts, compare co
 
 ## Public plugin / private user state boundary
 
-**Public plugin:** generic skills, references, scripts, blank templates,
-synthetic sanitized fixtures, and generic validation contracts. Tickers in
-fixtures or documentation are test examples only, not recommendations, a
-default watchlist, or a user profile.
-
-**Private user state:** stock pools and watchlists, `trading-profile.md`, Active
-Market Plans, setups, positions, executions, reviews, broker data, runtime
-files, account or connector authorization, personal risk parameters, and
-research history.
+| Area | Contents | Distribution rule |
+| --- | --- | --- |
+| Public plugin | Generic skills, references, scripts, blank templates, synthetic sanitized fixtures, and generic validation contracts. Fixture tickers are test examples, not recommendations, a default watchlist, or a user profile. | Repository marketplace installation and upgrades distribute this area only. |
+| Private user state | Stock pools and watchlists, `trading-profile.md`, Active Market Plans, setups, positions, executions, reviews, broker data, runtime files, account or connector authorization, personal risk parameters, and research history. | It remains local to each user and is never packaged, restored, or synchronized by this plugin. |
 
 Installation and upgrades distribute public plugin capability only. They never
 copy, package, commit, restore, or synchronize private user state. Each user

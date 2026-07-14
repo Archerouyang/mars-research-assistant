@@ -88,10 +88,11 @@ already requires the bounded architecture task recorded in
 
 The Git-backed distribution tracer bullet reduces only the release-propagation
 part of `TD-20260714-01`: repository marketplace ownership, source resolution,
-and version ownership are now deterministic local contracts. The debt remains
-`accepted`, not `removed`, because behavior ownership across router/direct
-activation surfaces is unresolved and remote installed-cache propagation still
-needs coordinator UAT after publication.
+version ownership, recursive public-package shape, and structured install docs
+are now deterministic local contracts. The debt remains `accepted`, not
+`removed`, because behavior ownership across router/direct activation surfaces
+is unresolved and remote installed-cache propagation still needs coordinator
+UAT after publication.
 
 ## Review Cadence
 

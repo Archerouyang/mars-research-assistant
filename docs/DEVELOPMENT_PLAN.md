@@ -186,7 +186,8 @@ Scope for this tracer bullet:
 - keep `plugins/trading-research-system/.codex-plugin/plugin.json` as the single
   source of truth for the published version;
 - reject marketplace source/name/display metadata drift, invalid manifest
-  versions, nested marketplace copies, and README install-command drift;
+  versions, nested marketplace copies, package paths outside the public
+  allowlist, and structured README install-contract drift;
 - document installation without implying that Codex account login synchronizes
   plugins, connector grants, credentials, or private runtime data.
 
@@ -211,10 +212,40 @@ Local acceptance gate:
 - `python3 scripts/verify_plugin_distribution_selftest.py` passes;
 - `bash scripts/verify-plugin.sh` and `bash scripts/verify-mvp.sh` pass;
 - plugin scripts compile and `git diff --check` passes;
-- an isolated temporary-repository smoke resolves the root marketplace to the
-  in-repository plugin source without writing global Codex configuration.
-- the distribution contract enforces a public package allowlist, fixture
-  disclosure, header-only CSV runtime templates, and non-sync README language.
+- an isolated Codex home smoke resolves the root marketplace, lists version
+  `0.1.1`, and installs the plugin into that temporary home without writing
+  global Codex configuration;
+- the distribution contract enforces top-level Python-only scripts,
+  `SKILL.md`/Markdown-only skill trees, explicit fixture/template asset shapes,
+  rejection of symlinks and generated/cache artifacts, header-only CSV runtime
+  templates, and structured Markdown install/boundary sections.
+
+Reproducible local marketplace resolution and install smoke:
+
+```bash
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ISOLATED_ROOT="$(mktemp -d /tmp/dailytrades-marketplace-review.XXXXXX)"
+mkdir -p "$ISOLATED_ROOT/home" "$ISOLATED_ROOT/codex" \
+  "$ISOLATED_ROOT/config" "$ISOLATED_ROOT/cache"
+export HOME="$ISOLATED_ROOT/home"
+export CODEX_HOME="$ISOLATED_ROOT/codex"
+export XDG_CONFIG_HOME="$ISOLATED_ROOT/config"
+export XDG_CACHE_HOME="$ISOLATED_ROOT/cache"
+export PYTHONDONTWRITEBYTECODE=1
+codex plugin marketplace add "$REPO_ROOT" --json
+codex plugin marketplace list --json
+codex plugin list --marketplace dailytrades --available --json
+codex plugin add trading-research-system@dailytrades --json
+codex plugin list --marketplace dailytrades --json
+```
+
+The 2026-07-14 review rerun resolved `dailytrades`, exposed
+`trading-research-system` version `0.1.1` from the repository source, and
+installed it under the temporary `CODEX_HOME`; the real home, global
+marketplace, plugin cache, credentials, and private runtime were not used.
+This is local-equivalent evidence only. It does not prove GitHub `master`
+fetching, desktop Plugins behavior, process restart, or a fresh task loading
+the installed version.
 
 Coordinator follow-up after integration and publication:
 
@@ -224,6 +255,9 @@ Coordinator follow-up after integration and publication:
 3. Open a new task and confirm the installed version and expected skills load.
 4. Confirm no account-login step is presented as plugin, connector, credential,
    or private-runtime synchronization.
+
+These remote GitHub and restart/new-task checks remain pending and must not be
+marked passed until the coordinator runs them after integration to `master`.
 
 ## Today
 
@@ -250,6 +284,10 @@ Date: 2026-07-14
   marketplace, manifest-owned versioning, README installation flow, and
   nested-marketplace drift prevention. Remote clean-install UAT remains a
   coordinator gate after the change is integrated and published to `master`.
+- Hardened the review fix with a strict recursive public package allowlist,
+  structured Markdown contracts, first-screen install and upgrade guidance,
+  two Mermaid diagrams, and an isolated temporary-`CODEX_HOME` CLI install.
+  GitHub/ref resolution and restart/new-task UAT remain coordinator-owned.
 - Closed all six 2026-07-11 behavior debug items after dual-axis review and
   targeted fresh-chat UAT.
 - Verified both Prompt 5 branches: unresolved setup keys stay watch-only, while

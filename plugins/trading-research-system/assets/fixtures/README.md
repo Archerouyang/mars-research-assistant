@@ -10,3 +10,9 @@ The `input/`, `expected/`, and `runtime/` trees exist only to exercise generic
 plugin contracts. They are public test data and must not be replaced with a
 user's watchlist, trading profile, Active Market Plan, setups, positions,
 executions, reviews, account configuration, or connector authorization state.
+
+| Fixture area | Public purpose |
+| --- | --- |
+| input | Synthetic inputs for deterministic contract tests. |
+| expected | Sanitized expected outputs checked by local verification. |
+| runtime | Runtime-shaped data invented solely for fixture-backed tests. |

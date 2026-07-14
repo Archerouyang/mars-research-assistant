@@ -4,7 +4,85 @@
 
 它不是自动交易系统，不下单，不保证收益，也不会绕过付费研报或 broker 权限。
 
+## 安装与升级
+
+### 首次安装
+
+1. **安装前提**：安装并登录 [Codex CLI 官方版本](https://developers.openai.com/codex/cli/) 或 [Codex 桌面端](https://developers.openai.com/codex/app/)，并确认当前设备可访问 GitHub。
+2. **添加 marketplace**：发布来源固定为 `Archerouyang/dailytrades@master`。
+
+   ```bash
+   codex plugin marketplace add Archerouyang/dailytrades --ref master
+   ```
+
+3. **验证 marketplace**：列表中应出现名称 `dailytrades`。
+
+   ```bash
+   codex plugin marketplace list
+   ```
+
+4. **安装 plugin**：在 Codex 的 `/plugins` 或桌面端 **Plugins** 页面，从 `dailytrades` 安装 `trading-research-system`。
+5. **新开 task 并测试**：安装后必须新开 task，再发送下面的首个测试 prompt。
+
+   ```text
+   请说明 Trading Research System 的公开能力与私有 runtime 边界，并列出首次使用前需要在本机完成的空白初始化步骤；不要读取 broker 或账户数据。
+   ```
+
+6. **初始化 private runtime**：由当前用户在当前设备从空白模板独立初始化；默认没有 watchlist、交易偏好、持仓或 market plan。
+
+```mermaid
+flowchart LR
+  A["登录 Codex"] --> B["添加 GitHub marketplace"]
+  B --> C["在 /plugins 或 Plugins 安装"]
+  C --> D["新开 task"]
+  D --> E["本机初始化 private runtime"]
+```
+
+### 升级
+
+1. **确认 marketplace**：先用 `codex plugin marketplace list` 确认名称是 `dailytrades`。
+2. **刷新 marketplace**：获取 `master` 上已发布的新快照。
+
+   ```bash
+   codex plugin marketplace upgrade dailytrades
+   ```
+
+3. **更新 plugin**：回到 `/plugins` 或桌面端 **Plugins**，对 `trading-research-system` 执行更新。
+4. **新开 task**：升级后必须新开 task，旧 task 不会重新加载新版本。
+
+### 故障排查
+
+| 现象 | 处理 |
+| --- | --- |
+| marketplace 看不到 | 运行 `codex plugin marketplace list`；若无 `dailytrades`，重新执行 add 命令并检查 GitHub 访问。 |
+| 已更新但旧 task 没变化 | 在 Plugins 确认更新完成，然后新开 task；不要用旧 task 判断版本。 |
+
+## Public plugin / Private user state
+
+| 区域 | 包含内容 | 分发规则 |
+| --- | --- | --- |
+| Public plugin（公开能力） | 通用 skills、references、scripts、空白模板、明确脱敏的 fixtures、通用契约 | marketplace 安装和升级只分发这些公开能力。fixture ticker 只是合成契约样例，不是推荐池、默认 watchlist 或用户 profile。 |
+| Private user state（私有用户状态） | 选股池/观察列表、`trading-profile.md`、Active Market Plan、setup、持仓、成交、复盘、broker 数据、runtime、账户/connector 授权、个人风险参数、研究历史 | 不得被 marketplace、plugin 安装、升级或跨设备流程复制、打包、提交、恢复或同步；每位用户在本机从空白状态初始化。 |
+
+Codex 账号登录、公开 plugin 安装、connector 授权、private runtime setup 是四件彼此独立的事。同账号登录不是用户状态同步。禁止复制 `~/.codex/auth.json`，也禁止把 broker 凭据或 private runtime 放入公开仓库。未来如设计偏好同步，只能是独立、私有、显式 opt-in 的产品能力，不属于本次 public plugin 分发。
+
+```mermaid
+flowchart LR
+  subgraph PUBLIC["公开仓库 / Public plugin"]
+    P["通用 skills、references、scripts、空白模板、脱敏 fixtures"]
+  end
+  subgraph LOCAL["每位用户本机 / Private runtime"]
+    U["空白初始化；个人状态仅留本机"]
+    R["研究"] --> M["计划"] --> T["追踪"] --> V["复盘"] --> R
+  end
+  P -->|"安装后提供公共能力"| R
+  U -->|"仅在本机参与研究"| R
+  U --- N["绝不反向打包或同步到公开 repo"]
+```
+
 ## 核心闭环
+
+研究输入进入计划、追踪和复盘闭环；详细工作记忆只保存在用户自己的 private runtime。这个项目让 agent 读得多、校验得严、展示得少，只呈现会改变计划、风险、setup 状态或下一步决策的信息。
 
 ```text
 研报 / 宏观 / 政策 / 利率 / 盘面
@@ -14,93 +92,7 @@
 -> 风险暴露、setup 表现和系统优化
 ```
 
-这个项目的重点不是生成长报告，而是让 agent 读得多、校验得严、展示得少，只把会改变计划、风险、setup 状态或下一步决策的信息告诉使用者。
-
-## 快速开始
-
-### 1. 安装前提
-
-先安装并登录 Codex CLI 或 Codex 桌面端，并确保当前设备可以访问 GitHub。
-登录 Codex 账号不会自动把 plugin、connector 授权、private runtime 或凭据同步到
-另一台设备；每台设备都要单独完成下面的安装和私有配置。
-
-### 2. 添加 Dailytrades marketplace
-
-在终端执行这一条命令；发布目标固定为 `Archerouyang/dailytrades@master`：
-
-```bash
-codex plugin marketplace add Archerouyang/dailytrades --ref master
-```
-
-### 3. 安装 plugin
-
-打开 Codex 的 `/plugins`，或桌面端的 **Plugins** 页面，在 `dailytrades`
-marketplace 中找到并安装 `trading-research-system`。以后升级 plugin 也从这个
-marketplace 完成。
-
-安装或升级后必须新开一个 task，让新 task 重新加载 plugin 的 skills 和工具。
-
-### 4. 分别完成私有设置
-
-下面四件事彼此独立，不要把“同账号登录”理解成自动同步：
-
-1. **Codex 账号登录**：只建立当前设备上的 Codex 会话。
-2. **Plugin 安装**：从 Git-backed marketplace 获取公开的 plugin 代码和文档。
-3. **Connector 授权**：在需要使用某个 connector 的设备上单独授权。
-4. **Private runtime setup**：在本机单独初始化并维护私有 runtime 数据。
-
-禁止复制 `~/.codex/auth.json`，禁止把 broker 凭据或 private runtime 提交到公开仓库；
-跨设备时应在新设备上重新登录、重新授权，并单独恢复或初始化私有数据。
-
-### 5. Public/Private boundary
-
-**Public plugin（公开能力）**只包含通用 skills、references、scripts、空白模板、
-脱敏 fixtures 和通用契约。fixtures 中的 ticker 仅用于公开契约测试，不是推荐池、
-默认 watchlist，也不是任何用户的 profile。
-
-**Private user state（私有用户状态）**包括选股池/观察列表、`trading-profile.md`、
-Active Market Plan、setup、持仓、成交、复盘、broker 数据、runtime、账户和 connector
-授权、个人风险参数及研究历史。
-
-安装或升级只分发公开 plugin 能力，不复制、打包、提交或同步任何 private user state。
-
-每个用户必须在本机从空白模板独立初始化 private runtime；repo 不会自动恢复个人 profile 或 Active Market Plan。
-
-未来的用户偏好同步必须是独立、私有、显式 opt-in 的能力，不属于本次 public plugin 分发。
-
-### 6. 开始使用
-
-在新 task 里直接说你要完成的交易研究任务。普通使用者不需要记住 focused skill
-名称；agent 会根据任务自动选择内部工作流。
-
-```text
-帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。
-```
-
-```text
-盘前更新一下今天需要盯的 setup，告诉我哪些接近触发。
-```
-
-```text
-现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？
-```
-
-```text
-读这篇 NVDA 研报，提炼 thesis 和 counter-thesis，并告诉我是否影响 Active Market Plan。
-```
-
-```text
-生成今天的持仓日报，只告诉我风险暴露和需要决策的事项。
-```
-
-```text
-这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
-```
-
-```text
-用我提供的 OHLCV 更新 DRAM/SOXX 的滚动盘面分析，标出主时间框架、
-支撑压力、加仓/减仓/暂停区，以及本周事件映射。
-```
+在新 task 里直接描述交易研究任务即可；普通使用者不需要记住 focused skill 名称，agent 会选择内部工作流。
 
 ## 主要能力
 
