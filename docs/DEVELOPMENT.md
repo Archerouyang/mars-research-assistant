@@ -30,8 +30,8 @@ temporary directory on exit.
 For release or manual visual acceptance, require a fresh browser capture:
 
 ```bash
-python3 scripts/verify_readme_gallery_contract_selftest.py
-python3 scripts/verify_readme_gallery_contract.py --require-browser-capture
+uv run python scripts/verify_readme_gallery_contract_selftest.py
+uv run python scripts/verify_readme_gallery_contract.py --require-browser-capture
 ```
 
 The required-browser command rebuilds the gallery in a new temporary directory

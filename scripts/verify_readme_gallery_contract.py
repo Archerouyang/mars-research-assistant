@@ -107,6 +107,12 @@ def validate_png_pixels(path: Path) -> None:
     require(chromatic / count > 0.005, "PA browser screenshot lacks rendered chart state")
 
 
+def validate_pa_html_contract(html: str, *, label: str) -> None:
+    require("5.2.0" in html, f"{label} must use Lightweight Charts v5.2.0")
+    require("TradingView" in html, f"{label} attribution missing")
+    require("Synthetic fixture" in html, f"{label} synthetic label missing")
+
+
 def validate_readme(path: Path, *, chinese: bool) -> None:
     text = path.read_text(encoding="utf-8")
     expected_order = (
@@ -162,9 +168,7 @@ def validate_fresh_browser_capture(generator: Path, browser_path: str | None) ->
         require(html_path.is_file(), "fresh browser run did not generate PA HTML")
         require(png_path.is_file(), "fresh browser run did not generate PA PNG")
         html = html_path.read_text(encoding="utf-8")
-        require("5.2.0" in html, "fresh PA HTML must use Lightweight Charts v5.2.0")
-        require("TradingView" in html, "fresh PA HTML attribution missing")
-        require("Synthetic fixture" in html, "fresh PA HTML synthetic label missing")
+        validate_pa_html_contract(html, label="fresh PA HTML")
         require(png_path.stat().st_size > 10_000, "fresh PA browser screenshot appears blank")
         validate_png_pixels(png_path)
 
@@ -184,9 +188,7 @@ def validate_gallery(
         require(path.is_file(), f"gallery artifact missing: {path}")
         require(path.stat().st_size > 1_000, f"gallery artifact unexpectedly empty: {path}")
     html = (GALLERY / "price-action-panel.html").read_text(encoding="utf-8")
-    require("5.2.0" in html, "PA HTML must use Lightweight Charts v5.2.0")
-    require("TradingView" in html, "PA HTML attribution missing")
-    require("Synthetic fixture" in html, "PA HTML synthetic label missing")
+    validate_pa_html_contract(html, label="PA HTML")
     require((REPO / "THIRD_PARTY_NOTICES.md").is_file(), "third-party notice missing")
     notices = (REPO / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
     require("Apache-2.0" in notices and "TradingView" in notices, "TradingView Apache notice missing")
@@ -267,6 +269,8 @@ def main() -> int:
     except (ContractError, OSError) as exc:
         print(f"README gallery contract failed: {exc}", file=sys.stderr)
         return 1
+    if args.require_browser_capture:
+        print("fresh browser capture verified")
     print("README gallery contract ok")
     return 0
 
