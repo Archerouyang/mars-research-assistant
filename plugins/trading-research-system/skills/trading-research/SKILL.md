@@ -13,7 +13,7 @@ This plugin is AI-native. The agent should absorb large volumes of market, macro
 
 ## Routing
 
-- General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究", "开始今天的交易研究日程", "现在该做什么", or any request where the user wants active process guidance:
+- General Daily Ops guidance, vague requests such as "start today", "begin daily ops", "开始今天的交易研究", "开始今天的交易研究日程", "周末首次启动，先看看下周", "现在该做什么", or any request where the user wants active process guidance:
   read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
 
 ### Exact Generic First Start
@@ -40,6 +40,48 @@ and no invented macro values.
 Then ask the first-start broker read-only question and route to a focused
 workflow. Do not replace this structure with a generic market-update status
 table.
+
+### Exact Weekend First Start
+
+For the exact request `周末首次启动，先看看下周`, run a first-start status-only
+runtime health check before analysis and route through Daily Ops before weekly
+analysis.
+
+#### 运行状态检查
+
+Before analytical claims, explicitly render `runtime_origin`, formal runtime,
+and startup status. Preserve the deterministic `runtime_origin` value from
+`runtime_health.py` (`environment` when `TRADING_RESEARCH_RUNTIME_DIR` selects
+the empty formal path). When that selected path does not exist, render
+`formal runtime=missing` and `startup_status=uninitialized`; keep formal-runtime
+availability and startup completeness as independent axes. Do not read private
+runtime file contents during this status-only check.
+
+#### 可用研究摘要
+
+After the status-only block, keep the user-facing order “先摘要，后授权/初始化”:
+give a concise current public-source weekly summary before requesting any
+authorization or initialization. Clearly label missing personalization and do
+not turn the summary into a setup or trading instruction.
+
+#### 摘要后缺失确认
+
+After the summary, request all three missing choices:
+
+- broker read-only preference; this records read intent only and does not read
+  an account;
+- the complete `ticker + trade_horizon + instrument` key;
+- whether to dry-run or initialize the private runtime.
+
+Initializing the private runtime requires separate explicit runtime-write
+authorization. Broker read-only preference, a setup-key confirmation, or a
+dry-run choice never authorizes a runtime write.
+
+#### 安全边界
+
+Do not write runtime. Do not read broker or private account data. Do not
+generate setups or buy/sell instructions in this first response.
+
 - Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, optional external momentum context, and setup discovery:
   use `weekly-trading-plan`.
 - Daily quick update against `market-plan.md`: macro/policy/news/event delta, momentum change, setup status changes, and level updates:

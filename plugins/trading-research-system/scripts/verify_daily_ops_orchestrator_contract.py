@@ -2,8 +2,12 @@
 """Verify Daily Ops Orchestrator contract and fixtures."""
 
 import json
+import os
+from pathlib import Path
 import re
+import subprocess
 import sys
+import tempfile
 
 from contract_suite import PluginPaths
 from contract_verifier import ContractSpec, FileContract, run_contract
@@ -16,6 +20,10 @@ REFERENCES = PATHS.references
 TEMPLATES = PATHS.templates
 FIXTURES = PATHS.fixtures
 ROUTER_INTENTS = FIXTURES / "input" / "router-intents.json"
+EMPTY_RUNTIME_WEEKEND_EXPECTED = (
+    FIXTURES / "expected" / "daily-ops-weekend-empty-runtime-first-start.md"
+)
+RUNTIME_HEALTH_SCRIPT = ROOT / "scripts" / "runtime_health.py"
 
 FILES = {
     "context": REPO / "CONTEXT.md",
@@ -297,6 +305,16 @@ def main() -> int:
         ROUTER_INTENTS,
     )
     print("daily ops exact start route behavior ok")
+    verify_exact_weekend_first_start_route(
+        FILES["router_skill"],
+        ROUTER_INTENTS,
+    )
+    print("daily ops exact weekend first-start route behavior ok")
+    verify_empty_environment_weekend_first_response(
+        RUNTIME_HEALTH_SCRIPT,
+        EMPTY_RUNTIME_WEEKEND_EXPECTED,
+    )
+    print("daily ops empty-environment weekend first-response behavior ok")
     verify_fixed_first_start_status(
         FILES["router_skill"],
         FILES["orchestrator_reference"],
@@ -480,6 +498,194 @@ def verify_exact_start_route(
     match = re.search(r"User prompt:\n\n```text\n([^\n]+)\n```", fixture_input)
     if not match or match.group(1) != exact_prompt:
         raise AssertionError("Daily Ops input fixture must contain only the exact acceptance prompt")
+
+
+def verify_exact_weekend_first_start_route(router_path, router_intents_path) -> None:
+    exact_prompt = "周末首次启动，先看看下周"
+    payload = json.loads(router_intents_path.read_text(encoding="utf-8"))
+    fixtures = payload.get("router_intents")
+    if not isinstance(fixtures, list):
+        raise AssertionError("router intent fixture must contain router_intents list")
+    exact_routes = [item for item in fixtures if item.get("prompt") == exact_prompt]
+    if len(exact_routes) != 1:
+        raise AssertionError("exact Prompt 7 must have exactly one router intent")
+    if exact_routes[0].get("expected_workflows") != [
+        "runtime_health",
+        "daily_ops_orchestrator",
+    ]:
+        raise AssertionError(
+            "exact Prompt 7 chain must be runtime_health -> daily_ops_orchestrator only"
+        )
+
+    router_text = router_path.read_text(encoding="utf-8")
+    routing = markdown_section(router_text, "## Routing")
+    route_item = list_item_containing(routing, exact_prompt)
+    if "read `references/daily-ops-orchestrator.md` first" not in route_item:
+        raise AssertionError("exact Prompt 7 must route to Daily Ops before weekly analysis")
+
+    contract = markdown_section(router_text, "### Exact Weekend First Start")
+    normalized = " ".join(contract.split())
+    for term in (
+        exact_prompt,
+        "status-only runtime health check before analysis",
+        "`runtime_origin`",
+        "`formal runtime=missing`",
+        "`startup_status=uninitialized`",
+        "independent axes",
+        "先摘要，后授权/初始化",
+        "broker read-only",
+        "`ticker + trade_horizon + instrument`",
+        "dry-run or initialize the private runtime",
+        "separate explicit runtime-write authorization",
+        "Do not write runtime",
+        "Do not read broker or private account data",
+        "Do not generate setups or buy/sell instructions",
+    ):
+        if term not in normalized:
+            raise AssertionError(f"model-facing exact Prompt 7 contract missing {term!r}")
+
+    ordered_headings_in_text(
+        contract,
+        (
+            "#### 运行状态检查",
+            "#### 可用研究摘要",
+            "#### 摘要后缺失确认",
+            "#### 安全边界",
+        ),
+    )
+
+
+def verify_empty_environment_weekend_first_response(runtime_health_path, expected_path) -> None:
+    with tempfile.TemporaryDirectory(prefix="daily-ops-empty-runtime-") as tmp:
+        runtime_dir = Path(tmp) / "nonexistent-private-runtime"
+        env = os.environ.copy()
+        env["TRADING_RESEARCH_RUNTIME_DIR"] = str(runtime_dir)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(runtime_health_path),
+                "--date",
+                "2026-07-18",
+                "--format",
+                "json",
+            ],
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                "empty-environment runtime health failed: "
+                f"{result.stderr or result.stdout}"
+            )
+        payload = json.loads(result.stdout)
+        checks = {item["id"]: item for item in payload["checks"]}
+        actual_state = {
+            "runtime_origin": payload.get("runtime_origin"),
+            "formal runtime": checks.get("runtime_dir", {}).get("status"),
+            "startup_status": payload.get("startup_status"),
+        }
+        expected_state = {
+            "runtime_origin": "environment",
+            "formal runtime": "missing",
+            "startup_status": "uninitialized",
+        }
+        if actual_state != expected_state:
+            raise AssertionError(
+                f"empty-environment state mismatch: expected {expected_state!r}, "
+                f"got {actual_state!r}"
+            )
+        if payload.get("runtime_dir") != str(runtime_dir):
+            raise AssertionError("runtime health must use the environment-selected path")
+        if payload.get("current_mode") != "dry-run":
+            raise AssertionError("empty runtime without broker facts must remain dry-run")
+        broker_statuses = {
+            item["id"]: item["status"] for item in payload["broker_source_health"]
+        }
+        if broker_statuses != {
+            "longbridge": "needs_review",
+            "ibkr": "needs_review",
+            "manual": "missing",
+        }:
+            raise AssertionError(
+                f"empty-environment test must not inject broker facts: {broker_statuses!r}"
+            )
+        if runtime_dir.exists():
+            raise AssertionError("status-only empty-environment check must not create runtime")
+
+        if not expected_path.exists():
+            raise AssertionError(
+                f"missing sanitized empty-runtime first-response fixture: {expected_path}"
+            )
+        response = expected_path.read_text(encoding="utf-8")
+        ordered_headings_in_text(
+            response,
+            (
+                "## 运行状态检查",
+                "## 可用研究摘要",
+                "## 摘要后缺失确认",
+                "## 安全边界",
+            ),
+        )
+        status_section = markdown_section(response, "## 运行状态检查")
+        status_rows = rows_by_key(
+            table_with_headers(status_section, ("item", "status", "effect"))
+        )
+        fixture_state = {
+            key: status_rows.get(key, (None, None))[1] for key in expected_state
+        }
+        if fixture_state != actual_state:
+            raise AssertionError(
+                f"empty-runtime first response must preserve runtime_health state: "
+                f"expected {actual_state!r}, got {fixture_state!r}"
+            )
+
+        summary = markdown_section(response, "## 可用研究摘要")
+        confirmations = markdown_section(response, "## 摘要后缺失确认")
+        boundaries = markdown_section(response, "## 安全边界")
+        for term in (
+            "公开来源",
+            "不提供当前市场读数",
+            "不生成 setup",
+        ):
+            if term not in summary:
+                raise AssertionError(f"empty-runtime summary missing boundary {term!r}")
+        for term in (
+            "broker read-only",
+            "ticker + trade_horizon + instrument",
+            "dry-run",
+            "初始化 private runtime",
+            "独立明确授权 runtime 写入",
+        ):
+            if term not in confirmations:
+                raise AssertionError(f"empty-runtime confirmations missing {term!r}")
+        for term in (
+            "本轮不写 runtime",
+            "不读取 broker 或 private account data",
+            "不生成 setup、买卖指令或订单动作",
+        ):
+            if term not in boundaries:
+                raise AssertionError(f"empty-runtime safety boundary missing {term!r}")
+        user_value_surface = f"{summary}\n{confirmations}"
+        for forbidden in (
+            "具体点位",
+            "entry trigger",
+            "exit trigger",
+            "买入",
+            "卖出",
+            "加仓",
+            "减仓",
+            "仓位比例",
+            "account_id",
+            "market_value",
+            "持仓数量",
+            "账户余额",
+        ):
+            if forbidden in user_value_surface:
+                raise AssertionError(
+                    f"empty-runtime first response leaked actionable/private field {forbidden!r}"
+                )
 
 
 def verify_fixed_first_start_status(router_path, reference_path, template_path, expected_path) -> None:

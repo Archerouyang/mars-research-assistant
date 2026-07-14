@@ -9,6 +9,14 @@
       "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
     },
     {
+      "id": "daily-ops-weekend-first-start",
+      "prompt": "周末首次启动，先看看下周",
+      "expected_public_route_label": "Daily Ops 周末首次启动",
+      "expected_workflows": ["runtime_health", "daily_ops_orchestrator"],
+      "required_reads": ["runtime health status-only", "public/official sources", "broker source availability"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
       "id": "weekly-plan",
       "prompt": "帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。",
       "expected_public_route_label": "周度深度计划更新",
