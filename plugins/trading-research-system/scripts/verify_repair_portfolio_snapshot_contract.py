@@ -21,8 +21,7 @@ FILES = {
     "fixture": ROOT / "assets" / "fixtures" / "input" / "portfolio-snapshot-stale-2026-06-24.csv",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "broker_contract": REFERENCES / "broker-data-contract.md",
-    "portfolio_skill": ROOT / "skills" / "portfolio-risk" / "SKILL.md",
-    "root_readme": REPO / "README.md",
+    "portfolio_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-portfolio-risk.md",
     "plugin_readme": ROOT / "README.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -72,11 +71,6 @@ REQUIRED = {
     "portfolio_skill": [
         "repair_portfolio_snapshot.py",
         "stale or unmapped product/theme",
-        "portfolio_snapshot.csv",
-    ],
-    "root_readme": [
-        "repair_portfolio_snapshot.py",
-        "stale/unmapped product/theme",
         "portfolio_snapshot.csv",
     ],
     "plugin_readme": [

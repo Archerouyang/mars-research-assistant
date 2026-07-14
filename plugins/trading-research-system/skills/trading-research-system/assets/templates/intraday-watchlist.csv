@@ -1,0 +1,1 @@
+date,setup_id,trade_id,theme_id,ticker,underlying,direction,trade_horizon,instrument_type,analysis_timeframe,trigger_timeframe,setup_type,key_levels,trigger_zone,invalidation,current_status,last_checked,attention_reason,execution_check_required,notes

@@ -12,23 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 
 FILES = {
-    "skill": ROOT / "skills" / "research-report-intake" / "SKILL.md",
-    "reference": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-research-report-intake.md",
+    "reference": ROOT / "skills" / "trading-research-system" / "references"
     / "research-report-intake.md",
-    "router": ROOT / "skills" / "trading-research" / "SKILL.md",
-    "macro_skill": ROOT / "skills" / "macro-equity-research" / "SKILL.md",
-    "equity_screening": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "router": ROOT / "skills" / "trading-research-system" / "SKILL.md",
+    "macro_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-macro-equity-research.md",
+    "equity_screening": ROOT / "skills" / "trading-research-system" / "references"
     / "equity-screening.md",
-    "output_templates": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "output_templates": ROOT / "skills" / "trading-research-system" / "references"
     / "output-templates.md",
     "report_log": ROOT / "assets" / "templates" / "research-report-log.csv",
     "expected_digest": ROOT

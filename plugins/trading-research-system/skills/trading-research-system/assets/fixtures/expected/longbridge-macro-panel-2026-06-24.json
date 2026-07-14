@@ -1,0 +1,102 @@
+{
+  "as_of": "2026-06-24T20:00:00Z",
+  "data_status": "fixture",
+  "degraded": false,
+  "indicators": [
+    {
+      "change_20d": 0.21,
+      "change_5d": 0.09,
+      "label": "10Y Treasury yield",
+      "name": "10Y",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "balanced; high-beta adds need rate confirmation",
+      "threshold": "4.50 pressure line",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "%",
+      "value": 4.48
+    },
+    {
+      "change_20d": 0.24,
+      "change_5d": 0.09,
+      "label": "30Y Treasury yield",
+      "name": "30Y",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "duration pressure near 5.00%",
+      "threshold": "5.00 stress line",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "%",
+      "value": 4.97
+    },
+    {
+      "change_20d": 0.02,
+      "change_5d": 0,
+      "label": "Credit risk appetite",
+      "name": "HYG/LQD",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "credit supports risk if ratio is stable or rising",
+      "threshold": "widening/tightening confirmation",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "",
+      "value": 0.78
+    },
+    {
+      "change_20d": -1.1,
+      "change_5d": -0.4,
+      "label": "US Dollar Index",
+      "name": "DXY",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "lower USD pressure supports liquidity",
+      "threshold": "breakout/breakdown confirmation",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "",
+      "value": 98.2
+    },
+    {
+      "change_20d": 2.4,
+      "change_5d": -1.3,
+      "label": "WTI crude oil",
+      "name": "Oil",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "oil spike would pressure inflation and volatility",
+      "threshold": "geopolitical spike / breakdown",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "USD",
+      "value": 65.7
+    },
+    {
+      "change_20d": 118,
+      "change_5d": 42,
+      "label": "Gold",
+      "name": "Gold",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "defensive / easing hedge confirmation",
+      "threshold": "trend confirmation",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "USD",
+      "value": 3340
+    },
+    {
+      "change_20d": "slightly easier",
+      "change_5d": "mixed",
+      "label": "Liquidity proxy",
+      "name": "liquidity",
+      "source": "Longbridge macrodata",
+      "strategy_impact": "liquidity proxy gates beta sizing",
+      "threshold": "reserves / RRP / TGA proxy",
+      "timestamp": "2026-06-24T20:00:00Z",
+      "unit": "",
+      "value": "neutral"
+    }
+  ],
+  "missing_indicators": [],
+  "missing_optional_indicators": [],
+  "missing_required_indicators": [],
+  "source_capability": "longbridge_macrodata",
+  "source_notes": [
+    "Longbridge macrodata is S1 macro/financial data, not a broker account source.",
+    "Policy facts, official speeches, and release status still require S0 official confirmation."
+  ],
+  "source_status": "available",
+  "strategy_posture": "balanced",
+  "summary": "Rates are near pressure thresholds, but credit, USD, oil, gold, and liquidity do not force a defensive posture."
+}

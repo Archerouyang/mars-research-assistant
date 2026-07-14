@@ -23,7 +23,6 @@ FILES = {
     "fixture_expected": ROOT / "assets" / "fixtures" / "expected" / "ibkr-connector-adapter-2026-06-24.csv",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "broker_contract": REFERENCES / "broker-data-contract.md",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -65,11 +64,6 @@ REQUIRED = {
         "get_account_balances",
         "No live broker reads",
         "No order actions",
-    ],
-    "root_readme": [
-        "IBKR connector adapter",
-        "ibkr_connector_adapter.py",
-        "No live broker reads",
     ],
     "plugin_readme": [
         "IBKR connector adapter",

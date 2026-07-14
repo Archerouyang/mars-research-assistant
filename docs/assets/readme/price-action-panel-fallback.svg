@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1025" viewBox="0 0 1200 1025" role="img" aria-label="QQQ / VIX Plan View">
+<style>
+.label{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.muted{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
+.small{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
+.title{font:700 22px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.subtitle{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
+.tag{font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+</style>
+<rect width="1200" height="1025" fill="#ffffff"/>
+<text class="title" x="36" y="42">QQQ / VIX Plan View</text>
+<text class="subtitle" x="36" y="66">Synthetic fixture for Lightweight Charts contract tests; not live market data</text>
+<text class="muted" x="36" y="86">setup status: active market plan fixture</text>
+<rect x="78" y="108" width="850" height="455" fill="#fbfcfd" stroke="#d8dee4"/>
+<line x1="78" y1="221.8" x2="928" y2="221.8" stroke="#eaeef2"/>
+<line x1="78" y1="335.5" x2="928" y2="335.5" stroke="#eaeef2"/>
+<line x1="78" y1="449.2" x2="928" y2="449.2" stroke="#eaeef2"/>
+<rect x="78" y="214.0" width="850" height="8.9" fill="#1a7f37" opacity="0.12"/>
+<text class="small" x="86" y="209.0" fill="#1a7f37">trigger zone: add only after confirmation</text>
+<rect x="78" y="258.4" width="850" height="19.1" fill="#d1242f" opacity="0.12"/>
+<text class="small" x="86" y="253.4" fill="#d1242f">invalidation / review zone</text>
+<rect x="78" y="139.4" width="850" height="14.7" fill="#9a6700" opacity="0.12"/>
+<text class="small" x="86" y="134.4" fill="#9a6700">TP/rebalance zone</text>
+<line x1="78.0" y1="496.5" x2="78.0" y2="512.8" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="73.1" y="504.1" width="9.9" height="6.3" fill="#1a7f37" opacity="0.88"/>
+<line x1="95.0" y1="500.5" x2="95.0" y2="531.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="90.1" y="502.6" width="9.9" height="24.4" fill="#1a7f37" opacity="0.88"/>
+<line x1="112.0" y1="490.2" x2="112.0" y2="503.2" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="107.1" y="494.8" width="9.9" height="5.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="129.0" y1="493.8" x2="129.0" y2="517.2" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="124.1" y="494.6" width="9.9" height="6.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="146.0" y1="447.3" x2="146.0" y2="464.6" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="141.1" y="449.9" width="9.9" height="5.8" fill="#cf222e" opacity="0.88"/>
+<line x1="163.0" y1="446.0" x2="163.0" y2="462.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="158.1" y="446.7" width="9.9" height="9.3" fill="#1a7f37" opacity="0.88"/>
+<line x1="180.0" y1="438.9" x2="180.0" y2="448.0" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="175.1" y="443.0" width="9.9" height="2.0" fill="#cf222e" opacity="0.88"/>
+<line x1="197.0" y1="430.2" x2="197.0" y2="451.3" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="192.1" y="430.7" width="9.9" height="17.6" fill="#1a7f37" opacity="0.88"/>
+<line x1="214.0" y1="405.8" x2="214.0" y2="424.7" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="209.1" y="405.8" width="9.9" height="18.6" fill="#1a7f37" opacity="0.88"/>
+<line x1="231.0" y1="385.7" x2="231.0" y2="406.7" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="226.1" y="386.3" width="9.9" height="18.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="248.0" y1="375.7" x2="248.0" y2="391.0" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="243.1" y="379.5" width="9.9" height="2.7" fill="#1a7f37" opacity="0.88"/>
+<line x1="265.0" y1="358.3" x2="265.0" y2="371.5" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="260.1" y="360.9" width="9.9" height="7.4" fill="#1a7f37" opacity="0.88"/>
+<line x1="282.0" y1="361.1" x2="282.0" y2="374.9" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="277.1" y="362.7" width="9.9" height="2.8" fill="#cf222e" opacity="0.88"/>
+<line x1="299.0" y1="357.9" x2="299.0" y2="375.6" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="294.1" y="361.9" width="9.9" height="9.0" fill="#cf222e" opacity="0.88"/>
+<line x1="316.0" y1="346.5" x2="316.0" y2="361.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="311.1" y="347.0" width="9.9" height="11.0" fill="#1a7f37" opacity="0.88"/>
+<line x1="333.0" y1="342.9" x2="333.0" y2="368.3" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="328.1" y="350.6" width="9.9" height="4.6" fill="#cf222e" opacity="0.88"/>
+<line x1="350.0" y1="326.1" x2="350.0" y2="343.8" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="345.1" y="327.5" width="9.9" height="11.9" fill="#1a7f37" opacity="0.88"/>
+<line x1="367.0" y1="326.3" x2="367.0" y2="334.5" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="362.1" y="326.7" width="9.9" height="2.0" fill="#1a7f37" opacity="0.88"/>
+<line x1="384.0" y1="336.9" x2="384.0" y2="349.8" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="379.1" y="341.5" width="9.9" height="2.0" fill="#1a7f37" opacity="0.88"/>
+<line x1="401.0" y1="332.4" x2="401.0" y2="343.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="396.1" y="332.6" width="9.9" height="6.6" fill="#1a7f37" opacity="0.88"/>
+<line x1="418.0" y1="316.7" x2="418.0" y2="341.5" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="413.1" y="318.9" width="9.9" height="5.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="435.0" y1="300.7" x2="435.0" y2="316.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="430.1" y="304.7" width="9.9" height="11.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="452.0" y1="299.0" x2="452.0" y2="316.4" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="447.1" y="303.6" width="9.9" height="4.0" fill="#cf222e" opacity="0.88"/>
+<line x1="469.0" y1="285.6" x2="469.0" y2="297.2" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="464.1" y="288.1" width="9.9" height="8.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="486.0" y1="256.4" x2="486.0" y2="277.3" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="481.1" y="256.7" width="9.9" height="17.8" fill="#1a7f37" opacity="0.88"/>
+<line x1="503.0" y1="244.6" x2="503.0" y2="265.6" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="498.1" y="254.9" width="9.9" height="3.6" fill="#cf222e" opacity="0.88"/>
+<line x1="520.0" y1="222.6" x2="520.0" y2="248.4" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="515.1" y="222.4" width="9.9" height="25.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="537.0" y1="214.9" x2="537.0" y2="227.5" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="532.1" y="217.8" width="9.9" height="6.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="554.0" y1="224.8" x2="554.0" y2="254.7" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="549.1" y="229.1" width="9.9" height="2.1" fill="#cf222e" opacity="0.88"/>
+<line x1="571.0" y1="210.4" x2="571.0" y2="236.6" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="566.1" y="214.7" width="9.9" height="10.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="588.0" y1="198.4" x2="588.0" y2="215.7" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="583.1" y="203.4" width="9.9" height="11.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="605.0" y1="213.8" x2="605.0" y2="235.0" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="600.1" y="224.8" width="9.9" height="2.7" fill="#cf222e" opacity="0.88"/>
+<line x1="622.0" y1="220.5" x2="622.0" y2="249.8" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="617.1" y="221.6" width="9.9" height="12.7" fill="#cf222e" opacity="0.88"/>
+<line x1="639.0" y1="232.9" x2="639.0" y2="257.8" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="634.1" y="243.9" width="9.9" height="3.8" fill="#1a7f37" opacity="0.88"/>
+<line x1="656.0" y1="218.2" x2="656.0" y2="238.9" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="651.1" y="218.1" width="9.9" height="17.4" fill="#1a7f37" opacity="0.88"/>
+<line x1="673.0" y1="209.3" x2="673.0" y2="232.3" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="668.1" y="215.1" width="9.9" height="12.3" fill="#1a7f37" opacity="0.88"/>
+<line x1="690.0" y1="198.2" x2="690.0" y2="211.9" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="685.1" y="207.2" width="9.9" height="2.0" fill="#cf222e" opacity="0.88"/>
+<line x1="707.0" y1="178.1" x2="707.0" y2="193.7" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="702.1" y="180.1" width="9.9" height="9.6" fill="#1a7f37" opacity="0.88"/>
+<line x1="724.0" y1="173.4" x2="724.0" y2="190.9" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="719.1" y="174.2" width="9.9" height="7.8" fill="#cf222e" opacity="0.88"/>
+<line x1="741.0" y1="166.1" x2="741.0" y2="188.7" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="736.1" y="168.3" width="9.9" height="13.1" fill="#1a7f37" opacity="0.88"/>
+<line x1="758.0" y1="155.0" x2="758.0" y2="169.1" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="753.1" y="162.3" width="9.9" height="2.0" fill="#1a7f37" opacity="0.88"/>
+<line x1="775.0" y1="146.0" x2="775.0" y2="167.4" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="770.1" y="152.5" width="9.9" height="12.5" fill="#1a7f37" opacity="0.88"/>
+<line x1="792.0" y1="144.2" x2="792.0" y2="160.2" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="787.1" y="144.9" width="9.9" height="8.2" fill="#1a7f37" opacity="0.88"/>
+<line x1="809.0" y1="139.4" x2="809.0" y2="156.2" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="804.1" y="142.2" width="9.9" height="7.0" fill="#cf222e" opacity="0.88"/>
+<line x1="826.0" y1="150.8" x2="826.0" y2="174.9" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="821.1" y="157.2" width="9.9" height="11.4" fill="#1a7f37" opacity="0.88"/>
+<line x1="843.0" y1="177.0" x2="843.0" y2="237.7" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="838.1" y="180.7" width="9.9" height="55.4" fill="#cf222e" opacity="0.88"/>
+<line x1="860.0" y1="196.2" x2="860.0" y2="218.2" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="855.1" y="207.8" width="9.9" height="3.8" fill="#cf222e" opacity="0.88"/>
+<line x1="877.0" y1="190.4" x2="877.0" y2="277.5" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="872.1" y="196.2" width="9.9" height="33.7" fill="#cf222e" opacity="0.88"/>
+<line x1="894.0" y1="222.4" x2="894.0" y2="263.0" stroke="#cf222e" stroke-width="1.4"/>
+<rect x="889.1" y="243.6" width="9.9" height="17.7" fill="#cf222e" opacity="0.88"/>
+<line x1="911.0" y1="206.5" x2="911.0" y2="258.4" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="906.1" y="209.3" width="9.9" height="39.6" fill="#1a7f37" opacity="0.88"/>
+<line x1="928.0" y1="194.0" x2="928.0" y2="222.3" stroke="#1a7f37" stroke-width="1.4"/>
+<rect x="923.1" y="200.0" width="9.9" height="8.3" fill="#1a7f37" opacity="0.88"/>
+<polyline points="401.0,403.7 418.0,395.6 435.0,386.9 452.0,379.4 469.0,370.7 486.0,359.8 503.0,350.2 520.0,338.0 537.0,326.6 554.0,317.5 571.0,307.7 588.0,297.8 605.0,291.1 622.0,285.7 639.0,281.7 656.0,275.6 673.0,269.9 690.0,264.0 707.0,256.0 724.0,249.0 741.0,241.3 758.0,233.8 775.0,226.0 792.0,218.3 809.0,211.7 826.0,206.5 843.0,209.3 860.0,209.6 877.0,211.5 894.0,216.2 911.0,215.6 928.0,214.1" fill="none" stroke="#24292f" stroke-width="2.2"/>
+<polyline points="911.0,293.8 928.0,290.1" fill="none" stroke="#8c959f" stroke-width="2.2"/>
+<text class="small" x="80" y="590" fill="#24292f">EMA 20</text>
+<text class="small" x="142" y="590" fill="#8c959f">EMA 50</text>
+<line x1="78" y1="214.0" x2="928" y2="214.0" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="218.0" fill="#1a7f37">trigger zone high / EMA 20</text>
+<line x1="78" y1="222.9" x2="928" y2="222.9" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="226.9" fill="#1a7f37">trigger zone low</text>
+<line x1="78" y1="236.2" x2="928" y2="236.2" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="240.2" fill="#1a7f37">deep reclaim high</text>
+<line x1="78" y1="258.4" x2="928" y2="258.4" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="262.4" fill="#1a7f37">deep reclaim low</text>
+<line x1="78" y1="139.4" x2="928" y2="139.4" stroke="#9a6700" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="143.4" fill="#9a6700">prior high / TP/rebalance watch</text>
+<line x1="78" y1="277.5" x2="928" y2="277.5" stroke="#d1242f" stroke-width="1.8" stroke-dasharray="6 5"/>
+<text class="small" x="936" y="281.5" fill="#d1242f">invalidation / review trigger</text>
+<text class="tag" x="78" y="96">chart callouts</text>
+<rect x="90" y="206.5" width="104" height="18" rx="9" fill="#ffffff" stroke="#1a7f37" stroke-width="1.2"/>
+<text class="small" x="98" y="219.5" style="fill:#1a7f37">Z1 trigger</text>
+<rect x="90" y="256.0" width="104" height="18" rx="9" fill="#ffffff" stroke="#d1242f" stroke-width="1.2"/>
+<text class="small" x="98" y="269.0" style="fill:#d1242f">Z2 invalidation</text>
+<rect x="90" y="134.7" width="104" height="18" rx="9" fill="#ffffff" stroke="#9a6700" stroke-width="1.2"/>
+<text class="small" x="98" y="147.7" style="fill:#9a6700">Z3 rebalance</text>
+<rect x="808" y="202.0" width="96" height="18" rx="9" fill="#ffffff" stroke="#1a7f37" stroke-width="1.2"/>
+<text class="small" x="816" y="215.0" style="fill:#1a7f37">L1 715</text>
+<rect x="808" y="224.0" width="96" height="18" rx="9" fill="#ffffff" stroke="#1a7f37" stroke-width="1.2"/>
+<text class="small" x="816" y="237.0" style="fill:#1a7f37">L2 711</text>
+<rect x="808" y="246.0" width="96" height="18" rx="9" fill="#ffffff" stroke="#1a7f37" stroke-width="1.2"/>
+<text class="small" x="816" y="259.0" style="fill:#1a7f37">L3 705</text>
+<rect x="808" y="268.0" width="96" height="18" rx="9" fill="#ffffff" stroke="#1a7f37" stroke-width="1.2"/>
+<text class="small" x="816" y="281.0" style="fill:#1a7f37">L4 695</text>
+<rect x="808" y="127.4" width="96" height="18" rx="9" fill="#ffffff" stroke="#9a6700" stroke-width="1.2"/>
+<text class="small" x="816" y="140.4" style="fill:#9a6700">L5 748.63</text>
+<rect x="808" y="290.0" width="96" height="18" rx="9" fill="#ffffff" stroke="#d1242f" stroke-width="1.2"/>
+<text class="small" x="816" y="303.0" style="fill:#d1242f">L6 686.4</text>
+<rect x="962" y="108" width="190" height="455" rx="6" fill="#ffffff" stroke="#d8dee4"/>
+<text class="label" x="978" y="136">Decision panel</text>
+<text class="muted" x="978" y="163">last close: 721.34</text>
+<text class="muted" x="978" y="184">source: fixture</text>
+<text class="muted" x="978" y="205">as of: 2026-06-12</text>
+<text class="label" x="978" y="238">Notes</text>
+<text class="small" x="978" y="260">Fixture only; use authorized OHLCV data for live analysis.</text>
+<text class="small" x="978" y="282">QQQ is a synthetic fixture symbol here, not a recommendatio...</text>
+<text class="small" x="78" y="593">2026-04-01</text>
+<text class="small" x="842" y="593">2026-06-12</text>
+<text class="tag" x="36" y="610">price reference table</text>
+<rect x="36" y="620" width="1128" height="329" rx="7" fill="#ffffff" stroke="#d8dee4"/>
+<rect x="36" y="620" width="1128" height="30" rx="7" fill="#f6f8fa" stroke="#d8dee4"/>
+<text class="tag" x="52" y="640">item</text>
+<text class="tag" x="348" y="640">type</text>
+<text class="tag" x="496" y="640">price / range</text>
+<text class="tag" x="648" y="640">role</text>
+<text class="tag" x="860" y="640">plan action</text>
+<text class="muted" x="52" y="673">setup status</text>
+<text class="muted" x="348" y="673">context</text>
+<text class="muted" x="496" y="673">active market pla...</text>
+<text class="muted" x="648" y="673">current plan state</text>
+<text class="muted" x="860" y="673">do not trade from chart alone</text>
+<rect x="36" y="676" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="696">last close</text>
+<text class="muted" x="348" y="696">price</text>
+<text class="muted" x="496" y="696">721.34</text>
+<text class="muted" x="648" y="696">2026-06-12</text>
+<text class="muted" x="860" y="696">anchor current read</text>
+<text class="muted" x="52" y="719">EMA 20</text>
+<text class="muted" x="348" y="719">moving average</text>
+<text class="muted" x="496" y="719">714.97</text>
+<text class="muted" x="648" y="719">trend reference</text>
+<text class="muted" x="860" y="719">check pullback / reclaim context</text>
+<rect x="36" y="722" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="742">EMA 50</text>
+<text class="muted" x="348" y="742">moving average</text>
+<text class="muted" x="496" y="742">680.72</text>
+<text class="muted" x="648" y="742">trend reference</text>
+<text class="muted" x="860" y="742">check larger trend pressure</text>
+<text class="muted" x="52" y="765">L1 trigger zone high / EMA 20</text>
+<text class="muted" x="348" y="765">trigger</text>
+<text class="muted" x="496" y="765">715</text>
+<text class="muted" x="648" y="765">single level</text>
+<text class="muted" x="860" y="765">wait for confirmation; no early entry</text>
+<rect x="36" y="768" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="788">L2 trigger zone low</text>
+<text class="muted" x="348" y="788">trigger</text>
+<text class="muted" x="496" y="788">711</text>
+<text class="muted" x="648" y="788">single level</text>
+<text class="muted" x="860" y="788">wait for confirmation; no early entry</text>
+<text class="muted" x="52" y="811">L3 deep reclaim high</text>
+<text class="muted" x="348" y="811">support</text>
+<text class="muted" x="496" y="811">705</text>
+<text class="muted" x="648" y="811">single level</text>
+<text class="muted" x="860" y="811">watch reclaim / support response</text>
+<rect x="36" y="814" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="834">L4 deep reclaim low</text>
+<text class="muted" x="348" y="834">support</text>
+<text class="muted" x="496" y="834">695</text>
+<text class="muted" x="648" y="834">single level</text>
+<text class="muted" x="860" y="834">watch reclaim / support response</text>
+<text class="muted" x="52" y="857">L5 prior high / TP/rebalance watch</text>
+<text class="muted" x="348" y="857">profit</text>
+<text class="muted" x="496" y="857">748.63</text>
+<text class="muted" x="648" y="857">single level</text>
+<text class="muted" x="860" y="857">TP/rebalance review, not forced exit</text>
+<rect x="36" y="860" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="880">L6 invalidation / review trigger</text>
+<text class="muted" x="348" y="880">review</text>
+<text class="muted" x="496" y="880">686.4</text>
+<text class="muted" x="648" y="880">single level</text>
+<text class="muted" x="860" y="880">pause adds and review plan</text>
+<text class="muted" x="52" y="903">Z1 trigger zone: add only after confirmation</text>
+<text class="muted" x="348" y="903">trigger</text>
+<text class="muted" x="496" y="903">711-715</text>
+<text class="muted" x="648" y="903">price / range</text>
+<text class="muted" x="860" y="903">wait for confirmation; no early entry</text>
+<rect x="36" y="906" width="1128" height="23" fill="#fbfcfd"/>
+<text class="muted" x="52" y="926">Z2 invalidation / review zone</text>
+<text class="muted" x="348" y="926">invalidation</text>
+<text class="muted" x="496" y="926">686.4-695</text>
+<text class="muted" x="648" y="926">price / range</text>
+<text class="muted" x="860" y="926">pause adds and review plan</text>
+<text class="muted" x="52" y="949">Z3 TP/rebalance zone</text>
+<text class="muted" x="348" y="949">rebalance</text>
+<text class="muted" x="496" y="949">742-748.63</text>
+<text class="muted" x="648" y="949">price / range</text>
+<text class="muted" x="860" y="949">TP/rebalance review, not forced exit</text>
+<text class="small" x="36" y="983">Display-first chart artifact. Use authorized OHLCV or fixture data only; no live broker reads or live market data calls.</text>
+</svg>

@@ -16,10 +16,7 @@ FILES = {
     "importer": ROOT / "scripts" / "import_legacy_active_csv.py",
     "selftest": ROOT / "scripts" / "verify_legacy_active_import_selftest.py",
     "fixture": ROOT / "assets" / "fixtures" / "input" / "legacy-active-trades.csv",
-    "trade_journal": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "trade_journal": ROOT / "skills" / "trading-research-system" / "references"
     / "trade-journal.md",
     "readme": ROOT / "README.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",

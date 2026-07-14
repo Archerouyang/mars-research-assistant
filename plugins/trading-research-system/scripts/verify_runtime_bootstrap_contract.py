@@ -16,7 +16,6 @@ FILES = {
     "bootstrap_selftest": ROOT / "scripts" / "verify_runtime_bootstrap_selftest.py",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "verify_plugin": REPO / "scripts" / "verify-plugin.sh",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "mvp_runbook": REPO / "docs" / "MVP_RUNBOOK.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -50,11 +49,6 @@ REQUIRED = {
         "verify_runtime_bootstrap_contract.py",
     ],
     "verify_plugin": ["verify_contract_suite.py", "core"],
-    "root_readme": [
-        "Runtime bootstrap",
-        "bootstrap_runtime.py",
-        "No live broker reads",
-    ],
     "plugin_readme": [
         "Runtime bootstrap",
         "bootstrap_runtime.py",

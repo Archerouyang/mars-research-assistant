@@ -2,6 +2,11 @@
 
 Status: accepted design.
 
+Distribution update: ADR 0007 packages this design as one public,
+self-contained `trading-research-system` Agent Skill. The focused workflows
+below are internal references and test boundaries, not separately installable
+or independently maintained Skills.
+
 This document defines the intended product shape, capability boundary, agent
 interaction model, runtime state model, and development sequence for the
 Dailytrades Trading Research System plugin.
@@ -14,10 +19,10 @@ current facts, and returns a concise decision-useful note.
 ## Design Principles
 
 - The plugin is decision support, not an automated trading system.
-- The user should not need to memorize focused skill names.
+- The user should not need to memorize focused workflow names.
 - The user should not need to manually call out every module in order; Daily Ops Orchestrator provides 主动日程引导 before focused workflows run.
-- Focused skills remain as agent-internal tools, test boundaries, and development
-  units.
+- Focused workflows remain agent-internal references, test boundaries, and
+  development units inside the one public Skill.
 - The public plugin must stay general. Personal strategy details belong in the
   private runtime trading profile.
 - The agent should read broadly, verify aggressively, and show only what changes
@@ -39,7 +44,7 @@ confirmed in the design discussion.
 | --- | --- | --- | --- |
 | Default UX | Natural language tasks are the default user interface | accepted | Keeps the product AI-native and avoids making users memorize skill names |
 | Daily Ops Orchestrator | Add an active process guide backed by `ops-state.md` and `ticker + trade_horizon + instrument` confirmations | accepted | Lets the user say "start today" or "continue the flow" while the agent decides the next workflow |
-| Focused skills | Keep as internal agent workflows, power-user shortcuts, and test boundaries | accepted | Preserves modularity without making the UX tool-menu driven |
+| Focused workflows | Keep as internal routing references and test boundaries within the public Skill | accepted | Preserves modularity without creating partially installable public packages |
 | Public docs | README should show task prompts first and move focused skill names to an advanced section | accepted | Aligns documentation with the desired user interaction model |
 | Runtime source of truth | Private runtime files own discretionary context; broker facts are read live when authorized; derived broker summaries may be saved for comparison | accepted | Avoids leaking private data and avoids stale local broker records |
 | Trading profile | Public plugin ships a blank framework; concrete strategy preferences live in private `trading-profile.md` | accepted | Keeps the plugin general while supporting personal workflows |
@@ -54,7 +59,7 @@ Review should happen in this order because later decisions depend on earlier
 ones.
 
 1. **User interaction model**: decide whether natural language tasks are the
-   default UX and focused skills are internal/power-user tools.
+   default UX and focused workflows are internal routing tools.
 2. **Runtime boundary**: decide what the agent may read/write locally, and what
    must remain private or external.
 3. **Router contract**: decide how the agent maps user tasks into focused
@@ -95,13 +100,13 @@ The agent then routes internally.
 Default UX:
 
 - User writes a natural language task.
-- Agent reads `trading-research` router guidance and private runtime state.
+- Agent reads `trading-research-system` router guidance and private runtime state.
 - Agent selects one or more focused workflows.
 - Agent asks only for missing information that materially affects the output.
 - Agent returns concise Chinese Markdown.
 
-Focused skills are not the default user-facing menu. They remain available for
-advanced users, debugging, tests, and direct development checks.
+Focused workflows are not a user-facing menu or separate install targets. They
+remain internal references for routing, debugging, tests, and development.
 
 Example user prompts:
 
@@ -453,7 +458,7 @@ fixtures and should not require live broker or paid research access.
 Deliverables:
 
 - Update README language so natural language tasks are the default UX.
-- Keep focused skills documented as internal/advanced paths.
+- Keep focused workflows documented as internal routing references.
 - Add router behavior fixtures for realistic prompts.
 - Ensure outputs stay concise and decision-useful.
 
@@ -461,7 +466,7 @@ Done when:
 
 - a new user understands they can ask goals directly;
 - the router can select focused workflows without requiring manual skill names;
-- README no longer implies focused skills are the primary UX.
+- README no longer implies focused workflows are separate user tools.
 
 Suggested issue slices:
 
@@ -663,7 +668,7 @@ boundaries are now accepted.
 | Decision | Recommendation | Status |
 | --- | --- | --- |
 | Public README default UX | Natural language tasks first; focused skill names in advanced/internal section | accepted |
-| Public-facing skill surface | `trading-research` as the conceptual router; focused skills remain callable but not the primary UX | accepted |
+| Public-facing skill surface | One `trading-research-system` Skill; focused workflows are internal references and cannot be partially installed | accepted |
 | Automation write confirmation | Trading ops automations should draft changes and wait for explicit confirmation before writing runtime files | accepted |
 | Runtime health minimum | Check `market-plan.md`, `trading-profile.md`, `updates/`, daily directory, broker-source availability, and KVN store status | accepted |
 | Broker preference when both are available | Ask during onboarding/runtime initialization and store enabled sources plus preference privately; v1 formally supports Longbridge skill/plugin and IBKR connector | accepted |

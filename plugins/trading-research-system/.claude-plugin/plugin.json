@@ -1,0 +1,17 @@
+{
+  "name": "trading-research-system",
+  "version": "0.1.1",
+  "description": "AI-native trading research, plan maintenance, setup tracking, and portfolio-risk decision support.",
+  "author": {
+    "name": "Archer Ouyang"
+  },
+  "homepage": "https://github.com/Archerouyang/dailytrades",
+  "repository": "https://github.com/Archerouyang/dailytrades",
+  "license": "MIT",
+  "keywords": [
+    "trading-research",
+    "market-analysis",
+    "risk-management"
+  ],
+  "skills": "./skills/trading-research-system"
+}

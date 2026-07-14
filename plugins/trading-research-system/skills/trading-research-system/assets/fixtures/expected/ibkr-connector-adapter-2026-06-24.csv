@@ -1,0 +1,4 @@
+as_of,broker,account_id,symbol,underlying,instrument_type,direction,quantity,avg_cost,market_price,market_value,currency,unrealized_pnl,realized_pnl,delta_exposure,notional_exposure,theme_id,source_timestamp,notes
+2026-06-24T20:00:00Z,IBKR,SIM-IBKR,CRDO,CRDO,stock_common,long,12,42.5,48.25,579,USD,69,0,579,579,unmapped,2026-06-24T20:00:00Z,IBKR connector positions JSON; asset_class=STK
+2026-06-24T20:00:00Z,IBKR,SIM-IBKR,QQQ,QQQ,etf_common,long,3,700,710,2130,USD,30,0,2130,2130,unmapped,2026-06-24T20:00:00Z,IBKR connector positions JSON; asset_class=STK
+2026-06-24T20:00:00Z,IBKR,SIM-IBKR,CASH,USD,cash,long,1,150.25,150.25,150.25,USD,0,0,0,0,cash,2026-06-24T20:00:00Z,IBKR connector balances JSON cash balance

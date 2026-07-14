@@ -16,9 +16,9 @@ PATHS = PluginPaths.from_script(__file__)
 FILES = {
     "root_readme": PATHS.repo / "README.md",
     "plugin_readme": PATHS.root / "README.md",
-    "router_skill": PATHS.skills / "trading-research" / "SKILL.md",
-    "daily_skill": PATHS.skills / "daily-market-tracking" / "SKILL.md",
-    "weekly_skill": PATHS.skills / "weekly-trading-plan" / "SKILL.md",
+    "router_skill": PATHS.skills / "trading-research-system" / "SKILL.md",
+    "daily_skill": PATHS.skills / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
+    "weekly_skill": PATHS.skills / "trading-research-system" / "references" / "workflow-weekly-trading-plan.md",
     "daily_template": PATHS.templates / "daily-market-tracking.md",
     "plugin_manifest": PATHS.root / ".codex-plugin" / "plugin.json",
     "router_fixture": PATHS.fixture_input / "router-intents.json",

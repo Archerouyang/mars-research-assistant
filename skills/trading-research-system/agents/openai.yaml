@@ -1,0 +1,4 @@
+interface:
+  display_name: "Trading Research System"
+  short_description: "AI-native trading research and risk decision support"
+  default_prompt: "Use $trading-research-system to begin the current trading research session."

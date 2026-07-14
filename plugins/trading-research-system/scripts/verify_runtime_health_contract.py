@@ -16,9 +16,9 @@ REPO = PATHS.repo
 FILES = {
     "script": ROOT / "scripts" / "runtime_health.py",
     "selftest": ROOT / "scripts" / "verify_runtime_health_selftest.py",
-    "reference": ROOT / "skills" / "trading-research" / "references" / "runtime-health.md",
-    "router": ROOT / "skills" / "trading-research" / "SKILL.md",
-    "automation": ROOT / "skills" / "trading-research" / "references" / "automation-contract.md",
+    "reference": ROOT / "skills" / "trading-research-system" / "references" / "runtime-health.md",
+    "router": ROOT / "skills" / "trading-research-system" / "SKILL.md",
+    "automation": ROOT / "skills" / "trading-research-system" / "references" / "automation-contract.md",
     "plugin_readme": ROOT / "README.md",
     "design": REPO / "docs" / "PLUGIN_DESIGN.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",

@@ -13,20 +13,14 @@ PATHS = PluginPaths.from_script(__file__)
 ROOT = PATHS.root
 
 FILES = {
-    "weekly_skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",
-    "macro_skill": ROOT / "skills" / "macro-equity-research" / "SKILL.md",
-    "active_plan": ROOT / "skills" / "trading-research" / "references" / "active-market-plan.md",
-    "macro_filter": ROOT / "skills" / "trading-research" / "references" / "macro-policy-filter.md",
-    "equity_screening": ROOT / "skills" / "trading-research" / "references" / "equity-screening.md",
-    "momentum_leaderboard": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "weekly_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-weekly-trading-plan.md",
+    "macro_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-macro-equity-research.md",
+    "active_plan": ROOT / "skills" / "trading-research-system" / "references" / "active-market-plan.md",
+    "macro_filter": ROOT / "skills" / "trading-research-system" / "references" / "macro-policy-filter.md",
+    "equity_screening": ROOT / "skills" / "trading-research-system" / "references" / "equity-screening.md",
+    "momentum_leaderboard": ROOT / "skills" / "trading-research-system" / "references"
     / "momentum-leaderboard.md",
-    "output_templates": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "output_templates": ROOT / "skills" / "trading-research-system" / "references"
     / "output-templates.md",
     "market_template": ROOT / "assets" / "templates" / "market-plan.md",
     "weekly_template": ROOT / "assets" / "templates" / "weekly-plan.md",

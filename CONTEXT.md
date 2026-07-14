@@ -37,7 +37,7 @@ Trading Research System 对外是一个自包含 Agent Skill，内部通过路�
 _Avoid_: 多个可被部分安装的公开 skills, 多个互不相干的 plugin
 
 **Daily Ops Orchestrator**:
-Trading Research System 的主动日程引导层。它在 `trading-research` 路由入口之后、focused skills 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代 focused skills。
+Trading Research System 的主动日程引导层。它位于单一 `trading-research-system` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
 _Avoid_: 新的荐股模块, 让用户手动 call out 每个步骤
 
 **Daily Ops State**:

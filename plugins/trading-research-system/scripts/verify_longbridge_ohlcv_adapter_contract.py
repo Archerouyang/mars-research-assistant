@@ -20,8 +20,7 @@ FILES = {
     "fixture": ROOT / "assets" / "fixtures" / "input" / "longbridge-kline-qqq-day-2026-07-09.json",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "price_action_reference": REFERENCES / "price-action-timing.md",
-    "daily_tracking_skill": ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
-    "root_readme": REPO / "README.md",
+    "daily_tracking_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
     "plugin_readme": ROOT / "README.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -66,11 +65,6 @@ REQUIRED = {
         "price_action_rollforward.py",
     ],
     "daily_tracking_skill": [
-        "longbridge_ohlcv_adapter.py",
-        "Longbridge kline",
-        "OHLCV",
-    ],
-    "root_readme": [
         "longbridge_ohlcv_adapter.py",
         "Longbridge kline",
         "OHLCV",

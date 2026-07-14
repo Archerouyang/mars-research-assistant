@@ -20,9 +20,8 @@ FILES = {
     "fixture": ROOT / "assets" / "fixtures" / "input" / "confirmed-setups-2026-06-24.json",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "intraday_reference": REFERENCES / "intraday-setup-scan.md",
-    "router_skill": ROOT / "skills" / "trading-research" / "SKILL.md",
+    "router_skill": ROOT / "skills" / "trading-research-system" / "SKILL.md",
     "daily_orchestrator": ROOT / "assets" / "templates" / "daily-ops-orchestrator.md",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "mvp_runbook": REPO / "docs" / "MVP_RUNBOOK.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -78,11 +77,6 @@ REQUIRED = {
         "prepare_setup_rows.py",
         "user-confirmed setup JSON",
         "populate setup rows",
-    ],
-    "root_readme": [
-        "prepare_setup_rows.py",
-        "user-confirmed setup JSON",
-        "intraday-watchlist.csv",
     ],
     "plugin_readme": [
         "prepare_setup_rows.py",

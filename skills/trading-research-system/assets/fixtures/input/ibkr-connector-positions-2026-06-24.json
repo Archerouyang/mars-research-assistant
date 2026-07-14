@@ -1,0 +1,28 @@
+{
+  "positions": [
+    {
+      "contract_id": 111111,
+      "contract_description": "CRDO",
+      "position": 12.0,
+      "market_price": 48.25,
+      "market_value": 579.0,
+      "currency": "USD",
+      "average_price": 42.5,
+      "unrealized_pnl": 69.0,
+      "daily_pnl": 12.0,
+      "asset_class": "STK"
+    },
+    {
+      "contract_id": 222222,
+      "contract_description": "QQQ",
+      "position": 3.0,
+      "market_price": 710.0,
+      "market_value": 2130.0,
+      "currency": "USD",
+      "average_price": 700.0,
+      "unrealized_pnl": 30.0,
+      "daily_pnl": 6.0,
+      "asset_class": "STK"
+    }
+  ]
+}

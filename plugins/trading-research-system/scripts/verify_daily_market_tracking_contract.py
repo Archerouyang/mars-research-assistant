@@ -10,7 +10,7 @@ from contract_verifier import ContractSpec, FileContract, run_contract
 PATHS = PluginPaths.from_script(__file__)
 
 FILES = {
-    "skill": PATHS.skills / "daily-market-tracking" / "SKILL.md",
+    "skill": PATHS.skills / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
     "template": PATHS.templates / "daily-market-tracking.md",
 }
 

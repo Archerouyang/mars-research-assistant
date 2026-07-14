@@ -1,0 +1,16 @@
+{
+  "name": "dailytrades",
+  "description": "Optional Claude Code native wrapper for Trading Research System.",
+  "owner": {
+    "name": "Archer Ouyang"
+  },
+  "plugins": [
+    {
+      "name": "trading-research-system",
+      "source": "./plugins/trading-research-system",
+      "description": "AI-native trading research and portfolio-risk decision support",
+      "category": "productivity",
+      "tags": ["trading-research", "market-analysis", "risk-management"]
+    }
+  ]
+}

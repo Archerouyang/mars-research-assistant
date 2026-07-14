@@ -1,7 +1,8 @@
 [project]
 name = "dailytrades"
-version = "0.0.0"
-description = "Development tooling for the Dailytrades Codex plugin repository."
+version = "0.1.1"
+description = "Development tooling for the DailyTrades Trading Research System repository."
+license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = []
 

@@ -21,7 +21,6 @@ FILES = {
     "longbridge_reference": REFERENCES / "longbridge-skill-adapter.md",
     "macro_data_contract": REFERENCES / "macro-data-source-contract.md",
     "daily_ops_reference": REFERENCES / "daily-ops-orchestrator.md",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -70,7 +69,6 @@ REQUIRED = {
         "item-level `source`",
     ],
     "daily_ops_reference": ["prepare_macro_panel.py", "macro-panel.json"],
-    "root_readme": ["prepare_macro_panel.py", "macro-panel.json", "--macrodata-json", "official_source_fallback"],
     "plugin_readme": ["prepare_macro_panel.py", "macro-panel.json", "--macrodata-json", "official_source_fallback"],
     "roadmap": ["Macro panel runtime preparation", "prepare_macro_panel.py", "macro-panel.json", "official_source_fallback"],
     "development_plan": [

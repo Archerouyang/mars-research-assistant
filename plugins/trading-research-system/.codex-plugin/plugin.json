@@ -1,11 +1,14 @@
 {
   "name": "trading-research-system",
   "version": "0.1.1",
-  "description": "Focused trading research skills for report intake, Active Market Plan updates, setup scans, trade review, broker reconciliation, and risk checks.",
+  "description": "AI-native trading research, plan maintenance, setup tracking, and portfolio-risk decision support.",
   "author": {
-    "name": "Archer"
+    "name": "Archer Ouyang",
+    "url": "https://github.com/Archerouyang"
   },
-  "license": "UNLICENSED",
+  "homepage": "https://github.com/Archerouyang/dailytrades",
+  "repository": "https://github.com/Archerouyang/dailytrades",
+  "license": "MIT",
   "keywords": [
     "trading",
     "investment-research",
@@ -13,21 +16,21 @@
     "equity-screening",
     "risk-management"
   ],
-  "skills": "./skills/",
+  "skills": "./skills",
   "interface": {
     "displayName": "Trading Research System",
     "shortDescription": "Report intake, active plans, setup scans, trade review, and broker-risk workflows.",
     "longDescription": "Trading Research System gives Codex a focused skill set for disciplined trading research: find and digest public or user-provided research reports, maintain an overwriteable Active Market Plan, append update notes, review prior trades during deep updates, analyze current market tape, macro, policy, news, and upcoming events, consume optional external momentum context when provided, manage setup-level opportunities, apply high-level Al Brooks price action timing, capture post-order and post-exit trade reviews from read-only broker facts, reconcile portfolio exposure across brokers, and review trading statistics.",
-    "developerName": "Archer",
+    "developerName": "Archer Ouyang",
     "category": "Productivity",
     "capabilities": [
       "Research",
       "Analysis"
     ],
     "defaultPrompt": [
-      "Deep-update my Active Market Plan for next week.",
-      "Read this research report and extract the plan impact.",
-      "Quick-update today's market plan and setup levels."
+      "Start today's trading research.",
+      "Review my Active Market Plan.",
+      "Check portfolio risk before I add exposure."
     ],
     "brandColor": "#2563EB"
   }

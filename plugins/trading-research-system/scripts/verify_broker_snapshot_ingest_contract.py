@@ -18,9 +18,8 @@ FILES = {
     "expected_snapshot": ROOT / "assets" / "fixtures" / "expected" / "broker-snapshot-ingest-2026-06-24.csv",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "verify_plugin": REPO / "scripts" / "verify-plugin.sh",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
-    "broker_contract": ROOT / "skills" / "trading-research" / "references" / "broker-data-contract.md",
+    "broker_contract": ROOT / "skills" / "trading-research-system" / "references" / "broker-data-contract.md",
     "position_automation": ROOT / "assets" / "templates" / "automation-position-daily-report.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
@@ -50,11 +49,6 @@ REQUIRED = {
         "verify_broker_snapshot_ingest_contract.py",
     ],
     "verify_plugin": ["verify_contract_suite.py", "core"],
-    "root_readme": [
-        "Broker snapshot ingest",
-        "broker_snapshot_ingest.py",
-        "No live broker reads",
-    ],
     "plugin_readme": [
         "Broker snapshot ingest",
         "broker_snapshot_ingest.py",

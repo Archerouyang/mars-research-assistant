@@ -11,16 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 
 FILES = {
-    "skill": ROOT / "skills" / "trade-review" / "SKILL.md",
-    "interactive_review": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-trade-review.md",
+    "interactive_review": ROOT / "skills" / "trading-research-system" / "references"
     / "interactive-trade-review.md",
-    "trade_journal": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "trade_journal": ROOT / "skills" / "trading-research-system" / "references"
     / "trade-journal.md",
     "writer": ROOT / "scripts" / "write_trade_review_context.py",
     "selftest": ROOT / "scripts" / "verify_trade_review_context_selftest.py",

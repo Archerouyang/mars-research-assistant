@@ -12,8 +12,8 @@ from contract_verifier import ContractSpec, FileContract, run_contract
 ROOT = Path(__file__).resolve().parents[1]
 
 FILES = {
-    "skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",
-    "output": ROOT / "skills" / "trading-research" / "references" / "output-templates.md",
+    "skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-weekly-trading-plan.md",
+    "output": ROOT / "skills" / "trading-research-system" / "references" / "output-templates.md",
     "template": ROOT / "assets" / "templates" / "weekly-plan.md",
     "fixture": ROOT / "assets" / "fixtures" / "expected" / "weekly-outlook-2026-06-15.md",
 }

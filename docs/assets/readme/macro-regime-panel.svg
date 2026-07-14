@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1106" viewBox="0 0 1200 1106" role="img" aria-label="Macro / Regime Mini-Panel">
+<style>
+.title{font:700 22px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.subtitle{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
+.label{font:600 14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.muted{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
+.value{font:700 19px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.tag{font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
+.axis{font:10px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#6e7781}
+</style>
+<rect width="1200" height="1106" fill="#ffffff"/>
+<text class="title" x="36" y="42">Macro / Regime Mini-Panel</text>
+<text class="subtitle" x="36" y="66">Synthetic fixture for display-first visual artifacts; not live market data</text>
+<text class="muted" x="36" y="86">source: fixture; Source Routing Boundary; Longbridge macrodata allowed for authorized series; official / reputable confirmation required for policy/news | as of: 2026-06-24</text>
+<text class="tag" x="36" y="112">strategy posture</text>
+<rect x="154" y="96" width="178" height="25" rx="12" fill="#fff8c5" stroke="#d4a72c"/>
+<text class="tag" x="170" y="113">Balanced / repair-watch</text>
+<text class="muted" x="358" y="113">Rates pressure is the main constraint; volatility and credit are not blocking risk.</text>
+<rect x="36" y="132" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="58" cy="158" r="7" fill="#cf222e"/>
+<text class="label" x="76" y="157">10Y</text>
+<text class="muted" x="76" y="179">10Y Treasury yield</text>
+<text class="value" x="368" y="162">4.48%</text>
+<text class="muted" x="368" y="184">delta +0.09% | pressure</text>
+<rect x="56" y="204" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="56" y1="221.5" x2="306" y2="221.5" stroke="#eaeef2"/>
+<line x1="56" y1="239.0" x2="306" y2="239.0" stroke="#eaeef2"/>
+<line x1="56" y1="256.5" x2="306" y2="256.5" stroke="#eaeef2"/>
+<line x1="56" y1="210.8" x2="306" y2="210.8" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="215.0" style="fill:#cf222e">threshold 4.50% pressure line</text>
+<line x1="56" y1="267.2" x2="306" y2="267.2" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="263.2" style="fill:#1a7f37">threshold risk-on support</text>
+<polyline points="56.0,252.2 118.5,237.1 181.0,225.8 243.5,229.6 306.0,218.3" fill="none" stroke="#cf222e" stroke-width="2.6"/>
+<circle cx="306.0" cy="218.3" r="4.2" fill="#cf222e"/>
+<text class="axis" x="56" y="290">2026-06-17</text>
+<text class="axis" x="248" y="290">2026-06-24</text>
+<text class="axis" x="314" y="214">4.518%</text>
+<text class="axis" x="314" y="274">4.332%</text>
+<text class="tag" x="368" y="214">impact path</text>
+<text class="muted" x="368" y="236">rates -&gt; growth multiple -&gt;</text>
+<text class="muted" x="368" y="254">QQQ/SOXX/AI hardware risk</text>
+<text class="muted" x="368" y="272">budget</text>
+<rect x="612" y="132" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="634" cy="158" r="7" fill="#cf222e"/>
+<text class="label" x="652" y="157">30Y</text>
+<text class="muted" x="652" y="179">30Y Treasury yield</text>
+<text class="value" x="944" y="162">4.97%</text>
+<text class="muted" x="944" y="184">delta +0.09% | pressure</text>
+<rect x="632" y="204" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="632" y1="221.5" x2="882" y2="221.5" stroke="#eaeef2"/>
+<line x1="632" y1="239.0" x2="882" y2="239.0" stroke="#eaeef2"/>
+<line x1="632" y1="256.5" x2="882" y2="256.5" stroke="#eaeef2"/>
+<line x1="632" y1="210.8" x2="882" y2="210.8" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="215.0" style="fill:#cf222e">threshold 5.00% stress line</text>
+<line x1="632" y1="267.2" x2="882" y2="267.2" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="263.2" style="fill:#1a7f37">threshold cooling support</text>
+<polyline points="632.0,255.9 694.5,244.6 757.0,237.1 819.5,233.4 882.0,222.1" fill="none" stroke="#cf222e" stroke-width="2.6"/>
+<circle cx="882.0" cy="222.1" r="4.2" fill="#cf222e"/>
+<text class="axis" x="632" y="290">2026-06-17</text>
+<text class="axis" x="824" y="290">2026-06-24</text>
+<text class="axis" x="890" y="214">5.018%</text>
+<text class="axis" x="890" y="274">4.832%</text>
+<text class="tag" x="944" y="214">impact path</text>
+<text class="muted" x="944" y="236">long-end yields -&gt; duration</text>
+<text class="muted" x="944" y="254">pressure -&gt; AI beta and LEAP</text>
+<text class="muted" x="944" y="272">risk</text>
+<rect x="36" y="340" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="58" cy="366" r="7" fill="#1a7f37"/>
+<text class="label" x="76" y="365">VIX</text>
+<text class="muted" x="76" y="387">Equity volatility</text>
+<text class="value" x="368" y="370">17.90</text>
+<text class="muted" x="368" y="392">delta -1.8 | benign</text>
+<rect x="56" y="412" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="56" y1="429.5" x2="306" y2="429.5" stroke="#eaeef2"/>
+<line x1="56" y1="447.0" x2="306" y2="447.0" stroke="#eaeef2"/>
+<line x1="56" y1="464.5" x2="306" y2="464.5" stroke="#eaeef2"/>
+<line x1="56" y1="418.8" x2="306" y2="418.8" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="423.0" style="fill:#cf222e">threshold 20 risk review</text>
+<line x1="56" y1="470.1" x2="306" y2="470.1" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="466.1" style="fill:#1a7f37">threshold calm tape</text>
+<polyline points="56.0,426.5 118.5,454.7 181.0,465.0 243.5,475.2 306.0,472.7" fill="none" stroke="#1a7f37" stroke-width="2.6"/>
+<circle cx="306.0" cy="472.7" r="4.2" fill="#1a7f37"/>
+<text class="axis" x="56" y="498">2026-06-17</text>
+<text class="axis" x="248" y="498">2026-06-24</text>
+<text class="axis" x="314" y="422">20.26</text>
+<text class="axis" x="314" y="482">17.54</text>
+<text class="tag" x="368" y="422">impact path</text>
+<text class="muted" x="368" y="444">volatility -&gt; position sizing</text>
+<text class="muted" x="368" y="462">-&gt; 0DTE and high-beta</text>
+<text class="muted" x="368" y="480">exposure</text>
+<rect x="612" y="340" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="634" cy="366" r="7" fill="#9a6700"/>
+<text class="label" x="652" y="365">NDX/RUT</text>
+<text class="muted" x="652" y="387">Large-cap growth vs small-cap breadth</text>
+<text class="value" x="944" y="370">10.84</text>
+<text class="muted" x="944" y="392">delta +0.26 | mixed</text>
+<rect x="632" y="412" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="632" y1="429.5" x2="882" y2="429.5" stroke="#eaeef2"/>
+<line x1="632" y1="447.0" x2="882" y2="447.0" stroke="#eaeef2"/>
+<line x1="632" y1="464.5" x2="882" y2="464.5" stroke="#eaeef2"/>
+<line x1="632" y1="425.4" x2="882" y2="425.4" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="423.0" style="fill:#cf222e">threshold narrow leadership</text>
+<line x1="632" y1="475.2" x2="882" y2="475.2" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="471.2" style="fill:#1a7f37">threshold better breadth</text>
+<polyline points="632.0,461.9 694.5,455.3 757.0,433.7 819.5,422.1 882.0,418.8" fill="none" stroke="#9a6700" stroke-width="2.6"/>
+<circle cx="882.0" cy="418.8" r="4.2" fill="#9a6700"/>
+<text class="axis" x="632" y="498">2026-06-17</text>
+<text class="axis" x="824" y="498">2026-06-24</text>
+<text class="axis" x="890" y="422">10.88</text>
+<text class="axis" x="890" y="482">10.46</text>
+<text class="tag" x="944" y="422">impact path</text>
+<text class="muted" x="944" y="444">NDX divided by RUT -&gt; breadth</text>
+<text class="muted" x="944" y="462">quality -&gt; narrow vs broad</text>
+<text class="muted" x="944" y="480">risk-on</text>
+<rect x="36" y="548" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="58" cy="574" r="7" fill="#1a7f37"/>
+<text class="label" x="76" y="573">SMH/SPY</text>
+<text class="muted" x="76" y="595">Semiconductor relative strength</text>
+<text class="value" x="368" y="578">0.44</text>
+<text class="muted" x="368" y="600">delta +0.03 | constructive</text>
+<rect x="56" y="620" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="56" y1="637.5" x2="306" y2="637.5" stroke="#eaeef2"/>
+<line x1="56" y1="655.0" x2="306" y2="655.0" stroke="#eaeef2"/>
+<line x1="56" y1="672.5" x2="306" y2="672.5" stroke="#eaeef2"/>
+<line x1="56" y1="643.3" x2="306" y2="643.3" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="639.3" style="fill:#1a7f37">threshold leadership hold</text>
+<line x1="56" y1="678.3" x2="306" y2="678.3" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="62" y="674.3" style="fill:#cf222e">threshold theme failure</text>
+<polyline points="56.0,666.7 118.5,655.0 181.0,643.3 243.5,631.7 306.0,631.7" fill="none" stroke="#1a7f37" stroke-width="2.6"/>
+<circle cx="306.0" cy="631.7" r="4.2" fill="#1a7f37"/>
+<text class="axis" x="56" y="706">2026-06-17</text>
+<text class="axis" x="248" y="706">2026-06-24</text>
+<text class="axis" x="314" y="630">0.45</text>
+<text class="axis" x="314" y="690">0.39</text>
+<text class="tag" x="368" y="630">impact path</text>
+<text class="muted" x="368" y="652">semis relative strength -&gt;</text>
+<text class="muted" x="368" y="670">theme leadership -&gt; AI</text>
+<text class="muted" x="368" y="688">hardware candidate pool</text>
+<rect x="612" y="548" width="548" height="184" rx="7" fill="#fbfcfd" stroke="#d8dee4"/>
+<circle cx="634" cy="574" r="7" fill="#1a7f37"/>
+<text class="label" x="652" y="573">HYG/LQD</text>
+<text class="muted" x="652" y="595">Credit risk appetite</text>
+<text class="value" x="944" y="578">0.78</text>
+<text class="muted" x="944" y="600">delta +0.01 | benign</text>
+<rect x="632" y="620" width="250" height="70" fill="#ffffff" stroke="#d8dee4"/>
+<line x1="632" y1="637.5" x2="882" y2="637.5" stroke="#eaeef2"/>
+<line x1="632" y1="655.0" x2="882" y2="655.0" stroke="#eaeef2"/>
+<line x1="632" y1="672.5" x2="882" y2="672.5" stroke="#eaeef2"/>
+<line x1="632" y1="648.0" x2="882" y2="648.0" stroke="#1a7f37" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="644.0" style="fill:#1a7f37">threshold credit support</text>
+<line x1="632" y1="676.0" x2="882" y2="676.0" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text class="axis" x="638" y="672.0" style="fill:#cf222e">threshold risk stress</text>
+<polyline points="632.0,648.0 694.5,648.0 757.0,634.0 819.5,634.0 882.0,634.0" fill="none" stroke="#1a7f37" stroke-width="2.6"/>
+<circle cx="882.0" cy="634.0" r="4.2" fill="#1a7f37"/>
+<text class="axis" x="632" y="706">2026-06-17</text>
+<text class="axis" x="824" y="706">2026-06-24</text>
+<text class="axis" x="890" y="630">0.79</text>
+<text class="axis" x="890" y="690">0.74</text>
+<text class="tag" x="944" y="630">impact path</text>
+<text class="muted" x="944" y="652">credit appetite -&gt; risk</text>
+<text class="muted" x="944" y="670">liquidity -&gt; equity beta</text>
+<text class="muted" x="944" y="688">confirmation</text>
+<text class="tag" x="36" y="756">reference table</text>
+<rect x="36" y="766" width="1128" height="212" rx="7" fill="#ffffff" stroke="#d8dee4"/>
+<rect x="36" y="766" width="1128" height="30" rx="7" fill="#f6f8fa" stroke="#d8dee4"/>
+<text class="tag" x="52" y="786">indicator</text>
+<text class="tag" x="186" y="786">latest</text>
+<text class="tag" x="294" y="786">delta</text>
+<text class="tag" x="408" y="786">key thresholds</text>
+<text class="tag" x="856" y="786">read</text>
+<text class="muted" x="52" y="822">10Y</text>
+<text class="muted" x="186" y="822">4.48%</text>
+<text class="muted" x="294" y="822">+0.09%</text>
+<text class="muted" x="408" y="822">4.50% pressure line (4.5%); risk-on support (4.35%)</text>
+<text class="muted" x="856" y="822">pressure: Near 4.50% pressure line; highe...</text>
+<rect x="36" y="825" width="1128" height="26" fill="#fbfcfd"/>
+<text class="muted" x="52" y="848">30Y</text>
+<text class="muted" x="186" y="848">4.97%</text>
+<text class="muted" x="294" y="848">+0.09%</text>
+<text class="muted" x="408" y="848">5.00% stress line (5%); cooling support (4.85%)</text>
+<text class="muted" x="856" y="848">pressure: Close to 5.00%; long-duration g...</text>
+<text class="muted" x="52" y="874">VIX</text>
+<text class="muted" x="186" y="874">17.90</text>
+<text class="muted" x="294" y="874">-1.8</text>
+<text class="muted" x="408" y="874">20 risk review (20.00); calm tape (18.00)</text>
+<text class="muted" x="856" y="874">benign: Below 20 supports balanced risk, ...</text>
+<rect x="36" y="877" width="1128" height="26" fill="#fbfcfd"/>
+<text class="muted" x="52" y="900">NDX/RUT</text>
+<text class="muted" x="186" y="900">10.84</text>
+<text class="muted" x="294" y="900">+0.26</text>
+<text class="muted" x="408" y="900">narrow leadership (10.80); better breadth (10.50)</text>
+<text class="muted" x="856" y="900">mixed: Rising ratio means leadership rema...</text>
+<text class="muted" x="52" y="926">SMH/SPY</text>
+<text class="muted" x="186" y="926">0.44</text>
+<text class="muted" x="294" y="926">+0.03</text>
+<text class="muted" x="408" y="926">leadership hold (0.43); theme failure (0.4)</text>
+<text class="muted" x="856" y="926">constructive: AI hardware remains the act...</text>
+<rect x="36" y="929" width="1128" height="26" fill="#fbfcfd"/>
+<text class="muted" x="52" y="952">HYG/LQD</text>
+<text class="muted" x="186" y="952">0.78</text>
+<text class="muted" x="294" y="952">+0.01</text>
+<text class="muted" x="408" y="952">credit support (0.77); risk stress (0.75)</text>
+<text class="muted" x="856" y="952">benign: Credit tone is not blocking risk,...</text>
+<text class="muted" x="36" y="1006">Source Routing Boundary: Longbridge macrodata can supply authorized series; policy/news require official / reputable confirmation.</text>
+<text class="muted" x="36" y="1028">Fixture only; live use must cite the authorized source for each series.</text>
+<text class="muted" x="36" y="1050">Macro visual summarizes regime pressure/support; it does not generate trade triggers.</text>
+<text class="muted" x="36" y="1072">Policy/news items should be included only after official or reputable confirmation.</text>
+</svg>

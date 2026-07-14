@@ -14,10 +14,7 @@ TEMPLATES = PATHS.templates
 FIXTURES = PATHS.fixtures
 
 FILES = {
-    "automation_contract": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "automation_contract": ROOT / "skills" / "trading-research-system" / "references"
     / "automation-contract.md",
     "template": TEMPLATES / "automation-macro-industry-research-monitor.md",
     "input_focus": FIXTURES / "input" / "macro-industry-monitor-focus-2026-07-06.md",

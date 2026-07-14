@@ -13,7 +13,6 @@ REPO = ROOT.parents[1]
 FILES = {
     "mvp_smoke_script": REPO / "scripts" / "verify-mvp.sh",
     "mvp_runbook": REPO / "docs" / "MVP_RUNBOOK.md",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "development": REPO / "docs" / "DEVELOPMENT.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -47,11 +46,6 @@ REQUIRED = {
         "No live market data",
         "New Chat Validation",
         "MVP Definition Of Done",
-    ],
-    "root_readme": [
-        "Local MVP",
-        "bash scripts/verify-mvp.sh",
-        "fixture-backed",
     ],
     "plugin_readme": [
         "MVP smoke",

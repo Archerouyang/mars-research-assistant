@@ -27,7 +27,7 @@ FILES = {
     "project_log": REPO / "docs" / "PROJECT_LOG.md",
     "mvp_runbook": REPO / "docs" / "MVP_RUNBOOK.md",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
-    "daily_tracking_skill": ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
+    "daily_tracking_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
     "rolling_pa_input": ROOT
     / "assets"
     / "fixtures"

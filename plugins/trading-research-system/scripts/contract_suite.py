@@ -39,7 +39,7 @@ class PluginPaths:
 
     @property
     def references(self) -> Path:
-        return self.skills / "trading-research" / "references"
+        return self.skills / "trading-research-system" / "references"
 
     @property
     def templates(self) -> Path:

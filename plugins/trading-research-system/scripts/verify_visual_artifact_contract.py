@@ -32,8 +32,12 @@ SPEC = ContractSpec(
             path=ROOT / "scripts" / "chart_artifact.py",
             required_terms=[
                 "--display-output",
+                "LIGHTWEIGHT_CHARTS_VERSION = \"5.2.0\"",
                 "--save-manifest",
                 "render_svg",
+                "render_html",
+                "no-browser fallback",
+                "TradingView",
                 "render_price_reference_table",
                 "render_chart_callouts",
                 "trigger zone",
@@ -86,10 +90,11 @@ SPEC = ContractSpec(
             ],
         ),
         "output_templates": FileContract(
-            path=ROOT / "skills" / "trading-research" / "references" / "output-templates.md",
+            path=ROOT / "skills" / "trading-research-system" / "references" / "output-templates.md",
             required_terms=[
                 "display-first visual",
-                "inline price visual",
+                "canonical TradingView Lightweight Charts",
+                "no-browser fallback",
                 "inline macro visual",
                 "optional local save",
                 "Do not save visual artifacts by default",

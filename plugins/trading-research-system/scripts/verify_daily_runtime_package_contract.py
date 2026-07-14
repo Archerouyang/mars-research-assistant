@@ -22,9 +22,8 @@ FILES = {
     "intraday_scan": ROOT / "scripts" / "intraday_scan.py",
     "contract_suite": ROOT / "scripts" / "contract_suite.py",
     "runtime_health_reference": REFERENCES / "runtime-health.md",
-    "router_skill": ROOT / "skills" / "trading-research" / "SKILL.md",
+    "router_skill": ROOT / "skills" / "trading-research-system" / "SKILL.md",
     "orchestrator_template": TEMPLATES / "daily-ops-orchestrator.md",
-    "root_readme": REPO / "README.md",
     "plugin_readme": ROOT / "README.md",
     "mvp_runbook": REPO / "docs" / "MVP_RUNBOOK.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
@@ -82,12 +81,6 @@ REQUIRED = {
         "trade-plans.csv",
         "intraday-watchlist.csv",
         "不会覆盖已有文件",
-    ],
-    "root_readme": [
-        "Daily runtime package",
-        "prepare_daily_runtime.py",
-        "header-only",
-        "No live broker reads",
     ],
     "plugin_readme": [
         "Daily runtime package",

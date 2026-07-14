@@ -23,7 +23,7 @@ def build_spec() -> ContractSpec:
         failure_header="position daily report contract verification failed",
         files={
             "reference": FileContract(
-                ROOT / "skills" / "trading-research" / "references" / "position-daily-report.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "position-daily-report.md",
                 required_terms=(
                     "# Position Daily Report",
                     "broker-live by default",
@@ -44,7 +44,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "broker contract": FileContract(
-                ROOT / "skills" / "trading-research" / "references" / "broker-data-contract.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "broker-data-contract.md",
                 required_terms=(
                     "read-only data",
                     "portfolio_snapshot.csv",
@@ -56,7 +56,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "portfolio skill": FileContract(
-                ROOT / "skills" / "portfolio-risk" / "SKILL.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "workflow-portfolio-risk.md",
                 required_terms=(
                     "position_daily_report.py",
                     "portfolio_snapshot.csv",
@@ -67,7 +67,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "router": FileContract(
-                ROOT / "skills" / "trading-research" / "SKILL.md",
+                ROOT / "skills" / "trading-research-system" / "SKILL.md",
                 required_terms=(
                     "position_daily_report.py",
                     "Holdings, sizing, portfolio exposure",
@@ -162,7 +162,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "automation contract": FileContract(
-                ROOT / "skills" / "trading-research" / "references" / "automation-contract.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "automation-contract.md",
                 required_terms=(
                     "automation-position-daily-report.md",
                     "position_daily_report.py",

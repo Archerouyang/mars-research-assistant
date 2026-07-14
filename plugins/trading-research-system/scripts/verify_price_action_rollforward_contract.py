@@ -12,11 +12,10 @@ PATHS = PluginPaths.from_script(__file__)
 FILES = {
     "price_action_reference": PATHS.references / "price-action-timing.md",
     "output_templates": PATHS.references / "output-templates.md",
-    "daily_tracking_skill": PATHS.skills / "daily-market-tracking" / "SKILL.md",
+    "daily_tracking_skill": PATHS.skills / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
     "daily_tracking_template": PATHS.templates / "daily-market-tracking.md",
     "script": PATHS.scripts / "price_action_rollforward.py",
     "selftest": PATHS.scripts / "verify_price_action_rollforward_selftest.py",
-    "root_readme": PATHS.repo / "README.md",
     "plugin_readme": PATHS.root / "README.md",
     "development_plan": PATHS.repo / "docs" / "DEVELOPMENT_PLAN.md",
     "project_log": PATHS.repo / "docs" / "PROJECT_LOG.md",
@@ -133,11 +132,6 @@ REQUIRED = {
         "complete setup key without OHLCV must fail clearly",
         "--ticker help must describe the explicit pre-payload setup-key requirement",
         "defaults to JSON symbol",
-    ],
-    "root_readme": [
-        "price_action_rollforward.py",
-        "OHLCV",
-        "滚动盘面分析",
     ],
     "plugin_readme": [
         "price_action_rollforward.py",

@@ -1,6 +1,9 @@
-# Trading Research System Plugin
+# Trading Research System Native Wrapper
 
-This plugin packages a trading research workflow for Codex.
+This optional Codex and Claude Code wrapper resolves the same public,
+self-contained `trading-research-system` Agent Skill distributed from the
+repository root. The root Skill is the behavior authority; wrapper copies are
+generated and drift-checked.
 
 It is designed for research, screening, risk review, and decision support. It does not provide guaranteed returns, personalized financial advice, or trading instructions that ignore user constraints.
 
@@ -79,14 +82,13 @@ task to the right internal workflow.
 这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
 ```
 
-## Advanced Skill Surface
+## Internal Workflow Surface
 
-The conceptual router is `trading-research`. Focused skills such as
-`weekly-trading-plan`, `daily-market-tracking`, `intraday-setup-scan`,
-`trade-review`, `research-report-intake`, `macro-equity-research`,
-`portfolio-risk`, and `trading-stats` remain available as internal agent
-workflows, power-user shortcuts, and development/test boundaries. They should
-not be presented as the default user-facing menu.
+`trading-research-system` is the only installable Skill. Focused workflows such
+as weekly planning, daily tracking, intraday scanning, trade review, report
+intake, macro/equity research, portfolio risk, and trading statistics remain
+internal routing references and development/test boundaries. They are not
+independent install targets or a user-facing menu.
 
 ## Data Boundaries
 

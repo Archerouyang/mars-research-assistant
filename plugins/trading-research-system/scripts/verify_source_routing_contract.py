@@ -19,8 +19,8 @@ FILES = {
     "output_templates": REFERENCES / "output-templates.md",
     "broker_contract": REFERENCES / "broker-data-contract.md",
     "orchestrator": REFERENCES / "daily-ops-orchestrator.md",
-    "weekly_skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",
-    "macro_skill": ROOT / "skills" / "macro-equity-research" / "SKILL.md",
+    "weekly_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-weekly-trading-plan.md",
+    "macro_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-macro-equity-research.md",
     "macro_monitor": TEMPLATES / "automation-macro-industry-research-monitor.md",
     "fixture_expected": ROOT
     / "assets"

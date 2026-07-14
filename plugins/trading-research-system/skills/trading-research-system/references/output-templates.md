@@ -1,0 +1,355 @@
+# Output Templates
+
+Use concise Chinese Markdown unless the user asks otherwise.
+
+## AI-Native Output Contract
+
+The agent should read and verify much more than it shows. User-facing output is a synthesis layer, not a research dump.
+
+Default rules:
+
+- start with the answer or current state;
+- keep only facts that change the plan, setup status, risk, or confidence;
+- collapse repetitive headlines into one changed variable;
+- prefer a compact chart or annotated visual when price structure, levels, volatility, or multi-timeframe context are easier to inspect visually;
+- cite or name sources only where evidence quality matters;
+- move raw detail into local notes or appendices only when needed;
+- ask follow-up questions only when missing information blocks the next decision.
+
+Chart rules:
+
+- before deciding whether to show a chart, read `visual-trigger-policy.md` and
+  apply its `视觉触发矩阵`;
+- use TradingView links or screenshots when the user provides them or when an authenticated browser session makes that practical;
+- prefer display-first visual artifacts when the chat needs a compact price or macro view;
+- use `Macro Regime Mini-Panel` when actual macro values from `macro-panel.json`
+  or an equivalent authorized macro panel can change strategy posture;
+- use `PA Scenario Board` for rolling PA, key level proximity, or setup state
+  changes where support/resistance, EMA, add/trim zones, and scenario paths are
+  easier to inspect visually;
+- for price action, always generate canonical TradingView Lightweight Charts
+  v5.2.0 interactive HTML from authorized OHLCV or fixture data;
+- for inline price display, capture a transient image from that same HTML in a
+  browser; use the handcrafted SVG only as an explicit no-browser fallback;
+- for inline macro visual output, generate a transient macro/regime mini-panel from authorized macro/market-condition data or fixture data;
+- keep the canonical HTML available for interactive inspection without treating
+  it as durable runtime history;
+- optional local save is allowed only after the user confirms durable storage and the caller writes an artifact manifest;
+- Do not save visual artifacts by default; default output should live under ignored transient paths such as `.scratch/visual-artifacts/`;
+- keep chart annotations limited to decision-useful levels such as 20 EMA, 50 EMA, trigger zone, invalidation, profit-taking/rebalance zone, VIX confirmation, and setup status;
+- avoid chart dumps with every indicator. If the chart needs more than a few annotations, put the full version in local notes and show the user the simplified version.
+
+## Source Routing Boundary
+
+When reporting source use, separate each source purpose instead of naming one
+global data source. Longbridge selection for one purpose does not override the source mix for other purposes.
+
+| source purpose | Preferred evidence | User-facing wording |
+| --- | --- | --- |
+| official policy facts | S0 official / primary | 用官方来源确认政策事实、讲话、法规、经济数据发布时间 |
+| market data / macrodata | S1 authorized market data, broker data, Longbridge macrodata, calendars | 用于 rates / yields / price / volatility / event timing / multi-indicator macro values |
+| news leads | S2 reputable financial media | 只作为新闻线索，影响计划前要确认 |
+| research thesis | S3 authorized research / opinion | 用于 thesis/counter-thesis，不单独证明事实 |
+| broker/account facts | read-only broker/account source | 只用于持仓、成交、订单状态和账户风险 |
+
+## 宏观数据来源状态
+
+Use this block before macro regime, rates, liquidity, or strategy posture
+claims. Longbridge macrodata is the preferred source for macro values when
+available; IBKR market data confirms price/OHLCV transmission; official source
+fallback confirms S0 facts and backs up macro values when needed.
+
+| source | status | used_for | fallback |
+| --- | --- | --- | --- |
+| Longbridge macrodata | available / unauthorized / not_installed / missing / stale | macro values and financial conditions | official source fallback |
+| IBKR market data | available / unauthorized / not_installed / missing / stale | price and OHLCV transmission | public/authorized market data |
+| official source fallback | available / pending / unavailable | S0 facts and fallback values | reputable media leads only |
+
+## 实际宏观指标读数
+
+Do not call a note macro analysis unless actual macro values were read or the
+output explicitly says the macro read is degraded.
+
+| 指标 | 当前值 | 近5日/20日变化 | 阈值 | 对策略姿态影响 | 数据时间戳 | source |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10Y |  |  | 4.5% | high beta momentum / balanced / defensive |  | Longbridge macrodata / official source fallback |
+| 30Y |  |  | 5.0% | duration pressure / relief |  |  |
+| HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
+| DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |
+| Oil |  |  | spike / breakdown | inflation and volatility pressure |  |  |
+| Gold |  |  | trend confirmation | optional defensive / easing hedge confirmation |  |  |
+
+Gold is optional for posture classification. If every required macro input is
+available and only Gold is missing, disclose the missing optional confirmation
+without calling the whole macro panel degraded.
+
+For market-hour outputs, prefer:
+
+```markdown
+## 结论
+-
+
+## 变化
+-
+
+## Setup 状态
+| setup_id | 状态 | 为什么 | 下一步 |
+| --- | --- | --- | --- |
+
+## 风险/失效
+-
+```
+
+For weekly macro / policy / news outlooks, avoid plain event-calendar output. Use:
+
+```markdown
+## 结论
+-
+
+## 本周真正重要的 3 个变量
+| 优先级 | 变量 | 为什么重要 | 影响的持仓/计划 | 用户动作 |
+| --- | --- | --- | --- | --- |
+| P0/P1/P2 |  |  |  |  |
+
+## 信源优先级
+| 等级 | 当前使用方式 | 可以影响什么 | 限制 |
+| --- | --- | --- | --- |
+| S0 official / primary |  | 政策事实、经济数据、交易所日历、公司事实 |  |
+| S1 market data / broker / macrodata / calendar |  | 宏观数值、金融条件、价格、收益率、VIX、事件时间、市场传导 | 政策事实仍需 S0 确认 |
+| S2 reputable financial media |  | 新闻线索和政策解读 | 需要 S0/S1 确认后才改变风险预算 |
+| S3 research / opinion |  | 研报观点、反方论证、个股 thesis | 不能单独证明政策或宏观事实 |
+| S4 social / rumor / unsourced commentary |  | 默认忽略 | 除非被更高等级信源确认 |
+
+## 宏观/利率
+- 只写会改变风险预算、策略姿态、持仓加仓/TP/暂停复核的利率和流动性变量。
+
+## 政策/新闻
+- 只写会通过 rates、USD、oil、sector、volatility、liquidity 或 earnings 传导到计划的政策/新闻。
+
+## 交易计划准备
+### Input Reads
+| 模块 | read | supports | pressures | blocks | evidence | next_check |
+| --- | --- | --- | --- | --- | --- | --- |
+| Macro Regime |  |  |  |  |  |  |
+| Financial Conditions |  |  |  |  |  |  |
+| Policy/Event Risk |  |  |  |  |  |  |
+| Industry/Sector Strength |  |  |  |  |  |  |
+| Company Thesis Check |  |  |  |  |  |  |
+| External Momentum Snapshot | optional / provided / missing / stale | user-configured external model output only |  |  | snapshot summary / skipped |  |
+
+### 截面候选池 / Cross-Section Candidate Pool
+| rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  | 4H/1D/1W 大周期环境 + price structure 待确认 |  |
+
+只有具备大周期环境、策略偏见、setup 类型、price structure、trigger zone、invalidation、risk_context 和 next_check 的候选，才能从截面候选池转为 `candidate setup`。External Momentum Snapshot 是用户配置或提供的外部量化模型输出，只能改变研究优先级；它不是买入名单，也不能单独生成 setup。Agent 不得在插件内重建、重排、重打分或把主题/行业轮动伪装成外部模型输出。
+
+## Price Action 滚动盘面分析
+
+用于用户要求 PA、盘面分析、点位更新、加仓/减仓区域、或对上次分析做更新时。
+
+### 时间框架声明
+| 标的 | 主分析时间框架 | 辅助时间框架 | 为什么这样选 |
+| --- | --- | --- | --- |
+| DRAM/SOXX | 4H / 1D / 1W | 1H / 15m / 5m | 主分析时间框架判断走势环境；辅助时间框架只微调执行观察和短线确认 |
+
+### 上次分析对照
+| 标的 | 上次结论 | 上次关键点位 | 最新变化 | 本次是否修正 |
+| --- | --- | --- | --- | --- |
+|  | 未找到时写：本次作为基准分析 |  |  |  |
+
+### 走势强弱参考点位
+| 标的 | 点位所属时间框架 | 支撑/压力 | 强势延续 | 修复确认 | 中性/震荡 | 转弱 | 失效/暂停复核 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  | 4H / 1D / 1W / 1H | 支撑 / 压力 / 中轴 / 缺口 |  |  |  |  |  |
+
+### 加仓/减仓/暂停区
+| 标的 | 成本/买入记录 | 仓位定位 | 可考虑加仓区 | TP/再平衡区 | 暂停加仓/复核区 | 比例式加减仓 | 不做什么 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 长期 ETF/主题 ETF | 均价 / 低成本核心 / 高成本批次 / unknown | 长期持有 / 主题仓 / 交易仓 | 只写区域和确认条件 | 减仓=TP/再平衡 | 不等于普通止损 | 少量 / 中等 / 较大 / 1/10 / 1/5 / 1/3 | 不追第一根、不在区间中间加仓、不默认给具体股数 |
+
+### 本周事件映射
+| 事件 | 时间 | 传导路径 | 影响标的 | 会增强什么判断 | 会削弱什么判断 |
+| --- | --- | --- | --- | --- | --- |
+| FOMC / 10Y / 30Y / 财报 / 产业新闻 | 日期 + 时区 | rates / yields / USD / oil / sector / volatility / earnings | DRAM/SOXX/QQQ/VOO/计划中标的 |  |  |
+
+## 对当前持仓的总体影响
+| 持仓 | 影响 | 本周动作 | 暂停/复核条件 |
+| --- | --- | --- | --- |
+| QQQ/VOO/DRAM/SOXX |  | 加仓 / TP再平衡 / 暂停加仓 |  |
+
+## 策略姿态建议
+| 姿态 | 采用条件 | 当前判断 | 对持仓/新增风险的含义 |
+| --- | --- | --- | --- |
+| 防御 |  |  |  |
+| 平衡 |  |  |  |
+| 高 beta 动量 |  |  |  |
+
+先给出组合层面的姿态判断，再说明具体观察清单和 setup。不要把“交易含义”写成孤立的买卖建议。
+
+## 当周重点财报
+| 优先级 | 时间 | 标的/主题 | 信源优先级 | 为什么重要 | 影响的持仓/计划 | 财报后确认 | 策略姿态含义 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| P0/P1/P2 | 日期 + 盘前/盘后/ET |  | S0/S1/S2 | 指数权重 / sector leadership / watchlist setup / gap risk | QQQ/VOO/DRAM/SOXX/新增计划 | guidance / gap hold / breadth / relative strength | 防御 / 平衡 / 高 beta 动量 |
+
+只列会影响当前持仓、指数/行业 beta、动量主题或计划中 setup 的财报。不要输出完整财报日历。
+
+## 事件重要性排序
+| 优先级 | 时间 | 事件 | 为什么重要 | 信源优先级 | 传导路径 | 影响的持仓/计划 | 需要观察的确认 | 策略姿态含义 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| P0/P1/P2 | 日期 + 美东时间 |  |  | S0/S1/S2/S3/S4 | rates / 10Y / USD / oil / sector / volatility |  |  | 防御 / 平衡 / 高 beta 动量 |
+
+## 宏观/政策/新闻时间线
+-
+
+## 下周事件预览
+- 用于补充还没有进入 P0/P1/P2 表格、但需要提前准备的数据、Fed/Treasury、财报、期权到期、政策期限或休市安排。
+
+## 特朗普/白宫公开讲话与政策风险
+- 只保留会影响 tariffs、Treasury/fiscal、Fed independence、energy、sector regulation 的内容。
+- 其他讲话或媒体噪音不进入交易计划，除非传导到 rates、USD、oil、sector 或 volatility。
+
+## 对现有持仓计划的影响
+- 长期 ETF 只讨论加仓、TP/再平衡、暂停加仓并复核；不写普通交易止损。
+
+## 对新增持仓计划的影响
+- 说明是否允许新增风险，还是必须等待事件确认。
+
+## 组合风险
+- 科技 beta：
+- 半导体：
+- 利率敏感：
+- 短周期/0DTE：
+
+## 需要用户决策的事项
+1.
+```
+
+Weekly user-facing text should not use unexplained internal status jumps. If an internal status is necessary, explain it in Chinese immediately.
+
+## Research Report Digest
+
+```markdown
+## 结论
+- 这份研报对计划的影响：
+- 置信度：
+- 暂时不能采用的原因：
+
+## Research Report Digest
+| 项目 | 内容 |
+| --- | --- |
+| source | 标题 / 作者或机构 / 日期 / access status |
+| target | 标的或主题 / 方向 / 时间跨度 |
+| thesis | 研报最强逻辑 |
+| counter_thesis | 最强反方逻辑 |
+| evidence_quality | strong / medium / weak |
+| current_relevance | current / partly stale / stale |
+| plan_impact | supports / pressures / blocks / watch only |
+| next_check | 下一步必须校验什么 |
+
+## Claim Ledger
+| claim | type | report evidence | verification source | status | plan impact |
+| --- | --- | --- | --- | --- | --- |
+|  | fact / estimate / opinion / assumption |  | S0/S1/S2/S3 | verified / needs_check / contradicted / stale | supports / pressures / blocks / none |
+
+## Verification Queue
+| 优先级 | 需要校验什么 | 首选信源 | 为什么会改变判断 |
+| --- | --- | --- | --- |
+| P0/P1/P2 |  | SEC / IR / transcript / official data / market data / counter-research |  |
+
+## Trade Plan Preparation Impact
+| 模块 | 影响 | 进入截面候选池的条件 | 不能升级为 setup 的原因 |
+| --- | --- | --- | --- |
+| Industry/Sector Strength / Company Thesis Check | supports / pressures / blocks |  |  |
+```
+
+## Research Memo
+
+```markdown
+# 交易研究备忘录：{target}
+
+## 结论摘要
+- 判断：
+- 置信度：
+- 不应贸然行动的理由：
+
+## 宏观政策与利率环境
+- 核心信号：
+- 噪音过滤：
+- 传导路径：
+
+## 事实与数据
+| 项目 | 数据/事实 | 日期 | 来源 |
+|---|---:|---|---|
+
+## 多头逻辑
+-
+
+## 空头逻辑
+-
+
+## 研报观点与校验
+| 来源 | 观点 | 可验证事实 | 反方证据 | 结论 |
+|---|---|---|---|---|
+
+长研报或用户提供的 PDF/链接应先产出 `Research Report Digest`、`Claim Ledger` 和 `Verification Queue`，再把通过校验的结论放入本备忘录。不要把完整研报摘要粘贴进用户-facing 输出。
+
+## Price Action 择时
+- 市场状态：
+- 交易类型：
+- 背景过滤时间框架：
+- 背景条件：
+- 执行触发时间框架：
+- 执行触发：
+- 失效/止损：
+- 目标：
+
+## 组合风险
+-
+
+## 下一步
+1.
+2.
+3.
+```
+
+## Stock Screen
+
+```markdown
+# 股票筛选：{theme}
+
+## 筛选结论
+| 排名 | 标的 | 逻辑 | 宏观适配 | 估值 | 催化剂 | 风险 | 择时条件 |
+|---:|---|---|---|---|---|---|---|
+
+## 入选理由
+-
+
+## 剔除/降级理由
+-
+
+## 组合风险提示
+-
+```
+
+## Portfolio Risk
+
+```markdown
+# 组合风险体检
+
+## 总体判断
+-
+
+## 风险暴露
+| 暴露 | 问题 | 相关仓位 | 严重度 | 处理方式 |
+|---|---|---|---|---|
+
+## 情景压力
+| 情景 | 可能影响 | 受影响仓位 | 应对 |
+|---|---|---|---|
+
+## 优先动作
+1.
+2.
+3.
+```

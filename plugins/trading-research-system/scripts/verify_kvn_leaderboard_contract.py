@@ -27,7 +27,7 @@ def build_spec() -> ContractSpec:
         failure_header="kvn leaderboard contract verification failed",
         files={
             "reference": FileContract(
-                ROOT / "skills" / "trading-research" / "references" / "momentum-leaderboard.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "momentum-leaderboard.md",
                 required_terms=(
                     "# Momentum Leaderboard",
                     "KVN is an imported snapshot",
@@ -48,7 +48,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "router skill": FileContract(
-                ROOT / "skills" / "trading-research" / "SKILL.md",
+                ROOT / "skills" / "trading-research-system" / "SKILL.md",
                 required_terms=(
                     "use `momentum-leaderboard`",
                     "references/momentum-leaderboard.md",
@@ -77,7 +77,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "daily skill": FileContract(
-                ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
+                ROOT / "skills" / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
                 required_terms=(
                     "KVN Momentum Leaderboard",
                     "ticker-only",

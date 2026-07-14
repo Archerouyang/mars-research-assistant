@@ -27,18 +27,18 @@ RUNTIME_HEALTH_SCRIPT = ROOT / "scripts" / "runtime_health.py"
 
 FILES = {
     "context": REPO / "CONTEXT.md",
-    "router_skill": ROOT / "skills" / "trading-research" / "SKILL.md",
+    "router_skill": ROOT / "skills" / "trading-research-system" / "SKILL.md",
     "orchestrator_reference": REFERENCES / "daily-ops-orchestrator.md",
     "active_plan": REFERENCES / "active-market-plan.md",
     "orchestrator_template": TEMPLATES / "daily-ops-orchestrator.md",
-    "daily_tracking_skill": ROOT / "skills" / "daily-market-tracking" / "SKILL.md",
+    "daily_tracking_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-daily-market-tracking.md",
     "ops_state_template": TEMPLATES / "ops-state.md",
     "fixture_input": FIXTURES / "input" / "daily-ops-orchestrator-start-today.md",
     "fixture_expected": FIXTURES / "expected" / "daily-ops-orchestrator-start-today.md",
     "weekend_fixture_input": FIXTURES / "input" / "daily-ops-weekend-first-start.md",
     "weekend_fixture_expected": FIXTURES / "expected" / "daily-ops-weekend-first-start.md",
-    "weekly_skill": ROOT / "skills" / "weekly-trading-plan" / "SKILL.md",
-    "macro_skill": ROOT / "skills" / "macro-equity-research" / "SKILL.md",
+    "weekly_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-weekly-trading-plan.md",
+    "macro_skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-macro-equity-research.md",
     "roadmap": REPO / "docs" / "ROADMAP.md",
     "development_plan": REPO / "docs" / "DEVELOPMENT_PLAN.md",
     "project_log": REPO / "docs" / "PROJECT_LOG.md",
@@ -581,7 +581,7 @@ def verify_exact_weekend_first_start_route(
     normalized_guard = " ".join(weekly_guard.split())
     for term in (
         exact_prompt,
-        "`python3 plugins/trading-research-system/scripts/runtime_health.py --format json`",
+        "`python3 scripts/runtime_health.py --format json`",
         "Daily Ops Orchestrator",
         "before this weekly workflow",
         "`runtime_origin`",

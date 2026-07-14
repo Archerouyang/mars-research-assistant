@@ -4,6 +4,29 @@ This document defines the public development workflow for the Dailytrades plugin
 
 It is a project workflow document, not an internal agent prompt. Do not include private trade records, credentials, account details, unpublished research excerpts, or broker-specific secrets.
 
+## Portable Skill Distribution
+
+Run the command-first distribution contracts without network access:
+
+```bash
+uv run python scripts/verify_plugin_distribution_selftest.py
+uv run python scripts/verify_plugin_distribution.py
+```
+
+Run the actual `npx skills` discovery and install smoke in isolated temporary
+agent homes. The script defaults to the current checkout and accepts a GitHub
+source as its optional first argument after changes are published:
+
+```bash
+bash scripts/smoke-portable-skill-install.sh
+bash scripts/smoke-portable-skill-install.sh Archerouyang/dailytrades
+```
+
+The smoke sets temporary `HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, and
+`XDG_CONFIG_HOME`, compares both installed copies with the canonical public
+Skill, scans for private configuration and absolute user paths, and removes the
+temporary directory on exit.
+
 ## Branch Model
 
 Use the lightweight branch model documented in `docs/ROADMAP.md`:

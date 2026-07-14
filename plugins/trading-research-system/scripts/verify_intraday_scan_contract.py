@@ -11,11 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 
 FILES = {
-    "skill": ROOT / "skills" / "intraday-setup-scan" / "SKILL.md",
-    "reference": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "skill": ROOT / "skills" / "trading-research-system" / "references" / "workflow-intraday-setup-scan.md",
+    "reference": ROOT / "skills" / "trading-research-system" / "references"
     / "intraday-setup-scan.md",
     "script": ROOT / "scripts" / "intraday_scan.py",
     "selftest": ROOT / "scripts" / "verify_intraday_scan_selftest.py",

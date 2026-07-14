@@ -1,0 +1,19 @@
+{
+  "title": "Position Risk",
+  "subtitle": "Synthetic partial fixture; not a real account",
+  "data_status": "partial",
+  "source": "synthetic fixture",
+  "as_of": "2026-07-14",
+  "concentration": [
+    {"label": "SYNTH-A", "weight": 0.42},
+    {"label": "SYNTH-B", "weight": 0.18}
+  ],
+  "missing_dimensions": ["instrument", "theme", "broker"],
+  "risk_flags": [
+    {
+      "severity": "attention",
+      "label": "Partial source coverage",
+      "detail": "Instrument, theme, and broker dimensions were not provided."
+    }
+  ]
+}

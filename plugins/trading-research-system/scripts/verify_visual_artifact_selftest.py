@@ -42,10 +42,13 @@ def main() -> None:
         tmp = Path(raw_tmp)
 
         display_svg = tmp / "qqq-display.svg"
+        display_html = tmp / "qqq-display.html"
         run_script(
             [
                 str(paths.scripts / "chart_artifact.py"),
                 str(chart_input),
+                "--output",
+                str(display_html),
                 "--display-output",
                 str(display_svg),
                 "--artifact-id",
@@ -53,7 +56,16 @@ def main() -> None:
             ]
         )
         if not display_svg.is_file():
-            raise AssertionError("chart script should write a display SVG")
+            raise AssertionError("chart script should write the requested fallback SVG")
+        assert_contains(
+            display_html,
+            [
+                "TradingView Lightweight Charts",
+                "5.2.0",
+                "https://www.tradingview.com/",
+                "Synthetic fixture",
+            ],
+        )
         assert_contains(
             display_svg,
             [
@@ -76,6 +88,20 @@ def main() -> None:
         )
         if (tmp / "artifact-manifest.json").exists():
             raise AssertionError("chart script must not write a manifest by default")
+
+        canonical_only_html = tmp / "qqq-canonical-only.html"
+        run_script(
+            [
+                str(paths.scripts / "chart_artifact.py"),
+                str(chart_input),
+                "--output",
+                str(canonical_only_html),
+            ]
+        )
+        if not canonical_only_html.is_file():
+            raise AssertionError("chart script must always write canonical HTML")
+        if (tmp / "qqq-canonical-only.svg").exists():
+            raise AssertionError("chart script must not create SVG without --display-output")
 
         saved_svg = tmp / "qqq-saved.svg"
         saved_html = tmp / "qqq-saved.html"
@@ -115,7 +141,9 @@ def main() -> None:
         if row.get("type") != "price_action" or row.get("mode") != "saved":
             raise AssertionError("manifest should record price_action saved artifact")
         if not str(row.get("image_path", "")).endswith(".svg"):
-            raise AssertionError("manifest should record display SVG path")
+            raise AssertionError("manifest should record requested fallback SVG path")
+        if not str(row.get("html_path", "")).endswith(".html"):
+            raise AssertionError("manifest should record canonical Lightweight Charts HTML path")
 
         macro_svg = tmp / "macro-display.svg"
         run_script(

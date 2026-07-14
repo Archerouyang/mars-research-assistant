@@ -12,10 +12,7 @@ REPO = ROOT.parents[1]
 TEMPLATES = ROOT / "assets" / "templates"
 
 FILES = {
-    "automation_contract": ROOT
-    / "skills"
-    / "trading-research"
-    / "references"
+    "automation_contract": ROOT / "skills" / "trading-research-system" / "references"
     / "automation-contract.md",
     "deep_update": TEMPLATES / "automation-active-plan-deep-update.md",
     "quick_update": TEMPLATES / "automation-active-plan-quick-update.md",
