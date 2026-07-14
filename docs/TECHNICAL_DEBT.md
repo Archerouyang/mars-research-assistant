@@ -71,13 +71,20 @@ verification baseline.
 | ID | Status | Scope | Evidence | Cost | Score | Next action | Exit |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TD-20260711-01 | accepted | Canonical record schemas | `docs/DEVELOPMENT_PLAN.md` task "Re-scope canonical record schema registry" | Fixture and compatibility schemas have unclear long-term ownership, making future adapters and migrations harder to change safely. | 6 | Define canonical, compatibility, and deprecated schema ownership before new record adapters are added. | One registry names each schema owner, compatibility policy, and test boundary. |
-| TD-20260711-02 | in_progress | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; integrated as `2766c70` after final local review | Shared runtime-selection and source-state semantics now have locally reviewed field-name and branch coverage, but fresh UAT has not confirmed every affected consumer. | 5 | Re-pin UAT and run fresh startup/source-state acceptance before deciding whether the debt can exit. | Shared taxonomy has full branch coverage, all affected consumers preserve it, and accepted UAT passes. |
-| TD-20260711-03 | accepted | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; four corrective review rounds and final dual-axis PASS against `b752b78` | Phrase-presence or incomplete condition/input matrices repeatedly missed broker-agnostic reconciliation, first-start state, exact metadata grammar, state-field taxonomy, and validation-order paths while the full suite remained green. | 5 | After UAT closure, implement the bounded behavior-contract matrix task in `docs/DEVELOPMENT_PLAN.md` before adding capability in the affected workflow. | High-risk behavior fixtures assert required structure, content, state/input matrices, and failure ordering rather than only keyword presence. |
+| TD-20260711-02 | removed | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; final accepted Prompt 7 UAT session `019f5ed4-9994-7832-bcef-82f6681a34fd` | The shared taxonomy cost was retired after branch coverage, direct-entry propagation, and accepted fresh UAT preserved the runtime and startup axes. | 5 | None; monitor through the retained runtime-health and Daily Ops contracts. | Shared taxonomy has full branch coverage, affected consumers preserve it, and accepted UAT passes. |
+| TD-20260711-03 | accepted | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; repeated corrective reviews through `19ca4ae` | Phrase-presence, expected-response fixtures, and incomplete entry/input matrices repeatedly missed broker-agnostic reconciliation, startup-state propagation, direct skill activation, validation ordering, and actual command cwd while green suites continued to pass. | 6 | Implement the bounded behavior-contract matrix task in `docs/DEVELOPMENT_PLAN.md` before adding capability in the affected workflow. | High-risk contracts exercise required structure, state/input matrices, direct activation surfaces, command cwd, and failure ordering rather than only keyword presence. |
+| TD-20260714-01 | accepted | Behavior ownership and plugin release propagation | Router and weekly entry duplication; Prompt 7 failures across `70b5787`, `f739019`, and final `19ca4ae`; personal source/cache refresh required for each UAT | One behavior is distributed across router, focused skill, reference, fixture, verifier, personal plugin source, and installed cache. Changes can be locally green yet absent from the model-selected entry or installed runtime. | 6 | Map the authoritative owner and injected entry surfaces, then design one bounded source-of-truth or generation seam plus a source/cache release check. | Each exact behavior has one named owner, all direct activation surfaces derive or validate against it, and the release check proves the installed cache matches the accepted source. |
 
 `TD-20260711-03` now meets Architecture Optimization Trigger 3: the same
 contract-depth cause has required multiple corrective patches within 30 days.
 The planned response is a bounded test-seam improvement, not a product rewrite;
-UAT closure remains the immediate priority.
+the UAT gate is closed, so this bounded task is now the next subsystem priority.
+
+`TD-20260711-03` and `TD-20260714-01` have a combined open score of 12 in this
+review. Architecture Optimization Trigger 1 requires the threshold for two
+consecutive weekly reviews, so it is not yet independently satisfied; Trigger 3
+already requires the bounded architecture task recorded in
+`docs/DEVELOPMENT_PLAN.md`.
 
 ## Review Cadence
 

@@ -128,8 +128,8 @@ Use these statuses:
 | P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
 | P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
-| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL; broker runtime views, macro panel, setup row bridge, PA OHLCV bridge, snapshot repair, and monitor-only setup rows have verified paths. Final `dev` gates passed; promotion to `master` still requires explicit user confirmation. |
-| P0 | review | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Integrated to `dev` in `2766c70`; re-pin `/Users/archer/Documents/交易想法-1-0-uat`, refresh the plugin, then rerun the targeted fresh-chat checks before closure. |
+| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
+| P0 | done | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Final targeted fresh-chat UAT passed at `19ca4ae` with plugin `0.1.0+codex.20260714041242`; all six debug items are closed. |
 | P1 | planned | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | After UAT closure, use `b752b78` plus the focused tests, `verify-plugin`, and `verify-mvp` as the regression baseline; add bounded matrices for reconciliation modes, startup states/doc surfaces, and validation ordering. No ADR is required unless the public contract changes. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
@@ -175,20 +175,38 @@ Use these statuses:
 
 ## Today
 
-Date: 2026-07-11
+Date: 2026-07-14
 
-- Main task: finish non-quant 1.0 stabilization after forward debugging.
-- Current stage: the reviewed debug scope and both weekend fixtures are
-  integrated to `dev` in `2766c70`; governance rules are integrated in
-  `7d91010`. Local plugin and MVP gates pass in the pure `dev` worktree.
-- Next task: re-pin the detached 1.0 UAT workspace, refresh the installed
-  plugin, and rerun the targeted fresh-chat acceptance prompts.
-- Definition of done: all six debug items move from `verified` to `closed` only
-  after accepted UAT evidence; no private runtime or broker data enters Git.
-- Verification: `bash scripts/verify-plugin.sh`, `bash scripts/verify-mvp.sh`,
-  compileall, and `git diff --check origin/dev..HEAD` pass on integrated `dev`.
+- Main task: complete the user-authorized non-quant 1.0 release promotion.
+- Current stage: all six debug items are closed; exact Prompt 5 and Prompt 7
+  targeted UAT passed at `19ca4ae` with the installed plugin cache matching its
+  personal source.
+- Next task: run the final repository gates, promote the accepted release to
+  `dev` and `master`, then begin the bounded high-risk behavior-contract
+  architecture task before adding capability in the affected workflow.
+- Definition of done: final gates and fast-forward promotion succeed; the dirty
+  Alpha development workspace remains untouched; no private runtime or broker
+  data enters Git.
+- Verification: focused contracts and targeted fresh-chat UAT pass. Final core,
+  plugin, MVP, compileall, and diff checks remain the promotion gate.
 
 ## Progress Log
+
+### 2026-07-14
+
+- Closed all six 2026-07-11 behavior debug items after dual-axis review and
+  targeted fresh-chat UAT.
+- Verified both Prompt 5 branches: unresolved setup keys stay watch-only, while
+  an authorized synthetic-OHLCV positive case renders the visible PA Scenario
+  Board without broker reads or writes.
+- Diagnosed Prompt 7 beyond fixture checks: the exact request directly activated
+  `weekly-trading-plan`, bypassing a router-only guard. Added direct-entry
+  assembly coverage and a repo-cwd subprocess check for the status command.
+- Final Prompt 7 session `019f5ed4-9994-7832-bcef-82f6681a34fd` passed with an
+  absent environment-selected runtime and no private read or write.
+- Recorded the remaining contract-depth and behavior-ownership costs in
+  `docs/TECHNICAL_DEBT.md`; broad feature work in this subsystem follows the
+  bounded architecture-optimization task.
 
 ### 2026-07-11
 

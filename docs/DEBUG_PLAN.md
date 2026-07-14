@@ -45,12 +45,12 @@ observable expected versus actual behavior.
 
 | ID | Severity | Status | Observed behavior | Exit evidence | Owner |
 | --- | --- | --- | --- | --- | --- |
-| DBG-20260711-01 | P1 | verified | New Daily Ops chats do not make the private-runtime binding and startup state unambiguous. | Fresh-chat startup reports the resolved runtime scope and its state without exposing private content. | `debug1` |
-| DBG-20260711-02 | P1 | verified | Partially available IBKR source data can be labelled as unauthorized rather than partial/degraded. | Source-health output preserves the distinct capability state and the relevant contract/self-test passes. | `debug1` |
-| DBG-20260711-03 | P2 | verified | A medium-horizon price-action request with authorized OHLCV may not surface its visual artifact until explicitly requested. | The visual-trigger policy is exercised by a fresh-chat regression case and renders the expected chart state. | `debug1` |
-| DBG-20260711-04 | P1 | verified | Separate IBKR NAV and Longbridge detail can be presented as confirmed combined exposure. | Portfolio output distinguishes coverage and prevents unsupported aggregate exposure claims. | `debug1` |
-| DBG-20260711-05 | P2 | verified | Trading horizon and instrument confirmations are requested too late in the Daily Ops flow. | The required decision context is requested before dependent plan/setup reasoning. | `debug1` |
-| DBG-20260711-06 | P2 | verified | The first weekly-plan response is overly status-oriented and does not foreground the actionable weekly plan. | Fresh-chat acceptance shows an ordered weekly plan with status details kept secondary. | `debug1` |
+| DBG-20260711-01 | P1 | closed | New Daily Ops chats do not make the private-runtime binding and startup state unambiguous. | Fresh-chat startup reports the resolved runtime scope and its state without exposing private content. | `debug1` |
+| DBG-20260711-02 | P1 | closed | Partially available IBKR source data can be labelled as unauthorized rather than partial/degraded. | Source-health output preserves the distinct capability state and the relevant contract/self-test passes. | `debug1` |
+| DBG-20260711-03 | P2 | closed | A medium-horizon price-action request with authorized OHLCV may not surface its visual artifact until explicitly requested. | The visual-trigger policy is exercised by a fresh-chat regression case and renders the expected chart state. | `debug1` |
+| DBG-20260711-04 | P1 | closed | Separate IBKR NAV and Longbridge detail can be presented as confirmed combined exposure. | Portfolio output distinguishes coverage and prevents unsupported aggregate exposure claims. | `debug1` |
+| DBG-20260711-05 | P2 | closed | Trading horizon and instrument confirmations are requested too late in the Daily Ops flow. | The required decision context is requested before dependent plan/setup reasoning. | `debug1` |
+| DBG-20260711-06 | P2 | closed | The first weekly-plan response is overly status-oriented and does not foreground the actionable weekly plan. | Fresh-chat acceptance shows an ordered weekly plan with status details kept secondary. | `debug1` |
 
 ## Review 2026-07-11
 
@@ -193,6 +193,39 @@ Review decision: `pass` for local implementation; formal UAT remains pending.
   weekend fixtures were integrated to `dev` in `2766c70`; closure still
   requires UAT workspace re-pin, plugin refresh, and the relevant fresh-chat
   acceptance prompts.
+
+### Release Closure Review 2026-07-14
+
+Review decision: `pass`; all six debug items are `closed`.
+
+- Final behavior candidate: `19ca4ae`; detached UAT workspace:
+  `/Users/archer/Documents/交易想法-1-0-uat`; installed plugin:
+  `0.1.0+codex.20260714041242`.
+- Exact rolling-PA Prompt 5 passed in fresh session
+  `019f5ca4-eec7-7661-96c9-91162d81460a` for the unresolved-key watch-only
+  branch. A separate authorized synthetic-OHLCV positive case passed in
+  `019f5ca9-27f0-78a3-97db-e370344e92ff` with a visible PA Scenario Board,
+  timeframe-owned levels, proportional actions, and no broker read or write.
+- Exact Prompt 7 initially failed because the response omitted explicit
+  `runtime_origin` / `startup_status` and the optional dry-run/initialization
+  choice. Later deterministic checks also produced false confidence because
+  the exact guard existed only in the router while the model directly activated
+  `weekly-trading-plan`, and because two proposed command paths were not valid
+  from the actual repo cwd.
+- The final Prompt 7 run, session
+  `019f5ed4-9994-7832-bcef-82f6681a34fd`, executed the repo-root runtime-health
+  command successfully on its first attempt. It reported
+  `runtime_origin=environment`, `formal runtime=missing`,
+  `startup_status=uninitialized`, and `current_mode=dry-run`; then gave a
+  public-source summary before requesting broker read-only preference, the full
+  setup key, and dry-run or initialization choice with separate write
+  authorization.
+- The final UAT runtime path remained absent. No private runtime content,
+  broker/account data, credentials, setup instruction, order action, or runtime
+  write entered the repository or the acceptance response.
+- Standards and Spec were reviewed independently after each accepted correction;
+  Sol reran the cited focused checks and retained fresh-chat UAT as a separate
+  release gate rather than treating fixture output as model evidence.
 
 ## Weekly Debug Review
 
