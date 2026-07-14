@@ -98,6 +98,77 @@ Agents may generate and test candidate factors autonomously. Promotion requires
 pre-registered formulas, walk-forward evidence, transaction-cost evaluation,
 ablation, regime stability, an audit record, and the model-governance gate.
 
+## Autonomous Factor Research Campaigns
+
+Autonomous factor research borrows the constrained experiment loop from
+Karpathy's `autoresearch`: a small editable hypothesis surface, a fixed
+evaluation harness, a bounded experiment budget, and an explicit keep/discard
+ledger. It does not permit an agent to optimize the evaluator, data cutoff, or
+published model around a single backtest statistic.
+
+Each campaign has an immutable Campaign Contract that records:
+
+- the point-in-time dataset fingerprints, universe rules, label, benchmark,
+  availability lags, adjustment policy, train/walk-forward/recent-OOS windows,
+  transaction-cost model, random seeds, and compute/time budget;
+- the fixed leakage, missingness, outlier, correlation, reproducibility, and
+  cost checks; and
+- the pre-declared multi-objective eligibility gates for Rank IC/ICIR,
+  TopN excess return, turnover, transaction cost, drawdown, tail loss, and
+  regime stability.
+
+The agent may only add or edit an isolated, versioned Factor Candidate Spec:
+formula or composition, inputs, lookbacks, availability lag, expected sign,
+economic rationale, and known failure modes. The data loader, point-in-time
+normalizer, labels, splitters, costs, gates, champion configuration, and
+published snapshot path are read-only within a campaign. An agent-generated
+code adapter is allowed only on a private experiment branch after the spec is
+registered and its deterministic unit and leakage checks pass.
+
+One loop is: propose and pre-register one hypothesis; normalize and validate
+it; run the unchanged harness within the campaign budget; append the result to
+the Experiment Ledger; then retain it as a research candidate or discard it.
+Crashes, failed quality gates, and non-improving trials are recorded rather
+than silently retried or erased. A retained candidate remains experimental; it
+does not modify the champion, daily inference, Alpha Leaderboard, or plugin.
+
+The private Experiment Ledger is append-only and records campaign and trial
+IDs, Git commit, Factor Candidate Spec hash, dataset/model/evaluator versions,
+budget consumption, all validation metrics, status (`kept`, `discarded`,
+`failed`, or `blocked`), and a concise rationale. It is backed by immutable
+run manifests and Parquet/SQLite indexes, with reports stored outside the
+public plugin repository.
+
+Unlike a single-score training experiment, factor retention is a Pareto-style
+screen: a candidate must meet hard safety gates and demonstrate incremental
+value after correlation and ablation checks. Model promotion remains governed
+by the separate shadow, immutable-report, rollback, and Sol-review rules below.
+Campaigns have explicit weekly trial and compute ceilings, and stop when data
+quality is stale, the budget is exhausted, or a required gate is unavailable.
+
+## Research Observability And Artifacts
+
+The [kansoku](https://github.com/Innei/kansoku) project is a useful reference
+for the separation between source data, orchestrated research workflows, and
+durable research artifacts. Alpha Lab adopts that record-and-index discipline,
+not its personal trading journal, real-time monitoring scope, or account-data
+model.
+
+For every campaign and accepted candidate, the private runtime writes immutable,
+schema-versioned artifacts: the Campaign Contract, Factor Candidate Spec, run
+manifest, deterministic evaluation summary, metric tables, failure records,
+and concise research note. These artifacts are the research record. SQLite may
+index runs, reports, and latest-success pointers for fast retrieval, but it
+cannot replace, rewrite, or become the only copy of the underlying evidence.
+
+The 1.0 presentation remains chat-first with immutable static report bundles.
+It does not add a persistent dashboard, personal trade journal, real-time quote
+service, or broker-position surface. A future local read-only observability
+console may render the same report bundle and historical chart data using the
+latest presentation code, but it must not alter the stored run, re-rank model
+output, or expose private data. Deterministic computed metrics remain distinct
+from any optional AI commentary and execution telemetry.
+
 ## Model Architecture
 
 The prediction label is the future 20-trading-day excess return versus SPY.
@@ -231,8 +302,9 @@ Alpha Lab 1.0 is accepted only when:
    ingestion, corporate-action handling, and data-quality reports pass tests.
 3. A small pilot universe and then the full eligible universe complete an
    end-to-end run without future leakage.
-4. The Factor Registry, Bayesian champion, LightGBM challenger, walk-forward
-   metrics, model registry, and reproducible run manifests are present.
+4. The Factor Registry, autonomous-research Campaign Contract and Experiment
+   Ledger, Bayesian champion, LightGBM challenger, walk-forward metrics, model
+   registry, and reproducible run manifests are present.
 5. The daily Alpha snapshot supports full-universe query, Top10 display, Top20
    research intake, Top5 focus, persistence fields, factor attribution, and
    Experimental model probability.
