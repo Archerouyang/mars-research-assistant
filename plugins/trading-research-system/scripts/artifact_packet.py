@@ -89,6 +89,40 @@ FORBIDDEN_HTML_TERMS = (
     "runtime",
     "order action",
 )
+SNAPSHOT_V1_FIELDS = frozenset(
+    {
+        "artifact_lifecycle",
+        "board",
+        "builder",
+        "content_hash",
+        "coverage",
+        "decision_cutoff",
+        "diagnostics",
+        "evidence_state",
+        "locale",
+        "payload",
+        "payload_version",
+        "privacy",
+        "renderer_version",
+        "schema_version",
+        "snapshot_id",
+        "source_registry",
+        "state_reasons",
+        "timezone",
+    }
+)
+BUILDER_V1_FIELDS = frozenset({"generated_at", "id"})
+COVERAGE_V1_FIELDS = frozenset({"required_complete", "required_total"})
+PAYLOAD_V1_FIELDS = frozenset(
+    {"board", "decision", "modules", "payload_version", "posture", "question", "subject", "views"}
+)
+SUBJECT_V1_FIELDS = frozenset(
+    {"analysis_horizon", "currency", "instrument", "market", "product_type", "underlying"}
+)
+MODULE_V1_FIELDS = frozenset(
+    {"as_of", "evidence_state", "freshness_policy_id", "gap_reason", "id", "requirement", "source_refs", "summary"}
+)
+SOURCE_V1_FIELDS = frozenset({"alias", "as_of", "freshness_policy_id", "freshness_status", "id", "priority"})
 
 
 class ArtifactPacketError(ValueError):
@@ -189,6 +223,8 @@ def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
         raise ArtifactPacketError("privacy_invalid")
     if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
         raise ArtifactPacketError("artifact_lifecycle_invalid")
+    _validate_public_privacy(normalized)
+    _validate_v1_field_sets(normalized)
     if not isinstance(normalized.get("payload"), dict):
         raise ArtifactPacketError("payload_invalid")
     payload = normalized["payload"]
@@ -203,7 +239,6 @@ def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     _require_size(canonical_json_bytes(normalized), SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
     _validate_sources(normalized)
     _validate_diagnostics(normalized)
-    _validate_public_privacy(normalized)
     _validate_payload(normalized)
     _validate_content_hash(normalized)
     return normalized
@@ -355,6 +390,34 @@ def _validate_envelope_fields(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("evidence_state_invalid")
     reasons = snapshot.get("state_reasons")
     if not isinstance(reasons, list) or not all(isinstance(reason, str) for reason in reasons):
+        raise ArtifactPacketError("schema_invalid")
+
+
+def _validate_v1_field_sets(snapshot: Mapping[str, Any]) -> None:
+    """Reject extension fields until a newer snapshot contract explicitly defines them."""
+
+    _reject_unknown_fields(snapshot, SNAPSHOT_V1_FIELDS)
+    _reject_unknown_fields(snapshot.get("builder"), BUILDER_V1_FIELDS)
+    _reject_unknown_fields(snapshot.get("coverage"), COVERAGE_V1_FIELDS)
+
+    payload = snapshot.get("payload")
+    _reject_unknown_fields(payload, PAYLOAD_V1_FIELDS)
+    if not isinstance(payload, Mapping):
+        return
+    _reject_unknown_fields(payload.get("subject"), SUBJECT_V1_FIELDS)
+    modules = payload.get("modules")
+    if isinstance(modules, list):
+        for module in modules:
+            _reject_unknown_fields(module, MODULE_V1_FIELDS)
+
+    sources = snapshot.get("source_registry")
+    if isinstance(sources, list):
+        for source in sources:
+            _reject_unknown_fields(source, SOURCE_V1_FIELDS)
+
+
+def _reject_unknown_fields(value: Any, allowed_fields: frozenset[str]) -> None:
+    if isinstance(value, Mapping) and set(value) - allowed_fields:
         raise ArtifactPacketError("schema_invalid")
 
 

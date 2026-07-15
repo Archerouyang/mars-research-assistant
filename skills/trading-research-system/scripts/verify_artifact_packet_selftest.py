@@ -168,25 +168,43 @@ class ArtifactPacketSelftest(unittest.TestCase):
     def test_private_runtime_and_non_sensitive_ids_remain_valid(self) -> None:
         private_runtime = copy.deepcopy(self.snapshot)
         private_runtime["privacy"] = "private_runtime"
-        private_runtime["unknown_private_probe"] = {"account_id": "DU12345678"}
+        private_runtime["payload"]["question"] = "account_id DU12345678"
         private_runtime["content_hash"] = _content_hash(private_runtime)
         self.build(private_runtime)
 
-        public_fixture = copy.deepcopy(self.snapshot)
-        public_fixture["unknown_public_probe"] = {
-            "observed_at": "2026-07-16T09:00:00Z",
-            "digest": "a" * 64,
-        }
-        public_fixture["content_hash"] = _content_hash(public_fixture)
-        self.build(public_fixture)
+    def test_rejects_unknown_v1_fields_without_rejecting_known_ids(self) -> None:
+        unknown_fields = (
+            lambda snapshot: snapshot.__setitem__("unknown_public_probe", 123456789),
+            lambda snapshot: snapshot["builder"].__setitem__("unknown_numeric", 123456789),
+            lambda snapshot: snapshot["coverage"].__setitem__("unknown_numeric", 123456789),
+            lambda snapshot: snapshot["payload"].__setitem__("unknown_numeric", 123456789),
+            lambda snapshot: snapshot["payload"]["subject"].__setitem__("unknown_numeric", 123456789),
+            lambda snapshot: snapshot["payload"]["modules"][0].__setitem__("unknown_numeric", 123456789),
+            lambda snapshot: snapshot["source_registry"][0].__setitem__("unknown_numeric", 123456789),
+        )
+        for inject_unknown in unknown_fields:
+            unsafe = copy.deepcopy(self.snapshot)
+            inject_unknown(unsafe)
+            self.assert_error("schema_invalid", unsafe)
+
+        private_unknown = copy.deepcopy(self.snapshot)
+        private_unknown["privacy"] = "private_runtime"
+        private_unknown["unknown_private_probe"] = 123456789
+        self.assert_error("schema_invalid", private_unknown)
+
+        packet = self.build()
+        canonical_snapshot = json.loads(packet.canonical_json)
+        self.assertEqual(canonical_snapshot["decision_cutoff"], "2026-07-16T09:00:00Z")
+        self.assertEqual(canonical_snapshot["content_hash"], EXPECTED_CONTENT_HASH)
 
     def test_rejects_unsafe_diagnostics_and_size_overages(self) -> None:
         unsafe_diagnostic = copy.deepcopy(self.snapshot)
+        unsafe_diagnostic["privacy"] = "private_runtime"
         unsafe_diagnostic["diagnostics"] = [_valid_diagnostic(message="Traceback: secret")]
         self.assert_error("diagnostic_unsafe", unsafe_diagnostic)
 
         oversized = copy.deepcopy(self.snapshot)
-        oversized["payload"]["padding"] = "x" * (1536 * 1024)
+        oversized["payload"]["question"] = "x" * (1536 * 1024)
         oversized["content_hash"] = _content_hash(oversized)
         self.assert_error("snapshot_size_exceeded", oversized)
 
@@ -266,6 +284,7 @@ class ArtifactPacketSelftest(unittest.TestCase):
             ("message", "reference 1234-5678-90"),
         ):
             unsafe = copy.deepcopy(self.snapshot)
+            unsafe["privacy"] = "private_runtime"
             diagnostic = _valid_diagnostic()
             diagnostic[field] = injected
             unsafe["diagnostics"] = [diagnostic]
