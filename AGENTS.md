@@ -37,6 +37,12 @@ fewest agents that provide clear parallel value. Subagents must self-check and
 must not push, reset, clean, delete shared data, expose credentials, or perform
 broker/order actions.
 
+When approved work genuinely benefits from multiple isolated temporary
+branches, and handing off bounded branches will not slow the coordinator's own
+active implementation, the coordinator may assign those branches to the
+designated `开发1` task. Keep single-branch mainline work local by default; do
+not dispatch merely to move context elsewhere.
+
 ## Context And Goal Hygiene
 
 - Keep the coordinator context focused on requirements, decisions, review
