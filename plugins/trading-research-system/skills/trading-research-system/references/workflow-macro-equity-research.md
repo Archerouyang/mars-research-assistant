@@ -20,8 +20,8 @@ spend the deep-research pass or generate concrete entry/exit levels yet.
    - `./macro-data-source-contract.md`
    - `./research-report-intake.md` when the input is a report, PDF, link, excerpt, Seeking Alpha-style article, or report-discovery request.
    - `./equity-screening.md`
-   - optional external quantitative momentum context only when already
-     configured or explicitly provided by the user.
+   - `./alpha-leaderboard.md` for the current production ranking and history
+     delta.
    - `./price-action-timing.md`
    - `./portfolio-risk.md`
    - `./output-templates.md`
@@ -33,17 +33,19 @@ spend the deep-research pass or generate concrete entry/exit levels yet.
    - `Policy/Event Risk`
    - `Industry/Sector Strength`
    - `Company Thesis Check`
-   - `External Momentum Snapshot` when enabled
+   - `Alpha Leaderboard` when the private read-only store is available
+   - `External Momentum Snapshot` only as a disclosed legacy fallback
 6. Each input read must return `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`.
    Macro and financial-condition reads must first show `宏观数据来源状态` and
    `实际宏观指标读数`. Use Longbridge macrodata for macro values when available,
    IBKR market data for price/OHLCV transmission, and official source fallback
    for S0 facts or fallback macro values.
 7. Convert the reads into a `Cross-Section Candidate Pool`: candidates worth searching for setup structure.
-8. Use external momentum context only from a user-authorized snapshot. The
-   plugin does not calculate the model inside this research step and should not
-   expose model construction, ranking generation, or backtesting as a v1
-   capability.
+8. Read Alpha through `alpha_leaderboard_adapter.py`. Preserve Alpha Rank and
+   use Top20 for candidate research and Top5 plus persistent/strengthening names
+   for deep research. The plugin does not calculate, re-rank, train, or promote
+   the model inside this research step. Legacy external momentum is allowed only
+   as a disclosed configured fallback.
 9. Promote candidates toward the weekly plan only when the next step is clear: higher-timeframe environment check, price-structure check, setup type, trigger zone, invalidation, additional thesis validation, or portfolio-risk review.
 
 ## Source Routing Boundary
@@ -76,12 +78,13 @@ Use Chinese Markdown with:
 - `Policy/Event Risk`
 - `Industry/Sector Strength`
 - `Company Thesis Check`
-- `External Momentum Snapshot`
+- `Alpha Leaderboard`
+- `External Momentum Snapshot` only when used as a legacy fallback
 - `Cross-Section Candidate Pool`
 - `多头逻辑 / 空头逻辑`
 - `需要校验 / blocks`
 - `可转化为 candidate setup 的下一步`
-- `动量候选池 / optional external snapshot`
+- `多因子候选池 / Alpha Leaderboard delta`
 - `组合风险`
 
 Do not rely on stale facts or unsupported analyst claims.

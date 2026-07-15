@@ -47,7 +47,8 @@ or risk defaults.
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| External Momentum Snapshot | optional / provided / missing / stale |  |  |  | snapshot summary / skipped |  |
+| Alpha Leaderboard | available / missing / stale |  |  |  | champion run + snapshot delta / skipped |  |
+| External Momentum Snapshot | legacy fallback / missing / skipped |  |  |  | disclosed KVN snapshot / skipped |  |
 
 ### Cross-Section Candidate Pool
 
@@ -61,11 +62,21 @@ or risk defaults.
 | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |
 
-## External Momentum Snapshot
+## Alpha Leaderboard
+
+Read-only production Alpha Lab output. Preserve stored rank. Use Top20 as
+cross-sectional candidates and Top5 plus persistent/strengthening names for
+deep research. Do not calculate or re-rank the model inside this plugin.
+
+| Alpha Rank | Ticker | Alpha Score | Historical percentile | P(20D excess > 0) + uncertainty | Trajectory | Snapshot delta | Research next step |
+| ---: | --- | ---: | ---: | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |
+
+### External Momentum Snapshot (Legacy Fallback)
 
 Optional external quantitative model output. Use only when the user has already
-provided or configured a snapshot. Do not rebuild, rank, or backtest the model
-inside this plugin.
+provided or configured a legacy snapshot and Alpha is unavailable. Disclose the
+fallback. Do not rebuild, rank, or backtest the model inside this plugin.
 
 | Rank | Ticker | Source score / percentile | Snapshot date | What changed | Setup relevance |
 | --- | --- | --- | --- | --- | --- |

@@ -135,7 +135,8 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| External Momentum Snapshot | optional / provided / missing / stale | user-configured external model output only |  |  | snapshot summary / skipped |  |
+| Alpha Leaderboard | available / missing / stale | private Alpha Lab champion output only |  |  | Top20 + snapshot delta / skipped |  |
+| External Momentum Snapshot | legacy fallback / missing / skipped | user-configured legacy output only |  |  | disclosed fallback / skipped |  |
 
 ### 截面候选池 / Cross-Section Candidate Pool
 | rank | symbol/theme | drivers | supported_by | pressured_by | blocked_by | price_structure / risk_context | setup_readiness | next_check |
@@ -226,6 +227,36 @@ For weekly macro / policy / news outlooks, avoid plain event-calendar output. Us
 ```
 
 Weekly user-facing text should not use unexplained internal status jumps. If an internal status is necessary, explain it in Chinese immediately.
+
+## Alpha Decision Card
+
+Use one compact card per ticker after the Alpha snapshot has raised research
+priority. Model fields are read-only. Macro, research, PA, EMA, events, and
+portfolio risk may change the decision state but never the stored rank or model
+probability.
+
+```markdown
+## {ticker} 决策卡
+
+| 模块 | 当前读数 |
+| --- | --- |
+| 上次运行增量 | unchanged / updated / invalidated / added；只写变化与原因 |
+| 决策状态 | 深挖 / 等确认 / 保持观察 / 暂停新增风险 / setup候选 |
+| Alpha Rank / trajectory | rank / new / strengthening / persistent / fading；model run + as of |
+| P(20D超额>0) / predictive uncertainty | 概率必须标 Experimental，并紧邻不确定性；非模型分析不得改写 |
+| 因子归因 | momentum / volume / volatility / liquidity / industry-theme / fundamental |
+| 主分析时间框架 | 1W / 1D / 4H；明确上涨 / 震荡 / 下跌与策略偏见 |
+| 执行观察时间框架 | 1H 或更小；只用于触发观察，不覆盖大周期判断 |
+| PA + EMA | Al Brooks-style context；20 / 50 / 200 EMA；事实、判断、失效分开 |
+| 走势强弱参考点位 | 每个支撑、压力、reclaim、breakdown 标明所属时间框架 |
+| 加仓区 / TP或再平衡区 | 结合持仓成本/批次；长期 ETF 不默认普通止损 |
+| 当周事件与新闻 | 只列会改变 thesis、risk budget、点位确认或下一次检查的事件 |
+| 失效与下一次检查 | thesis invalidation / setup invalidation / event or timeframe checkpoint |
+| 比例式仓位语言 | 少量 / 中等 / 较大，或 1/10 / 1/5 / 1/3；除非用户要求，不给具体股数 |
+
+### 需要你决定
+- 只列当前真正需要用户选择的 1-3 项。
+```
 
 ## Research Report Digest
 

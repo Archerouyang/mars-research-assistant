@@ -105,13 +105,15 @@ A separate development repository is not required at this stage. Codex/Claude co
 
 ## GitHub Trajectory
 
-Project trajectory should be visible on GitHub through four public artifacts:
+Project trajectory should be visible on GitHub through these public artifacts:
 
 - commit history for exact code/document changes;
 - `docs/PROJECT_LOG.md` for human-readable update records;
 - `docs/ROADMAP.md` for current plan, progress, milestones, and next implementation tasks;
 - `docs/DEVELOPMENT.md` for development workflow, testing, CI, and Codex/Claude handoff rules;
-- `docs/DEVELOPMENT_PLAN.md` for active development priorities, daily planning, and progress review;
+- `docs/DEVELOPMENT_PLAN.md` for active feature, integration, and approved architecture-optimization priorities;
+- `docs/DEBUG_PLAN.md` for reproducible defects, regressions, and acceptance-failure closure evidence;
+- `docs/TECHNICAL_DEBT.md` for accepted systemic maintenance cost and architecture-optimization triggers;
 - `docs/PLUGIN_CONTENT_PLAN.md` for the minimum useful plugin content checklist and fixture package definition;
 - `docs/adr/` for hard-to-reverse architecture decisions.
 
@@ -218,7 +220,8 @@ Deliverables:
 - Maintain internal workflow references for research report intake, Active Market Plan deep updates, quick updates, intraday scan, trade review, macro/equity research, portfolio risk, and trading statistics. External quantitative momentum modules stay hidden unless the user provides a separate snapshot.
 - Keep active plan, broker data, macro, equity screening, price action, intraday scan, risk, journal, and output references shared inside the plugin.
 - Keep automation rules aligned with the Active Market Plan loop and broker read-only boundary.
-- Keep the plugin installable from the personal marketplace.
+- Keep the plugin installable from the versioned Dailytrades Git marketplace
+  and document the first-use command in the root README.
 
 Exit criteria:
 

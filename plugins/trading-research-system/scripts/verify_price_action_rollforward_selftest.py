@@ -30,6 +30,20 @@ def main() -> None:
     if "defaults to JSON symbol" in normalized_help:
         raise AssertionError("--ticker help must not imply ticker can be inferred from the OHLCV payload")
 
+    help_result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if help_result.returncode != 0:
+        raise AssertionError(help_result.stderr or help_result.stdout)
+    normalized_help = " ".join(help_result.stdout.split())
+    if "Explicitly confirmed ticker required by the complete setup key" not in normalized_help:
+        raise AssertionError("--ticker help must describe the explicit pre-payload setup-key requirement")
+    if "defaults to JSON symbol" in normalized_help:
+        raise AssertionError("--ticker help must not imply ticker can be inferred from the OHLCV payload")
+
     with tempfile.TemporaryDirectory() as raw_tmp:
         output = Path(raw_tmp) / "qqq-pa.md"
         display_output = Path(raw_tmp) / "qqq-pa-scenario-board.svg"

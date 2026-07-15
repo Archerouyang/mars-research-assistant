@@ -14,7 +14,8 @@
 - runtime health:
 - missing blockers:
 - broker source:
-- optional external momentum snapshot:
+- Alpha Leaderboard store:
+- optional legacy external momentum snapshot:
 - 数据时间戳:
 - 行情数据: as of
 - 宏观/利率数据: as of
@@ -29,8 +30,8 @@ status.
 - Macro / policy events:
 - News catalysts:
 - Event preview:
-- optional external momentum snapshot: provided / missing / stale / skipped
-- If missing or stale: continue without optional external momentum unless the user explicitly provides a snapshot.
+- Alpha Leaderboard: available / missing / stale; preserve stored rank and read only the latest delta.
+- Legacy external momentum snapshot: fallback / missing / skipped; never merge its score with Alpha.
 - Do not rebuild, rank, or backtest a private quantitative model inside this plugin.
 - Portfolio exposure concern:
 
@@ -79,7 +80,13 @@ status.
 - News:
 - Next major event:
 
-## External Momentum Snapshot Update
+## Alpha Leaderboard Update
+
+| Alpha Rank | Ticker | Alpha Score / historical percentile | P(20D excess > 0) + uncertainty | Trajectory | Snapshot delta | Plan impact |
+| ---: | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |
+
+## External Momentum Snapshot Update (Legacy Fallback)
 
 | Ticker | Source rank | Score / percentile | Snapshot date | Source status | Plan impact |
 | --- | --- | --- | --- | --- | --- |

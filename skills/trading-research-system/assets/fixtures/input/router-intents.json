@@ -9,6 +9,14 @@
       "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
     },
     {
+      "id": "alpha-leaderboard",
+      "prompt": "看一下最新多因子 Alpha 榜，告诉我 Top10、变化，以及 NVDA 现在排多少。",
+      "expected_public_route_label": "多因子 Alpha 榜读取",
+      "expected_workflows": ["runtime_health", "alpha_leaderboard"],
+      "required_reads": ["alpha/leaderboard.sqlite", "latest immutable Alpha snapshot", "previous successful snapshot", "model run metadata"],
+      "expected_output_labels": ["本次路由", "读取状态", "结论", "变化", "影响", "需要你决定", "下一步"]
+    },
+    {
       "id": "daily-ops-weekend-first-start",
       "prompt": "周末首次启动，先看看下周",
       "expected_public_route_label": "Daily Ops 周末首次启动",

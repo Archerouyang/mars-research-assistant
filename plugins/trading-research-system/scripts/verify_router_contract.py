@@ -14,6 +14,7 @@ PATHS = PluginPaths.from_script(__file__)
 FIXTURE = PATHS.fixture_input / "router-intents.json"
 
 ALLOWED_WORKFLOWS = {
+    "alpha_leaderboard",
     "broker_source_configuration",
     "daily_ops_orchestrator",
     "deep_active_market_plan_update",
@@ -135,6 +136,7 @@ def verify_router_contract(path: Path) -> list[str]:
         _required_str_list(fixture, "required_reads", failures, fixture_id)
 
     required_coverage = {
+        "alpha_leaderboard",
         "daily_ops_orchestrator",
         "deep_active_market_plan_update",
         "quick_active_market_plan_update",

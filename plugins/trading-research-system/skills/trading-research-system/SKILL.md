@@ -110,11 +110,13 @@ generate setups or buy/sell instructions in this first response.
   use `research-report-intake`.
 - Macro policy, rates/yields, research-note verification, stock screening:
   use `macro-equity-research`.
-- External quantitative momentum model requests:
-  explain that v1 does not bundle or publicly expose model construction,
-  rankings, or a standalone leaderboard. If the user provides an already
-  generated snapshot, treat it as an optional internal input to Trade Plan
-  Preparation after confirmation; otherwise continue without it.
+- Alpha Leaderboard, multi-factor ranking, strongest stocks, rank changes, or a
+  full-universe ticker query:
+  read `references/alpha-leaderboard.md`, check runtime health, and use
+  `scripts/alpha_leaderboard_adapter.py`. Preserve the stored Alpha Rank.
+  If the Alpha store is unavailable, disclose the gap; use a legacy snapshot
+  only when an explicitly configured legacy snapshot exists, and never rebuild
+  or re-rank a private model inside the plugin.
 - Holdings, sizing, portfolio exposure, risk budget, trade impact:
   use `portfolio-risk`.
 - Win rate, R-multiple, setup performance, mistake tags, system review:
@@ -129,6 +131,12 @@ whether required state is available, missing, stale, unauthorized,
 `needs_review`. Preserve the returned status; do not translate a partial/error
 result into unauthorized. Do not read private file contents just to perform the
 health check.
+
+Before repeating a ticker/scope analysis, read `references/analysis-delta.md`
+and use `scripts/analysis_delta_adapter.py` with the exact symbol/scope,
+analysis type, primary timeframe, and strategy horizon. If no prior snapshot
+exists, state `本次作为基准分析`; otherwise default the user-facing note to the
+stored incremental changes.
 
 If the current trading date is missing its daily runtime package, ask before
 writing and then use `scripts/prepare_daily_runtime.py` to create safe
@@ -187,14 +195,15 @@ S0 facts or when Longbridge macrodata is unavailable.
 If a request spans multiple workflows, run them in the natural order:
 
 1. Daily Ops Orchestrator when the user asks to start, continue, or decide what to do next.
-2. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
-3. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
-4. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
-5. `daily-market-tracking` to quick-update the same plan against today's market.
-6. `intraday-setup-scan` to classify setup-level status during the session.
-7. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
-8. `trade-review` after orders/fills and after exits.
-9. `trading-stats` after enough closed-trade records exist.
+2. Read the Alpha Leaderboard when cross-sectional ranking or candidate discovery is needed.
+3. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
+4. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
+5. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
+6. `daily-market-tracking` to quick-update the same plan against today's market.
+7. `intraday-setup-scan` to classify setup-level status during the session.
+8. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
+9. `trade-review` after orders/fills and after exits.
+10. `trading-stats` after enough closed-trade records exist.
 
 ## Shared Resources
 
@@ -207,6 +216,8 @@ Detailed domain rules remain in:
 - `references/daily-ops-orchestrator.md`
 - `references/active-market-plan.md`
 - `references/runtime-health.md`
+- `references/alpha-leaderboard.md`
+- `references/analysis-delta.md`
 - `references/trading-profile.md`
 - `references/broker-data-contract.md`
 - `references/automation-contract.md`

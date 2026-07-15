@@ -48,6 +48,184 @@ Use this shape:
 
 ## 2026-07-11
 
+- Commit: pending
+- Scope: review, debug, local verification
+- What changed: final incremental Standards and Spec reviews both passed after
+  the unavailable guard became broker-agnostic and the weekend fixtures adopted
+  `formal runtime=available` plus `startup_status=partial`. Sol independently
+  reran the full plugin/MVP checks and the cited boundary reproductions.
+- Why it matters: the debug implementation is now locally reviewable without
+  unsupported aggregate exposure or conflicting startup taxonomy. This is not
+  yet release evidence because the reviewed files have not been integrated and
+  the UAT workspace has not been re-pinned.
+- Next step: integrate the complete reviewed scope including both weekend
+  fixtures, re-pin UAT, refresh the plugin, and run the relevant fresh-chat
+  acceptance before closing the debug items or making a 1.0 claim.
+
+- Commit: pending
+- Scope: review, debug, behavioral contracts
+- What changed: the fourth incremental review confirmed the prior correction
+  paths but found that the new `unavailable` guard was limited to IBKR and
+  Longbridge, allowing a manual/third-party second broker label to bypass the
+  fail-closed aggregate rule. It also found that the weekend fixtures still
+  encoded `formal runtime=partial` instead of separating runtime availability
+  from `startup_status=partial`.
+- Why it matters: broker-agnostic behavior and state-field taxonomy must hold in
+  fixtures and general input classes, not only the two currently supported live
+  connectors. These findings further confirm the planned contract-matrix debt
+  response.
+- Next step: complete the two bounded TDD corrections, perform final incremental
+  review, and only then integrate to `dev` and re-pin UAT.
+
+- Commit: pending
+- Scope: review, debug, technical debt
+- What changed: the third incremental `debug1` review closed the preceding raw
+  whitespace, omitted-OHLCV, and later-turn broker-routing findings, but Sol
+  reproduced a remaining P1 path where a two-broker snapshot with reconciliation
+  `unavailable` is rendered as a combined total. Review also found bounded
+  status-name, CLI-help, and contract-matrix gaps.
+- Why it matters: both full verification entrypoints still pass, so repeated
+  semantic escapes now establish behavioral-contract depth as accepted debt and
+  trigger a bounded contract-matrix architecture task rather than another
+  phrase-only patch.
+- Next step: let `debug1` make the TDD correction, perform final incremental
+  review, then integrate to `dev`, re-pin the UAT workspace, and run fresh-chat
+  acceptance before any 1.0 claim.
+
+- Commit: pending
+- Scope: agent workflow, token efficiency
+- What changed: simplified the review topology for GPT-5.6 Sol Ultra. Sol now
+  prepares normal review scope directly; formal review uses exactly two Terra
+  axes; Luna is reserved for materially large or ambiguous preparation. Normal
+  documentation, planning, status, narrow fixes, and verification default to no
+  subagents.
+- Why it matters: avoids spending tokens and latency on agent orchestration when
+  the highest-capability coordinator can recover a clean scope directly, while
+  preserving independent dual-axis review where the formal skill requires it.
+- Next step: apply the lean topology to the next `debug1` review and only restore
+  Luna if scope ambiguity proves expensive.
+
+- Commit: pending
+- Scope: review, debug, input validation
+- What changed: reviewed the second `debug1` correction round with isolated
+  Luna/Terra/Sol stages. The prior three findings are closed, but exact exclusion
+  grammar still accepts surrounding/annotation whitespace, and argparse still
+  requires OHLCV before an incomplete setup key can return watch-only. Later
+  `needs_review` routing also differs between router and reference/template.
+- Why it matters: full plugin and MVP verification remain green while raw-input
+  and validation-order paths violate the intended safety boundary. The debug
+  task remains unaccepted.
+- Next step: return the two P1 and one P2 findings to `debug1`, then perform one
+  final incremental review before dev integration or UAT.
+
+- Commit: pending
+- Scope: review, debug, tiered-agent workflow
+- What changed: applied the new Luna/Terra/Sol review pipeline to the first
+  `debug1` correction round. Luna produced a scoped packet, two explicit Terra
+  reviewers checked Standards and Spec, and Sol reproduced cited hotspots and
+  reran the repository verification entrypoints.
+- Why it matters: despite `verify-plugin` and `verify-mvp` passing, review found
+  three remaining P1 gaps: first-start `needs_review` omits broker setup,
+  malformed exclusion annotations are accepted, and PA parses OHLCV before the
+  complete setup-key gate. The correction round is not accepted.
+- Next step: return only these three findings to `debug1`, review the incremental
+  correction, then proceed to dev integration and fresh UAT only after PASS.
+
+- Commit: pending
+- Scope: agent workflow, review, context efficiency
+- What changed: formalized a token-efficient review pipeline. Luna prepares a
+  narrow mechanical packet, explicit Terra agents perform routine Standards and
+  Spec review with isolated context, and Sol reads only cited hotspots and owns
+  the final decision. Direct full-path Sol review is reserved for defined
+  safety, architecture, conflict, and low-confidence escalation cases.
+- Why it matters: the highest-capability coordinator keeps more relevant,
+  cleaner context without delegating final quality authority or trading-safety
+  decisions.
+- Next step: use this pipeline for the next `debug1` follow-up review and record
+  any friction before changing the thresholds.
+
+- Commit: pending
+- Scope: review, debug, technical debt
+- What changed: Codex reviewed the completed `debug1` working-tree changes
+  against implementation baseline `b752b78` and the six-item delegated spec,
+  using separate Standards and Spec axes. The decision is
+  `changes_requested`: three P1 behavior gaps and one P2 coverage gap remain.
+- Why it matters: passing contract/self-tests did not catch a mixed-broker
+  reconciliation bypass, an incomplete setup-key gate, or a placeholder weekend
+  summary. The debug task is not release-ready and no item is treated as formal
+  UAT evidence yet.
+- Next step: send the four findings back to `debug1`, rerun focused verification,
+  review the follow-up diff, then re-pin the UAT worktree for fresh-chat tests.
+
+- Commit: pending
+- Scope: plugin distribution, docs
+- What changed: added the repository-backed Dailytrades marketplace manifest
+  and made the root README begin with a single copyable Codex installation
+  command, installation check, update path, and first dry-run prompt.
+- Why it matters: a new user can install the plugin without cloning the
+  repository or discovering the maintainer-only `@personal` marketplace, then
+  immediately start a safe no-broker dry run.
+- Next step: after publishing this change, run the documented command from a
+  clean Codex configuration and record the fresh installation result.
+
+- Commit: pending
+- Scope: automation, quant integration, safety, test
+- What changed: added stable Alpha daily publish, weekly LightGBM shadow,
+  monthly governance, and Gmail audit-dispatch prompt contracts. The private
+  quant CLI now exposes exchange-calendar due checks, run leases, incremental
+  FMP price refresh, Bayesian/LightGBM artifact persistence, purged
+  walk-forward evaluation, governance reports, and a sanitized notification
+  outbox.
+- Why it matters: scheduled work now has deterministic commands, duplicate-run
+  protection, retry-safe audit notifications, and explicit promotion blockers
+  instead of relying on a conversational agent to remember process state.
+- Next step: confirm the production universe/security-master scope and Gmail
+  recipient, then create real Codex automations and run clean-runtime UAT.
+
+- Commit: pending
+- Scope: architecture, script, skill, runtime, test
+- What changed: connected the public plugin to the separate private Alpha Lab
+  through a read-only SQLite adapter. Added Top10 display, full-universe ticker
+  lookup, snapshot changes, runtime health, Alpha-first daily/weekly routing,
+  a fixed Decision Card, and explicit legacy KVN fallback semantics. The
+  private lab now owns point-in-time data, factors, Bayesian champion,
+  LightGBM shadow challenger, purged walk-forward evaluation, immutable model
+  governance, Parquet snapshots, SQLite history, and FTS5 retrieval.
+- Why it matters: the agent can consume a deterministic quantitative ranking
+  without inventing scores or hiding uncertainty, while the public plugin stays
+  reusable and contains no credentials, raw data, model binaries, or private
+  trading records.
+- Next step: add scheduled daily/weekly/monthly Alpha jobs and Gmail audit
+  notifications, then complete plugin packaging and fresh-chat acceptance.
+
+- Commit: pending
+- Scope: planning, architecture
+- What changed: split active work governance into a feature/integration and
+  approved-refactor development plan, a reproducible debug plan, and a scored
+  technical-debt register. The debt register now defines explicit thresholds
+  that create a bounded architecture-optimization task rather than allowing
+  unplanned broad rewrites.
+- Why it matters: defects, delivery work, and systemic maintenance cost can be
+  reviewed independently, while recurring cross-module cost has a visible path
+  to a tested architectural correction.
+- Next step: maintain the debug board from `debug1`, score only evidence-backed
+  debt, and schedule an architecture assessment when a documented trigger is
+  met.
+
+- Commit: pending
+- Scope: quant planning, observability
+- What changed: added a research-observability and artifact contract to the
+  Alpha Lab plan, informed by the source-data/workflow/durable-record layering
+  in `Innei/kansoku`. Alpha campaigns now treat schema-versioned manifests,
+  evaluations, metric tables, and research notes as immutable evidence, with
+  SQLite limited to indexing and retrieval.
+- Why it matters: quantitative research can be audited and compared without
+  treating a runtime cache or future frontend as the fact authority. The
+  approved 1.0 interface remains chat plus static report bundles, not a
+  persistent trading dashboard.
+- Next step: define the private report-bundle schema alongside the Campaign
+  Contract and Factor Candidate Spec before considering a local read-only
+  observability console.
 - Commit: `2766c70`, `7d91010`
 - Scope: runtime, broker safety, Daily Ops, PA, validation, governance
 - What changed: integrated the final reviewed non-quant 1.0 behavior correction

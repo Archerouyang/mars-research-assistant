@@ -1,6 +1,6 @@
 ---
 name: weekly-trading-plan
-description: Initialize or deep-update the Active Market Plan with last week's trade summary review, current market tape, macro/rates, policy, news, future event preview, optional external momentum context, setup-level opportunity discovery, and portfolio risk refresh. Use when the user asks for a weekly review, weekend prep, next-week outlook, deep plan update, macro/policy preview, momentum context update, or setup/opportunity discovery.
+description: Initialize or deep-update the Active Market Plan with last week's trade summary review, current market tape, macro/rates, policy, news, future event preview, optional Alpha context, setup-level opportunity discovery, and portfolio risk refresh. Use when the user asks for a weekly review, weekend prep, next-week outlook, deep plan update, macro/policy preview, Alpha context update, or setup/opportunity discovery.
 ---
 
 # Weekly Market Review And Trading Plan
@@ -64,8 +64,8 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - Trading profile strategy rules, pools, timeframes, and instrument preferences: `./trading-profile.md`.
    - Macro and rates: `./macro-policy-filter.md`.
    - Equity screening and thesis validation: `./equity-screening.md`.
-   - optional external quantitative momentum context when already configured
-     or explicitly provided by the user.
+   - Alpha ranking contract: `./alpha-leaderboard.md`.
+   - Prior-run delta contract: `./analysis-delta.md`.
    - Price action and timeframe rules: `./price-action-timing.md`.
    - Trade plan schema: `./trade-journal.md`.
    - Risk exposure: `./portfolio-risk.md`.
@@ -81,19 +81,18 @@ The weekly note must be a decision-support memo tied to holdings and planned ris
    - policy analysis: market-moving fiscal, Treasury, tariff, regulatory, or Trump-related policy only when relevant;
    - news analysis: earnings, guidance, sector catalysts, credit/liquidity events, and verified high-impact headlines;
    - trade plan preparation: reduce upstream research into input reads,
-     including optional external momentum context only when configured or
-     explicitly provided, then build the Cross-Section Candidate Pool before
-     touching the Setup Pool;
+     including the latest stored Alpha Leaderboard delta when available, then
+     build the Cross-Section Candidate Pool before touching the Setup Pool;
    - current holding impact: how the week changes add, TP/rebalance, or pause-and-review conditions for existing long-term ETF holdings;
    - new-position impact: whether planned risk such as 0DTE, ETF/2x ETF, LEAP, or post-event continuation should wait for confirmation;
    - strategy posture: decide whether the plan should be defensive, balanced, or high-beta momentum, and explain which conditions would change that posture;
    - key earnings this week: only include earnings that can affect current holdings, index/sector beta, momentum themes, or planned setups;
    - event priority ranking: P0/P1/P2 events sorted by decision impact;
    - next-week preview: macro releases, Fed/Treasury events, auctions, earnings, expirations, known policy deadlines, and relevant White House / Trump public remarks;
-   - optional external momentum context: consume an already configured or
-     user-provided snapshot only as research-priority context. If missing or
-     stale, continue without it instead of rebuilding a quantitative model
-     during the weekly plan;
+   - Alpha context: send Top20 into the Cross-Section Candidate Pool and start
+     deep research with Top5 plus persistent/strengthening Top20 names. The
+     agent must not re-rank stored rows. If Alpha is missing or stale, continue
+     without it; use a legacy snapshot only as a disclosed configured fallback;
    - setup pool refresh: promote only prepared candidates with higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and next check into `candidate` or `active` setups;
    - setup details: long/short thesis, setup type, instrument type, analysis timeframe, trigger timeframe, trigger zone, invalidation, profile fit, and risk budget;
    - portfolio exposure impact.
@@ -159,10 +158,10 @@ Use these input reads:
 - `Policy/Event Risk`: White House / Trump policy, Treasury/fiscal, tariffs, Fed independence, auctions, FOMC, earnings, holidays, and other event risk.
 - `Industry/Sector Strength`: sector leadership, breadth, relative strength, rotation, and themes that deserve or lose attention.
 - `Company Thesis Check`: verified company thesis/counter-thesis, valuation, catalyst, earnings, guidance, and disconfirming facts.
-- `External Momentum Snapshot`: optional imported model output when the user has
-  already provided or configured a separate quantitative model. Treat it as an
-  optional external snapshot and research priority only, not a buy list. Do not
-  rebuild, re-rank, or re-score the model inside the plugin.
+- `Alpha Leaderboard`: read-only production ranking from the private Alpha Lab.
+  Treat it as research priority only, not a buy list. Do not rebuild, re-rank,
+  or re-score the model inside the plugin. A legacy external snapshot may be
+  used only as a disclosed fallback.
 
 Each input read should use this shape: `read`, `supports`, `pressures`, `blocks`, `evidence`, and `next_check`. Keep it concise; this is not five separate reports.
 

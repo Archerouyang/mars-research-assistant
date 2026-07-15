@@ -91,6 +91,26 @@ class DistributionSelftest(unittest.TestCase):
         target.write_text("/Users/example/Documents/private-runtime/positions.csv\n", encoding="utf-8")
         self.assert_rejected("private absolute path bundled")
 
+    def test_rejects_unapproved_runtime_shaped_path(self) -> None:
+        targets = (
+            self.repo
+            / "skills"
+            / "trading-research-system"
+            / "runtime"
+            / "watchlist.csv",
+            self.repo
+            / "plugins"
+            / "trading-research-system"
+            / "skills"
+            / "trading-research-system"
+            / "runtime"
+            / "watchlist.csv",
+        )
+        for target in targets:
+            target.parent.mkdir()
+            target.write_text("ticker\nPRIVATE\n", encoding="utf-8")
+        self.assert_rejected("unsupported portable Skill path")
+
     def test_rejects_missing_claude_wrapper(self) -> None:
         (
             self.repo

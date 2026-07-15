@@ -72,8 +72,11 @@ flowchart TD
 | 宏观、利率与政策 | 市场环境、传导路径和受影响计划 | 官方一手信源优先；授权 macrodata 提供指标值 |
 | 个股与研报研究 | thesis、counter-thesis、Claim Ledger、Verification Queue | 只使用公开、已授权或用户提供的内容，不绕过付费墙 |
 | Price Action | 明确时间框架、趋势/震荡环境、点位和 setup 条件 | 使用授权 OHLCV；canonical 图表使用 TradingView Lightweight Charts |
+| Alpha Lab 输入 | 用于研究排序的已发布 champion 排名、历史变化和不确定性 | 只读私有 store；保留模型排名，不可用时安全降级 |
 | 组合风险 | 集中度、产品、主题、券商暴露和重大风险旗标 | 授权只读 broker facts 或用户明确提供的数据 |
 | 交易复盘 | 下单后与平仓后的背景、错误和经验 | 只读成交事实加用户确认 |
+
+私有 Alpha Lab 可用时，Skill 只把已发布的 champion 排名作为研究优先级输入，不会在 agent 内训练或重排模型。Alpha 契约与自动化细节见 [Alpha Lab 计划](docs/ALPHA_LAB_PLAN.md)。
 
 本系统只提供决策支持，不保证收益，不替代受监管的投资建议，也不会把单个数据点直接转成交易指令。
 

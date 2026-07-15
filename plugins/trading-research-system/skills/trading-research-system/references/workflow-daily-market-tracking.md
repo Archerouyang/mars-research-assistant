@@ -98,8 +98,8 @@ DRAM/SOXX/QQQ from this acceptance-only block.
    - Macro/rates context: `./macro-policy-filter.md`.
    - Macro data source contract: `./macro-data-source-contract.md`.
    - Visual trigger policy: `./visual-trigger-policy.md`.
-   - optional external quantitative momentum snapshots when already configured
-     or explicitly provided by the user.
+   - Alpha ranking contract: `./alpha-leaderboard.md`.
+   - Prior-run delta contract: `./analysis-delta.md`.
    - Price action/timeframes: `./price-action-timing.md`.
    - Intraday statuses: `./intraday-setup-scan.md`.
    - Portfolio risk: `./portfolio-risk.md`.
@@ -110,8 +110,7 @@ DRAM/SOXX/QQQ from this acceptance-only block.
    - fiscal/Treasury/Fed/policy headlines;
    - high-impact news and earnings;
    - major events in the current week and next-week preview window;
-   - optional external quantitative momentum snapshot changes only when the
-     source is already configured or explicitly provided;
+   - Alpha Leaderboard delta from the stored production snapshot when available;
    - prices, key levels, and chart context.
    For macro/rates and financial-condition reads, first report `宏观数据来源状态`.
    Use Longbridge macrodata for actual macro values when available, use
@@ -124,12 +123,11 @@ DRAM/SOXX/QQQ from this acceptance-only block.
    or financial conditions, apply `visual-trigger-policy.md` and show or request
    a `Macro Regime Mini-Panel`. If no macro chart is shown, say whether the
    reason is missing/stale macro values or that the update is text-only.
-   If an external momentum snapshot is missing or stale, report that the
-   optional snapshot is unavailable and continue without it unless the user
-   explicitly provides a fresh file. Do not rebuild private quantitative models
-   from public market data inside daily tracking. Public market data can support
-   tape, sector breadth, and relative-strength notes only. Any sector/theme
-   rotation belongs in market breadth, not in the external snapshot table.
+   If the Alpha store is missing or stale, report the gap and continue without
+   cross-sectional model input. A legacy snapshot is allowed only as a disclosed
+   configured fallback. The agent must not re-rank Alpha rows or rebuild private
+   quantitative models from public market data. Public data can support tape,
+   sector breadth, and relative-strength notes only.
 4. Update setup-level fields:
    - trigger zone;
    - invalidation;

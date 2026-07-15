@@ -11,12 +11,23 @@ import tempfile
 import unittest
 from urllib.parse import unquote, urlparse
 
+from verify_readme_gallery_contract import ContractError, validate_readme
+
 
 REPO = Path(__file__).resolve().parents[1]
 VERIFIER = REPO / "scripts" / "verify_readme_gallery_contract.py"
 
 
 class ReadmeGalleryVerifierSelftest(unittest.TestCase):
+    def test_english_readme_rejects_more_than_180_lines(self) -> None:
+        source = (REPO / "README.md").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as tmp:
+            readme = Path(tmp) / "README.md"
+            readme.write_text(source + "\n" + ("extra\n" * 31), encoding="utf-8")
+
+            with self.assertRaisesRegex(ContractError, "150-180 lines"):
+                validate_readme(readme, chinese=False)
+
     def test_unknown_argument_is_rejected(self) -> None:
         result = subprocess.run(
             [sys.executable, str(VERIFIER), "--unknown-gallery-option"],

@@ -33,9 +33,12 @@ explicitly opt-in.
 - User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
 - Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
 - High-level Al Brooks price action timing framework.
-- Optional external quantitative momentum snapshot consumption when the user has
-  already provided or enabled a separate model output. The plugin does not
-  build, rank, or publicly expose that model in v1.
+- Read-only Alpha Leaderboard consumption from the separate private Alpha Lab:
+  Top10 display, full-universe ticker lookup, Top20 candidate routing, Top5 deep
+  research priority, trajectory, probability, and uncertainty. The agent never
+  re-ranks model output.
+- Legacy external quantitative snapshot consumption only as a disclosed
+  configured fallback; legacy scores are never merged with Alpha scores.
 - Active Market Plan maintenance with an overwriteable current state and append-only update trail.
 - Trading profile template for personal strategy scoring, pool definitions, ETF groups, instrument preference, timeframe rules, crowding model, and setup-to-instrument translation.
 - Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
@@ -129,6 +132,7 @@ trading-profile.md
 updates/YYYY-MM-DD.md
 daily/YYYY-MM-DD/
 charts/
+alpha/leaderboard.sqlite
 ```
 
 The plugin includes templates for Active Market Plans, update notes, holdings, broker-live runtime views, watchlists, trade plans, report snapshots, reviews, research-note logs, research-report logs, and macro checklists.

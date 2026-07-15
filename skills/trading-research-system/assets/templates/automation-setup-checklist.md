@@ -15,6 +15,10 @@ Collect and confirm:
 - timezone: the user's scheduling timezone and the market calendar assumption.
 - runtime_dir: the private runtime root, defaulting to
   `~/Documents/dailytrades-runtime` unless the user overrides it.
+- quant_repo: the installed private Alpha Lab repository path. Never assume an
+  author-specific absolute path in the reusable plugin template.
+- quant_runtime: the private Alpha Lab data/model/run root, separate from both
+  the public plugin repository and `runtime_dir`.
 - enabled automations: which prompts should be scheduled now.
 - cadence: exact local time, weekdays/weekends, event-window exceptions, and
   whether intraday monitors should run only when active setups exist.
@@ -32,6 +36,10 @@ Collect and confirm:
   for the Research Report Intake queue.
 - output style: concise Chinese note-style output, focused on changes,
   invalidations, required decisions, and next checks instead of news dumps.
+- isolated dry-run evidence: every enabled Alpha daily/weekly/monthly job and
+  Gmail dispatcher has passed its prompt contract in a clean runtime with
+  fixture inputs, no live broker reads, no emails sent, and no public-repo
+  writes. Record the command, result, runtime path, and artifact fingerprints.
 
 ## Supported Automation Set
 
@@ -46,6 +54,37 @@ Use only the automations with stable prompt contracts:
   weekly P0/P1 variables.
 - `broker_reconciliation_prompt`: optional read-only broker fact alignment when
   the user chooses a broker source.
+- `alpha_daily_publish`: private `dailytrades-quant` price refresh, Bayesian
+  update, and immutable Alpha snapshot publication after the US close.
+- `alpha_weekly_shadow`: purged LightGBM shadow retraining; never changes the
+  production rank directly.
+- `alpha_monthly_governance`: purged walk-forward report and promotion blockers.
+- `alpha_gmail_dispatch`: sends only sanitized audit events from the private
+  outbox after a completed Alpha job.
+
+## Isolated Alpha Dry-Run Procedure
+
+Before activation, use a new empty `{uat_runtime}` and run:
+
+```bash
+cd {quant_repo} && uv run dailytrades-quant uat-dry-run \
+  --root {uat_runtime} --format json
+```
+
+Then verify both public read-only boundaries against the generated fixture:
+
+```bash
+python3 scripts/alpha_leaderboard_adapter.py show \
+  --db {uat_runtime}/plugin-runtime/alpha/leaderboard.sqlite
+python3 scripts/alpha_notification_adapter.py next \
+  --db {uat_runtime}/outbox.sqlite
+```
+
+The report must show daily, weekly, and monthly `success`, Gmail `not_sent`,
+broker/network `not_used`, promotion blocked for the non-PIT fixture, a pending
+sanitized outbox event, and immutable artifact fingerprints. This evidence
+tests orchestration only; it does not replace the live provider capability
+probe or PIT-universe acceptance.
 
 ## Output Contract
 
@@ -58,7 +97,8 @@ State what the user is trying to enable and whether setup is complete.
 ### Confirmed Configuration
 
 List confirmed thread, timezone, runtime_dir, enabled automations, cadence,
-allowed sources, runtime write policy, and broker-read policy.
+quant_repo, quant_runtime, allowed sources, runtime write policy, and
+broker-read policy.
 
 ### Missing Decisions
 
@@ -84,4 +124,6 @@ Always include:
 ### Next Action
 
 If setup is incomplete, ask for the missing confirmations. If setup is complete,
-ask whether to create the real Codex automations.
+ask whether to create the real Codex automations. Setup is not complete until
+the isolated dry-run evidence from a clean runtime is present for every enabled
+Alpha automation.

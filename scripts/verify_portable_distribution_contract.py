@@ -25,6 +25,32 @@ PRIVATE_FILE_NAMES = {
     ".env",
 }
 PRIVATE_PATH_RE = re.compile(r"/Users/[^/]+/(?:Documents|Library)/")
+PUBLIC_ROOT_FILES = {
+    Path("LICENSE"),
+    Path("SKILL.md"),
+    Path("agents/openai.yaml"),
+}
+FIXTURE_FILE_SUFFIXES = {".csv", ".json", ".md"}
+TEMPLATE_FILE_SUFFIXES = {".csv", ".md", ".toml"}
+FIXTURE_RUNTIME_ROOT_FILES = {"market-plan.md", "trading-profile.md"}
+FIXTURE_RUNTIME_DAILY_FILES = {
+    "broker_executions.csv",
+    "broker_orders.csv",
+    "intraday-watchlist.csv",
+    "portfolio_snapshot.csv",
+    "position-daily-report.md",
+    "reviews.md",
+    "trade-plans.csv",
+}
+VENDOR_FILES = {
+    Path("assets/vendor/lightweight-charts-5.2.0/LICENSE"),
+    Path(
+        "assets/vendor/lightweight-charts-5.2.0/"
+        "lightweight-charts.standalone.production.js"
+    ),
+}
+DATE_COMPONENT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+FIXTURE_RUNTIME_RE = re.compile(r"^active-market-plan-\d{4}-\d{2}-\d{2}$")
 
 
 class ContractError(ValueError):
@@ -51,6 +77,40 @@ def regular_files(root: Path) -> dict[Path, Path]:
             and path.suffix != ".pyc"
         )
     }
+
+
+def is_allowed_portable_path(relative: Path) -> bool:
+    if relative in PUBLIC_ROOT_FILES or relative in VENDOR_FILES:
+        return True
+
+    parts = relative.parts
+    if len(parts) == 2 and parts[0] == "references":
+        return relative.suffix == ".md"
+    if len(parts) == 2 and parts[0] == "scripts":
+        return relative.suffix == ".py"
+    if parts[:2] == ("assets", "templates"):
+        return len(parts) == 3 and relative.suffix in TEMPLATE_FILE_SUFFIXES
+    if relative == Path("assets/fixtures/README.md"):
+        return True
+    if parts[:3] in {
+        ("assets", "fixtures", "input"),
+        ("assets", "fixtures", "expected"),
+    }:
+        return len(parts) == 4 and relative.suffix in FIXTURE_FILE_SUFFIXES
+    if parts[:3] != ("assets", "fixtures", "runtime") or len(parts) < 5:
+        return False
+    if FIXTURE_RUNTIME_RE.fullmatch(parts[3]) is None:
+        return False
+    if len(parts) == 5:
+        return parts[4] in FIXTURE_RUNTIME_ROOT_FILES
+    if len(parts) == 6 and parts[4] == "updates":
+        return relative.suffix == ".md" and DATE_COMPONENT_RE.fullmatch(relative.stem) is not None
+    if len(parts) == 7 and parts[4] == "daily":
+        return (
+            DATE_COMPONENT_RE.fullmatch(parts[5]) is not None
+            and parts[6] in FIXTURE_RUNTIME_DAILY_FILES
+        )
+    return False
 
 
 def validate_skill() -> None:
@@ -86,7 +146,11 @@ def validate_skill() -> None:
     require(nested_skills == [Path("SKILL.md")], f"partial focused skills exposed: {nested_skills}")
     require(not any(path.is_symlink() for path in PORTABLE.rglob("*")), "portable skill contains symlink")
 
-    for path in regular_files(PORTABLE).values():
+    for relative, path in regular_files(PORTABLE).items():
+        require(
+            is_allowed_portable_path(relative),
+            f"unsupported portable Skill path: {relative}",
+        )
         require(path.name not in PRIVATE_FILE_NAMES, f"private runtime-shaped file bundled: {path}")
         if path.suffix.lower() in {".md", ".json", ".toml", ".csv", ".py", ".yaml", ".yml"}:
             text = path.read_text(encoding="utf-8")

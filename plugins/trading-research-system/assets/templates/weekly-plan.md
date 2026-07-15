@@ -112,7 +112,8 @@ Only include earnings that can affect current holdings, index/sector beta, momen
 | Policy/Event Risk |  |  |  |  |  |  |
 | Industry/Sector Strength |  |  |  |  |  |  |
 | Company Thesis Check |  |  |  |  |  |  |
-| External Momentum Snapshot | optional / provided / missing / stale | user-configured external model output only |  |  | snapshot summary / skipped |  |
+| Alpha Leaderboard | available / missing / stale | private Alpha Lab champion output |  |  | Top20 + delta / skipped |  |
+| External Momentum Snapshot | legacy fallback / missing / skipped | disclosed user-configured KVN output only |  |  | fallback summary / skipped |  |
 
 ### Cross-Section Candidate Pool
 
@@ -172,7 +173,16 @@ Use this only for forward-looking events that need preparation but are not alrea
 | ETF / 2x ETF | yes / wait |  | leveraged beta |
 | LEAP | yes / wait |  | rate-sensitive duration |
 
-## External Momentum Snapshot
+## Alpha Leaderboard
+
+| Alpha Rank | Ticker | Alpha Score / historical percentile | P(20D excess > 0) + uncertainty | Trajectory | Factor attribution | Research next step |
+| ---: | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |
+
+Use Top20 for the Cross-Section Candidate Pool. Start deep research with Top5
+plus persistent or rapidly strengthening Top20 names. Never re-rank stored rows.
+
+## External Momentum Snapshot (Legacy Fallback)
 
 Optional external quantitative model output. Use only when the user has already
 provided or configured a snapshot. Do not rebuild, rank, or backtest the model

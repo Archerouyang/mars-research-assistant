@@ -115,6 +115,14 @@ def validate_pa_html_contract(html: str, *, label: str) -> None:
 
 def validate_readme(path: Path, *, chinese: bool) -> None:
     text = path.read_text(encoding="utf-8")
+    line_count = len(text.splitlines())
+    if chinese:
+        require(line_count <= 180, f"{path.name} must not exceed 180 lines")
+    else:
+        require(
+            150 <= line_count <= 180,
+            f"{path.name} must contain 150-180 lines; found {line_count}",
+        )
     expected_order = (
         ["30 秒安装", "首次使用", "合成输出示例", "工作流", "能力与数据来源", "Public Skill / Private Runtime", "可选 Native Plugins", "故障排查与详细文档"]
         if chinese

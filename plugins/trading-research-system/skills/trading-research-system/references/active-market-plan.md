@@ -46,7 +46,7 @@ The setup is the smallest planning unit. A setup is not just a ticker and not ju
 
 Before a new setup enters the setup pool, route research through `Trade Plan Preparation`:
 
-1. Summarize the input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, `Company Thesis Check`, and `External Momentum Snapshot` when an optional user-configured snapshot is available.
+1. Summarize the input reads: `Macro Regime`, `Financial Conditions`, `Policy/Event Risk`, `Industry/Sector Strength`, `Company Thesis Check`, and the read-only `Alpha Leaderboard` when available. `External Momentum Snapshot` remains a disclosed legacy fallback only.
 2. Apply profile-defined strategy posture, pool, instrument, timeframe, and crowding rules.
 3. Convert those reads into a `Cross-Section Candidate Pool`.
 4. Promote only candidates with sufficient higher-timeframe regime, strategy bias, price structure, trigger zone, invalidation, and risk context into `candidate` or `active` setups.

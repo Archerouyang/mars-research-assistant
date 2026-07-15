@@ -113,6 +113,8 @@ Use these statuses:
 | Priority | Status | Task | Why It Matters | Next Action |
 | --- | --- | --- | --- | --- |
 | P0 | done | Establish public planning baseline | Gives the project capability boundaries, execution method, task breakdown, and progress tracking. | Keep roadmap and project log updated as decisions change. |
+| P0 | done | Publish a newcomer installation path | Makes the root README start with one copyable marketplace-install command, an installation check, and the first dry-run prompt. | Keep `.agents/plugins/marketplace.json` and the root README command synchronized with the published Git marketplace. |
+| P0 | done | Define token-efficient Sol Ultra review | Preserves Sol as final quality authority while minimizing subagent count and context duplication. | Default to zero subagents; formal review uses exactly two Terra axes, with Luna reserved for materially large or ambiguous preparation. |
 | P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
 | P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
 | P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |

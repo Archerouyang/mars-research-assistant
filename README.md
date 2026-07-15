@@ -86,8 +86,14 @@ workflow names.
 | Macro, rates, and policy | Regime posture, transmission paths, and affected plans | Prefer official primary sources; use authorized macro data for values |
 | Equity and report research | Thesis, counter-thesis, claim ledger, and verification queue | Public, authorized, or user-provided research only; no paywall bypass |
 | Price action | Declared timeframe, trend/range context, levels, and setup conditions | Authorized OHLCV; TradingView Lightweight Charts for canonical visuals |
+| Alpha Lab input | Published champion ranks, history deltas, and uncertainty for research priority | Read-only private store; preserve model ranks and continue safely when unavailable |
 | Portfolio risk | Concentration, product, theme, broker exposure, and material flags | Authorized read-only broker facts or explicit user input |
 | Trade review | Post-order and post-exit context, errors, and lessons | Read-only execution facts plus user confirmation |
+
+When the private Alpha Lab is available, the Skill reads its published champion
+ranking as research priority only. It never retrains or re-ranks the model.
+Alpha contracts and automation details live in the
+[Alpha Lab plan](docs/ALPHA_LAB_PLAN.md).
 
 The system is decision support. It does not promise returns, replace regulated
 advice, or turn a data point into an automatic trade instruction.
