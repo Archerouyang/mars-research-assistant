@@ -29,6 +29,23 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-15
+
+- Commit: `9096c9b` `Reconcile portable distribution with dev`
+- Scope: integration, distribution, documentation, validation
+- What changed: reconciled the reviewed portable Skill and newcomer README work
+  with current `dev`, verified the remote candidate branch resolved to the same
+  commit, and passed isolated remote discovery/install for Codex and Claude
+  Code. The integrated commit also passed plugin and fixture-backed MVP gates in
+  both the `dev` worktree and the re-pinned non-quant UAT worktree.
+- Why it matters: `dev` now contains one reviewed command-first Skill, the
+  bilingual newcomer surface, and reproducible synthetic visual evidence without
+  adding private runtime or broker state to the repository.
+- Next step: the GitHub repository is still private. Before public release,
+  change visibility intentionally, rerun an anonymous one-command install from
+  stable `master` or a release tag, and complete the separate fresh-chat visual
+  UAT before making a 1.0 claim.
+
 ## 2026-07-14
 
 - Commit: `c50c315` `Distribute trading research as one portable skill`
