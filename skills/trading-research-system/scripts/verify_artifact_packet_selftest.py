@@ -18,8 +18,8 @@ from artifact_packet import ArtifactPacketError, build_artifact_packet, write_ar
 # These are independently captured known-good bytes for the public fixture.
 EXPECTED_CONTENT_HASH = "e81d14d85094d5d9c068ec85101f428c33967481b3d8bf4ec81b819190e952bd"
 EXPECTED_JSON_SHA256 = "809841d66fd759af82710108bf97718c10b597e96b5947881cd6e53ff0857366"
-EXPECTED_HTML_SHA256 = "f9cbbb7a603a3b77e2ce24712626c7e2019497e8251628fa9a53ec61d8b5eacf"
-EXPECTED_MANIFEST_SHA256 = "bcae87b490d241907d5bbf4caa392409f3989ee3779352d688a89662b23cb0d3"
+EXPECTED_HTML_SHA256 = "12d5b3066b380caa88498836b44f63fedf03cbed6016679b0b9e289d4045d60b"
+EXPECTED_MANIFEST_SHA256 = "8a8d36ce8365ebd6aba3c0a64625c377e39b75efeff085a5ef97724672a2e879"
 
 
 class ArtifactPacketSelftest(unittest.TestCase):
@@ -128,6 +128,57 @@ class ArtifactPacketSelftest(unittest.TestCase):
         privacy_violation = copy.deepcopy(self.snapshot)
         privacy_violation["payload"]["question"] = "private path: /Users/example/secret"
         self.assert_error("privacy_violation", privacy_violation)
+
+    def test_rejects_all_public_fixture_privacy_sentinel_families(self) -> None:
+        payload_cases = (
+            ("question", "/home/analyst/private-plan.md"),
+            ("decision", r"C:\\Users\\analyst\\.ssh\\id_ed25519"),
+            ("module_summary", ".codex/session-state.json"),
+            ("question", "private plan for a user position"),
+            ("decision", "user-generated chart attached"),
+        )
+        for field, injected in payload_cases:
+            unsafe = copy.deepcopy(self.snapshot)
+            if field == "module_summary":
+                unsafe["payload"]["modules"][0]["summary"] = injected
+            else:
+                unsafe["payload"][field] = injected
+            self.assert_error("privacy_violation", unsafe, secret=injected)
+
+        extra_cases = (
+            ("account_id", "DU12345678"),
+            ("account number", "123456789"),
+            ("account-id", "U87654321"),
+            ("credential", "secret-token"),
+            ("api key", "fixture-api-key"),
+            ("private_key", "BEGIN PRIVATE KEY"),
+            ("raw broker-response", "raw broker response payload"),
+            ("private_position", "synthetic-private-position"),
+            ("user chart", "user-generated-chart"),
+            ("public_probe", "private_position"),
+            ("public_probe", "private-position"),
+            ("public_probe", "user_chart"),
+            ("public_probe", "user-chart"),
+        )
+        for key, injected in extra_cases:
+            unsafe = copy.deepcopy(self.snapshot)
+            unsafe["unknown_public_probe"] = {key: injected}
+            self.assert_error("privacy_violation", unsafe, secret=injected)
+
+    def test_private_runtime_and_non_sensitive_ids_remain_valid(self) -> None:
+        private_runtime = copy.deepcopy(self.snapshot)
+        private_runtime["privacy"] = "private_runtime"
+        private_runtime["unknown_private_probe"] = {"account_id": "DU12345678"}
+        private_runtime["content_hash"] = _content_hash(private_runtime)
+        self.build(private_runtime)
+
+        public_fixture = copy.deepcopy(self.snapshot)
+        public_fixture["unknown_public_probe"] = {
+            "observed_at": "2026-07-16T09:00:00Z",
+            "digest": "a" * 64,
+        }
+        public_fixture["content_hash"] = _content_hash(public_fixture)
+        self.build(public_fixture)
 
     def test_rejects_unsafe_diagnostics_and_size_overages(self) -> None:
         unsafe_diagnostic = copy.deepcopy(self.snapshot)

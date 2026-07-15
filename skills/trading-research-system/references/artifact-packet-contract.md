@@ -26,9 +26,10 @@ The output directory contains:
   bytes, Board identity, `snapshot_contract_version`, payload and manifest
   versions, decision cutoff, privacy, Views, and presentation state.
 
-The fixture is synthetic and sanitized. Opening the HTML does not initiate an
-external request or state-changing action. The artifact is decision support,
-not investment advice and not an action approval.
+The fixture is synthetic and sanitized. Public fixtures are recursively
+privacy-scanned across every field, including unknown extra fields. Opening the
+HTML does not initiate an external request or state-changing action. The
+artifact is decision support, not investment advice and not an action approval.
 
 The tracer accepts only the Instrument payload version `1.0`. Invalid schema or
 version, Board/payload mismatch, invalid content hash, unsafe diagnostics, and

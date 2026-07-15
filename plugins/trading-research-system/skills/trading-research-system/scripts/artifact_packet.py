@@ -45,6 +45,25 @@ PRIVACY_SENTINELS = (
     "private_runtime",
     ".codex",
 )
+PUBLIC_PRIVACY_COMPACT_SENTINELS = frozenset(
+    {
+        "accountid",
+        "accountnumber",
+        "credential",
+        "secret",
+        "token",
+        "apikey",
+        "privatekey",
+        "rawbrokerresponse",
+        "brokerresponse",
+        "privateplan",
+        "privateposition",
+        "userchart",
+        "usergeneratedchart",
+    }
+)
+PUBLIC_PRIVATE_PATH_PATTERN = re.compile(r"(?:^|/)(?:users|home|\.ssh|\.codex)(?:/|$)", re.IGNORECASE)
+BROKER_ACCOUNT_ID_PATTERN = re.compile(r"\b(?:DU|U)\d{5,}\b", re.IGNORECASE)
 UNSAFE_DIAGNOSTIC_TERMS = ("traceback", "stack trace", "/Users/", "api_key", "password", "token")
 REQUIRED_INSTRUMENT_MODULES = ("industry", "fundamentals", "catalysts", "market_instrument")
 DIAGNOSTIC_SEVERITIES = frozenset({"info", "warning", "error"})
@@ -213,6 +232,7 @@ def render_instrument_research_brief(
     payload = snapshot["payload"]
     subject = payload["subject"]
     modules = payload["modules"]
+    privacy_label = "public fixture" if snapshot["privacy"] == "public_fixture" else "private"
     module_rows = "".join(
         "<article class=\"module\">"
         f"<h3>{escape(module['id'].replace('_', ' ').title())}</h3>"
@@ -267,7 +287,7 @@ footer {{ border-top: 1px solid #c8d0d8; padding-top: 12px; font-size: 0.92rem; 
 </header>
 <section aria-labelledby=\"provenance\">
 <h2 id=\"provenance\">Provenance</h2>
-<p>Snapshot {escape(snapshot['snapshot_id'])}; cutoff {escape(snapshot['decision_cutoff'])}; privacy {escape(snapshot['privacy'])}.</p>
+<p>Snapshot {escape(snapshot['snapshot_id'])}; cutoff {escape(snapshot['decision_cutoff'])}; privacy {privacy_label}.</p>
 </section>
 <section class=\"summary\" aria-label=\"Research summary\">
 <p><strong>Current decision</strong><br>{escape(payload['decision'])}</p>
@@ -443,9 +463,9 @@ def _validate_content_hash(snapshot: Mapping[str, Any]) -> None:
 def _validate_public_privacy(value: Any) -> None:
     if value.get("privacy") != "public_fixture":
         return
-    text = canonical_json_bytes(value).decode("utf-8").lower()
-    if any(sentinel.lower() in text for sentinel in PRIVACY_SENTINELS):
-        raise ArtifactPacketError("privacy_violation")
+    for text in _iter_snapshot_text(value):
+        if _contains_public_privacy_sentinel(text):
+            raise ArtifactPacketError("privacy_violation")
 
 
 def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
@@ -494,7 +514,30 @@ def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
 def _contains_unsafe_text(value: str) -> bool:
     lowered = value.lower()
     return any(term.lower() in lowered for term in SAFE_TEXT_FORBIDDEN_TERMS) or bool(
-        ACCOUNT_ID_PATTERN.search(value)
+        ACCOUNT_ID_PATTERN.search(value) or BROKER_ACCOUNT_ID_PATTERN.search(value)
+    )
+
+
+def _iter_snapshot_text(value: Any):
+    if isinstance(value, Mapping):
+        for key, nested_value in value.items():
+            yield str(key)
+            yield from _iter_snapshot_text(nested_value)
+    elif isinstance(value, list):
+        for nested_value in value:
+            yield from _iter_snapshot_text(nested_value)
+    elif isinstance(value, str):
+        yield value
+
+
+def _contains_public_privacy_sentinel(value: str) -> bool:
+    normalized_path = value.replace("\\", "/")
+    compact = re.sub(r"[^a-z0-9]+", "", value.casefold())
+    return (
+        any(sentinel.casefold() in value.casefold() for sentinel in PRIVACY_SENTINELS)
+        or bool(PUBLIC_PRIVATE_PATH_PATTERN.search(normalized_path))
+        or any(sentinel in compact for sentinel in PUBLIC_PRIVACY_COMPACT_SENTINELS)
+        or bool(BROKER_ACCOUNT_ID_PATTERN.search(value))
     )
 
 
