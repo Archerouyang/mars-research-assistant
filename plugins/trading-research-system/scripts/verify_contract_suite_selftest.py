@@ -47,6 +47,8 @@ def main() -> None:
         raise AssertionError("core suite should include 1.0 acceptance contract")
     if "visual-trigger" not in names:
         raise AssertionError("core suite should include visual trigger contract")
+    if "artifact-packet-selftest" not in names:
+        raise AssertionError("core suite should include artifact packet selftest")
     if len(names) != len(set(names)):
         raise AssertionError("core suite should not contain duplicate names")
 
