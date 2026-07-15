@@ -581,14 +581,16 @@ def _contains_unsafe_text(value: str) -> bool:
     )
 
 
-def _iter_snapshot_text(value: Any):
+def _iter_snapshot_text(value: Any, *, top_level: bool = True):
     if isinstance(value, Mapping):
         for key, nested_value in value.items():
             yield str(key)
-            yield from _iter_snapshot_text(nested_value)
+            if top_level and key == "content_hash":
+                continue
+            yield from _iter_snapshot_text(nested_value, top_level=False)
     elif isinstance(value, list):
         for nested_value in value:
-            yield from _iter_snapshot_text(nested_value)
+            yield from _iter_snapshot_text(nested_value, top_level=False)
     elif isinstance(value, str):
         yield value
 
@@ -596,10 +598,12 @@ def _iter_snapshot_text(value: Any):
 def _contains_public_privacy_sentinel(value: str) -> bool:
     normalized_path = value.replace("\\", "/")
     compact = re.sub(r"[^a-z0-9]+", "", value.casefold())
+    bare_account_id = ACCOUNT_ID_PATTERN.fullmatch(value.strip())
     return (
         any(sentinel.casefold() in value.casefold() for sentinel in PRIVACY_SENTINELS)
         or bool(PUBLIC_PRIVATE_PATH_PATTERN.search(normalized_path))
         or any(sentinel in compact for sentinel in PUBLIC_PRIVACY_COMPACT_SENTINELS)
+        or bool(bare_account_id)
         or bool(BROKER_ACCOUNT_ID_PATTERN.search(value))
     )
 

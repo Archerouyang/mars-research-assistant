@@ -165,6 +165,21 @@ class ArtifactPacketSelftest(unittest.TestCase):
             unsafe["unknown_public_probe"] = {key: injected}
             self.assert_error("privacy_violation", unsafe, secret=injected)
 
+    def test_rejects_bare_account_ids_in_allowed_public_text_fields(self) -> None:
+        bare_account_ids = (
+            ("question", "123456789"),
+            ("module_summary", "1234-5678-90"),
+        )
+        for field, injected in bare_account_ids:
+            unsafe = copy.deepcopy(self.snapshot)
+            if field == "module_summary":
+                unsafe["payload"]["modules"][0]["summary"] = injected
+            else:
+                unsafe["payload"][field] = injected
+            self.assert_error("privacy_violation", unsafe, secret=injected)
+
+        self.build()
+
     def test_private_runtime_and_non_sensitive_ids_remain_valid(self) -> None:
         private_runtime = copy.deepcopy(self.snapshot)
         private_runtime["privacy"] = "private_runtime"
