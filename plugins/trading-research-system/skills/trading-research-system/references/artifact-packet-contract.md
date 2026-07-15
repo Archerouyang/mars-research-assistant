@@ -23,8 +23,8 @@ The output directory contains:
 - `research-brief.html`: self-contained semantic Overview with no executable
   code or external reference.
 - `artifact.manifest.json`: immutable hash chain for the exact JSON and HTML
-  bytes, Board identity, versions, decision cutoff, privacy, Views, and
-  presentation state.
+  bytes, Board identity, `snapshot_contract_version`, payload and manifest
+  versions, decision cutoff, privacy, Views, and presentation state.
 
 The fixture is synthetic and sanitized. Opening the HTML does not initiate an
 external request or state-changing action. The artifact is decision support,

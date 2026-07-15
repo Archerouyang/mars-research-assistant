@@ -14,6 +14,7 @@ import hashlib
 from html import escape
 import json
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 
@@ -46,6 +47,16 @@ PRIVACY_SENTINELS = (
 )
 UNSAFE_DIAGNOSTIC_TERMS = ("traceback", "stack trace", "/Users/", "api_key", "password", "token")
 REQUIRED_INSTRUMENT_MODULES = ("industry", "fundamentals", "catalysts", "market_instrument")
+DIAGNOSTIC_SEVERITIES = frozenset({"info", "warning", "error"})
+DIAGNOSTIC_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
+SAFE_TEXT_FORBIDDEN_TERMS = UNSAFE_DIAGNOSTIC_TERMS + (
+    "raw response",
+    "credential",
+    "authorization",
+    "bearer ",
+    "full account",
+)
+ACCOUNT_ID_PATTERN = re.compile(r"\b(?:\d[ -]?){7,}\d\b")
 FORBIDDEN_HTML_TERMS = (
     "<script",
     "fetch(",
@@ -113,6 +124,7 @@ def build_artifact_packet(
             "privacy": normalized["privacy"],
             "renderer_version": normalized["renderer_version"],
             "snapshot_id": normalized["snapshot_id"],
+            "snapshot_contract_version": normalized["schema_version"],
             "views": views,
         }
     )
@@ -170,9 +182,9 @@ def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
     _validate_envelope_fields(normalized)
     _require_size(canonical_json_bytes(normalized), SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
-    _validate_public_privacy(normalized)
-    _validate_diagnostics(normalized.get("diagnostics"))
     _validate_sources(normalized)
+    _validate_diagnostics(normalized)
+    _validate_public_privacy(normalized)
     _validate_payload(normalized)
     _validate_content_hash(normalized)
     return normalized
@@ -292,9 +304,11 @@ def _validate_sources(snapshot: Mapping[str, Any]) -> None:
             raise ArtifactPacketError("source_registry_invalid")
         source_id = source.get("id")
         policy = source.get("freshness_policy_id")
+        alias = source.get("alias")
         if (
             not _is_nonempty_string(source_id)
-            or not _is_nonempty_string(source.get("alias"))
+            or not _is_nonempty_string(alias)
+            or _contains_unsafe_text(alias)
             or source_id in source_ids
             or policy not in FRESHNESS_POLICIES
         ):
@@ -362,6 +376,8 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
     ):
         raise ArtifactPacketError("modules_invalid")
     source_ids = {source["id"] for source in snapshot["source_registry"]}
+    sources_by_id = {source["id"]: source for source in snapshot["source_registry"]}
+    cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
     required_complete = 0
     for module_id in REQUIRED_INSTRUMENT_MODULES:
         module = by_id[module_id]
@@ -369,7 +385,7 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
             raise ArtifactPacketError("modules_invalid")
         if not _is_nonempty_string(module.get("summary")) or not isinstance(module.get("gap_reason"), str):
             raise ArtifactPacketError("modules_invalid")
-        _parse_timestamp(module.get("as_of"), "modules_invalid")
+        module_as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
         refs = module.get("source_refs")
         if (
             not isinstance(refs, list)
@@ -378,8 +394,20 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
             or not set(refs).issubset(source_ids)
         ):
             raise ArtifactPacketError("modules_invalid")
-        if module.get("freshness_policy_id") not in FRESHNESS_POLICIES:
+        policy_id = module.get("freshness_policy_id")
+        if policy_id not in FRESHNESS_POLICIES:
             raise ArtifactPacketError("modules_invalid")
+        module_freshness = evaluate_freshness(policy_id, module_as_of, cutoff)
+        if module_as_of > cutoff:
+            raise ArtifactPacketError("module_freshness_invalid")
+        if module_freshness == "stale" and module["evidence_state"] != "stale":
+            raise ArtifactPacketError("module_freshness_invalid")
+        if module["evidence_state"] in {"complete", "partial"} and not any(
+            sources_by_id[reference]["freshness_status"] == "fresh"
+            and sources_by_id[reference]["priority"] != "S4"
+            for reference in refs
+        ):
+            raise ArtifactPacketError("module_source_support_invalid")
         if module["evidence_state"] == "complete":
             required_complete += 1
     coverage = snapshot.get("coverage")
@@ -420,21 +448,54 @@ def _validate_public_privacy(value: Any) -> None:
         raise ArtifactPacketError("privacy_violation")
 
 
-def _validate_diagnostics(diagnostics: Any) -> None:
+def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
+    diagnostics = snapshot.get("diagnostics")
     if not isinstance(diagnostics, list):
         raise ArtifactPacketError("diagnostics_invalid")
+    known_aliases = {source["alias"] for source in snapshot["source_registry"]}
     for diagnostic in diagnostics:
         if not isinstance(diagnostic, dict):
             raise ArtifactPacketError("diagnostics_invalid")
         allowed = {"code", "severity", "module", "source_alias", "message", "retryable"}
-        if set(diagnostic) - allowed or not _is_nonempty_string(diagnostic.get("code")):
+        if set(diagnostic) - allowed:
             raise ArtifactPacketError("diagnostics_invalid")
-        message = diagnostic.get("message", "")
-        if not isinstance(message, str) or len(message) > 200:
-            raise ArtifactPacketError("diagnostic_unsafe")
-        lowered = message.lower()
-        if any(term.lower() in lowered for term in UNSAFE_DIAGNOSTIC_TERMS):
-            raise ArtifactPacketError("diagnostic_unsafe")
+        code = diagnostic.get("code")
+        severity = diagnostic.get("severity")
+        message = diagnostic.get("message")
+        retryable = diagnostic.get("retryable")
+        if (
+            not _is_nonempty_string(code)
+            or not isinstance(severity, str)
+            or severity not in DIAGNOSTIC_SEVERITIES
+            or not isinstance(message, str)
+            or len(message) > 200
+            or not isinstance(retryable, bool)
+        ):
+            raise ArtifactPacketError("diagnostics_invalid")
+        module = diagnostic.get("module")
+        source_alias = diagnostic.get("source_alias")
+        if (module is not None and not isinstance(module, str)) or (
+            source_alias is not None and not isinstance(source_alias, str)
+        ):
+            raise ArtifactPacketError("diagnostics_invalid")
+        for field in (code, message, module, source_alias):
+            if field is not None and _contains_unsafe_text(field):
+                raise ArtifactPacketError("diagnostic_unsafe")
+        if not DIAGNOSTIC_CODE_PATTERN.fullmatch(code):
+            raise ArtifactPacketError("diagnostics_invalid")
+        if module is not None and (not _is_nonempty_string(module) or module not in REQUIRED_INSTRUMENT_MODULES):
+            raise ArtifactPacketError("diagnostic_reference_invalid")
+        if source_alias is not None and (
+            not _is_nonempty_string(source_alias) or source_alias not in known_aliases
+        ):
+            raise ArtifactPacketError("diagnostic_reference_invalid")
+
+
+def _contains_unsafe_text(value: str) -> bool:
+    lowered = value.lower()
+    return any(term.lower() in lowered for term in SAFE_TEXT_FORBIDDEN_TERMS) or bool(
+        ACCOUNT_ID_PATTERN.search(value)
+    )
 
 
 def _validate_html_safety(html: bytes) -> None:
