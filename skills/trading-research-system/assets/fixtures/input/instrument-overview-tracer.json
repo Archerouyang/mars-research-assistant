@@ -1,0 +1,121 @@
+{
+  "artifact_lifecycle": "transient",
+  "board": "instrument_research",
+  "builder": {
+    "generated_at": "2026-07-16T09:30:00Z",
+    "id": "dailytrades.fixture-builder"
+  },
+  "content_hash": "e81d14d85094d5d9c068ec85101f428c33967481b3d8bf4ec81b819190e952bd",
+  "coverage": {
+    "required_complete": 4,
+    "required_total": 4
+  },
+  "decision_cutoff": "2026-07-16T09:00:00Z",
+  "diagnostics": [],
+  "evidence_state": "complete",
+  "locale": "en-US",
+  "payload": {
+    "board": "instrument_research",
+    "decision": "Continue research; Price & Setup is timing-only and does not approve an action.",
+    "modules": [
+      {
+        "as_of": "2026-07-15T20:00:00Z",
+        "evidence_state": "complete",
+        "freshness_policy_id": "official-current-v1",
+        "gap_reason": "",
+        "id": "industry",
+        "requirement": "required",
+        "source_refs": ["industry-filing"],
+        "summary": "Synthetic demand, capacity, and peer context are complete."
+      },
+      {
+        "as_of": "2026-07-15T20:00:00Z",
+        "evidence_state": "complete",
+        "freshness_policy_id": "official-current-v1",
+        "gap_reason": "",
+        "id": "fundamentals",
+        "requirement": "required",
+        "source_refs": ["company-filing"],
+        "summary": "Synthetic earnings and balance-sheet evidence are complete."
+      },
+      {
+        "as_of": "2026-07-16T08:00:00Z",
+        "evidence_state": "complete",
+        "freshness_policy_id": "event-calendar-v1",
+        "gap_reason": "",
+        "id": "catalysts",
+        "requirement": "required",
+        "source_refs": ["event-calendar"],
+        "summary": "Synthetic earnings-date and policy-event coverage are complete."
+      },
+      {
+        "as_of": "2026-07-16T08:55:00Z",
+        "evidence_state": "complete",
+        "freshness_policy_id": "intraday-market-v1",
+        "gap_reason": "",
+        "id": "market_instrument",
+        "requirement": "required",
+        "source_refs": ["market-data"],
+        "summary": "Synthetic price structure, liquidity, and invalidation coverage are complete."
+      }
+    ],
+    "payload_version": "1.0",
+    "posture": "research_in_progress",
+    "question": "Does synthetic SAMP support continued evidence-led research?",
+    "subject": {
+      "analysis_horizon": "medium_term",
+      "currency": "USD",
+      "instrument": "SAMP",
+      "market": "US",
+      "product_type": "equity",
+      "underlying": "SAMP"
+    },
+    "views": [
+      "Overview",
+      "Price & Setup",
+      "Industry & Peers",
+      "Catalysts & Flows"
+    ]
+  },
+  "payload_version": "1.0",
+  "privacy": "public_fixture",
+  "renderer_version": "1.0",
+  "schema_version": "1.0",
+  "snapshot_id": "synthetic-instrument-overview-001",
+  "source_registry": [
+    {
+      "alias": "Synthetic industry filing",
+      "as_of": "2026-07-15T20:00:00Z",
+      "freshness_policy_id": "official-current-v1",
+      "freshness_status": "fresh",
+      "id": "industry-filing",
+      "priority": "S0"
+    },
+    {
+      "alias": "Synthetic company filing",
+      "as_of": "2026-07-15T20:00:00Z",
+      "freshness_policy_id": "official-current-v1",
+      "freshness_status": "fresh",
+      "id": "company-filing",
+      "priority": "S0"
+    },
+    {
+      "alias": "Synthetic event calendar",
+      "as_of": "2026-07-16T08:00:00Z",
+      "freshness_policy_id": "event-calendar-v1",
+      "freshness_status": "fresh",
+      "id": "event-calendar",
+      "priority": "S1"
+    },
+    {
+      "alias": "Synthetic market data",
+      "as_of": "2026-07-16T08:55:00Z",
+      "freshness_policy_id": "intraday-market-v1",
+      "freshness_status": "fresh",
+      "id": "market-data",
+      "priority": "S1"
+    }
+  ],
+  "state_reasons": [],
+  "timezone": "UTC"
+}

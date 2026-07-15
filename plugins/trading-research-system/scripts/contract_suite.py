@@ -113,6 +113,7 @@ CORE_SUITE: tuple[tuple[str, str], ...] = (
     ("setup-row-preparation-contract", "verify_prepare_setup_rows_contract.py"),
     ("visual-artifact-selftest", "verify_visual_artifact_selftest.py"),
     ("visual-artifact-contract", "verify_visual_artifact_contract.py"),
+    ("artifact-packet-selftest", "verify_artifact_packet_selftest.py"),
     ("visual-trigger", "verify_visual_trigger_contract.py"),
     ("position-daily-report-selftest", "verify_position_daily_report_selftest.py"),
     ("position-daily-report-contract", "verify_position_daily_report_contract.py"),
