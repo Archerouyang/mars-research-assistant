@@ -33,6 +33,13 @@ def assert_contains(path: Path, terms: list[str]) -> None:
             raise AssertionError(f"{path} missing {term!r}")
 
 
+def assert_not_contains(path: Path, terms: list[str]) -> None:
+    text = path.read_text(encoding="utf-8")
+    for term in terms:
+        if term in text:
+            raise AssertionError(f"{path} unexpectedly contains {term!r}")
+
+
 def main() -> None:
     paths = PluginPaths.from_script(__file__)
     chart_input = paths.fixture_input / "chart-ohlcv-qqq-sample.json"
@@ -72,7 +79,6 @@ def main() -> None:
                 "<svg",
                 "QQQ",
                 "EMA 20",
-                "EMA 50",
                 "trigger zone",
                 "TP/rebalance",
                 "chart callouts",
@@ -86,8 +92,29 @@ def main() -> None:
                 "invalidation / review trigger",
             ],
         )
+        assert_not_contains(display_svg, ["EMA 50"])
         if (tmp / "artifact-manifest.json").exists():
             raise AssertionError("chart script must not write a manifest by default")
+
+        default_indicator_input = tmp / "qqq-default-indicators.json"
+        default_indicator_payload = json.loads(chart_input.read_text(encoding="utf-8"))
+        default_indicator_payload.pop("ema50")
+        default_indicator_input.write_text(
+            json.dumps(default_indicator_payload),
+            encoding="utf-8",
+        )
+        default_indicator_svg = tmp / "qqq-default-indicators.svg"
+        run_script(
+            [
+                str(paths.scripts / "chart_artifact.py"),
+                str(default_indicator_input),
+                "--output",
+                str(tmp / "qqq-default-indicators.html"),
+                "--display-output",
+                str(default_indicator_svg),
+            ]
+        )
+        assert_contains(default_indicator_svg, ["EMA 20", "EMA 50"])
 
         canonical_only_html = tmp / "qqq-canonical-only.html"
         run_script(

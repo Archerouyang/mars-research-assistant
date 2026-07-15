@@ -127,6 +127,7 @@ def validate_pa_html_contract(html: str, *, label: str) -> None:
     )
     ema20_times = [point.get("time") for point in payload.get("ema20", [])]
     require(display_from in ema20_times, f"{label} first visible candle must have EMA20")
+    require(payload.get("ema50") == [], f"{label} README example must not include EMA50")
     require(
         "chart.timeScale().setVisibleRange" in html and "from: payload.display_from" in html,
         f"{label} must hide warm-up candles from the initial viewport",
@@ -227,6 +228,8 @@ def validate_gallery(
         require(path.stat().st_size > 1_000, f"gallery artifact unexpectedly empty: {path}")
     html = (GALLERY / "price-action-panel.html").read_text(encoding="utf-8")
     validate_pa_html_contract(html, label="PA HTML")
+    fallback_svg = (GALLERY / "price-action-panel-fallback.svg").read_text(encoding="utf-8")
+    require("EMA 50" not in fallback_svg, "PA fallback SVG must not display EMA50")
     require((REPO / "THIRD_PARTY_NOTICES.md").is_file(), "third-party notice missing")
     notices = (REPO / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
     require("Apache-2.0" in notices and "TradingView" in notices, "TradingView Apache notice missing")

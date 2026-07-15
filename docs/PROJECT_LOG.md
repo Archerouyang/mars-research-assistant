@@ -35,9 +35,10 @@ Use this shape:
 - Scope: documentation, visualization, validation
 - What changed: added 20 synthetic warm-up sessions to the reproducible
   Lightweight Charts fixture while preserving the original visible date range,
-  so EMA20 is present on the first visible candle. Replaced the English and
-  Chinese workflow diagrams with compact two-stage trees that keep the public
-  Skill and user-owned private runtime visually distinct.
+  so EMA20 is present on the first visible candle, while intentionally omitting
+  EMA50 from the public example. Replaced the English and Chinese workflow
+  diagrams with compact two-stage trees that keep the public Skill and
+  user-owned private runtime visually distinct.
 - Why it matters: newcomers see a complete moving-average example and can scan
   the research-to-plan loop without a clipped or overly wide diagram.
 - Next step: review and integrate this branch into `dev`; fresh-chat visual UAT

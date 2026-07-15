@@ -216,7 +216,7 @@ def build_chart_payload(payload: dict[str, Any], title_override: str | None) -> 
         "candles": candles,
         "volume": volume_points(candles),
         "ema20": payload.get("ema20") or ema_points(candles, 20),
-        "ema50": payload.get("ema50") or ema_points(candles, 50),
+        "ema50": payload.get("ema50") if "ema50" in payload else ema_points(candles, 50),
         "levels": normalize_levels(payload),
         "zones": normalize_zones(payload),
         "notes": payload.get("notes") or [],
@@ -291,14 +291,18 @@ def _price_reference_rows(chart_payload: dict[str, Any]) -> list[tuple[str, str,
             "trend reference",
             "check pullback / reclaim context",
         ),
-        (
-            "EMA 50",
-            "moving average",
-            _latest_ema(chart_payload.get("ema50") or []),
-            "trend reference",
-            "check larger trend pressure",
-        ),
     ]
+
+    if chart_payload.get("ema50"):
+        rows.append(
+            (
+                "EMA 50",
+                "moving average",
+                _latest_ema(chart_payload["ema50"]),
+                "trend reference",
+                "check larger trend pressure",
+            )
+        )
 
     for index, level in enumerate(chart_payload.get("levels") or [], start=1):
         kind = str(level.get("kind") or "level")
@@ -582,11 +586,12 @@ def render_svg(chart_payload: dict[str, Any]) -> str:
     svg.append(
         f'<polyline points="{_polyline(ema_path(ema20))}" fill="none" stroke="#24292f" stroke-width="2.2"/>'
     )
-    svg.append(
-        f'<polyline points="{_polyline(ema_path(ema50))}" fill="none" stroke="#8c959f" stroke-width="2.2"/>'
-    )
     svg.append('<text class="small" x="80" y="590" fill="#24292f">EMA 20</text>')
-    svg.append('<text class="small" x="142" y="590" fill="#8c959f">EMA 50</text>')
+    if ema50:
+        svg.append(
+            f'<polyline points="{_polyline(ema_path(ema50))}" fill="none" stroke="#8c959f" stroke-width="2.2"/>'
+        )
+        svg.append('<text class="small" x="142" y="590" fill="#8c959f">EMA 50</text>')
 
     for level in levels:
         y = y_for_price(float(level["price"]))

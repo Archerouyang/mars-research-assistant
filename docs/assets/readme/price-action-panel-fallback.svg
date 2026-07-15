@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1025" viewBox="0 0 1200 1025" role="img" aria-label="QQQ / VIX Plan View">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1002" viewBox="0 0 1200 1002" role="img" aria-label="QQQ / VIX Plan View">
 <style>
 .label{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
 .muted{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
@@ -7,7 +7,7 @@
 .subtitle{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}
 .tag{font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#24292f}
 </style>
-<rect width="1200" height="1025" fill="#ffffff"/>
+<rect width="1200" height="1002" fill="#ffffff"/>
 <text class="title" x="36" y="42">QQQ / VIX Plan View</text>
 <text class="subtitle" x="36" y="66">Synthetic fixture for Lightweight Charts contract tests; not live market data</text>
 <text class="muted" x="36" y="86">setup status: active market plan fixture</text>
@@ -164,9 +164,7 @@
 <line x1="928.0" y1="189.6" x2="928.0" y2="215.6" stroke="#1a7f37" stroke-width="1.4"/>
 <rect x="924.5" y="195.1" width="7.0" height="7.6" fill="#1a7f37" opacity="0.88"/>
 <polyline points="308.7,496.6 320.9,494.5 333.0,492.5 345.1,490.0 357.3,487.7 369.4,482.2 381.6,476.5 393.7,471.1 405.9,465.0 418.0,457.3 430.1,448.7 442.3,440.2 454.4,431.0 466.6,423.0 478.7,416.2 490.9,408.0 503.0,401.4 515.1,392.9 527.3,385.1 539.4,379.4 551.6,373.5 563.7,366.9 575.9,359.7 588.0,353.4 600.1,346.1 612.3,336.7 624.4,328.3 636.6,317.6 648.7,307.5 660.9,299.5 673.0,290.9 685.1,282.0 697.3,276.2 709.4,271.4 721.6,268.0 733.7,262.7 745.9,257.6 758.0,252.3 770.1,245.1 782.3,238.8 794.4,231.9 806.6,225.1 818.7,218.0 830.9,211.0 843.0,205.1 855.1,200.4 867.3,203.0 879.4,203.3 891.6,205.1 903.7,209.6 915.9,209.0 928.0,207.7" fill="none" stroke="#24292f" stroke-width="2.2"/>
-<polyline points="673.0,402.0 685.1,394.0 697.3,387.2 709.4,380.9 721.6,375.2 733.7,368.8 745.9,362.5 758.0,356.3 770.1,349.2 782.3,342.5 794.4,335.6 806.6,328.7 818.7,321.8 830.9,314.8 843.0,308.3 855.1,302.3 867.3,299.4 879.4,295.7 891.6,292.9 903.7,291.3 915.9,287.8 928.0,284.2" fill="none" stroke="#8c959f" stroke-width="2.2"/>
 <text class="small" x="80" y="590" fill="#24292f">EMA 20</text>
-<text class="small" x="142" y="590" fill="#8c959f">EMA 50</text>
 <line x1="78" y1="208.0" x2="928" y2="208.0" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
 <text class="small" x="936" y="212.0" fill="#1a7f37">trigger zone high / EMA 20</text>
 <line x1="78" y1="216.2" x2="928" y2="216.2" stroke="#1a7f37" stroke-width="1.8" stroke-dasharray="6 5"/>
@@ -209,7 +207,7 @@
 <text class="small" x="78" y="593">2026-03-04</text>
 <text class="small" x="842" y="593">2026-06-12</text>
 <text class="tag" x="36" y="610">price reference table</text>
-<rect x="36" y="620" width="1128" height="329" rx="7" fill="#ffffff" stroke="#d8dee4"/>
+<rect x="36" y="620" width="1128" height="306" rx="7" fill="#ffffff" stroke="#d8dee4"/>
 <rect x="36" y="620" width="1128" height="30" rx="7" fill="#f6f8fa" stroke="#d8dee4"/>
 <text class="tag" x="52" y="640">item</text>
 <text class="tag" x="348" y="640">type</text>
@@ -233,59 +231,54 @@
 <text class="muted" x="648" y="719">trend reference</text>
 <text class="muted" x="860" y="719">check pullback / reclaim context</text>
 <rect x="36" y="722" width="1128" height="23" fill="#fbfcfd"/>
-<text class="muted" x="52" y="742">EMA 50</text>
-<text class="muted" x="348" y="742">moving average</text>
-<text class="muted" x="496" y="742">677.66</text>
-<text class="muted" x="648" y="742">trend reference</text>
-<text class="muted" x="860" y="742">check larger trend pressure</text>
-<text class="muted" x="52" y="765">L1 trigger zone high / EMA 20</text>
+<text class="muted" x="52" y="742">L1 trigger zone high / EMA 20</text>
+<text class="muted" x="348" y="742">trigger</text>
+<text class="muted" x="496" y="742">715</text>
+<text class="muted" x="648" y="742">single level</text>
+<text class="muted" x="860" y="742">wait for confirmation; no early entry</text>
+<text class="muted" x="52" y="765">L2 trigger zone low</text>
 <text class="muted" x="348" y="765">trigger</text>
-<text class="muted" x="496" y="765">715</text>
+<text class="muted" x="496" y="765">711</text>
 <text class="muted" x="648" y="765">single level</text>
 <text class="muted" x="860" y="765">wait for confirmation; no early entry</text>
 <rect x="36" y="768" width="1128" height="23" fill="#fbfcfd"/>
-<text class="muted" x="52" y="788">L2 trigger zone low</text>
-<text class="muted" x="348" y="788">trigger</text>
-<text class="muted" x="496" y="788">711</text>
+<text class="muted" x="52" y="788">L3 deep reclaim high</text>
+<text class="muted" x="348" y="788">support</text>
+<text class="muted" x="496" y="788">705</text>
 <text class="muted" x="648" y="788">single level</text>
-<text class="muted" x="860" y="788">wait for confirmation; no early entry</text>
-<text class="muted" x="52" y="811">L3 deep reclaim high</text>
+<text class="muted" x="860" y="788">watch reclaim / support response</text>
+<text class="muted" x="52" y="811">L4 deep reclaim low</text>
 <text class="muted" x="348" y="811">support</text>
-<text class="muted" x="496" y="811">705</text>
+<text class="muted" x="496" y="811">695</text>
 <text class="muted" x="648" y="811">single level</text>
 <text class="muted" x="860" y="811">watch reclaim / support response</text>
 <rect x="36" y="814" width="1128" height="23" fill="#fbfcfd"/>
-<text class="muted" x="52" y="834">L4 deep reclaim low</text>
-<text class="muted" x="348" y="834">support</text>
-<text class="muted" x="496" y="834">695</text>
+<text class="muted" x="52" y="834">L5 prior high / TP/rebalance watch</text>
+<text class="muted" x="348" y="834">profit</text>
+<text class="muted" x="496" y="834">748.63</text>
 <text class="muted" x="648" y="834">single level</text>
-<text class="muted" x="860" y="834">watch reclaim / support response</text>
-<text class="muted" x="52" y="857">L5 prior high / TP/rebalance watch</text>
-<text class="muted" x="348" y="857">profit</text>
-<text class="muted" x="496" y="857">748.63</text>
+<text class="muted" x="860" y="834">TP/rebalance review, not forced exit</text>
+<text class="muted" x="52" y="857">L6 invalidation / review trigger</text>
+<text class="muted" x="348" y="857">review</text>
+<text class="muted" x="496" y="857">686.4</text>
 <text class="muted" x="648" y="857">single level</text>
-<text class="muted" x="860" y="857">TP/rebalance review, not forced exit</text>
+<text class="muted" x="860" y="857">pause adds and review plan</text>
 <rect x="36" y="860" width="1128" height="23" fill="#fbfcfd"/>
-<text class="muted" x="52" y="880">L6 invalidation / review trigger</text>
-<text class="muted" x="348" y="880">review</text>
-<text class="muted" x="496" y="880">686.4</text>
-<text class="muted" x="648" y="880">single level</text>
-<text class="muted" x="860" y="880">pause adds and review plan</text>
-<text class="muted" x="52" y="903">Z1 trigger zone: add only after confirmation</text>
-<text class="muted" x="348" y="903">trigger</text>
-<text class="muted" x="496" y="903">711-715</text>
+<text class="muted" x="52" y="880">Z1 trigger zone: add only after confirmation</text>
+<text class="muted" x="348" y="880">trigger</text>
+<text class="muted" x="496" y="880">711-715</text>
+<text class="muted" x="648" y="880">price / range</text>
+<text class="muted" x="860" y="880">wait for confirmation; no early entry</text>
+<text class="muted" x="52" y="903">Z2 invalidation / review zone</text>
+<text class="muted" x="348" y="903">invalidation</text>
+<text class="muted" x="496" y="903">686.4-695</text>
 <text class="muted" x="648" y="903">price / range</text>
-<text class="muted" x="860" y="903">wait for confirmation; no early entry</text>
+<text class="muted" x="860" y="903">pause adds and review plan</text>
 <rect x="36" y="906" width="1128" height="23" fill="#fbfcfd"/>
-<text class="muted" x="52" y="926">Z2 invalidation / review zone</text>
-<text class="muted" x="348" y="926">invalidation</text>
-<text class="muted" x="496" y="926">686.4-695</text>
+<text class="muted" x="52" y="926">Z3 TP/rebalance zone</text>
+<text class="muted" x="348" y="926">rebalance</text>
+<text class="muted" x="496" y="926">742-748.63</text>
 <text class="muted" x="648" y="926">price / range</text>
-<text class="muted" x="860" y="926">pause adds and review plan</text>
-<text class="muted" x="52" y="949">Z3 TP/rebalance zone</text>
-<text class="muted" x="348" y="949">rebalance</text>
-<text class="muted" x="496" y="949">742-748.63</text>
-<text class="muted" x="648" y="949">price / range</text>
-<text class="muted" x="860" y="949">TP/rebalance review, not forced exit</text>
-<text class="small" x="36" y="983">Display-first chart artifact. Use authorized OHLCV or fixture data only; no live broker reads or live market data calls.</text>
+<text class="muted" x="860" y="926">TP/rebalance review, not forced exit</text>
+<text class="small" x="36" y="960">Display-first chart artifact. Use authorized OHLCV or fixture data only; no live broker reads or live market data calls.</text>
 </svg>
