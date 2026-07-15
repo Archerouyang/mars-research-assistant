@@ -31,6 +31,18 @@ Use this shape:
 
 ## 2026-07-15
 
+- Commit: pending `Polish README chart and workflow`
+- Scope: documentation, visualization, validation
+- What changed: added 20 synthetic warm-up sessions to the reproducible
+  Lightweight Charts fixture while preserving the original visible date range,
+  so EMA20 is present on the first visible candle. Replaced the English and
+  Chinese workflow diagrams with compact two-stage trees that keep the public
+  Skill and user-owned private runtime visually distinct.
+- Why it matters: newcomers see a complete moving-average example and can scan
+  the research-to-plan loop without a clipped or overly wide diagram.
+- Next step: review and integrate this branch into `dev`; fresh-chat visual UAT
+  remains separate release evidence.
+
 - Commit: `9096c9b` `Reconcile portable distribution with dev`
 - Scope: integration, distribution, documentation, validation
 - What changed: reconciled the reviewed portable Skill and newcomer README work

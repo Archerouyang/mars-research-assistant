@@ -59,19 +59,48 @@ and Apache-2.0 licensing.
 ## Workflow
 
 ```mermaid
-flowchart TD
-  subgraph PUBLIC["Public Skill"]
-    A["Market, macro, policy, research, charts"] --> B["Evidence filtering and verification"]
-    B --> C["Active Market Plan"]
-    C --> D["Daily tracking and setup review"]
-    D --> E["Portfolio risk and trade review"]
-    E --> C
+flowchart TB
+  GOAL(["Natural-language research goal"])
+
+  subgraph PUBLIC["PUBLIC SKILL · RESEARCH LOOP"]
+    direction TB
+    subgraph DISCOVER["01 · BUILD THE VIEW"]
+      direction LR
+      ROUTE{"Route intent"} --> RESEARCH["Research<br/>macro · equity · reports"]
+      RESEARCH --> VERIFY["Verify<br/>claims · sources"]
+    end
+    subgraph OPERATE["02 · OPERATE THE PLAN"]
+      direction LR
+      PLAN(["Active Market Plan"]) --> TRACK["Track<br/>setups · levels"]
+      TRACK --> REVIEW["Review<br/>risk · trades"]
+    end
+    VERIFY --> PLAN
+    REVIEW -. "learn" .-> PLAN
   end
-  subgraph PRIVATE["Private Runtime"]
-    R["Profile, watchlist, positions, plans, history"]
+
+  subgraph PRIVATE["PRIVATE RUNTIME · USER OWNED"]
+    direction LR
+    RUNTIME[("Profile · watchlist · positions · history")]
   end
-  R --> C
-  PUBLIC -. "never packages private state" .- PRIVATE
+
+  GOAL --> ROUTE
+  PRIVATE -. "local context only" .-> ROUTE
+  REVIEW --> RESULT(["Decision brief · next check"])
+
+  classDef terminal fill:#1f2328,stroke:#1f2328,color:#ffffff,stroke-width:1.5px
+  classDef gate fill:#fff8c5,stroke:#9a6700,color:#1f2328,stroke-width:1.5px
+  classDef step fill:#ffffff,stroke:#57606a,color:#1f2328,stroke-width:1.5px
+  classDef plan fill:#dafbe1,stroke:#1a7f37,color:#1f2328,stroke-width:2px
+  classDef runtime fill:#f6f8fa,stroke:#8c959f,color:#57606a,stroke-width:1.5px
+  class GOAL,RESULT terminal
+  class ROUTE gate
+  class RESEARCH,VERIFY,TRACK,REVIEW step
+  class PLAN plan
+  class RUNTIME runtime
+  style PUBLIC fill:#f6f8fa,stroke:#d0d7de,stroke-width:1.5px
+  style DISCOVER fill:#ffffff,stroke:#d8dee4,stroke-width:1px
+  style OPERATE fill:#ffffff,stroke:#d8dee4,stroke-width:1px
+  style PRIVATE fill:#ffffff,stroke:#8c959f,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 The user describes the research goal in natural language. The Skill selects

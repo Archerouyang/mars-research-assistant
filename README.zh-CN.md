@@ -47,19 +47,48 @@ npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -
 ## 工作流
 
 ```mermaid
-flowchart TD
-  subgraph PUBLIC["Public Skill"]
-    A["市场、宏观、政策、研报、图表"] --> B["证据过滤与校验"]
-    B --> C["Active Market Plan"]
-    C --> D["每日追踪与 setup 复核"]
-    D --> E["组合风险与交易复盘"]
-    E --> C
+flowchart TB
+  GOAL(["自然语言研究目标"])
+
+  subgraph PUBLIC["PUBLIC SKILL · 研究循环"]
+    direction TB
+    subgraph DISCOVER["01 · 建立研究判断"]
+      direction LR
+      ROUTE{"识别任务"} --> RESEARCH["研究<br/>宏观 · 个股 · 研报"]
+      RESEARCH --> VERIFY["校验<br/>观点 · 信源"]
+    end
+    subgraph OPERATE["02 · 执行市场计划"]
+      direction LR
+      PLAN(["Active Market Plan"]) --> TRACK["追踪<br/>setup · 点位"]
+      TRACK --> REVIEW["复核<br/>风险 · 交易"]
+    end
+    VERIFY --> PLAN
+    REVIEW -. "沉淀经验" .-> PLAN
   end
-  subgraph PRIVATE["Private Runtime"]
-    R["交易偏好、观察清单、持仓、计划、历史"]
+
+  subgraph PRIVATE["PRIVATE RUNTIME · 用户所有"]
+    direction LR
+    RUNTIME[("偏好 · 观察清单 · 持仓 · 历史")]
   end
-  R --> C
-  PUBLIC -. "绝不打包私有状态" .- PRIVATE
+
+  GOAL --> ROUTE
+  PRIVATE -. "仅提供本地上下文" .-> ROUTE
+  REVIEW --> RESULT(["决策摘要 · 下一检查点"])
+
+  classDef terminal fill:#1f2328,stroke:#1f2328,color:#ffffff,stroke-width:1.5px
+  classDef gate fill:#fff8c5,stroke:#9a6700,color:#1f2328,stroke-width:1.5px
+  classDef step fill:#ffffff,stroke:#57606a,color:#1f2328,stroke-width:1.5px
+  classDef plan fill:#dafbe1,stroke:#1a7f37,color:#1f2328,stroke-width:2px
+  classDef runtime fill:#f6f8fa,stroke:#8c959f,color:#57606a,stroke-width:1.5px
+  class GOAL,RESULT terminal
+  class ROUTE gate
+  class RESEARCH,VERIFY,TRACK,REVIEW step
+  class PLAN plan
+  class RUNTIME runtime
+  style PUBLIC fill:#f6f8fa,stroke:#d0d7de,stroke-width:1.5px
+  style DISCOVER fill:#ffffff,stroke:#d8dee4,stroke-width:1px
+  style OPERATE fill:#ffffff,stroke:#d8dee4,stroke-width:1px
+  style PRIVATE fill:#ffffff,stroke:#8c959f,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 用户只需用自然语言描述研究目标，Skill 会自主选择内部 workflow；新用户不需要记住 focused workflow 名称。

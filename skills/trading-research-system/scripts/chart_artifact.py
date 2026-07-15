@@ -203,12 +203,16 @@ def volume_points(candles: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_chart_payload(payload: dict[str, Any], title_override: str | None) -> dict[str, Any]:
     candles = normalize_candles(payload)
     title = title_override or str(payload.get("title") or payload.get("symbol") or "Chart Artifact")
+    display_from = str(payload.get("display_from") or "")
+    if display_from and not any(candle["time"] == display_from for candle in candles):
+        raise SystemExit("display_from must match a candle time")
     return {
         "title": title,
         "subtitle": str(payload.get("subtitle") or ""),
         "symbol": str(payload.get("symbol") or ""),
         "setup_status": str(payload.get("setup_status") or ""),
         "data_as_of": str(payload.get("data_as_of") or payload.get("as_of") or ""),
+        "display_from": display_from,
         "candles": candles,
         "volume": volume_points(candles),
         "ema20": payload.get("ema20") or ema_points(candles, 20),
@@ -801,7 +805,14 @@ def render_html(chart_payload: dict[str, Any]) -> str:
       notes.appendChild(item);
     }}
 
-    chart.timeScale().fitContent();
+    if (payload.display_from && payload.candles.length > 0) {{
+      chart.timeScale().setVisibleRange({{
+        from: payload.display_from,
+        to: payload.candles[payload.candles.length - 1].time,
+      }});
+    }} else {{
+      chart.timeScale().fitContent();
+    }}
     window.addEventListener('resize', () => {{
       chart.applyOptions({{ width: chartElement.clientWidth }});
     }});

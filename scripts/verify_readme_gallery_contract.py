@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import re
 import struct
@@ -111,6 +112,25 @@ def validate_pa_html_contract(html: str, *, label: str) -> None:
     require("5.2.0" in html, f"{label} must use Lightweight Charts v5.2.0")
     require("TradingView" in html, f"{label} attribution missing")
     require("Synthetic fixture" in html, f"{label} synthetic label missing")
+    payload_prefix = "const payload = "
+    payload_start = html.find(payload_prefix)
+    payload_end = html.find(";\n    const chartElement", payload_start)
+    require(payload_start >= 0 and payload_end > payload_start, f"{label} payload missing")
+    payload = json.loads(html[payload_start + len(payload_prefix) : payload_end])
+    display_from = payload.get("display_from")
+    require(isinstance(display_from, str) and display_from, f"{label} display_from missing")
+    candle_times = [candle.get("time") for candle in payload.get("candles", [])]
+    require(display_from in candle_times, f"{label} display_from must identify a candle")
+    require(
+        sum(isinstance(time, str) and time < display_from for time in candle_times) >= 20,
+        f"{label} must include at least 20 warm-up candles before display_from",
+    )
+    ema20_times = [point.get("time") for point in payload.get("ema20", [])]
+    require(display_from in ema20_times, f"{label} first visible candle must have EMA20")
+    require(
+        "chart.timeScale().setVisibleRange" in html and "from: payload.display_from" in html,
+        f"{label} must hide warm-up candles from the initial viewport",
+    )
 
 
 def validate_readme(path: Path, *, chinese: bool) -> None:
@@ -141,7 +161,17 @@ def validate_readme(path: Path, *, chinese: bool) -> None:
     require("No order actions" in text, f"{path.name} no-order boundary missing")
     require("synthetic" in text.lower() or "合成" in text, f"{path.name} synthetic disclosure missing")
     require("Codex" in text and "Claude Code" in text, f"{path.name} native wrapper facts missing")
-    require("flowchart TD" in text, f"{path.name} workflow must be top-down Mermaid")
+    for workflow_term in (
+        "flowchart TB",
+        'subgraph PUBLIC[',
+        'subgraph PRIVATE[',
+        "direction LR",
+        "classDef terminal",
+        "classDef plan",
+        "classDef runtime",
+        "-. ",
+    ):
+        require(workflow_term in text, f"{path.name} workflow missing {workflow_term!r}")
     for filename in ("macro-regime-panel.svg", "price-action-panel.png", "position-risk-panel.svg"):
         require(f"docs/assets/readme/{filename}" in text, f"{path.name} missing gallery asset {filename}")
 
