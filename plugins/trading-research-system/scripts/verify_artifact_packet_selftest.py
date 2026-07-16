@@ -334,6 +334,14 @@ class ArtifactPacketSelftest(unittest.TestCase):
             with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
                 write_artifact_packet(packet, output)
 
+    def test_rejects_output_directory_with_unexpected_entries(self) -> None:
+        packet = self.build()
+        with tempfile.TemporaryDirectory() as raw_tmp:
+            output = Path(raw_tmp)
+            (output / "unrelated.txt").write_text("unrelated", encoding="utf-8")
+            with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
+                write_artifact_packet(packet, output)
+
     def test_documented_generator_command_writes_complete_packet(self) -> None:
         root = Path(__file__).resolve().parents[1]
         fixture = root / "assets" / "fixtures" / "input" / "instrument-overview-tracer.json"

@@ -252,6 +252,10 @@ def write_artifact_packet(packet: ArtifactPacket, output_dir: Path) -> dict[str,
         "html": output_dir / "research-brief.html",
         "manifest": output_dir / "artifact.manifest.json",
     }
+    existing_names = {path.name for path in output_dir.iterdir()}
+    expected_names = {path.name for path in paths.values()}
+    if existing_names and existing_names != expected_names:
+        raise ArtifactPacketError("immutable_output_conflict")
     for key, path in paths.items():
         data = getattr(packet, "canonical_json" if key == "json" else key)
         if path.exists() and path.read_bytes() != data:
