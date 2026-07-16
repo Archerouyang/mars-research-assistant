@@ -41,6 +41,7 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
             "Price Action is timing evidence, not the research thesis.",
             'data-library="TradingView Lightweight Charts"',
             "LightweightCharts.createChart",
+            "instrumentBoardPayload.zones",
             "Research gate: ready",
             "Daily reset can diverge from the underlying over multiple sessions.",
         ):
@@ -88,6 +89,7 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
                     self.assertIn("Visible gaps", html)
                 if expected_state == "source_error":
                     self.assertIn("Unavailable", html)
+                    self.assertNotIn("Advanced demand is growing faster", html)
 
         partial = json.loads((fixture_dir / "instrument-research-partial.json").read_text(encoding="utf-8"))
         self.assertEqual(partial["payload"]["modules"][-1]["id"], "flows")
@@ -129,6 +131,64 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
         invalid_zone["content_hash"] = _content_hash(invalid_zone)
         with self.assertRaisesRegex(ArtifactPacketError, "^price_setup_invalid$"):
             build_artifact_packet(invalid_zone)
+
+    def test_source_error_outranks_stale_required_evidence(self) -> None:
+        snapshot = json.loads(
+            (self.root / "assets" / "fixtures" / "input" / "instrument-research-source-error.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for module in snapshot["payload"]["modules"]:
+            if module["id"] in {"market_instrument", "flows"}:
+                module.update(
+                    {
+                        "as_of": "2026-07-14T08:00:00Z",
+                        "evidence_state": "stale",
+                        "gap_reason": "Synthetic market evidence is stale.",
+                    }
+                )
+        for source in snapshot["source_registry"]:
+            if source["id"] == "market-data":
+                source.update({"as_of": "2026-07-14T08:00:00Z", "freshness_status": "stale"})
+        snapshot["coverage"] = {"required_complete": 2, "required_total": 4}
+        snapshot["content_hash"] = _content_hash(snapshot)
+
+        packet = build_artifact_packet(snapshot)
+        self.assertEqual(json.loads(packet.canonical_json)["evidence_state"], "source_error")
+
+    def test_claim_evidence_gate_rejects_supporting_flow_substitution(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        claim = snapshot["payload"]["claims"][1]
+        claim.update({"evidence_gate": "fundamentals", "evidence_refs": ["market-data"]})
+        snapshot["content_hash"] = _content_hash(snapshot)
+        with self.assertRaisesRegex(ArtifactPacketError, "^claim_source_mismatch$"):
+            build_artifact_packet(snapshot)
+
+    def test_invalid_identity_is_represented_as_source_error(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        snapshot["payload"]["subject"].update(
+            {"identity_status": "source_error", "instrument": "", "underlying": "", "product_name": ""}
+        )
+        snapshot["evidence_state"] = "source_error"
+        snapshot["payload"]["price_setup"]["research_gate_status"] = "blocked"
+        snapshot["state_reasons"] = ["Instrument identity could not be established."]
+        snapshot["content_hash"] = _content_hash(snapshot)
+
+        packet = build_artifact_packet(snapshot)
+        self.assertIn("Unresolved instrument", packet.html.decode("utf-8"))
+
+    def test_rejects_peer_and_candle_evidence_after_the_decision_cutoff(self) -> None:
+        future_peer = copy.deepcopy(self.complete)
+        future_peer["payload"]["peers"][0]["as_of"] = "2099-01-01T00:00:00Z"
+        future_peer["content_hash"] = _content_hash(future_peer)
+        with self.assertRaisesRegex(ArtifactPacketError, "^evidence_cutoff_invalid$"):
+            build_artifact_packet(future_peer)
+
+        future_candle = copy.deepcopy(self.complete)
+        future_candle["payload"]["price_setup"]["candles"][-1]["time"] = 9_999_999_999
+        future_candle["content_hash"] = _content_hash(future_candle)
+        with self.assertRaisesRegex(ArtifactPacketError, "^evidence_cutoff_invalid$"):
+            build_artifact_packet(future_candle)
 
     def test_instrument_research_cli_writes_the_canonical_packet(self) -> None:
         generator = self.root / "scripts" / "instrument_research_artifact.py"

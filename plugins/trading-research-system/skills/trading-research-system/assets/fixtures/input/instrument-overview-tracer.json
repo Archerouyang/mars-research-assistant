@@ -5,7 +5,7 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "cd704e88344ea74f39722a464e5e0aab5272c8e8c55d2cef901278802c891b72",
+  "content_hash": "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f0d2e675fe",
   "coverage": {
     "required_complete": 4,
     "required_total": 4
@@ -22,9 +22,10 @@
         "evidence_refs": [
           "industry-filing"
         ],
+        "evidence_gate": "industry",
         "id": "claim-demand",
         "impact": "supports",
-        "kind": "fact",
+        "kind": "industry_fact",
         "status": "verified"
       },
       {
@@ -32,9 +33,10 @@
         "evidence_refs": [
           "company-filing"
         ],
+        "evidence_gate": "fundamentals",
         "id": "claim-margin",
         "impact": "supports",
-        "kind": "hypothesis",
+        "kind": "fundamental_hypothesis",
         "status": "needs_check"
       }
     ],
@@ -402,6 +404,7 @@
     "subject": {
       "analysis_horizon": "medium_term",
       "currency": "USD",
+      "identity_status": "complete",
       "instrument": "SAMP",
       "market": "US",
       "path_dependent": true,

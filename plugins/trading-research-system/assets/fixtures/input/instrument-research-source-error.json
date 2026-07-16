@@ -5,7 +5,7 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "dcd50cf1930a40b748c7fc17ff23f9f7f434858b4c29d674fea6ef5d98d66d1b",
+  "content_hash": "ed6bcad80b6325c99abb6e8b0a5d014f8959942791e33a33c09880b726944baf",
   "coverage": {
     "required_complete": 3,
     "required_total": 4
@@ -27,23 +27,14 @@
     "board": "instrument_research",
     "claims": [
       {
-        "claim": "Advanced demand is growing faster than synthetic capacity.",
-        "evidence_refs": [
-          "industry-filing"
-        ],
-        "id": "claim-demand",
-        "impact": "supports",
-        "kind": "fact",
-        "status": "verified"
-      },
-      {
         "claim": "Utilization can sustain the current margin range.",
         "evidence_refs": [
           "company-filing"
         ],
+        "evidence_gate": "fundamentals",
         "id": "claim-margin",
         "impact": "supports",
-        "kind": "hypothesis",
+        "kind": "fundamental_hypothesis",
         "status": "needs_check"
       }
     ],
@@ -52,7 +43,6 @@
       {
         "catalyst": "Synthetic monthly revenue release",
         "claim_ids": [
-          "claim-demand",
           "claim-margin"
         ],
         "confirmation": "Growth remains above the synthetic peer median.",
@@ -172,19 +162,6 @@
         "status": "complete",
         "symbol": "SAMP",
         "valuation_multiple": 31.0
-      },
-      {
-        "as_of": "2026-07-15T20:00:00Z",
-        "comparability_gap": "Product mix differs.",
-        "gross_margin_pct": 47.0,
-        "revenue_growth_pct": 11.0,
-        "role": "comparable",
-        "source_refs": [
-          "industry-filing"
-        ],
-        "status": "partial",
-        "symbol": "PEER",
-        "valuation_multiple": 28.0
       }
     ],
     "posture": "research_in_progress",
@@ -411,6 +388,7 @@
     "subject": {
       "analysis_horizon": "medium_term",
       "currency": "USD",
+      "identity_status": "complete",
       "instrument": "SAMP",
       "market": "US",
       "path_dependent": true,

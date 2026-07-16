@@ -47,9 +47,23 @@ supporting-only and never increase required coverage. Price & Setup is `ready`
 only when all four required gates are complete; otherwise its cross-module
 research gate is `blocked`.
 
+The subject carries an explicit `identity_status`; an unresolved identity is a
+visible `source_error`, not a fabricated symbol. Every Claim Ledger row names
+its `evidence_gate`, and its evidence references must come from that gate.
+Flow-backed claims are limited to market-reaction evidence and cannot verify an
+industry or fundamental claim. Peer, candle, and overlay observations may not
+postdate the decision cutoff.
+
 The renderer accepts only the Instrument payload version `1.0`. Invalid schema or
 version, Board/payload mismatch, invalid content hash, unsafe diagnostics, and
 public-fixture privacy sentinels fail closed with stable safe error codes.
 
 The public hard limits are 1.5 MiB for canonical JSON, 4 MiB for HTML, and
 64 KiB for the manifest. These limits are contract values, not renderer hints.
+
+Local browser acceptance is reproducible with
+`scripts/verify_instrument_research_browser.cjs`. It checks all four views at
+1200, 700, and 320 pixels, keyboard view changes, horizontal overflow, nonblank
+K-line canvases, script errors, and artifact-initiated external requests. The
+script requires local Playwright and a caller-supplied generated HTML artifact;
+screenshots go only to the caller's temporary output path.

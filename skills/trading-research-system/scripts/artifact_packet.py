@@ -147,6 +147,7 @@ SUBJECT_V1_FIELDS = frozenset(
     {
         "analysis_horizon",
         "currency",
+        "identity_status",
         "instrument",
         "market",
         "path_dependent",
@@ -171,6 +172,15 @@ MODULE_V1_FIELDS = frozenset(
 SOURCE_V1_FIELDS = frozenset({"alias", "as_of", "freshness_policy_id", "freshness_status", "id", "priority"})
 SUPPORTING_INSTRUMENT_MODULES = ("flows",)
 ALL_INSTRUMENT_MODULES = REQUIRED_INSTRUMENT_MODULES + SUPPORTING_INSTRUMENT_MODULES
+CLAIM_KINDS = frozenset({"industry_fact", "fundamental_hypothesis", "event_fact", "market_fact", "market_reaction", "counter_thesis"})
+CLAIM_STATUSES = frozenset({"verified", "needs_check", "blocked", "insufficient_alone"})
+CLAIM_IMPACTS = frozenset({"supports", "pressures", "blocks", "watch", "none"})
+QUEUE_STATUSES = frozenset({"open", "blocked", "complete"})
+PEER_STATUSES = frozenset({"complete", "partial", "stale", "source_error"})
+EVENT_STATUSES = frozenset({"scheduled", "confirmed", "invalidated", "source_error"})
+SETUP_STATES = frozenset({"watch", "candidate", "invalidated", "needs_review"})
+LIQUIDITY_STATUSES = frozenset({"usable", "limited", "unavailable"})
+VOLATILITY_STATUSES = frozenset({"normal", "elevated", "extreme", "unavailable"})
 
 
 class ArtifactPacketError(ValueError):
@@ -406,15 +416,22 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
     if not isinstance(subject, dict) or not all(
         _is_nonempty_string(subject.get(key))
         for key in (
-            "instrument",
-            "underlying",
-            "product_name",
             "product_type",
             "market",
             "currency",
             "analysis_horizon",
         )
     ):
+        raise ArtifactPacketError("subject_invalid")
+    identity_status = subject.get("identity_status")
+    identity_fields = ("instrument", "underlying", "product_name")
+    if identity_status not in {"complete", "source_error"} or not all(
+        isinstance(subject.get(key), str) for key in identity_fields
+    ):
+        raise ArtifactPacketError("subject_invalid")
+    if identity_status == "complete" and not all(_is_nonempty_string(subject[key]) for key in identity_fields):
+        raise ArtifactPacketError("subject_invalid")
+    if identity_status == "source_error" and any(subject[key] for key in identity_fields):
         raise ArtifactPacketError("subject_invalid")
     if not isinstance(subject.get("path_dependent"), bool):
         raise ArtifactPacketError("subject_invalid")
@@ -471,10 +488,10 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
     coverage = snapshot.get("coverage")
     if coverage != {"required_complete": required_complete, "required_total": 4}:
         raise ArtifactPacketError("coverage_mismatch")
-    derived_state = _derive_instrument_evidence_state(by_id)
+    derived_state = _derive_instrument_evidence_state(by_id, identity_status)
     if snapshot.get("evidence_state") != derived_state:
         raise ArtifactPacketError("evidence_state_mismatch")
-    _validate_instrument_details(payload, source_ids, derived_state)
+    _validate_instrument_details(payload, source_ids, derived_state, cutoff, by_id)
 
 
 def _validate_module_data(module_id: str, data: Any, evidence_state: str) -> None:
@@ -497,13 +514,19 @@ def _validate_module_data(module_id: str, data: Any, evidence_state: str) -> Non
         raise ArtifactPacketError("module_data_invalid")
 
 
-def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str], evidence_state: str) -> None:
+def _validate_instrument_details(
+    payload: Mapping[str, Any],
+    source_ids: set[str],
+    evidence_state: str,
+    cutoff: datetime,
+    modules: Mapping[str, Mapping[str, Any]],
+) -> None:
     claims = payload.get("claims")
     if not isinstance(claims, list) or not claims:
         raise ArtifactPacketError("claims_invalid")
     claim_ids: set[str] = set()
     for claim in claims:
-        allowed = {"id", "kind", "claim", "evidence_refs", "status", "impact"}
+        allowed = {"id", "kind", "claim", "evidence_gate", "evidence_refs", "status", "impact"}
         if not isinstance(claim, Mapping) or set(claim) != allowed:
             raise ArtifactPacketError("claims_invalid")
         claim_id = claim.get("id")
@@ -511,12 +534,25 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
         if (
             not _is_nonempty_string(claim_id)
             or claim_id in claim_ids
-            or not all(_is_nonempty_string(claim.get(key)) for key in ("kind", "claim", "status", "impact"))
+            or claim.get("kind") not in CLAIM_KINDS
+            or claim.get("status") not in CLAIM_STATUSES
+            or claim.get("impact") not in CLAIM_IMPACTS
+            or not _is_nonempty_string(claim.get("claim"))
+            or claim.get("evidence_gate") not in ALL_INSTRUMENT_MODULES
             or not isinstance(refs, list)
             or not refs
             or not set(refs).issubset(source_ids)
         ):
             raise ArtifactPacketError("claims_invalid")
+        gate = claim["evidence_gate"]
+        if not set(refs).issubset(set(modules[gate]["source_refs"])):
+            raise ArtifactPacketError("claim_source_mismatch")
+        if gate == "flows" and claim["kind"] != "market_reaction":
+            raise ArtifactPacketError("claim_source_mismatch")
+        if gate != "flows" and claim["kind"] == "market_reaction":
+            raise ArtifactPacketError("claim_source_mismatch")
+        if modules[gate]["evidence_state"] == "source_error" and claim["status"] == "verified":
+            raise ArtifactPacketError("claim_source_mismatch")
         claim_ids.add(claim_id)
 
     queue = payload.get("verification_queue")
@@ -528,7 +564,8 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
             not isinstance(item, Mapping)
             or set(item) != allowed
             or item.get("claim_id") not in claim_ids
-            or not all(_is_nonempty_string(item.get(key)) for key in allowed)
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"status"})
+            or item.get("status") not in QUEUE_STATUSES
         ):
             raise ArtifactPacketError("verification_queue_invalid")
 
@@ -544,7 +581,8 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
         if (
             not isinstance(peer, Mapping)
             or set(peer) != allowed
-            or not all(_is_nonempty_string(peer.get(key)) for key in ("symbol", "role", "status", "as_of"))
+            or not all(_is_nonempty_string(peer.get(key)) for key in ("symbol", "role", "as_of"))
+            or peer.get("status") not in PEER_STATUSES
             or not all(isinstance(peer.get(key), (int, float)) for key in ("revenue_growth_pct", "gross_margin_pct", "valuation_multiple"))
             or not isinstance(peer.get("comparability_gap"), str)
             or not isinstance(refs, list)
@@ -552,7 +590,8 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
             or not set(refs).issubset(source_ids)
         ):
             raise ArtifactPacketError("peers_invalid")
-        _parse_timestamp(peer["as_of"], "peers_invalid")
+        if _parse_timestamp(peer["as_of"], "peers_invalid") > cutoff:
+            raise ArtifactPacketError("evidence_cutoff_invalid")
 
     transmissions = payload.get("event_transmission")
     if not isinstance(transmissions, list) or not transmissions:
@@ -567,7 +606,8 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
         if (
             not isinstance(item, Mapping)
             or set(item) != allowed
-            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"claim_ids", "source_refs"})
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"claim_ids", "source_refs", "status"})
+            or item.get("status") not in EVENT_STATUSES
             or not isinstance(linked_claims, list)
             or not linked_claims
             or not set(linked_claims).issubset(claim_ids)
@@ -578,17 +618,21 @@ def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str
             raise ArtifactPacketError("event_transmission_invalid")
         _parse_timestamp(item["event_time"], "event_transmission_invalid")
 
-    _validate_price_setup(payload.get("price_setup"), evidence_state)
+    _validate_price_setup(payload.get("price_setup"), evidence_state, cutoff)
 
 
-def _validate_price_setup(price_setup: Any, evidence_state: str) -> None:
+def _validate_price_setup(price_setup: Any, evidence_state: str, cutoff: datetime) -> None:
     allowed = {
         "main_timeframe", "auxiliary_timeframe", "setup_state", "research_gate_status", "invalidation",
         "liquidity", "volatility", "product_path", "candles", "overlays", "levels", "zones", "scenarios",
     }
     if not isinstance(price_setup, Mapping) or set(price_setup) != allowed:
         raise ArtifactPacketError("price_setup_invalid")
-    if not all(_is_nonempty_string(price_setup.get(key)) for key in ("main_timeframe", "auxiliary_timeframe", "setup_state", "research_gate_status")):
+    if (
+        not all(_is_nonempty_string(price_setup.get(key)) for key in ("main_timeframe", "auxiliary_timeframe"))
+        or price_setup.get("setup_state") not in SETUP_STATES
+        or price_setup.get("research_gate_status") not in {"ready", "blocked"}
+    ):
         raise ArtifactPacketError("price_setup_invalid")
     expected_gate = "ready" if evidence_state == "complete" else "blocked"
     if price_setup["research_gate_status"] != expected_gate:
@@ -608,7 +652,7 @@ def _validate_price_setup(price_setup: Any, evidence_state: str) -> None:
         or set(liquidity) != {"average_daily_volume", "bid_ask_bps", "status"}
         or not isinstance(liquidity.get("average_daily_volume"), (int, float))
         or not isinstance(liquidity.get("bid_ask_bps"), (int, float))
-        or not _is_nonempty_string(liquidity.get("status"))
+        or liquidity.get("status") not in LIQUIDITY_STATUSES
     ):
         raise ArtifactPacketError("price_setup_invalid")
     volatility = price_setup.get("volatility")
@@ -617,7 +661,7 @@ def _validate_price_setup(price_setup: Any, evidence_state: str) -> None:
         or set(volatility) != {"atr_percent", "realized_20d_percent", "status"}
         or not isinstance(volatility.get("atr_percent"), (int, float))
         or not isinstance(volatility.get("realized_20d_percent"), (int, float))
-        or not _is_nonempty_string(volatility.get("status"))
+        or volatility.get("status") not in VOLATILITY_STATUSES
     ):
         raise ArtifactPacketError("price_setup_invalid")
     product = price_setup.get("product_path")
@@ -641,11 +685,13 @@ def _validate_price_setup(price_setup: Any, evidence_state: str) -> None:
             raise ArtifactPacketError("price_setup_invalid")
         if previous_time is not None and candle["time"] <= previous_time:
             raise ArtifactPacketError("price_setup_invalid")
+        if candle["time"] > cutoff.timestamp():
+            raise ArtifactPacketError("evidence_cutoff_invalid")
         previous_time = candle["time"]
-    _validate_price_collections(price_setup)
+    _validate_price_collections(price_setup, cutoff)
 
 
-def _validate_price_collections(price_setup: Mapping[str, Any]) -> None:
+def _validate_price_collections(price_setup: Mapping[str, Any], cutoff: datetime) -> None:
     overlays = price_setup.get("overlays")
     if not isinstance(overlays, list):
         raise ArtifactPacketError("price_setup_invalid")
@@ -657,6 +703,8 @@ def _validate_price_collections(price_setup: Mapping[str, Any]) -> None:
             raise ArtifactPacketError("price_setup_invalid")
         if not all(isinstance(point, Mapping) and set(point) == {"time", "value"} and all(isinstance(point[key], (int, float)) for key in point) for point in points):
             raise ArtifactPacketError("price_setup_invalid")
+        if any(point["time"] > cutoff.timestamp() for point in points):
+            raise ArtifactPacketError("evidence_cutoff_invalid")
     levels = price_setup.get("levels")
     if not isinstance(levels, list) or not all(
         isinstance(item, Mapping)
@@ -687,15 +735,19 @@ def _validate_price_collections(price_setup: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("price_setup_invalid")
 
 
-def _derive_instrument_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> str:
+def _derive_instrument_evidence_state(
+    modules: Mapping[str, Mapping[str, Any]], identity_status: str
+) -> str:
     states = {module_id: modules[module_id]["evidence_state"] for module_id in REQUIRED_INSTRUMENT_MODULES}
-    if any(state == "stale" for state in states.values()):
-        return "stale"
+    if identity_status == "source_error":
+        return "source_error"
     usable = {module_id for module_id, state in states.items() if state in {"complete", "partial"}}
     if states["industry"] != "complete" or states["fundamentals"] != "complete":
         return "source_error"
     if len(usable) < 3:
         return "source_error"
+    if any(state == "stale" for state in states.values()):
+        return "stale"
     if all(state == "complete" for state in states.values()):
         return "complete"
     return "partial"

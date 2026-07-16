@@ -33,6 +33,7 @@ def render_instrument_research_board(
 
     payload = snapshot["payload"]
     subject = payload["subject"]
+    instrument_label = subject["instrument"] or "Unresolved instrument"
     modules = {module["id"]: module for module in payload["modules"]}
     privacy_label = "public fixture" if snapshot["privacy"] == "public_fixture" else "private"
     chart_json = _script_json(payload["price_setup"])
@@ -42,7 +43,7 @@ def render_instrument_research_board(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape(subject['instrument'])} Instrument Research</title>
+<title>{escape(instrument_label)} Instrument Research</title>
 <meta name="generator" content="DailyTrades Instrument Research renderer {escape(snapshot['renderer_version'])}">
 <style>
 {_styles()}
@@ -53,7 +54,7 @@ def render_instrument_research_board(
 <header class="masthead">
 <div>
 <p class="eyebrow">Instrument Research</p>
-<h1>{escape(subject['instrument'])} Research brief</h1>
+<h1>{escape(instrument_label)} Research brief</h1>
 <p class="lede">{escape(payload['question'])}</p>
 </div>
 <dl class="provenance" aria-label="Provenance">
@@ -181,7 +182,7 @@ def _render_overview(payload: Mapping[str, Any], modules: Mapping[str, Mapping[s
         '<article class="ledger-row">'
         f'<div><span class="badge">{escape(claim["kind"])}</span><p>{escape(claim["status"])}</p></div>'
         f'<div><strong>{escape(claim["claim"])}</strong><p class="module-meta">Evidence: {escape(", ".join(claim["evidence_refs"]))}</p></div>'
-        f'<div><span class="field-label">Impact</span><strong>{escape(claim["impact"])}</strong></div>'
+        f'<div><span class="field-label">Gate / impact</span><strong>{escape(claim["evidence_gate"])} · {escape(claim["impact"])}</strong></div>'
         '</article>'
         for claim in payload["claims"]
     )
@@ -230,10 +231,15 @@ def _render_price_setup(payload: Mapping[str, Any], modules: Mapping[str, Mappin
         f'<tr><td>{int(candle["time"])}</td><td>{candle["open"]:.2f}</td><td>{candle["high"]:.2f}</td><td>{candle["low"]:.2f}</td><td>{candle["close"]:.2f}</td></tr>'
         for candle in candles
     )
+    zone_rows = "".join(
+        f'<li><strong>{escape(zone["label"])}</strong> {zone["low"]:.2f}–{zone["high"]:.2f} · {escape(zone["kind"])}</li>'
+        for zone in setup["zones"]
+    ) or "<li>No active price zones.</li>"
     return f"""<section class="view-panel" id="view-price-setup" data-view="price-setup" role="tabpanel" aria-labelledby="tab-price-setup"{_hidden('price-setup', default_view)}>
 <div class="section-head"><h2>Price &amp; Setup</h2><p>Main {escape(setup['main_timeframe'])} · Auxiliary {escape(setup['auxiliary_timeframe'])}</p></div>
 <p class="thesis-boundary"><strong>Research gate: {escape(setup['research_gate_status'])}</strong>. Price Action is timing evidence, not the research thesis.</p>
-<div class="chart-shell"><div id="instrument-price-chart" role="img" aria-label="Synthetic candlestick chart with volume, overlays, and decision levels"></div><div class="chart-fallback"><strong>Semantic price fallback</strong><table><thead><tr><th>Time</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody>{fallback_rows}</tbody></table></div></div>
+<div class="chart-shell"><div id="instrument-price-chart" role="img" aria-label="Synthetic candlestick chart with volume, overlays, decision levels, and price zones"></div><div class="chart-fallback"><strong>Semantic price fallback</strong><table><thead><tr><th>Time</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody>{fallback_rows}</tbody></table></div></div>
+<div class="zone-legend"><span class="field-label">Price zones</span><ul>{zone_rows}</ul></div>
 <div class="fact-grid">
 <article><span class="field-label">Underlying identity</span><strong>{escape(product['underlying_identity'])}</strong></article>
 <article><span class="field-label">Leverage / reset</span><strong>{product['leverage_multiple']:.1f}x · {escape(product['reset_frequency'])}</strong></article>
@@ -355,6 +361,10 @@ function renderPriceChart() {{
   for (const level of instrumentBoardPayload.levels) {{
     candles.createPriceLine({{ price: level.price, color: level.kind === 'invalidation' ? '#bf3b33' : '#a15c00', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: level.label }});
   }}
+  for (const zone of instrumentBoardPayload.zones) {{
+    candles.createPriceLine({{ price: zone.low, color: '#1769aa', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: `${{zone.label}} low` }});
+    candles.createPriceLine({{ price: zone.high, color: '#1769aa', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: `${{zone.label}} high` }});
+  }}
   chart.timeScale().fitContent();
   new ResizeObserver(entries => {{ for (const entry of entries) chart.applyOptions({{ width: entry.contentRect.width }}); }}).observe(element);
   chartRendered = true;
@@ -363,6 +373,15 @@ function renderPriceChart() {{
 }}
 
 for (const tab of tabs) tab.addEventListener('click', () => activateView(tab.dataset.viewTarget));
+document.addEventListener('keydown', event => {{
+  if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+  const selectedIndex = tabs.findIndex(tab => tab.getAttribute('aria-selected') === 'true');
+  const direction = event.key === 'ArrowRight' ? 1 : -1;
+  const next = tabs[(selectedIndex + direction + tabs.length) % tabs.length];
+  activateView(next.dataset.viewTarget);
+  next.focus();
+  event.preventDefault();
+}});
 boardRoot.classList.add('enhanced');
 activateView('{default_view_id}');
 window.__dailytradesBoardReady = true;
