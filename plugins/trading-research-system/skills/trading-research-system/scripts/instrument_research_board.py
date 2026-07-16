@@ -254,15 +254,19 @@ def _render_price_setup(payload: Mapping[str, Any], modules: Mapping[str, Mappin
 
 def _render_industry_peers(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], default_view: str) -> str:
     peer_rows = "".join(
-        f'<tr><td data-label="Symbol">{escape(peer["symbol"])}</td><td data-label="Role">{escape(peer["role"])}</td><td data-label="Revenue growth">{peer["revenue_growth_pct"]:.1f}%</td><td data-label="Gross margin">{peer["gross_margin_pct"]:.1f}%</td><td data-label="Valuation">{peer["valuation_multiple"]:.1f}x</td><td data-label="Comparability gap">{escape(peer["comparability_gap"] or "None")}</td></tr>'
+        f'<tr><td data-label="Symbol">{escape(peer["symbol"])}</td><td data-label="Role">{escape(peer["role"])}</td><td data-label="Status"><span class="badge {escape(peer["status"])}">{escape(peer["status"])}</span></td><td data-label="Revenue growth">{_peer_metric(peer["revenue_growth_pct"], "%")}</td><td data-label="Gross margin">{_peer_metric(peer["gross_margin_pct"], "%")}</td><td data-label="Valuation">{_peer_metric(peer["valuation_multiple"], "x")}</td><td data-label="Comparability gap">{escape(peer["comparability_gap"] or "None")}</td></tr>'
         for peer in payload["peers"]
     )
     return f"""<section class="view-panel" id="view-industry-peers" data-view="industry-peers" role="tabpanel" aria-labelledby="tab-industry-peers"{_hidden('industry-peers', default_view)}>
 <div class="section-head"><h2>Industry &amp; Peers</h2><p>Industry facts, differentiation, and comparability gaps</p></div>
 {_render_module_row(modules['industry'])}
 {_render_module_row(modules['fundamentals'])}
-<table class="peer-table"><thead><tr><th>Symbol</th><th>Role</th><th>Revenue growth</th><th>Gross margin</th><th>Valuation</th><th>Comparability gap</th></tr></thead><tbody>{peer_rows}</tbody></table>
+<table class="peer-table"><thead><tr><th>Symbol</th><th>Role</th><th>Status</th><th>Revenue growth</th><th>Gross margin</th><th>Valuation</th><th>Comparability gap</th></tr></thead><tbody>{peer_rows}</tbody></table>
 </section>"""
+
+
+def _peer_metric(value: Any, suffix: str) -> str:
+    return "Unavailable" if value is None else f"{value:.1f}{suffix}"
 
 
 def _render_catalysts_flows(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], default_view: str) -> str:

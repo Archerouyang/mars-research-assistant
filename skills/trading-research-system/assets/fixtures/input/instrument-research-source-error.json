@@ -5,7 +5,7 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "ed6bcad80b6325c99abb6e8b0a5d014f8959942791e33a33c09880b726944baf",
+  "content_hash": "894310808c547f936bee4d384f5fc3aa776ce458fcd2be8902f64ed2ca7e3617",
   "coverage": {
     "required_complete": 3,
     "required_total": 4
@@ -83,7 +83,7 @@
           "business_quality": "Recurring high-performance demand supports utilization.",
           "earnings_cash_flow": "Revenue, margin, and free-cash-flow direction agree.",
           "operating_risks": "Customer concentration and capital intensity remain material.",
-          "valuation_context": "Valuation is above its synthetic history but within peers."
+          "valuation_context": "Standalone valuation evidence is available; peer-relative context is unavailable."
         },
         "evidence_state": "complete",
         "freshness_policy_id": "official-current-v1",

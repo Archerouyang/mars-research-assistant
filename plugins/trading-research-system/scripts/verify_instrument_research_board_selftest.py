@@ -90,6 +90,7 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
                 if expected_state == "source_error":
                     self.assertIn("Unavailable", html)
                     self.assertNotIn("Advanced demand is growing faster", html)
+                    self.assertNotIn("within peers", html)
 
         partial = json.loads((fixture_dir / "instrument-research-partial.json").read_text(encoding="utf-8"))
         self.assertEqual(partial["payload"]["modules"][-1]["id"], "flows")
@@ -189,6 +190,29 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
         future_candle["content_hash"] = _content_hash(future_candle)
         with self.assertRaisesRegex(ArtifactPacketError, "^evidence_cutoff_invalid$"):
             build_artifact_packet(future_candle)
+
+    def test_source_error_peer_requires_empty_metrics_and_renders_the_gap(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        peer = snapshot["payload"]["peers"][1]
+        peer.update(
+            {
+                "status": "source_error",
+                "revenue_growth_pct": None,
+                "gross_margin_pct": None,
+                "valuation_multiple": None,
+                "comparability_gap": "Comparable peer evidence is unavailable.",
+            }
+        )
+        snapshot["content_hash"] = _content_hash(snapshot)
+        html = build_artifact_packet(snapshot).html.decode("utf-8")
+        self.assertIn("Comparable peer evidence is unavailable.", html)
+        self.assertIn("Unavailable", html)
+
+        contradictory = copy.deepcopy(snapshot)
+        contradictory["payload"]["peers"][1]["valuation_multiple"] = 28.0
+        contradictory["content_hash"] = _content_hash(contradictory)
+        with self.assertRaisesRegex(ArtifactPacketError, "^peers_invalid$"):
+            build_artifact_packet(contradictory)
 
     def test_instrument_research_cli_writes_the_canonical_packet(self) -> None:
         generator = self.root / "scripts" / "instrument_research_artifact.py"

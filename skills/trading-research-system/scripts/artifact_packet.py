@@ -578,17 +578,22 @@ def _validate_instrument_details(
             "status", "source_refs", "as_of", "comparability_gap",
         }
         refs = peer.get("source_refs") if isinstance(peer, Mapping) else None
+        metrics = ("revenue_growth_pct", "gross_margin_pct", "valuation_multiple")
         if (
             not isinstance(peer, Mapping)
             or set(peer) != allowed
             or not all(_is_nonempty_string(peer.get(key)) for key in ("symbol", "role", "as_of"))
             or peer.get("status") not in PEER_STATUSES
-            or not all(isinstance(peer.get(key), (int, float)) for key in ("revenue_growth_pct", "gross_margin_pct", "valuation_multiple"))
             or not isinstance(peer.get("comparability_gap"), str)
             or not isinstance(refs, list)
             or not refs
             or not set(refs).issubset(source_ids)
         ):
+            raise ArtifactPacketError("peers_invalid")
+        if peer["status"] == "source_error":
+            if any(peer.get(key) is not None for key in metrics) or not _is_nonempty_string(peer["comparability_gap"]):
+                raise ArtifactPacketError("peers_invalid")
+        elif not all(isinstance(peer.get(key), (int, float)) for key in metrics):
             raise ArtifactPacketError("peers_invalid")
         if _parse_timestamp(peer["as_of"], "peers_invalid") > cutoff:
             raise ArtifactPacketError("evidence_cutoff_invalid")

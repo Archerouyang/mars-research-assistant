@@ -62,8 +62,9 @@ The public hard limits are 1.5 MiB for canonical JSON, 4 MiB for HTML, and
 64 KiB for the manifest. These limits are contract values, not renderer hints.
 
 Local browser acceptance is reproducible with
-`scripts/verify_instrument_research_browser.cjs`. It checks all four views at
+`uv run --frozen python scripts/verify_instrument_research_browser.py`. It checks all four views at
 1200, 700, and 320 pixels, keyboard view changes, horizontal overflow, nonblank
 K-line canvases, script errors, and artifact-initiated external requests. The
-script requires local Playwright and a caller-supplied generated HTML artifact;
+script uses the repository-locked Playwright dependency and requires a
+caller-supplied generated HTML artifact plus browser executable;
 screenshots go only to the caller's temporary output path.

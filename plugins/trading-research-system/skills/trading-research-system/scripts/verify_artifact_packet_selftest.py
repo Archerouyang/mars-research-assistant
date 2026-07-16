@@ -18,8 +18,8 @@ from artifact_packet import ArtifactPacketError, build_artifact_packet, write_ar
 # These are independently captured known-good bytes for the public fixture.
 EXPECTED_CONTENT_HASH = "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f0d2e675fe"
 EXPECTED_JSON_SHA256 = "bfdaa9d9b4b9920cbe8fd41146198093159c769ab9458a305a6fbd979ef7268f"
-EXPECTED_HTML_SHA256 = "3005ea3b249806da855d9a4084d5504a5eefb9153f1e4a5363066a87b52bf8f7"
-EXPECTED_MANIFEST_SHA256 = "1a80d660714194a4e2ea8a5b43474e490760f85e7f09056777862a2a971ae563"
+EXPECTED_HTML_SHA256 = "5b2fe8da599fba80de289fe08b1e888fbd17177d90338d821c8d08691affcfe4"
+EXPECTED_MANIFEST_SHA256 = "2def410623e3f0a97ffd9b5bcd47e763e574a190bcab48fc782cd2b4a0a724c9"
 
 
 class ArtifactPacketSelftest(unittest.TestCase):
