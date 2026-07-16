@@ -5,14 +5,14 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "cd704e88344ea74f39722a464e5e0aab5272c8e8c55d2cef901278802c891b72",
+  "content_hash": "f581768054d09c9a9afee04030d1fdd754a3dacc16d7151bb230e970b1cc6cf9",
   "coverage": {
-    "required_complete": 4,
+    "required_complete": 3,
     "required_total": 4
   },
   "decision_cutoff": "2026-07-16T09:00:00Z",
   "diagnostics": [],
-  "evidence_state": "complete",
+  "evidence_state": "partial",
   "locale": "en-US",
   "payload": {
     "board": "instrument_research",
@@ -103,9 +103,9 @@
           "expected_transmission": "Revenue momentum tests demand and margin claims.",
           "next_event": "Synthetic monthly revenue release"
         },
-        "evidence_state": "complete",
+        "evidence_state": "partial",
         "freshness_policy_id": "event-calendar-v1",
-        "gap_reason": "",
+        "gap_reason": "Confirmation criteria await the scheduled synthetic event.",
         "id": "catalysts",
         "requirement": "required",
         "source_refs": [
@@ -364,7 +364,7 @@
         "risk_note": "Gap risk and volatility drag can dominate a correct underlying thesis.",
         "underlying_identity": "SAMP underlying synthetic equity"
       },
-      "research_gate_status": "ready",
+      "research_gate_status": "blocked",
       "scenarios": [
         {
           "bias": "constructive",
@@ -428,7 +428,7 @@
   "privacy": "public_fixture",
   "renderer_version": "1.0",
   "schema_version": "1.0",
-  "snapshot_id": "synthetic-instrument-research-complete-001",
+  "snapshot_id": "synthetic-instrument-research-partial-001",
   "source_registry": [
     {
       "alias": "Synthetic industry filing",
@@ -463,6 +463,8 @@
       "priority": "S1"
     }
   ],
-  "state_reasons": [],
+  "state_reasons": [
+    "Catalyst evidence is partial; flows remain supporting-only."
+  ],
   "timezone": "UTC"
 }

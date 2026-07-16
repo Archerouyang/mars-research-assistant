@@ -16,10 +16,10 @@ from artifact_packet import ArtifactPacketError, build_artifact_packet, write_ar
 
 
 # These are independently captured known-good bytes for the public fixture.
-EXPECTED_CONTENT_HASH = "e81d14d85094d5d9c068ec85101f428c33967481b3d8bf4ec81b819190e952bd"
-EXPECTED_JSON_SHA256 = "809841d66fd759af82710108bf97718c10b597e96b5947881cd6e53ff0857366"
-EXPECTED_HTML_SHA256 = "12d5b3066b380caa88498836b44f63fedf03cbed6016679b0b9e289d4045d60b"
-EXPECTED_MANIFEST_SHA256 = "8a8d36ce8365ebd6aba3c0a64625c377e39b75efeff085a5ef97724672a2e879"
+EXPECTED_CONTENT_HASH = "cd704e88344ea74f39722a464e5e0aab5272c8e8c55d2cef901278802c891b72"
+EXPECTED_JSON_SHA256 = "ba9d1cb7566ec4ca8c0d1b650dce8d462468d60b9ef291aa4699d0c5158a2db8"
+EXPECTED_HTML_SHA256 = "f886b20d10aaf3b55af72d5a6664ea24dccddbae3315205d429ab95549b42eed"
+EXPECTED_MANIFEST_SHA256 = "09f3e8eda63fb2877b0e7f018ceae7f5acbf466b2e3e7c3e4aed0655bebcc680"
 
 
 class ArtifactPacketSelftest(unittest.TestCase):
@@ -76,13 +76,12 @@ class ArtifactPacketSelftest(unittest.TestCase):
         ):
             self.assertIn(literal, html)
         for forbidden in (
-            "<script",
             "fetch(",
             "xmlhttprequest",
             "websocket",
-            "http://",
-            "https://",
-            "cdn",
+            'src="http',
+            'src="//',
+            'href="http',
             "telemetry",
             "broker",
             "runtime",

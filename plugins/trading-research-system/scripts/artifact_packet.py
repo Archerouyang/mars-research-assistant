@@ -11,11 +11,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import copy
 import hashlib
-from html import escape
 import json
 from pathlib import Path
 import re
 from typing import Any, Mapping
+
+from instrument_research_board import render_instrument_research_board
 
 
 SCHEMA_VERSION = "1.0"
@@ -76,8 +77,7 @@ SAFE_TEXT_FORBIDDEN_TERMS = UNSAFE_DIAGNOSTIC_TERMS + (
     "full account",
 )
 ACCOUNT_ID_PATTERN = re.compile(r"\b(?:\d[ -]?){7,}\d\b")
-FORBIDDEN_HTML_TERMS = (
-    "<script",
+FORBIDDEN_SNAPSHOT_TERMS = (
     "fetch(",
     "xmlhttprequest",
     "websocket",
@@ -87,6 +87,19 @@ FORBIDDEN_HTML_TERMS = (
     "telemetry",
     "broker",
     "runtime",
+    "order action",
+)
+FORBIDDEN_HTML_TERMS = (
+    'src="http',
+    "src='http",
+    'src="//',
+    "src='//",
+    'href="http',
+    "href='http",
+    "fetch(",
+    "xmlhttprequest",
+    "websocket",
+    "telemetry",
     "order action",
 )
 SNAPSHOT_V1_FIELDS = frozenset(
@@ -114,15 +127,50 @@ SNAPSHOT_V1_FIELDS = frozenset(
 BUILDER_V1_FIELDS = frozenset({"generated_at", "id"})
 COVERAGE_V1_FIELDS = frozenset({"required_complete", "required_total"})
 PAYLOAD_V1_FIELDS = frozenset(
-    {"board", "decision", "modules", "payload_version", "posture", "question", "subject", "views"}
+    {
+        "board",
+        "claims",
+        "decision",
+        "event_transmission",
+        "modules",
+        "payload_version",
+        "peers",
+        "posture",
+        "price_setup",
+        "question",
+        "subject",
+        "verification_queue",
+        "views",
+    }
 )
 SUBJECT_V1_FIELDS = frozenset(
-    {"analysis_horizon", "currency", "instrument", "market", "product_type", "underlying"}
+    {
+        "analysis_horizon",
+        "currency",
+        "instrument",
+        "market",
+        "path_dependent",
+        "product_name",
+        "product_type",
+        "underlying",
+    }
 )
 MODULE_V1_FIELDS = frozenset(
-    {"as_of", "evidence_state", "freshness_policy_id", "gap_reason", "id", "requirement", "source_refs", "summary"}
+    {
+        "as_of",
+        "data",
+        "evidence_state",
+        "freshness_policy_id",
+        "gap_reason",
+        "id",
+        "requirement",
+        "source_refs",
+        "summary",
+    }
 )
 SOURCE_V1_FIELDS = frozenset({"alias", "as_of", "freshness_policy_id", "freshness_status", "id", "priority"})
+SUPPORTING_INSTRUMENT_MODULES = ("flows",)
+ALL_INSTRUMENT_MODULES = REQUIRED_INSTRUMENT_MODULES + SUPPORTING_INSTRUMENT_MODULES
 
 
 class ArtifactPacketError(ValueError):
@@ -224,6 +272,7 @@ def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
         raise ArtifactPacketError("artifact_lifecycle_invalid")
     _validate_public_privacy(normalized)
+    _validate_snapshot_action_safety(normalized)
     _validate_v1_field_sets(normalized)
     if not isinstance(normalized.get("payload"), dict):
         raise ArtifactPacketError("payload_invalid")
@@ -262,90 +311,9 @@ def sha256_hex(data: bytes) -> str:
 def render_instrument_research_brief(
     snapshot: Mapping[str, Any], default_view: str, presentation_state: str
 ) -> bytes:
-    """Render a directly openable semantic Overview without executable code."""
+    """Render the board through its purpose-specific renderer."""
 
-    payload = snapshot["payload"]
-    subject = payload["subject"]
-    modules = payload["modules"]
-    privacy_label = "public fixture" if snapshot["privacy"] == "public_fixture" else "private"
-    module_rows = "".join(
-        "<article class=\"module\">"
-        f"<h3>{escape(module['id'].replace('_', ' ').title())}</h3>"
-        f"<p><strong>Status:</strong> {escape(module['evidence_state'])}</p>"
-        f"<p>{escape(module['summary'])}</p>"
-        f"<p><strong>As of:</strong> {escape(module['as_of'])}</p>"
-        f"<p><strong>Gap:</strong> {escape(module['gap_reason'] or 'None')}</p>"
-        "</article>"
-        for module in modules
-    )
-    source_rows = "".join(
-        "<li>"
-        f"{escape(source['alias'])} ({escape(source['priority'])}, {escape(source['freshness_status'])}, "
-        f"{escape(source['as_of'])})"
-        "</li>"
-        for source in snapshot["source_registry"]
-    )
-    views = "".join(
-        _render_view_label(view, default_view) for view in payload["views"]
-    )
-    html = f"""<!doctype html>
-<html lang=\"en\">
-<head>
-<meta charset=\"utf-8\">
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-<title>{escape(subject['instrument'])} Instrument Research</title>
-<style>
-:root {{ color-scheme: light; font-family: Arial, sans-serif; line-height: 1.45; }}
-body {{ margin: 0; color: #17212b; background: #f6f8fa; }}
-main {{ max-width: 960px; margin: 0 auto; padding: 24px; }}
-header, section, footer {{ margin-bottom: 20px; }}
-.masthead {{ border-bottom: 3px solid #18794e; padding-bottom: 16px; }}
-.eyebrow {{ color: #0d5f3b; font-weight: 700; margin: 0; }}
-nav {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }}
-nav span {{ border: 1px solid #6d7a86; padding: 4px 8px; }}
-nav span[aria-current=\"page\"] {{ background: #d7f3e3; font-weight: 700; }}
-.summary {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }}
-.summary p, .module {{ background: #fff; border: 1px solid #c8d0d8; margin: 0; padding: 12px; }}
-.modules {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
-.rail {{ border-left: 4px solid #d0a000; padding-left: 16px; }}
-footer {{ border-top: 1px solid #c8d0d8; padding-top: 12px; font-size: 0.92rem; }}
-@media (max-width: 736px) {{ main {{ padding: 16px; }} .summary, .modules {{ grid-template-columns: 1fr; }} .rail {{ border-left: 0; border-top: 4px solid #d0a000; padding-left: 0; padding-top: 12px; }} }}
-</style>
-</head>
-<body>
-<main>
-<header class=\"masthead\">
-<p class=\"eyebrow\">Instrument Research</p>
-<h1>{escape(subject['instrument'])} Research brief</h1>
-<p>Overview for a synthetic {escape(subject['product_type'])} in {escape(subject['market'])}.</p>
-<nav aria-label=\"Research views\">{views}</nav>
-</header>
-<section aria-labelledby=\"provenance\">
-<h2 id=\"provenance\">Provenance</h2>
-<p>Snapshot {escape(snapshot['snapshot_id'])}; cutoff {escape(snapshot['decision_cutoff'])}; privacy {privacy_label}.</p>
-</section>
-<section class=\"summary\" aria-label=\"Research summary\">
-<p><strong>Current decision</strong><br>{escape(payload['decision'])}</p>
-<p><strong>Coverage</strong><br>{snapshot['coverage']['required_complete']} of {snapshot['coverage']['required_total']} required modules complete.</p>
-<p><strong>Status</strong><br>Evidence: {escape(snapshot['evidence_state'])}; presentation: {escape(presentation_state)}.</p>
-</section>
-<section aria-labelledby=\"modules\">
-<h2 id=\"modules\">Module status and gaps</h2>
-<div class=\"modules\">{module_rows}</div>
-</section>
-<section class=\"rail\" aria-labelledby=\"evidence-rail\">
-<h2 id=\"evidence-rail\">Evidence rail</h2>
-<ul>{source_rows}</ul>
-</section>
-<footer>
-<h2>Safety boundary</h2>
-<p>Synthetic fixture. Not investment advice. No external requests or state-changing actions occur when this file is opened.</p>
-</footer>
-</main>
-</body>
-</html>
-"""
-    return html.encode("utf-8")
+    return render_instrument_research_board(snapshot, default_view, presentation_state)
 
 
 def _validate_sources(snapshot: Mapping[str, Any]) -> None:
@@ -421,11 +389,6 @@ def _reject_unknown_fields(value: Any, allowed_fields: frozenset[str]) -> None:
         raise ArtifactPacketError("schema_invalid")
 
 
-def _render_view_label(view: str, default_view: str) -> str:
-    current = ' aria-current="page"' if view == default_view else ""
-    return f"<span{current}>{escape(view)}</span>"
-
-
 def evaluate_freshness(policy_id: str, observed_at: datetime, decision_cutoff: datetime) -> str:
     """Evaluate a versioned source freshness policy at a fixed decision cutoff."""
 
@@ -442,8 +405,18 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
     subject = payload.get("subject")
     if not isinstance(subject, dict) or not all(
         _is_nonempty_string(subject.get(key))
-        for key in ("instrument", "underlying", "product_type", "market", "currency", "analysis_horizon")
+        for key in (
+            "instrument",
+            "underlying",
+            "product_name",
+            "product_type",
+            "market",
+            "currency",
+            "analysis_horizon",
+        )
     ):
+        raise ArtifactPacketError("subject_invalid")
+    if not isinstance(subject.get("path_dependent"), bool):
         raise ArtifactPacketError("subject_invalid")
     views = payload.get("views")
     if not isinstance(views, list) or views != ["Overview", "Price & Setup", "Industry & Peers", "Catalysts & Flows"]:
@@ -453,21 +426,23 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("modules_invalid")
     by_id = {module.get("id"): module for module in modules if isinstance(module, dict)}
     if (
-        len(modules) != len(REQUIRED_INSTRUMENT_MODULES)
+        len(modules) != len(ALL_INSTRUMENT_MODULES)
         or len(by_id) != len(modules)
-        or set(by_id) != set(REQUIRED_INSTRUMENT_MODULES)
+        or set(by_id) != set(ALL_INSTRUMENT_MODULES)
     ):
         raise ArtifactPacketError("modules_invalid")
     source_ids = {source["id"] for source in snapshot["source_registry"]}
     sources_by_id = {source["id"]: source for source in snapshot["source_registry"]}
     cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
     required_complete = 0
-    for module_id in REQUIRED_INSTRUMENT_MODULES:
+    for module_id in ALL_INSTRUMENT_MODULES:
         module = by_id[module_id]
-        if module.get("requirement") != "required" or module.get("evidence_state") not in EVIDENCE_STATES:
+        expected_requirement = "required" if module_id in REQUIRED_INSTRUMENT_MODULES else "supporting"
+        if module.get("requirement") != expected_requirement or module.get("evidence_state") not in EVIDENCE_STATES:
             raise ArtifactPacketError("modules_invalid")
         if not _is_nonempty_string(module.get("summary")) or not isinstance(module.get("gap_reason"), str):
             raise ArtifactPacketError("modules_invalid")
+        _validate_module_data(module_id, module.get("data"), module["evidence_state"])
         module_as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
         refs = module.get("source_refs")
         if (
@@ -491,13 +466,225 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
             for reference in refs
         ):
             raise ArtifactPacketError("module_source_support_invalid")
-        if module["evidence_state"] == "complete":
+        if module_id in REQUIRED_INSTRUMENT_MODULES and module["evidence_state"] == "complete":
             required_complete += 1
     coverage = snapshot.get("coverage")
     if coverage != {"required_complete": required_complete, "required_total": 4}:
         raise ArtifactPacketError("coverage_mismatch")
-    if snapshot.get("evidence_state") != _derive_instrument_evidence_state(by_id):
+    derived_state = _derive_instrument_evidence_state(by_id)
+    if snapshot.get("evidence_state") != derived_state:
         raise ArtifactPacketError("evidence_state_mismatch")
+    _validate_instrument_details(payload, source_ids, derived_state)
+
+
+def _validate_module_data(module_id: str, data: Any, evidence_state: str) -> None:
+    required_keys = {
+        "industry": {"demand", "supply_capacity", "inventory_pricing", "cycle_position", "competitive_structure"},
+        "fundamentals": {"business_quality", "earnings_cash_flow", "valuation_context", "operating_risks"},
+        "catalysts": {"next_event", "event_time", "expected_transmission"},
+        "market_instrument": {"price_structure", "relative_strength", "liquidity", "volatility"},
+        "flows": {"participation", "positioning", "methodology"},
+    }[module_id]
+    if not isinstance(data, Mapping) or set(data) != required_keys:
+        raise ArtifactPacketError("module_data_invalid")
+    if not all(isinstance(data[key], str) for key in required_keys):
+        raise ArtifactPacketError("module_data_invalid")
+    if evidence_state in {"complete", "partial", "stale"} and not all(
+        _is_nonempty_string(data[key]) for key in required_keys
+    ):
+        raise ArtifactPacketError("module_data_invalid")
+    if evidence_state == "source_error" and any(data[key] for key in required_keys):
+        raise ArtifactPacketError("module_data_invalid")
+
+
+def _validate_instrument_details(payload: Mapping[str, Any], source_ids: set[str], evidence_state: str) -> None:
+    claims = payload.get("claims")
+    if not isinstance(claims, list) or not claims:
+        raise ArtifactPacketError("claims_invalid")
+    claim_ids: set[str] = set()
+    for claim in claims:
+        allowed = {"id", "kind", "claim", "evidence_refs", "status", "impact"}
+        if not isinstance(claim, Mapping) or set(claim) != allowed:
+            raise ArtifactPacketError("claims_invalid")
+        claim_id = claim.get("id")
+        refs = claim.get("evidence_refs")
+        if (
+            not _is_nonempty_string(claim_id)
+            or claim_id in claim_ids
+            or not all(_is_nonempty_string(claim.get(key)) for key in ("kind", "claim", "status", "impact"))
+            or not isinstance(refs, list)
+            or not refs
+            or not set(refs).issubset(source_ids)
+        ):
+            raise ArtifactPacketError("claims_invalid")
+        claim_ids.add(claim_id)
+
+    queue = payload.get("verification_queue")
+    if not isinstance(queue, list):
+        raise ArtifactPacketError("verification_queue_invalid")
+    for item in queue:
+        allowed = {"claim_id", "check", "due_event", "status"}
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != allowed
+            or item.get("claim_id") not in claim_ids
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed)
+        ):
+            raise ArtifactPacketError("verification_queue_invalid")
+
+    peers = payload.get("peers")
+    if not isinstance(peers, list) or not peers:
+        raise ArtifactPacketError("peers_invalid")
+    for peer in peers:
+        allowed = {
+            "symbol", "role", "revenue_growth_pct", "gross_margin_pct", "valuation_multiple",
+            "status", "source_refs", "as_of", "comparability_gap",
+        }
+        refs = peer.get("source_refs") if isinstance(peer, Mapping) else None
+        if (
+            not isinstance(peer, Mapping)
+            or set(peer) != allowed
+            or not all(_is_nonempty_string(peer.get(key)) for key in ("symbol", "role", "status", "as_of"))
+            or not all(isinstance(peer.get(key), (int, float)) for key in ("revenue_growth_pct", "gross_margin_pct", "valuation_multiple"))
+            or not isinstance(peer.get("comparability_gap"), str)
+            or not isinstance(refs, list)
+            or not refs
+            or not set(refs).issubset(source_ids)
+        ):
+            raise ArtifactPacketError("peers_invalid")
+        _parse_timestamp(peer["as_of"], "peers_invalid")
+
+    transmissions = payload.get("event_transmission")
+    if not isinstance(transmissions, list) or not transmissions:
+        raise ArtifactPacketError("event_transmission_invalid")
+    for item in transmissions:
+        allowed = {
+            "event_id", "event_time", "catalyst", "claim_ids", "expected_evidence", "confirmation",
+            "invalidation", "decision_consequence", "source_refs", "status",
+        }
+        refs = item.get("source_refs") if isinstance(item, Mapping) else None
+        linked_claims = item.get("claim_ids") if isinstance(item, Mapping) else None
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != allowed
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"claim_ids", "source_refs"})
+            or not isinstance(linked_claims, list)
+            or not linked_claims
+            or not set(linked_claims).issubset(claim_ids)
+            or not isinstance(refs, list)
+            or not refs
+            or not set(refs).issubset(source_ids)
+        ):
+            raise ArtifactPacketError("event_transmission_invalid")
+        _parse_timestamp(item["event_time"], "event_transmission_invalid")
+
+    _validate_price_setup(payload.get("price_setup"), evidence_state)
+
+
+def _validate_price_setup(price_setup: Any, evidence_state: str) -> None:
+    allowed = {
+        "main_timeframe", "auxiliary_timeframe", "setup_state", "research_gate_status", "invalidation",
+        "liquidity", "volatility", "product_path", "candles", "overlays", "levels", "zones", "scenarios",
+    }
+    if not isinstance(price_setup, Mapping) or set(price_setup) != allowed:
+        raise ArtifactPacketError("price_setup_invalid")
+    if not all(_is_nonempty_string(price_setup.get(key)) for key in ("main_timeframe", "auxiliary_timeframe", "setup_state", "research_gate_status")):
+        raise ArtifactPacketError("price_setup_invalid")
+    expected_gate = "ready" if evidence_state == "complete" else "blocked"
+    if price_setup["research_gate_status"] != expected_gate:
+        raise ArtifactPacketError("research_gate_mismatch")
+
+    invalidation = price_setup.get("invalidation")
+    if (
+        not isinstance(invalidation, Mapping)
+        or set(invalidation) != {"price", "condition"}
+        or not isinstance(invalidation.get("price"), (int, float))
+        or not _is_nonempty_string(invalidation.get("condition"))
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    liquidity = price_setup.get("liquidity")
+    if (
+        not isinstance(liquidity, Mapping)
+        or set(liquidity) != {"average_daily_volume", "bid_ask_bps", "status"}
+        or not isinstance(liquidity.get("average_daily_volume"), (int, float))
+        or not isinstance(liquidity.get("bid_ask_bps"), (int, float))
+        or not _is_nonempty_string(liquidity.get("status"))
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    volatility = price_setup.get("volatility")
+    if (
+        not isinstance(volatility, Mapping)
+        or set(volatility) != {"atr_percent", "realized_20d_percent", "status"}
+        or not isinstance(volatility.get("atr_percent"), (int, float))
+        or not isinstance(volatility.get("realized_20d_percent"), (int, float))
+        or not _is_nonempty_string(volatility.get("status"))
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    product = price_setup.get("product_path")
+    if (
+        not isinstance(product, Mapping)
+        or set(product) != {"underlying_identity", "leverage_multiple", "reset_frequency", "path_dependency", "risk_note"}
+        or not isinstance(product.get("leverage_multiple"), (int, float))
+        or not all(_is_nonempty_string(product.get(key)) for key in ("underlying_identity", "reset_frequency", "path_dependency", "risk_note"))
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    candles = price_setup.get("candles")
+    if not isinstance(candles, list) or len(candles) < 10:
+        raise ArtifactPacketError("price_setup_invalid")
+    previous_time: int | float | None = None
+    for candle in candles:
+        if not isinstance(candle, Mapping) or set(candle) != {"time", "open", "high", "low", "close", "volume"}:
+            raise ArtifactPacketError("price_setup_invalid")
+        if not all(isinstance(candle.get(key), (int, float)) for key in candle):
+            raise ArtifactPacketError("price_setup_invalid")
+        if candle["low"] > min(candle["open"], candle["close"]) or candle["high"] < max(candle["open"], candle["close"]):
+            raise ArtifactPacketError("price_setup_invalid")
+        if previous_time is not None and candle["time"] <= previous_time:
+            raise ArtifactPacketError("price_setup_invalid")
+        previous_time = candle["time"]
+    _validate_price_collections(price_setup)
+
+
+def _validate_price_collections(price_setup: Mapping[str, Any]) -> None:
+    overlays = price_setup.get("overlays")
+    if not isinstance(overlays, list):
+        raise ArtifactPacketError("price_setup_invalid")
+    for overlay in overlays:
+        if not isinstance(overlay, Mapping) or set(overlay) != {"id", "label", "points"}:
+            raise ArtifactPacketError("price_setup_invalid")
+        points = overlay.get("points")
+        if not _is_nonempty_string(overlay.get("id")) or not _is_nonempty_string(overlay.get("label")) or not isinstance(points, list):
+            raise ArtifactPacketError("price_setup_invalid")
+        if not all(isinstance(point, Mapping) and set(point) == {"time", "value"} and all(isinstance(point[key], (int, float)) for key in point) for point in points):
+            raise ArtifactPacketError("price_setup_invalid")
+    levels = price_setup.get("levels")
+    if not isinstance(levels, list) or not all(
+        isinstance(item, Mapping)
+        and set(item) == {"price", "label", "kind"}
+        and isinstance(item["price"], (int, float))
+        and _is_nonempty_string(item["label"])
+        and _is_nonempty_string(item["kind"])
+        for item in levels
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    zones = price_setup.get("zones")
+    if not isinstance(zones, list) or not all(
+        isinstance(item, Mapping)
+        and set(item) == {"low", "high", "label", "kind"}
+        and isinstance(item["low"], (int, float))
+        and isinstance(item["high"], (int, float))
+        and item["low"] <= item["high"]
+        and _is_nonempty_string(item["label"])
+        and _is_nonempty_string(item["kind"])
+        for item in zones
+    ):
+        raise ArtifactPacketError("price_setup_invalid")
+    scenarios = price_setup.get("scenarios")
+    scenario_keys = {"name", "bias", "trigger", "evidence_required", "invalidation", "response"}
+    if not isinstance(scenarios, list) or not scenarios:
+        raise ArtifactPacketError("price_setup_invalid")
+    if not all(isinstance(item, Mapping) and set(item) == scenario_keys and all(_is_nonempty_string(item[key]) for key in scenario_keys) for item in scenarios):
+        raise ArtifactPacketError("price_setup_invalid")
 
 
 def _derive_instrument_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> str:
@@ -505,7 +692,7 @@ def _derive_instrument_evidence_state(modules: Mapping[str, Mapping[str, Any]]) 
     if any(state == "stale" for state in states.values()):
         return "stale"
     usable = {module_id for module_id, state in states.items() if state in {"complete", "partial"}}
-    if states["industry"] not in {"complete", "partial"} or states["fundamentals"] not in {"complete", "partial"}:
+    if states["industry"] != "complete" or states["fundamentals"] != "complete":
         return "source_error"
     if len(usable) < 3:
         return "source_error"
@@ -566,7 +753,7 @@ def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
                 raise ArtifactPacketError("diagnostic_unsafe")
         if not DIAGNOSTIC_CODE_PATTERN.fullmatch(code):
             raise ArtifactPacketError("diagnostics_invalid")
-        if module is not None and (not _is_nonempty_string(module) or module not in REQUIRED_INSTRUMENT_MODULES):
+        if module is not None and (not _is_nonempty_string(module) or module not in ALL_INSTRUMENT_MODULES):
             raise ArtifactPacketError("diagnostic_reference_invalid")
         if source_alias is not None and (
             not _is_nonempty_string(source_alias) or source_alias not in known_aliases
@@ -612,6 +799,12 @@ def _validate_html_safety(html: bytes) -> None:
     lowered = html.decode("utf-8").lower()
     if any(term in lowered for term in FORBIDDEN_HTML_TERMS):
         raise ArtifactPacketError("html_safety_violation")
+
+
+def _validate_snapshot_action_safety(snapshot: Mapping[str, Any]) -> None:
+    for text in _iter_snapshot_text(snapshot.get("payload", {})):
+        if any(term in text.casefold() for term in FORBIDDEN_SNAPSHOT_TERMS):
+            raise ArtifactPacketError("html_safety_violation")
 
 
 def _parse_timestamp(value: Any, error_code: str) -> datetime:

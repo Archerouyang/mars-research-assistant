@@ -5,14 +5,23 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "cd704e88344ea74f39722a464e5e0aab5272c8e8c55d2cef901278802c891b72",
+  "content_hash": "dcd50cf1930a40b748c7fc17ff23f9f7f434858b4c29d674fea6ef5d98d66d1b",
   "coverage": {
-    "required_complete": 4,
+    "required_complete": 3,
     "required_total": 4
   },
   "decision_cutoff": "2026-07-16T09:00:00Z",
-  "diagnostics": [],
-  "evidence_state": "complete",
+  "diagnostics": [
+    {
+      "code": "INDUSTRY_SOURCE_ERROR",
+      "message": "Synthetic industry evidence is unavailable.",
+      "module": "industry",
+      "retryable": true,
+      "severity": "error",
+      "source_alias": "Synthetic industry filing"
+    }
+  ],
+  "evidence_state": "source_error",
   "locale": "en-US",
   "payload": {
     "board": "instrument_research",
@@ -62,21 +71,21 @@
       {
         "as_of": "2026-07-15T20:00:00Z",
         "data": {
-          "competitive_structure": "The synthetic underlying retains a leading share.",
-          "cycle_position": "Expansion with rising capital-cycle risk.",
-          "demand": "AI infrastructure demand remains above synthetic capacity growth.",
-          "inventory_pricing": "Inventory is balanced and pricing remains constructive.",
-          "supply_capacity": "Advanced-node capacity is tight with gradual expansion."
+          "competitive_structure": "",
+          "cycle_position": "",
+          "demand": "",
+          "inventory_pricing": "",
+          "supply_capacity": ""
         },
-        "evidence_state": "complete",
+        "evidence_state": "source_error",
         "freshness_policy_id": "official-current-v1",
-        "gap_reason": "",
+        "gap_reason": "Synthetic industry source failed; no industry conclusion is available.",
         "id": "industry",
         "requirement": "required",
         "source_refs": [
           "industry-filing"
         ],
-        "summary": "Synthetic demand, capacity, and peer context are complete."
+        "summary": "Industry evidence is unavailable."
       },
       {
         "as_of": "2026-07-15T20:00:00Z",
@@ -364,7 +373,7 @@
         "risk_note": "Gap risk and volatility drag can dominate a correct underlying thesis.",
         "underlying_identity": "SAMP underlying synthetic equity"
       },
-      "research_gate_status": "ready",
+      "research_gate_status": "blocked",
       "scenarios": [
         {
           "bias": "constructive",
@@ -428,7 +437,7 @@
   "privacy": "public_fixture",
   "renderer_version": "1.0",
   "schema_version": "1.0",
-  "snapshot_id": "synthetic-instrument-research-complete-001",
+  "snapshot_id": "synthetic-instrument-research-source-error-001",
   "source_registry": [
     {
       "alias": "Synthetic industry filing",
@@ -463,6 +472,8 @@
       "priority": "S1"
     }
   ],
-  "state_reasons": [],
+  "state_reasons": [
+    "Industry evidence could not be established from a usable source."
+  ],
   "timezone": "UTC"
 }
