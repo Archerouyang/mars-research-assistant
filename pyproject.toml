@@ -8,6 +8,7 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+  "playwright==1.61.0",
   "PyYAML>=6.0.3",
 ]
 

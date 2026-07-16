@@ -176,7 +176,39 @@ Use these statuses:
 | P2 | review | Content & Visualization Artifact System MVP | Supports chat-first price action and macro/regime visuals without adding a frontend or saving artifacts by default. | Review fixture-backed implementation and PR; next slice is richer chart rendering or save-on-confirm runtime integration. |
 | P2 | review | Visual Trigger Policy | Prevents chart scripts from staying invisible while also avoiding chart spam in every update. | Use `visual-trigger-policy.md` and `verify_visual_trigger_contract.py`; next forward-test whether Daily Ops/weekly/PA/intraday/position outputs trigger charts at the right time. |
 | P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
+| P2 | review | Complete the canonical Instrument Research Board (#62) | Establishes the first production Board vertical slice with four evidence-gated views, immutable synthetic snapshots, offline chart assets, and visible degraded states. | Review and merge PR #66; then start the Macro Regime Board from the updated `dev` baseline. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
+
+## Canonical Instrument Research Board
+
+Status: implementation complete and under review in PR #66.
+
+Bounded scope:
+
+- four views: Overview, Price & Setup, Industry & Peers, and Catalysts & Flows;
+- industry, fundamentals, catalysts, and market/instrument data remain required
+  evidence gates, while flows remain supporting-only;
+- complete, partial, stale, and source_error snapshots are synthetic,
+  deterministic, privacy-safe, and rendered through the canonical artifact
+  packet seam;
+- Price Action owns timing and setup evidence only and cannot make an incomplete
+  cross-module research gate ready;
+- Issue #38 annotation work, private runtime state, README Gallery switching,
+  and the public SVG cutover remain outside this ticket.
+
+Local acceptance:
+
+```bash
+bash scripts/verify-plugin-compile.sh
+bash scripts/verify-plugin.sh
+```
+
+Focused browser acceptance uses the repository-locked Playwright dependency,
+a freshly generated synthetic HTML artifact, and a caller-supplied local Chrome
+or Chromium executable. The exact command is maintained in
+`skills/trading-research-system/references/artifact-packet-contract.md`.
+Repository-wide mandatory browser, privacy, and distribution gating remains a
+separate deliverable under Issue #58.
 
 ## Cross-device Git-backed Plugin Distribution
 

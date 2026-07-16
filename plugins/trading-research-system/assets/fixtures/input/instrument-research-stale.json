@@ -5,14 +5,14 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f0d2e675fe",
+  "content_hash": "15fd35699b89a05942f32c761b9a338d52a38ee6ab66b3a7eed761dd0242f6dd",
   "coverage": {
-    "required_complete": 4,
+    "required_complete": 3,
     "required_total": 4
   },
   "decision_cutoff": "2026-07-16T09:00:00Z",
   "diagnostics": [],
-  "evidence_state": "complete",
+  "evidence_state": "stale",
   "locale": "en-US",
   "payload": {
     "board": "instrument_research",
@@ -116,16 +116,16 @@
         "summary": "Synthetic earnings-date and policy-event coverage are complete."
       },
       {
-        "as_of": "2026-07-16T08:55:00Z",
+        "as_of": "2026-07-16T08:20:00Z",
         "data": {
           "liquidity": "Average daily value and spread satisfy the research threshold.",
           "price_structure": "Daily higher low; auxiliary four-hour consolidation.",
           "relative_strength": "Leads the synthetic sector over twenty sessions.",
           "volatility": "Realized volatility is elevated but stable."
         },
-        "evidence_state": "complete",
+        "evidence_state": "stale",
         "freshness_policy_id": "intraday-market-v1",
-        "gap_reason": "",
+        "gap_reason": "Observation is stale under intraday-market-v1.",
         "id": "market_instrument",
         "requirement": "required",
         "source_refs": [
@@ -134,15 +134,15 @@
         "summary": "Synthetic price structure, liquidity, and invalidation coverage are complete."
       },
       {
-        "as_of": "2026-07-16T08:55:00Z",
+        "as_of": "2026-07-16T08:20:00Z",
         "data": {
           "methodology": "Flow confirms reaction only and cannot fill a required gate.",
           "participation": "Volume participation is above its twenty-day median.",
           "positioning": "Positioning is elevated, not extreme."
         },
-        "evidence_state": "complete",
+        "evidence_state": "stale",
         "freshness_policy_id": "intraday-market-v1",
-        "gap_reason": "",
+        "gap_reason": "Observation is stale under intraday-market-v1.",
         "id": "flows",
         "requirement": "supporting",
         "source_refs": [
@@ -366,7 +366,7 @@
         "risk_note": "Gap risk and volatility drag can dominate a correct underlying thesis.",
         "underlying_identity": "SAMP underlying synthetic equity"
       },
-      "research_gate_status": "ready",
+      "research_gate_status": "blocked",
       "scenarios": [
         {
           "bias": "constructive",
@@ -431,7 +431,7 @@
   "privacy": "public_fixture",
   "renderer_version": "1.0",
   "schema_version": "1.0",
-  "snapshot_id": "synthetic-instrument-research-complete-001",
+  "snapshot_id": "synthetic-instrument-research-stale-001",
   "source_registry": [
     {
       "alias": "Synthetic industry filing",
@@ -459,13 +459,15 @@
     },
     {
       "alias": "Synthetic market data",
-      "as_of": "2026-07-16T08:55:00Z",
+      "as_of": "2026-07-16T08:20:00Z",
       "freshness_policy_id": "intraday-market-v1",
-      "freshness_status": "fresh",
+      "freshness_status": "stale",
       "id": "market-data",
       "priority": "S1"
     }
   ],
-  "state_reasons": [],
+  "state_reasons": [
+    "Market and flow observations exceeded the intraday freshness policy."
+  ],
   "timezone": "UTC"
 }

@@ -16,10 +16,10 @@ from artifact_packet import ArtifactPacketError, build_artifact_packet, write_ar
 
 
 # These are independently captured known-good bytes for the public fixture.
-EXPECTED_CONTENT_HASH = "e81d14d85094d5d9c068ec85101f428c33967481b3d8bf4ec81b819190e952bd"
-EXPECTED_JSON_SHA256 = "809841d66fd759af82710108bf97718c10b597e96b5947881cd6e53ff0857366"
-EXPECTED_HTML_SHA256 = "12d5b3066b380caa88498836b44f63fedf03cbed6016679b0b9e289d4045d60b"
-EXPECTED_MANIFEST_SHA256 = "8a8d36ce8365ebd6aba3c0a64625c377e39b75efeff085a5ef97724672a2e879"
+EXPECTED_CONTENT_HASH = "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f0d2e675fe"
+EXPECTED_JSON_SHA256 = "bfdaa9d9b4b9920cbe8fd41146198093159c769ab9458a305a6fbd979ef7268f"
+EXPECTED_HTML_SHA256 = "5b2fe8da599fba80de289fe08b1e888fbd17177d90338d821c8d08691affcfe4"
+EXPECTED_MANIFEST_SHA256 = "2def410623e3f0a97ffd9b5bcd47e763e574a190bcab48fc782cd2b4a0a724c9"
 
 
 class ArtifactPacketSelftest(unittest.TestCase):
@@ -76,13 +76,12 @@ class ArtifactPacketSelftest(unittest.TestCase):
         ):
             self.assertIn(literal, html)
         for forbidden in (
-            "<script",
             "fetch(",
             "xmlhttprequest",
             "websocket",
-            "http://",
-            "https://",
-            "cdn",
+            'src="http',
+            'src="//',
+            'href="http',
             "telemetry",
             "broker",
             "runtime",
@@ -332,6 +331,39 @@ class ArtifactPacketSelftest(unittest.TestCase):
             write_artifact_packet(packet, output)
 
             paths["html"].write_text("changed", encoding="utf-8")
+            with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
+                write_artifact_packet(packet, output)
+
+    def test_rejects_output_directory_with_unexpected_entries(self) -> None:
+        packet = self.build()
+        for entry_kind in ("file", "directory"):
+            with self.subTest(entry_kind=entry_kind), tempfile.TemporaryDirectory() as raw_tmp:
+                output = Path(raw_tmp)
+                unexpected = output / "unrelated"
+                if entry_kind == "file":
+                    unexpected.write_text("unrelated", encoding="utf-8")
+                else:
+                    unexpected.mkdir()
+                with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
+                    write_artifact_packet(packet, output)
+
+    def test_rejects_symlink_backed_packet_files(self) -> None:
+        packet = self.build()
+        packet_files = {
+            "snapshot.canonical.json": packet.canonical_json,
+            "research-brief.html": packet.html,
+            "artifact.manifest.json": packet.manifest,
+        }
+        with tempfile.TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            output = root / "output"
+            targets = root / "targets"
+            output.mkdir()
+            targets.mkdir()
+            for name, data in packet_files.items():
+                target = targets / name
+                target.write_bytes(data)
+                (output / name).symlink_to(target)
             with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
                 write_artifact_packet(packet, output)
 

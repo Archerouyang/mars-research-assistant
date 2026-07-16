@@ -5,29 +5,27 @@
     "generated_at": "2026-07-16T09:30:00Z",
     "id": "dailytrades.fixture-builder"
   },
-  "content_hash": "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f0d2e675fe",
+  "content_hash": "894310808c547f936bee4d384f5fc3aa776ce458fcd2be8902f64ed2ca7e3617",
   "coverage": {
-    "required_complete": 4,
+    "required_complete": 3,
     "required_total": 4
   },
   "decision_cutoff": "2026-07-16T09:00:00Z",
-  "diagnostics": [],
-  "evidence_state": "complete",
+  "diagnostics": [
+    {
+      "code": "INDUSTRY_SOURCE_ERROR",
+      "message": "Synthetic industry evidence is unavailable.",
+      "module": "industry",
+      "retryable": true,
+      "severity": "error",
+      "source_alias": "Synthetic industry filing"
+    }
+  ],
+  "evidence_state": "source_error",
   "locale": "en-US",
   "payload": {
     "board": "instrument_research",
     "claims": [
-      {
-        "claim": "Advanced demand is growing faster than synthetic capacity.",
-        "evidence_refs": [
-          "industry-filing"
-        ],
-        "evidence_gate": "industry",
-        "id": "claim-demand",
-        "impact": "supports",
-        "kind": "industry_fact",
-        "status": "verified"
-      },
       {
         "claim": "Utilization can sustain the current margin range.",
         "evidence_refs": [
@@ -45,7 +43,6 @@
       {
         "catalyst": "Synthetic monthly revenue release",
         "claim_ids": [
-          "claim-demand",
           "claim-margin"
         ],
         "confirmation": "Growth remains above the synthetic peer median.",
@@ -64,21 +61,21 @@
       {
         "as_of": "2026-07-15T20:00:00Z",
         "data": {
-          "competitive_structure": "The synthetic underlying retains a leading share.",
-          "cycle_position": "Expansion with rising capital-cycle risk.",
-          "demand": "AI infrastructure demand remains above synthetic capacity growth.",
-          "inventory_pricing": "Inventory is balanced and pricing remains constructive.",
-          "supply_capacity": "Advanced-node capacity is tight with gradual expansion."
+          "competitive_structure": "",
+          "cycle_position": "",
+          "demand": "",
+          "inventory_pricing": "",
+          "supply_capacity": ""
         },
-        "evidence_state": "complete",
+        "evidence_state": "source_error",
         "freshness_policy_id": "official-current-v1",
-        "gap_reason": "",
+        "gap_reason": "Synthetic industry source failed; no industry conclusion is available.",
         "id": "industry",
         "requirement": "required",
         "source_refs": [
           "industry-filing"
         ],
-        "summary": "Synthetic demand, capacity, and peer context are complete."
+        "summary": "Industry evidence is unavailable."
       },
       {
         "as_of": "2026-07-15T20:00:00Z",
@@ -86,7 +83,7 @@
           "business_quality": "Recurring high-performance demand supports utilization.",
           "earnings_cash_flow": "Revenue, margin, and free-cash-flow direction agree.",
           "operating_risks": "Customer concentration and capital intensity remain material.",
-          "valuation_context": "Valuation is above its synthetic history but within peers."
+          "valuation_context": "Standalone valuation evidence is available; peer-relative context is unavailable."
         },
         "evidence_state": "complete",
         "freshness_policy_id": "official-current-v1",
@@ -165,19 +162,6 @@
         "status": "complete",
         "symbol": "SAMP",
         "valuation_multiple": 31.0
-      },
-      {
-        "as_of": "2026-07-15T20:00:00Z",
-        "comparability_gap": "Product mix differs.",
-        "gross_margin_pct": 47.0,
-        "revenue_growth_pct": 11.0,
-        "role": "comparable",
-        "source_refs": [
-          "industry-filing"
-        ],
-        "status": "partial",
-        "symbol": "PEER",
-        "valuation_multiple": 28.0
       }
     ],
     "posture": "research_in_progress",
@@ -366,7 +350,7 @@
         "risk_note": "Gap risk and volatility drag can dominate a correct underlying thesis.",
         "underlying_identity": "SAMP underlying synthetic equity"
       },
-      "research_gate_status": "ready",
+      "research_gate_status": "blocked",
       "scenarios": [
         {
           "bias": "constructive",
@@ -431,7 +415,7 @@
   "privacy": "public_fixture",
   "renderer_version": "1.0",
   "schema_version": "1.0",
-  "snapshot_id": "synthetic-instrument-research-complete-001",
+  "snapshot_id": "synthetic-instrument-research-source-error-001",
   "source_registry": [
     {
       "alias": "Synthetic industry filing",
@@ -466,6 +450,8 @@
       "priority": "S1"
     }
   ],
-  "state_reasons": [],
+  "state_reasons": [
+    "Industry evidence could not be established from a usable source."
+  ],
   "timezone": "UTC"
 }

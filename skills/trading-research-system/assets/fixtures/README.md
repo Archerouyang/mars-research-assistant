@@ -16,3 +16,8 @@ executions, reviews, account configuration, or connector authorization state.
 | input | Synthetic inputs for deterministic contract tests. |
 | expected | Sanitized expected outputs checked by local verification. |
 | runtime | Runtime-shaped data invented solely for fixture-backed tests. |
+
+The canonical Instrument Research corpus under `input/` contains deterministic
+`complete`, `partial`, `stale`, and `source_error` snapshots. Each snapshot is
+synthetic, privacy-safe, and exercises the same artifact-packet boundary. Flow
+evidence is supporting-only in every state.
