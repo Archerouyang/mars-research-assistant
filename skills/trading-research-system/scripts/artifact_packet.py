@@ -621,6 +621,8 @@ def _validate_instrument_details(
             or not set(refs).issubset(source_ids)
         ):
             raise ArtifactPacketError("event_transmission_invalid")
+        if not set(refs).issubset(set(modules["catalysts"]["source_refs"])):
+            raise ArtifactPacketError("event_transmission_source_mismatch")
         _parse_timestamp(item["event_time"], "event_transmission_invalid")
 
     _validate_price_setup(payload.get("price_setup"), evidence_state, cutoff)

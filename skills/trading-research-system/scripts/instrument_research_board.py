@@ -73,7 +73,7 @@ def render_instrument_research_board(
 <div class="board-layout">
 <div class="view-stack">
 {_render_overview(payload, modules, default_view_id)}
-{_render_price_setup(payload, modules, default_view_id)}
+{_render_price_setup(payload, default_view_id)}
 {_render_industry_peers(payload, modules, default_view_id)}
 {_render_catalysts_flows(payload, modules, default_view_id)}
 </div>
@@ -213,7 +213,7 @@ def _render_module_row(module: Mapping[str, Any]) -> str:
 </article>"""
 
 
-def _render_price_setup(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], default_view: str) -> str:
+def _render_price_setup(payload: Mapping[str, Any], default_view: str) -> str:
     setup = payload["price_setup"]
     product = setup["product_path"]
     liquidity = setup["liquidity"]

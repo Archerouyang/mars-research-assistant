@@ -165,6 +165,13 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
         with self.assertRaisesRegex(ArtifactPacketError, "^claim_source_mismatch$"):
             build_artifact_packet(snapshot)
 
+    def test_event_transmission_rejects_non_catalyst_source_substitution(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        snapshot["payload"]["event_transmission"][0]["source_refs"] = ["market-data"]
+        snapshot["content_hash"] = _content_hash(snapshot)
+        with self.assertRaisesRegex(ArtifactPacketError, "^event_transmission_source_mismatch$"):
+            build_artifact_packet(snapshot)
+
     def test_invalid_identity_is_represented_as_source_error(self) -> None:
         snapshot = copy.deepcopy(self.complete)
         snapshot["payload"]["subject"].update(

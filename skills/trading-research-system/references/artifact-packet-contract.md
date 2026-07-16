@@ -61,10 +61,24 @@ public-fixture privacy sentinels fail closed with stable safe error codes.
 The public hard limits are 1.5 MiB for canonical JSON, 4 MiB for HTML, and
 64 KiB for the manifest. These limits are contract values, not renderer hints.
 
-Local browser acceptance is reproducible with
-`uv run --frozen python scripts/verify_instrument_research_browser.py`. It checks all four views at
-1200, 700, and 320 pixels, keyboard view changes, horizontal overflow, nonblank
-K-line canvases, script errors, and artifact-initiated external requests. The
-script uses the repository-locked Playwright dependency and requires a
-caller-supplied generated HTML artifact plus browser executable;
-screenshots go only to the caller's temporary output path.
+Local browser acceptance uses a caller-supplied Chrome or Chromium executable:
+
+```bash
+export BROWSER_BIN=/path/to/chrome-or-chromium
+OUTPUT_DIR="$(mktemp -d)"
+uv run --frozen python skills/trading-research-system/scripts/instrument_research_artifact.py \
+  skills/trading-research-system/assets/fixtures/input/instrument-research-complete.json \
+  --output-dir "$OUTPUT_DIR"
+uv run --frozen python scripts/verify_instrument_research_browser.py \
+  --html "$OUTPUT_DIR/research-brief.html" \
+  --browser "$BROWSER_BIN" \
+  --screenshot-dir "$OUTPUT_DIR/screenshots"
+```
+
+It checks all four views at 1200, 700, and 320 pixels, keyboard view changes,
+horizontal overflow, nonblank K-line canvases, script errors, and
+artifact-initiated external requests. The script uses the repository-locked
+Playwright dependency; screenshots go only to the caller's temporary output
+path. The repository-wide mandatory browser gate is delivered separately by
+the visual acceptance ticket; this command is the focused local acceptance for
+the Instrument vertical slice.
