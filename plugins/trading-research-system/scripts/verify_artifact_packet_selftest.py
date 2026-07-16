@@ -336,9 +336,34 @@ class ArtifactPacketSelftest(unittest.TestCase):
 
     def test_rejects_output_directory_with_unexpected_entries(self) -> None:
         packet = self.build()
+        for entry_kind in ("file", "directory"):
+            with self.subTest(entry_kind=entry_kind), tempfile.TemporaryDirectory() as raw_tmp:
+                output = Path(raw_tmp)
+                unexpected = output / "unrelated"
+                if entry_kind == "file":
+                    unexpected.write_text("unrelated", encoding="utf-8")
+                else:
+                    unexpected.mkdir()
+                with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
+                    write_artifact_packet(packet, output)
+
+    def test_rejects_symlink_backed_packet_files(self) -> None:
+        packet = self.build()
+        packet_files = {
+            "snapshot.canonical.json": packet.canonical_json,
+            "research-brief.html": packet.html,
+            "artifact.manifest.json": packet.manifest,
+        }
         with tempfile.TemporaryDirectory() as raw_tmp:
-            output = Path(raw_tmp)
-            (output / "unrelated.txt").write_text("unrelated", encoding="utf-8")
+            root = Path(raw_tmp)
+            output = root / "output"
+            targets = root / "targets"
+            output.mkdir()
+            targets.mkdir()
+            for name, data in packet_files.items():
+                target = targets / name
+                target.write_bytes(data)
+                (output / name).symlink_to(target)
             with self.assertRaisesRegex(ArtifactPacketError, "^immutable_output_conflict$"):
                 write_artifact_packet(packet, output)
 
