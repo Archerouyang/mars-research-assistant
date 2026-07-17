@@ -135,7 +135,7 @@ Use these statuses:
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
 | P0 | done | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Final targeted fresh-chat UAT passed at `19ca4ae` with plugin `0.1.0+codex.20260714041242`; all six debug items are closed. |
-| P1 | in_progress | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | Deliver the approved repo-level test Module in three replace-not-layer slices: reconciliation, startup/direct activation, then setup-key/validation ordering. Keep public behavior unchanged and close `TD-20260711-03` only after all focused and aggregate gates pass. |
+| P1 | done | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | The repo-level test Module now covers all three replace-not-layer slices; focused, compile, plugin, and MVP gates pass, final two-axis review has no findings, and `TD-20260711-03` is removed. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
 | P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
@@ -182,8 +182,7 @@ Use these statuses:
 
 ## Architecture Optimization: High-Risk Behavior Contract Matrices
 
-Status: approved and in progress on `codex/behavior-contract-matrix` from
-`dev@7ab4ab0`.
+Status: complete on `codex/behavior-contract-matrix` from `dev@7ab4ab0`.
 
 Trigger and target invariant:
 
@@ -224,6 +223,17 @@ Acceptance:
 - canonical Skill and generated wrapper remain drift-free;
 - `TD-20260711-03` is removed only after formal review confirms the exit
   criteria; no ADR is required unless the public contract changes.
+
+Completion evidence:
+
+- the shared harness and three focused family modules replace the migrated
+  bespoke reconciliation and setup-key subprocess cases;
+- startup surface cases bind each surface contract to a concrete
+  ready/partial/uninitialized fixture, and all harness inputs are preflighted
+  before any case executes;
+- `bash scripts/verify-plugin-compile.sh`, `bash scripts/verify-plugin.sh`, and
+  `bash scripts/verify-mvp.sh` pass after the final review fixes;
+- final Standards and Spec reviews report no findings.
 
 ## Conditional Architecture Optimization: Artifact Packet Internal Board Seam
 
