@@ -43,6 +43,8 @@ FIXTURE_RUNTIME_DAILY_FILES = {
     "trade-plans.csv",
 }
 VENDOR_FILES = {
+    Path("assets/vendor/echarts-6.1.0/LICENSE"),
+    Path("assets/vendor/echarts-6.1.0/echarts.min.js"),
     Path("assets/vendor/lightweight-charts-5.2.0/LICENSE"),
     Path(
         "assets/vendor/lightweight-charts-5.2.0/"
