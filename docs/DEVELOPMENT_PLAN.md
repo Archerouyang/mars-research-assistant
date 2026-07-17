@@ -135,7 +135,7 @@ Use these statuses:
 | P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
 | P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
 | P0 | done | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Final targeted fresh-chat UAT passed at `19ca4ae` with plugin `0.1.0+codex.20260714041242`; all six debug items are closed. |
-| P1 | planned | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | After UAT closure, use `b752b78` plus the focused tests, `verify-plugin`, and `verify-mvp` as the regression baseline; add bounded matrices for reconciliation modes, startup states/doc surfaces, and validation ordering. No ADR is required unless the public contract changes. |
+| P1 | done | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | The repo-level test Module now covers all three replace-not-layer slices; focused, compile, plugin, and MVP gates pass, final two-axis review has no findings, and `TD-20260711-03` is removed. |
 | P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
 | P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
 | P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
@@ -179,6 +179,105 @@ Use these statuses:
 | P2 | review | Complete the canonical Instrument Research Board (#62) | Establishes the first production Board vertical slice with four evidence-gated views, immutable synthetic snapshots, offline chart assets, and visible degraded states. | Review and merge PR #66; then start the Macro Regime Board from the updated `dev` baseline. |
 | P2 | review | Complete the canonical Macro Regime Board (#56) | Adds a plan-linked Macro Board with five evidence-gated views, Decision Cascade, holding-first Exposure Lens, event scenario playbook, immutable synthetic snapshots, and bundled offline ECharts. | Formal review fixes add fail-closed plan redaction, structurally verifiable plan context, row-level source provenance, builder-owned ECharts loading, and a shared Research brief shell; focused artifact/browser acceptance and plugin gates pass. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
+
+## Architecture Optimization: High-Risk Behavior Contract Matrices
+
+Status: complete on `codex/behavior-contract-matrix` from `dev@7ab4ab0`.
+
+Trigger and target invariant:
+
+- `TD-20260711-03` satisfies Architecture Optimization Trigger 3 after the same
+  shallow behavior-contract cause produced repeated corrective patches while
+  aggregate suites remained green;
+- one repo-level deep test Module must own common scenario execution and
+  observable assertions for the affected workflows;
+- the Module is development harness only, tests the canonical
+  `skills/trading-research-system/` behavior source, and is not distributed in
+  the public Agent Skill or generated Native Plugin wrapper;
+- migrated behavior must be tested through existing CLI and document surfaces;
+  no public Trading Research System behavior changes are in scope.
+
+Approved slices:
+
+1. `portfolio_reconciliation` status by broker-source composition;
+2. `startup_status` by router, reference, template, fixture, and direct
+   activation surface;
+3. complete setup key by OHLCV input, validation ordering, and forbidden side
+   effects.
+
+The shared Interface is limited to command, cwd, temporary filesystem, exit
+code, stdout/stderr, forbidden text, file creation/change, and validation
+precedence. Workflow-specific semantic assertions remain with their workflow.
+Each case has a stable ID; behavior mismatches aggregate within a scenario
+family, while harness corruption fails immediately. Migration is
+replace-not-layer: delete superseded bespoke setup and assertions rather than
+running old and new paths together.
+
+Acceptance:
+
+- all three slices use the shared Interface and preserve workflow-specific
+  behavior;
+- focused Matrix and workflow selftests pass;
+- `bash scripts/verify-plugin-compile.sh`, `bash scripts/verify-plugin.sh`, and
+  `bash scripts/verify-mvp.sh` pass;
+- canonical Skill and generated wrapper remain drift-free;
+- `TD-20260711-03` is removed only after formal review confirms the exit
+  criteria; no ADR is required unless the public contract changes.
+
+Completion evidence:
+
+- the shared harness and three focused family modules replace the migrated
+  bespoke reconciliation and setup-key subprocess cases;
+- startup surface cases bind each surface contract to a concrete
+  ready/partial/uninitialized fixture, and all harness inputs are preflighted
+  before any case executes;
+- `bash scripts/verify-plugin-compile.sh`, `bash scripts/verify-plugin.sh`, and
+  `bash scripts/verify-mvp.sh` pass after the final review fixes;
+- final Standards and Spec reviews report no findings.
+
+## Conditional Architecture Optimization: Artifact Packet Internal Board Seam
+
+Status: complete after post-Macro deletion-test revalidation on
+`codex/behavior-contract-matrix`. The integrated `dev@7ab4ab0` implementation
+still mixed two payload policies and renderers into the shared packet core, so
+the approved private Board seam remained justified.
+
+Proceed only when the integrated baseline still shows all of the following:
+
+- Instrument and Macro payload policy is coupled inside the shared Artifact
+  Packet implementation;
+- shared identity, privacy, hash, diagnostic, size, and immutable-write tests
+  are duplicated across Board paths;
+- deleting a private Board seam would spread that complexity back across both
+  Board implementations.
+
+If confirmed, preserve the Artifact Packet external Interface, CLI, stable
+error codes, canonical JSON/HTML/manifest bytes, and ADR 0008. Keep shared
+invariants in a deep core; use an explicit static internal registry for the two
+known Board adapters; keep payload schema, evidence/freshness policy, and
+renderer selection inside each adapter. Modify only canonical
+`skills/trading-research-system/` behavior, generate Native Plugin wrappers via
+`scripts/sync_native_plugin.py`, and replace duplicated shared tests with one
+core conformance matrix plus Board-specific semantic tests.
+
+Completion evidence:
+
+- `artifact_packet.py` is now the stable public facade, while
+  `artifact_packet_core.py` owns shared packet validation, canonical JSON,
+  privacy, diagnostics, size limits, HTML safety, manifests, and immutable
+  writes; neither contains Instrument or Macro payload/renderer policy;
+- `artifact_packet_instrument_adapter.py` and
+  `artifact_packet_macro_adapter.py` own their Board-specific schema,
+  evidence/freshness rules, and renderer selection;
+- `artifact_packet_board_adapters.py` is an explicit static registry keyed by
+  `(board_id, payload major)` with no dynamic discovery;
+- the shared conformance test pins exact JSON/HTML/manifest SHA-256 bytes for
+  both complete public fixtures, while existing Instrument and Macro tests
+  retain Board-specific semantic coverage;
+- canonical Skill changes were projected only through
+  `scripts/sync_native_plugin.py`; compile, plugin, MVP, Instrument browser
+  (12 checks), and Macro browser (15 checks) gates pass;
+- the external Artifact Packet contract and ADR 0008 are unchanged.
 
 ## Canonical Instrument Research Board
 

@@ -41,6 +41,8 @@ uv_run python scripts/verify_plugin_compile_gate_selftest.py
 PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-plugin-compile.sh
 uv_run python scripts/verify_plugin_distribution_selftest.py
 uv_run python scripts/verify_plugin_distribution.py
+uv_run python scripts/verify_behavior_contract_matrix_selftest.py
+uv_run python scripts/verify_behavior_contract_matrices_contract.py
 uv_run python scripts/verify_readme_gallery_contract_selftest.py
 uv_run python scripts/verify_readme_gallery_contract.py
 uv_run python plugins/trading-research-system/scripts/verify_position_risk_artifact_selftest.py
