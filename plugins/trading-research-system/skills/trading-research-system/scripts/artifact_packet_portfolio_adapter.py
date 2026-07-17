@@ -49,6 +49,7 @@ PORTFOLIO_PRODUCT_TYPES = frozenset(
 )
 PORTFOLIO_LIQUIDITY_STATES = frozenset({"usable", "limited", "unavailable"})
 PORTFOLIO_RESET_FREQUENCIES = frozenset({"none", "daily", "monthly", "expiry"})
+ALLOWED_SNAPSHOT_ACTION_TERMS = frozenset({"broker"})
 PORTFOLIO_UNAVAILABLE_POSTURE = "Calculated exposure unavailable"
 PORTFOLIO_UNAVAILABLE_DECISION = (
     "No portfolio risk calculation is available until confirmed position detail is restored."
@@ -81,6 +82,8 @@ PORTFOLIO_PAYLOAD_FIELDS = frozenset(
         "views",
     }
 )
+
+
 def validate_payload(snapshot: Mapping[str, Any]) -> None:
     """Validate only Portfolio-owned payload fields and evidence semantics."""
 

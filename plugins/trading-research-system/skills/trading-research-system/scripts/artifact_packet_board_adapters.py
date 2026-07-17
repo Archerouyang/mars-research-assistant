@@ -35,7 +35,7 @@ BOARD_ADAPTERS: Mapping[tuple[str, str], BoardAdapter] = {
         render=portfolio.render_board,
         allowed_modules=frozenset(portfolio.REQUIRED_PORTFOLIO_MODULES),
         freshness_policies=portfolio.FRESHNESS_POLICIES,
-        allowed_snapshot_action_terms=frozenset({"broker"}),
+        allowed_snapshot_action_terms=portfolio.ALLOWED_SNAPSHOT_ACTION_TERMS,
     ),
 }
 
