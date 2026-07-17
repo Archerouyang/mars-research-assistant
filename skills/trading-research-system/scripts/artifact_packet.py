@@ -453,7 +453,10 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         if not isinstance(refs, list) or not refs or not set(refs).issubset(source_ids):
             raise ArtifactPacketError("modules_invalid")
         as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
-        if as_of > cutoff or module.get("freshness_policy_id") not in FRESHNESS_POLICIES:
+        policy_id = module.get("freshness_policy_id")
+        if as_of > cutoff or policy_id not in FRESHNESS_POLICIES:
+            raise ArtifactPacketError("module_freshness_invalid")
+        if evaluate_freshness(policy_id, as_of, cutoff) == "stale" and module["evidence_state"] != "stale":
             raise ArtifactPacketError("module_freshness_invalid")
         if module["evidence_state"] in {"complete", "partial"} and not any(
             source_by_id[source_id]["freshness_status"] == "fresh"

@@ -133,6 +133,15 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
         with self.assertRaisesRegex(ArtifactPacketError, "^plan_context_invalid$"):
             build_artifact_packet(snapshot)
 
+    def test_stale_macro_module_cannot_claim_complete_evidence(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        rates = _module(snapshot, "rates_liquidity")
+        rates["as_of"] = "2026-07-17T09:00:00Z"
+        snapshot["content_hash"] = _content_hash(snapshot)
+
+        with self.assertRaisesRegex(ArtifactPacketError, "^module_freshness_invalid$"):
+            build_artifact_packet(snapshot)
+
     def test_evidence_rows_include_auditable_source_provenance(self) -> None:
         html = build_artifact_packet(copy.deepcopy(self.complete)).html.decode("utf-8")
         for literal in (
