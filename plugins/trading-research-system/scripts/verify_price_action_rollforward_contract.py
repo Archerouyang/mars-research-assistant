@@ -16,7 +16,7 @@ FILES = {
     "daily_tracking_template": PATHS.templates / "daily-market-tracking.md",
     "script": PATHS.scripts / "price_action_rollforward.py",
     "selftest": PATHS.scripts / "verify_price_action_rollforward_selftest.py",
-    "behavior_matrix": PATHS.repo / "scripts" / "verify_behavior_contract_matrices.py",
+    "behavior_matrix": PATHS.repo / "scripts" / "behavior_contract_setup_key_cases.py",
     "plugin_readme": PATHS.root / "README.md",
     "development_plan": PATHS.repo / "docs" / "DEVELOPMENT_PLAN.md",
     "project_log": PATHS.repo / "docs" / "PROJECT_LOG.md",
@@ -130,6 +130,8 @@ REQUIRED = {
         "case_id=f\"completeness/missing-{missing}\"",
         "precedence/incomplete-key-before-invalid-ohlcv",
         "ohlcv/complete-key-missing-payload",
+        "user_provided",
+        "needs_review",
         "FileExpectation",
     ],
     "plugin_readme": [

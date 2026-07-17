@@ -11,6 +11,14 @@ REPO = Path(__file__).resolve().parents[1]
 SKILL = REPO / "skills" / "trading-research-system"
 
 SURFACES: dict[tuple[str, str], tuple[Path, tuple[str, ...]]] = {
+    ("router", "ready"): (
+        SKILL / "SKILL.md",
+        ("Render `runtime_dir`, `runtime_origin`, `formal runtime`, `startup_status`",),
+    ),
+    ("router", "partial"): (
+        SKILL / "SKILL.md",
+        ("Render `runtime_dir`, `runtime_origin`, `formal runtime`, `startup_status`",),
+    ),
     ("router", "uninitialized"): (
         SKILL / "SKILL.md",
         ("startup_status=uninitialized", "Exact Weekend First Start"),
@@ -30,6 +38,10 @@ SURFACES: dict[tuple[str, str], tuple[Path, tuple[str, ...]]] = {
     ("template", "partial"): (
         SKILL / "assets" / "templates" / "daily-ops-orchestrator.md",
         ("startup_status=partial / uninitialized", "可用研究摘要"),
+    ),
+    ("template", "ready"): (
+        SKILL / "assets" / "templates" / "daily-ops-orchestrator.md",
+        ("| startup_status |  |  |", "### 运行状态检查"),
     ),
     ("template", "uninitialized"): (
         SKILL / "assets" / "templates" / "daily-ops-orchestrator.md",
@@ -54,6 +66,14 @@ SURFACES: dict[tuple[str, str], tuple[Path, tuple[str, ...]]] = {
     ("direct-activation", "uninitialized"): (
         SKILL / "references" / "workflow-weekly-trading-plan.md",
         ("startup_status=uninitialized", "Daily Ops Orchestrator"),
+    ),
+    ("direct-activation", "ready"): (
+        SKILL / "references" / "workflow-weekly-trading-plan.md",
+        ("`startup_status`", "Preserve the deterministic values"),
+    ),
+    ("direct-activation", "partial"): (
+        SKILL / "references" / "workflow-weekly-trading-plan.md",
+        ("partial or uninitialized runtime", "Daily Ops Orchestrator"),
     ),
 }
 

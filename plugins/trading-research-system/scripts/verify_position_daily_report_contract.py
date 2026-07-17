@@ -110,7 +110,7 @@ def build_spec() -> ContractSpec:
                 ),
             ),
             "behavior matrix": FileContract(
-                REPO / "scripts" / "verify_behavior_contract_matrices.py",
+                REPO / "scripts" / "behavior_contract_reconciliation_cases.py",
                 required_terms=(
                     "build_reconciliation_cases",
                     "mode/unavailable/two-brokers",
