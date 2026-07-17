@@ -105,6 +105,12 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
             payload["posture"]["label"],
             payload["posture"]["consequence"],
             *(item["plan_effect"] for item in payload["evidence"]),
+            *(
+                value
+                for item in payload["evidence"]
+                if item["category"] == "thesis"
+                for value in (item["label"], item["reading"], item["transmission"])
+            ),
             *(item["plan_rule"] for item in payload["exposure_lens"]),
             *(item["impact"] for item in payload["exposure_lens"]),
             *(item["posture"] for item in payload["scenarios"]),

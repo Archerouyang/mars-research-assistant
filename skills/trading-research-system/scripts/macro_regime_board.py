@@ -170,6 +170,7 @@ def _cascade(
     rows = "".join(
         f"<article class=\"cascade-row\"><div><span class=\"source-category\">{escape(row['category'])}</span><h3>{escape(row['label'])}</h3><p class=\"module-meta\">{escape(row['status'])} · {escape(row['as_of'])}</p></div><div><p><strong>Evidence:</strong> {escape(row['reading'])}</p><p><strong>Transmission:</strong> {escape(row['transmission'])}</p><p><strong>Exposure:</strong> {escape(exposure_by_id[row['exposure_id']]['label'])}</p>{_source_provenance(row, sources)}{_plan_decision(row, plan_available)}</div></article>"
         for row in evidence
+        if plan_available or row["category"] != "thesis"
     )
     return f'<div class="cascade">{rows}</div>'
 
@@ -182,7 +183,8 @@ def _evidence_rows(
 ) -> str:
     rows = "".join(
         f"<article class=\"evidence-row\"><div><span class=\"source-category\">{escape(row['category'])}</span><p class=\"module-meta\">{escape(row['status'])}</p></div><div><strong>{escape(row['label'])}</strong><p class=\"evidence-reading\">{escape(row['reading'])}</p><p>{escape(row['transmission'])}</p>{_source_provenance(row, sources)}</div>{_plan_effect(row, plan_available)}</article>"
-        for row in evidence if row['family'] == family
+        for row in evidence
+        if row['family'] == family and (plan_available or row["category"] != "thesis")
     )
     return f'<div class="evidence-list">{rows}</div>'
 
