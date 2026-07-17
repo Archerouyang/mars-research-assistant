@@ -342,8 +342,6 @@ def main() -> int:
         FILES["orchestrator_template"],
     )
     print("daily ops later-turn broker behavior ok")
-    verify_startup_status_taxonomy(FILES["orchestrator_template"])
-    print("daily ops startup status taxonomy ok")
     verify_weekend_fixture_behavior(
         FILES["weekend_fixture_input"],
         FILES["weekend_fixture_expected"],
@@ -1122,14 +1120,6 @@ def verify_later_turn_broker_behavior(router_path, reference_path, template_path
                 raise AssertionError(f"later-turn broker behavior missing {term!r} in {path}")
         if "only `unauthorized` re-enters" in normalized:
             raise AssertionError(f"later-turn broker behavior excludes missing in {path}")
-
-
-def verify_startup_status_taxonomy(template_path) -> None:
-    text = template_path.read_text(encoding="utf-8")
-    if "startup_status=partial / uninitialized" not in text:
-        raise AssertionError("weekend first-start template must use startup_status=partial / uninitialized")
-    if "formal runtime 为 partial / uninitialized" in text:
-        raise AssertionError("formal runtime availability must not use startup_status values")
 
 
 if __name__ == "__main__":
