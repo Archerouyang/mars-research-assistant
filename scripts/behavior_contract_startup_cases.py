@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 
 from behavior_contract_matrix import CommandCase, FileExpectation
+from verify_startup_status_surface import SURFACES
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -82,23 +83,7 @@ def build_startup_cases(tmp: Path) -> tuple[CommandCase, ...]:
             files=(FileExpectation(ready_marker, "unchanged"),),
         ),
     ]
-    for surface, status in (
-        ("router", "ready"),
-        ("router", "partial"),
-        ("router", "uninitialized"),
-        ("reference", "ready"),
-        ("reference", "partial"),
-        ("reference", "uninitialized"),
-        ("template", "ready"),
-        ("template", "partial"),
-        ("template", "uninitialized"),
-        ("fixture", "ready"),
-        ("fixture", "partial"),
-        ("fixture", "uninitialized"),
-        ("direct-activation", "ready"),
-        ("direct-activation", "partial"),
-        ("direct-activation", "uninitialized"),
-    ):
+    for surface, status in SURFACES:
         cases.append(
             CommandCase(
                 case_id=f"surface/{surface}/{status}",
@@ -114,5 +99,4 @@ def build_startup_cases(tmp: Path) -> tuple[CommandCase, ...]:
             )
         )
     return tuple(cases)
-
 

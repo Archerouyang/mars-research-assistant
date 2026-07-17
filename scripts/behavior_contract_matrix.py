@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 from typing import Literal, Sequence
 
@@ -142,14 +144,31 @@ def _validate_and_snapshot(
     seen: set[str] = set()
     snapshots: dict[tuple[str, Path], bytes | None] = {}
     for case in cases:
+        if not isinstance(case, CommandCase):
+            raise MatrixHarnessError(f"invalid command case: {case!r}")
         if CASE_ID_PATTERN.fullmatch(case.case_id) is None:
             raise MatrixHarnessError(f"invalid case ID {case.case_id!r}")
         if case.case_id in seen:
             raise MatrixHarnessError(f"duplicate case ID {case.case_id!r}")
         seen.add(case.case_id)
+
+    for case in cases:
+        _validate_command(case)
+        _validate_terms(case.case_id, "required_stdout", case.required_stdout)
+        _validate_terms(case.case_id, "forbidden_stdout", case.forbidden_stdout)
+        _validate_terms(case.case_id, "required_stderr", case.required_stderr)
+        _validate_terms(case.case_id, "forbidden_stderr", case.forbidden_stderr)
         case_paths: set[Path] = set()
         for expected_file in case.files:
+            if not isinstance(expected_file, FileExpectation):
+                raise MatrixHarnessError(
+                    f"invalid file expectation in {case.case_id!r}: {expected_file!r}"
+                )
             path = expected_file.path
+            if not isinstance(path, Path):
+                raise MatrixHarnessError(
+                    f"file path must be pathlib.Path in {case.case_id!r}: {path!r}"
+                )
             if path in case_paths:
                 raise MatrixHarnessError(
                     f"duplicate file expectation in {case.case_id!r}: {path}"
@@ -159,6 +178,16 @@ def _validate_and_snapshot(
                 raise MatrixHarnessError(
                     f"invalid file state in {case.case_id!r}: {expected_file.state!r}"
                 )
+            _validate_terms(
+                case.case_id,
+                f"file {path} required_terms",
+                expected_file.required_terms,
+            )
+            _validate_terms(
+                case.case_id,
+                f"file {path} forbidden_terms",
+                expected_file.forbidden_terms,
+            )
             before = path.read_bytes() if path.is_file() else None
             if expected_file.state == "created" and before is not None:
                 raise MatrixHarnessError(
@@ -171,6 +200,41 @@ def _validate_and_snapshot(
                 )
             snapshots[(case.case_id, path)] = before
     return snapshots
+
+
+def _validate_command(case: CommandCase) -> None:
+    if isinstance(case.command, (str, bytes)) or not case.command:
+        raise MatrixHarnessError(f"command must be a non-empty string sequence in {case.case_id!r}")
+    if any(not isinstance(arg, str) for arg in case.command) or not case.command[0]:
+        raise MatrixHarnessError(f"command contains an invalid argument in {case.case_id!r}")
+    if isinstance(case.expected_returncode, bool) or not isinstance(
+        case.expected_returncode, int
+    ):
+        raise MatrixHarnessError(f"return code must be an integer in {case.case_id!r}")
+    if case.cwd is not None and (
+        not isinstance(case.cwd, Path) or not case.cwd.is_dir()
+    ):
+        raise MatrixHarnessError(f"cwd is not a directory in {case.case_id!r}: {case.cwd}")
+
+    executable = case.command[0]
+    if os.sep in executable:
+        executable_path = Path(executable)
+        if not executable_path.is_absolute():
+            executable_path = (case.cwd or Path.cwd()) / executable_path
+        found = executable_path.is_file() and os.access(executable_path, os.X_OK)
+    else:
+        found = shutil.which(executable) is not None
+    if not found:
+        raise MatrixHarnessError(
+            f"command executable not found in {case.case_id!r}: {executable!r}"
+        )
+
+
+def _validate_terms(case_id: str, field_name: str, terms: Sequence[str]) -> None:
+    if isinstance(terms, (str, bytes)) or any(
+        not isinstance(term, str) or not term for term in terms
+    ):
+        raise MatrixHarnessError(f"invalid {field_name} in {case_id!r}")
 
 
 def _file_failures(

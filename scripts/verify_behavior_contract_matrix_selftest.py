@@ -113,6 +113,50 @@ def main() -> int:
         if not file_result.ok:
             raise AssertionError(file_result.render_failures())
 
+        must_not_run = tmp / "must-not-run.txt"
+        try:
+            run_command_matrix(
+                "selftest-harness",
+                (
+                    CommandCase(
+                        case_id="harness/earlier-valid-case",
+                        command=(
+                            sys.executable,
+                            "-c",
+                            f"from pathlib import Path; Path({str(must_not_run)!r}).touch()",
+                        ),
+                    ),
+                    CommandCase(
+                        case_id="harness/missing-executable",
+                        command=("definitely-not-a-command",),
+                    ),
+                ),
+            )
+        except MatrixHarnessError as error:
+            if "command executable not found" not in str(error):
+                raise AssertionError(f"unexpected command preflight diagnostic: {error}")
+        else:
+            raise AssertionError("missing command executable must fail harness preflight")
+        if must_not_run.exists():
+            raise AssertionError("harness corruption must fail before any case executes")
+
+        try:
+            run_command_matrix(
+                "selftest-harness",
+                (
+                    CommandCase(
+                        case_id="harness/invalid-cwd",
+                        command=(sys.executable, "-c", "pass"),
+                        cwd=tmp / "missing-cwd",
+                    ),
+                ),
+            )
+        except MatrixHarnessError as error:
+            if "cwd is not a directory" not in str(error):
+                raise AssertionError(f"unexpected cwd preflight diagnostic: {error}")
+        else:
+            raise AssertionError("invalid cwd must fail harness preflight")
+
     print("behavior contract matrix selftest ok")
     return 0
 
