@@ -123,6 +123,11 @@ class ArtifactPacketSelftest(unittest.TestCase):
                 with self.assertRaisesRegex(ArtifactPacketError, "^payload_version_invalid$"):
                     build_artifact_packet(invalid_version)
 
+                invalid_board = copy.deepcopy(snapshot)
+                invalid_board["board"] = []
+                with self.assertRaisesRegex(ArtifactPacketError, "^board_invalid$"):
+                    build_artifact_packet(invalid_board)
+
                 privacy_violation = copy.deepcopy(snapshot)
                 privacy_violation["payload"]["question"] = "private path: /Users/example/secret"
                 with self.assertRaisesRegex(ArtifactPacketError, "^privacy_violation$"):
@@ -130,7 +135,8 @@ class ArtifactPacketSelftest(unittest.TestCase):
 
     def test_core_and_board_adapter_ownership_stays_separate(self) -> None:
         scripts = Path(__file__).resolve().parents[1] / "scripts"
-        core = (scripts / "artifact_packet.py").read_text(encoding="utf-8")
+        facade = (scripts / "artifact_packet.py").read_text(encoding="utf-8")
+        core = (scripts / "artifact_packet_core.py").read_text(encoding="utf-8")
         registry = (scripts / "artifact_packet_board_adapters.py").read_text(
             encoding="utf-8"
         )
@@ -156,8 +162,14 @@ class ArtifactPacketSelftest(unittest.TestCase):
         ):
             self.assertNotIn(board_policy_term, core)
 
+        self.assertIn("resolve_board_adapter", facade)
+        self.assertNotIn("artifact_packet_board_adapters", core)
         self.assertIn("BOARD_ADAPTERS", registry)
-        self.assertIn("payload_major", registry)
+        self.assertNotIn("payload_major", registry)
+        self.assertNotIn("from artifact_packet import", instrument)
+        self.assertNotIn("from artifact_packet import", macro)
+        self.assertIn("def validate_snapshot", core)
+        self.assertIn("adapter.validate_payload", core)
         self.assertIn("def _validate_payload", instrument)
         self.assertIn("render_instrument_research_board", instrument)
         self.assertIn("def _validate_macro_payload", macro)

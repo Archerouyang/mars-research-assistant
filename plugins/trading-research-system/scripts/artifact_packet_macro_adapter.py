@@ -3,32 +3,19 @@
 
 from __future__ import annotations
 
-import copy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Mapping
 
 from macro_regime_board import render_macro_regime_board
 
-from artifact_packet import (
+from artifact_packet_core import (
     ArtifactPacketError,
-    BUILDER_V1_FIELDS,
-    COVERAGE_V1_FIELDS,
     EVIDENCE_STATES,
-    MODULE_V1_FIELDS,
-    RENDERER_VERSION,
-    SCHEMA_VERSION,
-    SNAPSHOT_V1_FIELDS,
-    SOURCE_V1_FIELDS,
     _is_nonempty_string,
     _parse_timestamp,
     _reject_unknown_fields,
-    _validate_content_hash,
-    _validate_diagnostics,
-    _validate_envelope_fields,
-    _validate_public_privacy,
-    _validate_snapshot_action_safety,
-    _validate_sources,
+    evaluate_freshness as evaluate_core_freshness,
 )
 
 
@@ -75,56 +62,12 @@ MACRO_PAYLOAD_FIELDS = frozenset(
 )
 
 
-def validate_macro_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Validate the independently versioned, plan-linked Macro Board payload."""
+def validate_payload(snapshot: Mapping[str, Any]) -> None:
+    """Validate only Macro-owned payload fields and evidence semantics."""
 
-    normalized = copy.deepcopy(dict(snapshot))
-    if normalized.get("schema_version") != SCHEMA_VERSION:
-        raise ArtifactPacketError("schema_version_invalid")
-    if normalized.get("board") != BOARD_ID:
-        raise ArtifactPacketError("board_invalid")
-    if normalized.get("payload_version") != PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_invalid")
-    if normalized.get("renderer_version") != RENDERER_VERSION:
-        raise ArtifactPacketError("renderer_version_invalid")
-    if normalized.get("privacy") not in {"public_fixture", "private_runtime"}:
-        raise ArtifactPacketError("privacy_invalid")
-    if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
-        raise ArtifactPacketError("artifact_lifecycle_invalid")
-    _validate_public_privacy(normalized)
-    _validate_snapshot_action_safety(normalized)
-    _validate_macro_field_sets(normalized)
-    payload = normalized.get("payload")
-    if not isinstance(payload, dict) or payload.get("board") != BOARD_ID:
-        raise ArtifactPacketError("board_mismatch")
-    if payload.get("payload_version") != PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_mismatch")
-    if not _is_nonempty_string(normalized.get("snapshot_id")):
-        raise ArtifactPacketError("snapshot_id_invalid")
-    _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
-    _validate_envelope_fields(normalized)
-    _validate_sources(normalized, FRESHNESS_POLICIES)
-    _validate_diagnostics(normalized, frozenset(REQUIRED_MACRO_MODULES))
-    _validate_macro_payload(normalized)
-    _validate_content_hash(normalized)
-    return normalized
-
-
-def _validate_macro_field_sets(snapshot: Mapping[str, Any]) -> None:
-    _reject_unknown_fields(snapshot, SNAPSHOT_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("builder"), BUILDER_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("coverage"), COVERAGE_V1_FIELDS)
     payload = snapshot.get("payload")
     _reject_unknown_fields(payload, MACRO_PAYLOAD_FIELDS)
-    if isinstance(payload, Mapping):
-        modules = payload.get("modules")
-        if isinstance(modules, list):
-            for module in modules:
-                _reject_unknown_fields(module, MODULE_V1_FIELDS)
-    sources = snapshot.get("source_registry")
-    if isinstance(sources, list):
-        for source in sources:
-            _reject_unknown_fields(source, SOURCE_V1_FIELDS)
+    _validate_macro_payload(snapshot)
 
 
 def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
@@ -160,7 +103,16 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         policy_id = module.get("freshness_policy_id")
         if as_of > cutoff or policy_id not in FRESHNESS_POLICIES:
             raise ArtifactPacketError("module_freshness_invalid")
-        if evaluate_freshness(policy_id, as_of, cutoff) == "stale" and module["evidence_state"] != "stale":
+        if (
+            evaluate_core_freshness(
+                policy_id,
+                as_of,
+                cutoff,
+                FRESHNESS_POLICIES,
+            )
+            == "stale"
+            and module["evidence_state"] != "stale"
+        ):
             raise ArtifactPacketError("module_freshness_invalid")
         if module["evidence_state"] in {"complete", "partial"} and not any(
             source_by_id[source_id]["freshness_status"] == "fresh"
@@ -313,18 +265,6 @@ def _validate_macro_module_data(
 
 
 
-def evaluate_freshness(
-    policy_id: str,
-    observed_at: datetime,
-    decision_cutoff: datetime,
-) -> str:
-    limit = FRESHNESS_POLICIES.get(policy_id)
-    if limit is None:
-        return "fresh"
-    return "fresh" if decision_cutoff - observed_at <= limit else "stale"
-
-
-
 def render_board(
     snapshot: Mapping[str, Any],
     default_view: str,
@@ -338,4 +278,3 @@ def render_board(
             "</script", "<\\/script"
         ),
     )
-

@@ -262,9 +262,10 @@ core conformance matrix plus Board-specific semantic tests.
 
 Completion evidence:
 
-- `artifact_packet.py` now owns shared packet validation, canonical JSON,
+- `artifact_packet.py` is now the stable public facade, while
+  `artifact_packet_core.py` owns shared packet validation, canonical JSON,
   privacy, diagnostics, size limits, HTML safety, manifests, and immutable
-  writes; it no longer contains Instrument or Macro payload/renderer policy;
+  writes; neither contains Instrument or Macro payload/renderer policy;
 - `artifact_packet_instrument_adapter.py` and
   `artifact_packet_macro_adapter.py` own their Board-specific schema,
   evidence/freshness rules, and renderer selection;

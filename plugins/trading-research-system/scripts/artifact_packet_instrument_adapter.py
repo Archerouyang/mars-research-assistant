@@ -3,34 +3,18 @@
 
 from __future__ import annotations
 
-import copy
 from datetime import datetime, timedelta
 from typing import Any, Mapping
 
 from instrument_research_board import render_instrument_research_board
 
-from artifact_packet import (
+from artifact_packet_core import (
     ArtifactPacketError,
-    BUILDER_V1_FIELDS,
-    COVERAGE_V1_FIELDS,
     EVIDENCE_STATES,
-    MODULE_V1_FIELDS,
-    RENDERER_VERSION,
-    SCHEMA_VERSION,
-    SNAPSHOT_HARD_LIMIT_BYTES,
-    SNAPSHOT_V1_FIELDS,
-    SOURCE_V1_FIELDS,
     _is_nonempty_string,
     _parse_timestamp,
     _reject_unknown_fields,
-    _require_size,
-    _validate_content_hash,
-    _validate_diagnostics,
-    _validate_envelope_fields,
-    _validate_public_privacy,
-    _validate_snapshot_action_safety,
-    _validate_sources,
-    canonical_json_bytes,
+    evaluate_freshness as evaluate_core_freshness,
 )
 
 
@@ -73,82 +57,15 @@ LIQUIDITY_STATUSES = frozenset({"usable", "limited", "unavailable"})
 VOLATILITY_STATUSES = frozenset({"normal", "elevated", "extreme", "unavailable"})
 
 
-def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a deep-copied valid Instrument snapshot or a safe error code."""
-
-    if not isinstance(snapshot, Mapping):
-        raise ArtifactPacketError("schema_invalid")
-    normalized = copy.deepcopy(dict(snapshot))
-    if normalized.get("schema_version") != SCHEMA_VERSION:
-        raise ArtifactPacketError("schema_version_invalid")
-    if normalized.get("board") != BOARD_ID:
-        raise ArtifactPacketError("board_invalid")
-    if normalized.get("payload_version") != PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_invalid")
-    if normalized.get("renderer_version") != RENDERER_VERSION:
-        raise ArtifactPacketError("renderer_version_invalid")
-    if normalized.get("privacy") not in {"public_fixture", "private_runtime"}:
-        raise ArtifactPacketError("privacy_invalid")
-    if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
-        raise ArtifactPacketError("artifact_lifecycle_invalid")
-    _validate_public_privacy(normalized)
-    _validate_snapshot_action_safety(normalized)
-    _validate_v1_field_sets(normalized)
-    if not isinstance(normalized.get("payload"), dict):
-        raise ArtifactPacketError("payload_invalid")
-    payload = normalized["payload"]
-    if payload.get("board") != normalized["board"]:
-        raise ArtifactPacketError("board_mismatch")
-    if payload.get("payload_version") != normalized["payload_version"]:
-        raise ArtifactPacketError("payload_version_mismatch")
-    if not _is_nonempty_string(normalized.get("snapshot_id")):
-        raise ArtifactPacketError("snapshot_id_invalid")
-    _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
-    _validate_envelope_fields(normalized)
-    _require_size(canonical_json_bytes(normalized), SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
-    _validate_sources(normalized, FRESHNESS_POLICIES)
-    _validate_diagnostics(normalized, frozenset(ALL_INSTRUMENT_MODULES))
-    _validate_payload(normalized)
-    _validate_content_hash(normalized)
-    return normalized
-
-
-
-def _validate_v1_field_sets(snapshot: Mapping[str, Any]) -> None:
-    """Reject extension fields until a newer snapshot contract explicitly defines them."""
-
-    _reject_unknown_fields(snapshot, SNAPSHOT_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("builder"), BUILDER_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("coverage"), COVERAGE_V1_FIELDS)
+def validate_payload(snapshot: Mapping[str, Any]) -> None:
+    """Validate only Instrument-owned payload fields and evidence semantics."""
 
     payload = snapshot.get("payload")
     _reject_unknown_fields(payload, PAYLOAD_V1_FIELDS)
     if not isinstance(payload, Mapping):
         return
     _reject_unknown_fields(payload.get("subject"), SUBJECT_V1_FIELDS)
-    modules = payload.get("modules")
-    if isinstance(modules, list):
-        for module in modules:
-            _reject_unknown_fields(module, MODULE_V1_FIELDS)
-
-    sources = snapshot.get("source_registry")
-    if isinstance(sources, list):
-        for source in sources:
-            _reject_unknown_fields(source, SOURCE_V1_FIELDS)
-
-
-
-
-def evaluate_freshness(
-    policy_id: str,
-    observed_at: datetime,
-    decision_cutoff: datetime,
-) -> str:
-    limit = FRESHNESS_POLICIES.get(policy_id)
-    if limit is None:
-        return "fresh"
-    return "fresh" if decision_cutoff - observed_at <= limit else "stale"
-
+    _validate_payload(snapshot)
 
 def _validate_payload(snapshot: Mapping[str, Any]) -> None:
     payload = snapshot["payload"]
@@ -214,7 +131,12 @@ def _validate_payload(snapshot: Mapping[str, Any]) -> None:
         policy_id = module.get("freshness_policy_id")
         if policy_id not in FRESHNESS_POLICIES:
             raise ArtifactPacketError("modules_invalid")
-        module_freshness = evaluate_freshness(policy_id, module_as_of, cutoff)
+        module_freshness = evaluate_core_freshness(
+            policy_id,
+            module_as_of,
+            cutoff,
+            FRESHNESS_POLICIES,
+        )
         if module_as_of > cutoff:
             raise ArtifactPacketError("module_freshness_invalid")
         if module_freshness == "stale" and module["evidence_state"] != "stale":
@@ -511,4 +433,3 @@ def render_board(
     presentation_state: str,
 ) -> bytes:
     return render_instrument_research_board(snapshot, default_view, presentation_state)
-
