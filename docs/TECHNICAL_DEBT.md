@@ -72,19 +72,12 @@ verification baseline.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TD-20260711-01 | accepted | Canonical record schemas | `docs/DEVELOPMENT_PLAN.md` task "Re-scope canonical record schema registry" | Fixture and compatibility schemas have unclear long-term ownership, making future adapters and migrations harder to change safely. | 6 | Define canonical, compatibility, and deprecated schema ownership before new record adapters are added. | One registry names each schema owner, compatibility policy, and test boundary. |
 | TD-20260711-02 | removed | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; final accepted Prompt 7 UAT session `019f5ed4-9994-7832-bcef-82f6681a34fd` | The shared taxonomy cost was retired after branch coverage, direct-entry propagation, and accepted fresh UAT preserved the runtime and startup axes. | 5 | None; monitor through the retained runtime-health and Daily Ops contracts. | Shared taxonomy has full branch coverage, affected consumers preserve it, and accepted UAT passes. |
-| TD-20260711-03 | accepted | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; repeated corrective reviews through `19ca4ae` | Phrase-presence, expected-response fixtures, and incomplete entry/input matrices repeatedly missed broker-agnostic reconciliation, startup-state propagation, direct skill activation, validation ordering, and actual command cwd while green suites continued to pass. | 6 | Implement the bounded behavior-contract matrix task in `docs/DEVELOPMENT_PLAN.md` before adding capability in the affected workflow. | High-risk contracts exercise required structure, state/input matrices, direct activation surfaces, command cwd, and failure ordering rather than only keyword presence. |
+| TD-20260711-03 | removed | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; repo-level Behavior Contract Matrix modules and final two-axis review on `codex/behavior-contract-matrix` | The shallow-contract cost was retired by replacing duplicated subprocess scenarios with reconciliation, startup-surface, and setup-key/OHLCV matrices that preflight harness state and aggregate behavior mismatches. | 6 | None; retain the focused matrices in the plugin and MVP gates. | Focused, compile, plugin, and MVP gates pass; direct activation, state/input combinations, validation precedence, cwd, and forbidden side effects are covered; final review has no findings. |
 | TD-20260714-01 | accepted | Behavior ownership and plugin release propagation | Router and weekly entry duplication; Prompt 7 failures across `70b5787`, `f739019`, and final `19ca4ae`; `.agents/plugins/marketplace.json`; `scripts/verify_plugin_distribution.py` | The repo distribution seam now has one root marketplace and a manifest-owned version, but one behavior is still distributed across router, focused skill, reference, fixture, and verifier. Local source can still differ from the installed cache until post-publication clean-install UAT proves propagation. | 6 | Map the authoritative behavior owner and injected entry surfaces; after publication, run the coordinator-owned remote clean-install/new-task UAT against `master`. | Each exact behavior has one named owner, all direct activation surfaces derive or validate against it, and remote UAT proves the installed plugin matches the accepted repository source. |
 
-`TD-20260711-03` now meets Architecture Optimization Trigger 3: the same
-contract-depth cause has required multiple corrective patches within 30 days.
-The planned response is a bounded test-seam improvement, not a product rewrite;
-the UAT gate is closed, so this bounded task is now the next subsystem priority.
-
-`TD-20260711-03` and `TD-20260714-01` have a combined open score of 12 in this
-review. Architecture Optimization Trigger 1 requires the threshold for two
-consecutive weekly reviews, so it is not yet independently satisfied; Trigger 3
-already requires the bounded architecture task recorded in
-`docs/DEVELOPMENT_PLAN.md`.
+`TD-20260711-03` previously met Architecture Optimization Trigger 3. The
+bounded test-seam task recorded in `docs/DEVELOPMENT_PLAN.md` is complete, so
+the debt is removed and no longer contributes to the open-score threshold.
 
 The Git-backed distribution tracer bullet reduces only the release-propagation
 part of `TD-20260714-01`: repository marketplace ownership, source resolution,

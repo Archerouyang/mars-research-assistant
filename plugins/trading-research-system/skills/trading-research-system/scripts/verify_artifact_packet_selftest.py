@@ -13,6 +13,7 @@ import tempfile
 import unittest
 
 from artifact_packet import ArtifactPacketError, build_artifact_packet, write_artifact_packet
+from artifact_packet_board_adapters import BOARD_ADAPTERS
 
 
 # These are independently captured known-good bytes for the public fixture.
@@ -20,6 +21,26 @@ EXPECTED_CONTENT_HASH = "76695562130fdb4f295b33c4dbd95476b42cbeb27558008f34a7e1f
 EXPECTED_JSON_SHA256 = "bfdaa9d9b4b9920cbe8fd41146198093159c769ab9458a305a6fbd979ef7268f"
 EXPECTED_HTML_SHA256 = "792c9dfd579372fad78aa4945eaa73267cd10d9769319913282ec773d3b54fc7"
 EXPECTED_MANIFEST_SHA256 = "35c915cc653c0c6700a8416c36776c047203f24f61e1540135aabd3253afb75b"
+EXPECTED_BOARD_PACKET_HASHES = {
+    ("instrument_research", "1"): (
+        "instrument-overview-tracer.json",
+        EXPECTED_JSON_SHA256,
+        EXPECTED_HTML_SHA256,
+        EXPECTED_MANIFEST_SHA256,
+    ),
+    ("macro_regime", "1"): (
+        "macro-regime-complete.json",
+        "80c776bdcc7b34ae9ae66c27bc227ae775a7f693fcaac7a166754b68f2ef59d9",
+        "6540819b6cd538bdb8a0bcf4495190430176e23f4ac5f096f31c376e8450c195",
+        "a6747a084b007ad61307a36c78b41035e7b4cb9e77979f5bce9e8b4dc8768921",
+    ),
+    ("portfolio_risk", "1"): (
+        "portfolio-risk-complete.json",
+        "5b4206434ad6f1a8e071741b21af116d15653ffe26736d6039374f76af7f7d73",
+        "c1d13b5ef31869f8804d89a4974d19f71a2ee0a3496c36f74fd17cca83553182",
+        "fcf4ed20bcdd201f28d80c93b4ee841e254bef99181a61e98005d6726bdb2b6a",
+    ),
+}
 
 
 class ArtifactPacketSelftest(unittest.TestCase):
@@ -88,6 +109,84 @@ class ArtifactPacketSelftest(unittest.TestCase):
             "order action",
         ):
             self.assertNotIn(forbidden, html.lower())
+
+    def test_registered_boards_share_packet_conformance_and_exact_bytes(self) -> None:
+        self.assertEqual(set(BOARD_ADAPTERS), set(EXPECTED_BOARD_PACKET_HASHES))
+        fixture_dir = Path(__file__).resolve().parents[1] / "assets" / "fixtures" / "input"
+        for key, expected in EXPECTED_BOARD_PACKET_HASHES.items():
+            filename, json_hash, html_hash, manifest_hash = expected
+            with self.subTest(board=key):
+                snapshot = json.loads((fixture_dir / filename).read_text(encoding="utf-8"))
+                first = build_artifact_packet(copy.deepcopy(snapshot))
+                second = build_artifact_packet(copy.deepcopy(snapshot))
+                self.assertEqual(first, second)
+                self.assertEqual(hashlib.sha256(first.canonical_json).hexdigest(), json_hash)
+                self.assertEqual(hashlib.sha256(first.html).hexdigest(), html_hash)
+                self.assertEqual(hashlib.sha256(first.manifest).hexdigest(), manifest_hash)
+
+                invalid_version = copy.deepcopy(snapshot)
+                invalid_version["payload_version"] = "2.0"
+                with self.assertRaisesRegex(ArtifactPacketError, "^payload_version_invalid$"):
+                    build_artifact_packet(invalid_version)
+
+                invalid_board = copy.deepcopy(snapshot)
+                invalid_board["board"] = []
+                with self.assertRaisesRegex(ArtifactPacketError, "^board_invalid$"):
+                    build_artifact_packet(invalid_board)
+
+                privacy_violation = copy.deepcopy(snapshot)
+                privacy_violation["payload"]["question"] = "private path: /Users/example/secret"
+                with self.assertRaisesRegex(ArtifactPacketError, "^privacy_violation$"):
+                    build_artifact_packet(privacy_violation)
+
+    def test_core_and_board_adapter_ownership_stays_separate(self) -> None:
+        scripts = Path(__file__).resolve().parents[1] / "scripts"
+        facade = (scripts / "artifact_packet.py").read_text(encoding="utf-8")
+        core = (scripts / "artifact_packet_core.py").read_text(encoding="utf-8")
+        registry = (scripts / "artifact_packet_board_adapters.py").read_text(
+            encoding="utf-8"
+        )
+        instrument = (scripts / "artifact_packet_instrument_adapter.py").read_text(
+            encoding="utf-8"
+        )
+        macro = (scripts / "artifact_packet_macro_adapter.py").read_text(encoding="utf-8")
+        portfolio = (scripts / "artifact_packet_portfolio_adapter.py").read_text(
+            encoding="utf-8"
+        )
+
+        for shared_term in (
+            "canonical_json_bytes",
+            "_validate_public_privacy",
+            "_validate_diagnostics",
+            "_validate_html_safety",
+            "write_artifact_packet",
+            "MANIFEST_VERSION",
+        ):
+            self.assertIn(shared_term, core)
+        for board_policy_term in (
+            "def _validate_payload",
+            "def _validate_macro_payload",
+            "render_instrument_research_board",
+            "render_macro_regime_board",
+            "render_portfolio_risk_board",
+        ):
+            self.assertNotIn(board_policy_term, core)
+
+        self.assertIn("resolve_board_adapter", facade)
+        self.assertNotIn("artifact_packet_board_adapters", core)
+        self.assertIn("BOARD_ADAPTERS", registry)
+        self.assertNotIn("payload_major", registry)
+        self.assertNotIn("from artifact_packet import", instrument)
+        self.assertNotIn("from artifact_packet import", macro)
+        self.assertNotIn("from artifact_packet import", portfolio)
+        self.assertIn("def validate_snapshot", core)
+        self.assertIn("adapter.validate_payload", core)
+        self.assertIn("def _validate_payload", instrument)
+        self.assertIn("render_instrument_research_board", instrument)
+        self.assertIn("def _validate_macro_payload", macro)
+        self.assertIn("render_macro_regime_board", macro)
+        self.assertIn("def validate_payload", portfolio)
+        self.assertIn("render_portfolio_risk_board", portfolio)
 
     def test_rejects_forbidden_network_and_action_references(self) -> None:
         for injected in (
