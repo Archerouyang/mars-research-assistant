@@ -24,6 +24,7 @@ SCHEMA_VERSION = "1.0"
 INSTRUMENT_BOARD = "instrument_research"
 MACRO_BOARD = "macro_regime"
 PAYLOAD_VERSION = "1.0"
+MACRO_PAYLOAD_VERSION = "1.0"
 RENDERER_VERSION = "1.0"
 MANIFEST_VERSION = "1.0"
 SNAPSHOT_HARD_LIMIT_BYTES = 1536 * 1024
@@ -79,6 +80,29 @@ REQUIRED_MACRO_MODULES = (
 )
 MACRO_DECISION_FAMILIES = ("rates_liquidity", "inflation_growth", "cross_asset", "event_scenarios")
 MACRO_VIEWS = ["Overview", "Rates & Liquidity", "Inflation & Growth", "Cross-Asset Impact", "Event Scenarios"]
+MACRO_PLAN_CONTEXT_FIELDS = frozenset(
+    {
+        "active_plan_id",
+        "applicable_horizon",
+        "applicable_session",
+        "assumptions",
+        "constraints",
+        "current_posture",
+        "decision_rules",
+    }
+)
+MACRO_PLAN_UNAVAILABLE_POSTURE = "Plan context unavailable"
+MACRO_PLAN_UNAVAILABLE_DECISION = (
+    "No plan-linked Macro decision is available until plan context is complete."
+)
+ECHARTS_VERSION = "6.1.0"
+ECHARTS_ASSET = (
+    Path(__file__).resolve().parents[1]
+    / "assets"
+    / "vendor"
+    / f"echarts-{ECHARTS_VERSION}"
+    / "echarts.min.js"
+)
 MACRO_PAYLOAD_FIELDS = frozenset(
     {
         "board",
@@ -355,7 +379,7 @@ def validate_macro_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
         raise ArtifactPacketError("schema_version_invalid")
     if normalized.get("board") != MACRO_BOARD:
         raise ArtifactPacketError("board_invalid")
-    if normalized.get("payload_version") != PAYLOAD_VERSION:
+    if normalized.get("payload_version") != MACRO_PAYLOAD_VERSION:
         raise ArtifactPacketError("payload_version_invalid")
     if normalized.get("renderer_version") != RENDERER_VERSION:
         raise ArtifactPacketError("renderer_version_invalid")
@@ -369,7 +393,7 @@ def validate_macro_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     payload = normalized.get("payload")
     if not isinstance(payload, dict) or payload.get("board") != MACRO_BOARD:
         raise ArtifactPacketError("board_mismatch")
-    if payload.get("payload_version") != PAYLOAD_VERSION:
+    if payload.get("payload_version") != MACRO_PAYLOAD_VERSION:
         raise ArtifactPacketError("payload_version_mismatch")
     if not _is_nonempty_string(normalized.get("snapshot_id")):
         raise ArtifactPacketError("snapshot_id_invalid")
@@ -424,17 +448,7 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
             or not isinstance(module.get("gap_reason"), str)
         ):
             raise ArtifactPacketError("modules_invalid")
-        data = module.get("data")
-        if not isinstance(data, Mapping) or set(data) != {"rule", "scope"} or not all(
-            isinstance(value, str) for value in data.values()
-        ):
-            raise ArtifactPacketError("module_data_invalid")
-        if module["evidence_state"] in {"complete", "partial", "stale"} and not all(
-            _is_nonempty_string(value) for value in data.values()
-        ):
-            raise ArtifactPacketError("module_data_invalid")
-        if module["evidence_state"] == "source_error" and any(data.values()):
-            raise ArtifactPacketError("module_data_invalid")
+        _validate_macro_module_data(module_id, module.get("data"), module["evidence_state"], cutoff)
         refs = module.get("source_refs")
         if not isinstance(refs, list) or not refs or not set(refs).issubset(source_ids):
             raise ArtifactPacketError("modules_invalid")
@@ -514,6 +528,12 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
     ):
         raise ArtifactPacketError("posture_derivation_invalid")
 
+    if by_id["plan_context"]["evidence_state"] != "complete":
+        if posture["label"] != MACRO_PLAN_UNAVAILABLE_POSTURE:
+            raise ArtifactPacketError("plan_context_invalid")
+        if payload["decision"] != MACRO_PLAN_UNAVAILABLE_DECISION:
+            raise ArtifactPacketError("plan_context_invalid")
+
     scenarios = payload.get("scenarios")
     if not isinstance(scenarios, list) or not scenarios:
         raise ArtifactPacketError("scenarios_invalid")
@@ -555,6 +575,36 @@ def _derive_macro_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> st
     return "partial"
 
 
+def _validate_macro_module_data(
+    module_id: str, data: Any, evidence_state: str, cutoff: datetime
+) -> None:
+    if module_id != "plan_context":
+        if not isinstance(data, Mapping) or set(data) != {"rule", "scope"} or not all(
+            isinstance(value, str) for value in data.values()
+        ):
+            raise ArtifactPacketError("module_data_invalid")
+        if evidence_state in {"complete", "partial", "stale"} and not all(
+            _is_nonempty_string(value) for value in data.values()
+        ):
+            raise ArtifactPacketError("module_data_invalid")
+        if evidence_state == "source_error" and any(data.values()):
+            raise ArtifactPacketError("module_data_invalid")
+        return
+
+    if not isinstance(data, Mapping) or set(data) != MACRO_PLAN_CONTEXT_FIELDS or not all(
+        isinstance(value, str) for value in data.values()
+    ):
+        raise ArtifactPacketError("plan_context_invalid")
+    if evidence_state == "source_error":
+        if any(data.values()):
+            raise ArtifactPacketError("plan_context_invalid")
+        return
+    if not all(_is_nonempty_string(value) for value in data.values()):
+        raise ArtifactPacketError("plan_context_invalid")
+    if _parse_timestamp(data["applicable_session"], "plan_context_invalid").date() != cutoff.date():
+        raise ArtifactPacketError("plan_context_invalid")
+
+
 def canonical_json_bytes(value: Any) -> bytes:
     """Serialize JSON with stable key order and no presentation whitespace."""
 
@@ -576,7 +626,12 @@ def render_research_brief(
     """Render one Board through its purpose-specific renderer."""
 
     if snapshot["board"] == MACRO_BOARD:
-        return render_macro_regime_board(snapshot, default_view, presentation_state)
+        return render_macro_regime_board(
+            snapshot,
+            default_view,
+            presentation_state,
+            echarts_source=_load_macro_echarts_source(),
+        )
     return render_instrument_research_board(snapshot, default_view, presentation_state)
 
 
@@ -586,6 +641,12 @@ def render_instrument_research_brief(
     """Backward-compatible Instrument-only render entrypoint."""
 
     return render_research_brief(snapshot, default_view, presentation_state)
+
+
+def _load_macro_echarts_source() -> str:
+    """Load the bundled offline chart library in the packet-builder layer."""
+
+    return ECHARTS_ASSET.read_text(encoding="utf-8").replace("</script", "<\\/script")
 
 
 def _validate_sources(snapshot: Mapping[str, Any]) -> None:

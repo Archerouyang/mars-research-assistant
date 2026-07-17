@@ -11,8 +11,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from artifact_packet import ArtifactPacketError, build_artifact_packet
+from macro_regime_board import render_macro_regime_board
 
 
 class MacroRegimeBoardSelftest(unittest.TestCase):
@@ -42,6 +44,7 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
             "animation: false",
             "aria: { enabled: true }",
             "Semantic cross-asset fallback",
+            'data-research-brief-shell="v1"',
         ):
             self.assertIn(literal, html)
 
@@ -71,7 +74,7 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
                 self.assertIn("Visible gaps", html)
                 self.assertIn("Decision cutoff", html)
                 if expected_state == "source_error":
-                    self.assertIn("No Macro decision is available", html)
+                    self.assertIn("Plan-linked Macro decision unavailable", html)
                     self.assertNotIn("Risk-on regime", html)
 
     def test_missing_or_stale_plan_is_source_error_without_a_regime_label(self) -> None:
@@ -82,12 +85,67 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
         snapshot["evidence_state"] = "source_error"
         snapshot["coverage"]["required_complete"] = 5
         snapshot["state_reasons"] = ["Active plan is stale."]
-        snapshot["payload"]["decision"] = "No Macro decision is available until the Active Market Plan is refreshed."
+        snapshot["payload"]["posture"]["label"] = "Plan context unavailable"
+        snapshot["payload"]["decision"] = "No plan-linked Macro decision is available until plan context is complete."
         snapshot["content_hash"] = _content_hash(snapshot)
 
         packet = build_artifact_packet(snapshot)
         self.assertEqual(json.loads(packet.canonical_json)["evidence_state"], "source_error")
         self.assertNotIn("Risk-on regime", packet.html.decode("utf-8"))
+
+    def test_unavailable_plan_redacts_plan_derived_consequences_from_html(self) -> None:
+        snapshot = _fixture(self.fixture_dir / "macro-regime-source-error.json")
+        payload = snapshot["payload"]
+        html = build_artifact_packet(snapshot).html.decode("utf-8")
+
+        self.assertIn("Plan-linked Macro decision unavailable", html)
+        self.assertEqual(html.count('data-view-target="'), 5)
+        self.assertIn("Evidence rail", html)
+        for value in (
+            payload["posture"]["label"],
+            payload["posture"]["consequence"],
+            *(item["plan_effect"] for item in payload["evidence"]),
+            *(item["plan_rule"] for item in payload["exposure_lens"]),
+            *(item["impact"] for item in payload["exposure_lens"]),
+            *(item["posture"] for item in payload["scenarios"]),
+        ):
+            self.assertNotIn(value, html)
+
+    def test_plan_context_requires_identity_session_posture_and_rules(self) -> None:
+        snapshot = copy.deepcopy(self.complete)
+        plan = _module(snapshot, "plan_context")
+        plan["data"] = {
+            "active_plan_id": "synthetic-macro-plan-2026-07-17",
+            "applicable_horizon": "weekly",
+            "applicable_session": "2026-07-16T00:00:00Z",
+            "assumptions": "Synthetic inflation and growth assumptions.",
+            "constraints": "Cross-asset confirmation is required.",
+            "current_posture": "Mixed evidence-gated posture.",
+            "decision_rules": "Retain constraints until confirmation persists.",
+        }
+        snapshot["content_hash"] = _content_hash(snapshot)
+        with self.assertRaisesRegex(ArtifactPacketError, "^plan_context_invalid$"):
+            build_artifact_packet(snapshot)
+
+    def test_evidence_rows_include_auditable_source_provenance(self) -> None:
+        html = build_artifact_packet(copy.deepcopy(self.complete)).html.decode("utf-8")
+        for literal in (
+            "Source: Authorized Macro values (market-values) · S1 · fresh · 2026-07-17T09:50:00Z",
+            "Source: Forecast consensus (forecast-consensus) · S1 · fresh · 2026-07-17T09:00:00Z",
+            "Source: Media context (media-context) · S2 · fresh · 2026-07-17T09:30:00Z",
+            "Source: Synthetic Macro plan (plan-fixture) · S3 · fresh · 2026-07-17T08:30:00Z",
+        ):
+            self.assertIn(literal, html)
+
+    def test_macro_renderer_uses_injected_asset_without_filesystem_read(self) -> None:
+        with patch.object(Path, "read_text", side_effect=AssertionError("renderer filesystem read")):
+            html = render_macro_regime_board(
+                self.complete,
+                "Overview",
+                "ready",
+                echarts_source="window.echarts={init(){return {setOption(){},resize(){}}}};",
+            ).decode("utf-8")
+        self.assertIn("window.echarts", html)
 
     def test_unreconciled_holdings_require_conditional_portfolio_impact(self) -> None:
         snapshot = _fixture(self.fixture_dir / "macro-regime-partial.json")

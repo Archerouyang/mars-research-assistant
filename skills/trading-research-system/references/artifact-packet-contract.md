@@ -9,6 +9,21 @@ never supplies a generic regime label when that gate fails. The four committed
 Macro fixtures are synthetic and privacy-safe: `complete`, `partial`, `stale`,
 and `source_error`.
 
+Macro has its own payload version constant (`1.0`). A complete, partial, or
+stale `plan_context` structurally names the active plan identity, applicable
+horizon and timestamped session, current posture, constraints, assumptions, and
+decision rules; the session date must match the decision cutoff. An unavailable
+plan uses empty structured plan fields plus the explicit `Plan context
+unavailable` state. Its rendered Board retains views and evidence coverage, but
+does not expose payload posture/consequences, plan effects, exposure plan rules
+or impacts, or scenario posture consequences. The artifact-packet builder loads
+the bundled ECharts source and passes it to the pure Macro renderer; the
+renderer does not access the filesystem.
+
+Every Macro cascade and family evidence row identifies its source alias and
+reference, priority, freshness status, and as-of timestamp. Actual, forecast,
+media, and thesis provenance therefore remains auditable at the decision row.
+
 This canonical entrypoint deliberately coexists with
 `scripts/macro_regime_artifact.py`, the legacy static SVG mini-panel generator.
 The SVG path is not a fallback, is not included in a Macro packet manifest, and

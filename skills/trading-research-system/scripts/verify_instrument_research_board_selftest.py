@@ -44,6 +44,7 @@ class InstrumentResearchBoardSelftest(unittest.TestCase):
             "instrumentBoardPayload.zones",
             "Research gate: ready",
             "Daily reset can diverge from the underlying over multiple sessions.",
+            'data-research-brief-shell="v1"',
         ):
             self.assertIn(literal, html)
 
