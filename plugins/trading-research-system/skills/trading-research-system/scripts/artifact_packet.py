@@ -16,15 +16,9 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-from instrument_research_board import render_instrument_research_board
-from macro_regime_board import render_macro_regime_board
 
 
 SCHEMA_VERSION = "1.0"
-INSTRUMENT_BOARD = "instrument_research"
-MACRO_BOARD = "macro_regime"
-PAYLOAD_VERSION = "1.0"
-MACRO_PAYLOAD_VERSION = "1.0"
 RENDERER_VERSION = "1.0"
 MANIFEST_VERSION = "1.0"
 SNAPSHOT_HARD_LIMIT_BYTES = 1536 * 1024
@@ -69,56 +63,6 @@ PUBLIC_PRIVACY_COMPACT_SENTINELS = frozenset(
 PUBLIC_PRIVATE_PATH_PATTERN = re.compile(r"(?:^|/)(?:users|home|\.ssh|\.codex)(?:/|$)", re.IGNORECASE)
 BROKER_ACCOUNT_ID_PATTERN = re.compile(r"\b(?:DU|U)\d{5,}\b", re.IGNORECASE)
 UNSAFE_DIAGNOSTIC_TERMS = ("traceback", "stack trace", "/Users/", "api_key", "password", "token")
-REQUIRED_INSTRUMENT_MODULES = ("industry", "fundamentals", "catalysts", "market_instrument")
-REQUIRED_MACRO_MODULES = (
-    "plan_context",
-    "holdings_context",
-    "rates_liquidity",
-    "inflation_growth",
-    "cross_asset",
-    "event_scenarios",
-)
-MACRO_DECISION_FAMILIES = ("rates_liquidity", "inflation_growth", "cross_asset", "event_scenarios")
-MACRO_VIEWS = ["Overview", "Rates & Liquidity", "Inflation & Growth", "Cross-Asset Impact", "Event Scenarios"]
-MACRO_PLAN_CONTEXT_FIELDS = frozenset(
-    {
-        "active_plan_id",
-        "applicable_horizon",
-        "applicable_session",
-        "assumptions",
-        "constraints",
-        "current_posture",
-        "decision_rules",
-    }
-)
-MACRO_PLAN_UNAVAILABLE_POSTURE = "Plan context unavailable"
-MACRO_PLAN_UNAVAILABLE_DECISION = (
-    "No plan-linked Macro decision is available until plan context is complete."
-)
-ECHARTS_VERSION = "6.1.0"
-ECHARTS_ASSET = (
-    Path(__file__).resolve().parents[1]
-    / "assets"
-    / "vendor"
-    / f"echarts-{ECHARTS_VERSION}"
-    / "echarts.min.js"
-)
-MACRO_PAYLOAD_FIELDS = frozenset(
-    {
-        "board",
-        "chart_series",
-        "decision",
-        "evidence",
-        "exposure_lens",
-        "holdings_context",
-        "modules",
-        "payload_version",
-        "posture",
-        "question",
-        "scenarios",
-        "views",
-    }
-)
 DIAGNOSTIC_SEVERITIES = frozenset({"info", "warning", "error"})
 DIAGNOSTIC_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
 SAFE_TEXT_FORBIDDEN_TERMS = UNSAFE_DIAGNOSTIC_TERMS + (
@@ -178,36 +122,6 @@ SNAPSHOT_V1_FIELDS = frozenset(
 )
 BUILDER_V1_FIELDS = frozenset({"generated_at", "id"})
 COVERAGE_V1_FIELDS = frozenset({"required_complete", "required_total"})
-PAYLOAD_V1_FIELDS = frozenset(
-    {
-        "board",
-        "claims",
-        "decision",
-        "event_transmission",
-        "modules",
-        "payload_version",
-        "peers",
-        "posture",
-        "price_setup",
-        "question",
-        "subject",
-        "verification_queue",
-        "views",
-    }
-)
-SUBJECT_V1_FIELDS = frozenset(
-    {
-        "analysis_horizon",
-        "currency",
-        "identity_status",
-        "instrument",
-        "market",
-        "path_dependent",
-        "product_name",
-        "product_type",
-        "underlying",
-    }
-)
 MODULE_V1_FIELDS = frozenset(
     {
         "as_of",
@@ -222,19 +136,6 @@ MODULE_V1_FIELDS = frozenset(
     }
 )
 SOURCE_V1_FIELDS = frozenset({"alias", "as_of", "freshness_policy_id", "freshness_status", "id", "priority"})
-SUPPORTING_INSTRUMENT_MODULES = ("flows",)
-ALL_INSTRUMENT_MODULES = REQUIRED_INSTRUMENT_MODULES + SUPPORTING_INSTRUMENT_MODULES
-CLAIM_KINDS = frozenset({"industry_fact", "fundamental_hypothesis", "event_fact", "market_fact", "market_reaction", "counter_thesis"})
-CLAIM_STATUSES = frozenset({"verified", "needs_check", "blocked", "insufficient_alone"})
-CLAIM_IMPACTS = frozenset({"supports", "pressures", "blocks", "watch", "none"})
-QUEUE_STATUSES = frozenset({"open", "blocked", "complete"})
-PEER_STATUSES = frozenset({"complete", "partial", "stale", "source_error"})
-EVENT_STATUSES = frozenset({"scheduled", "confirmed", "invalidated", "source_error"})
-SETUP_STATES = frozenset({"watch", "candidate", "invalidated", "needs_review"})
-LIQUIDITY_STATUSES = frozenset({"usable", "limited", "unavailable"})
-VOLATILITY_STATUSES = frozenset({"normal", "elevated", "extreme", "unavailable"})
-
-
 class ArtifactPacketError(ValueError):
     """A fail-closed public error code without sensitive input details."""
 
@@ -257,6 +158,9 @@ def build_artifact_packet(
     """Validate one Board snapshot and return its canonical artifact packet."""
 
     normalized = validate_board_snapshot(snapshot)
+    from artifact_packet_board_adapters import resolve_board_adapter
+
+    adapter = resolve_board_adapter(normalized)
     views = normalized["payload"]["views"]
     if default_view not in views:
         raise ArtifactPacketError("default_view_invalid")
@@ -265,7 +169,7 @@ def build_artifact_packet(
 
     canonical_json = canonical_json_bytes(normalized)
     _require_size(canonical_json, SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
-    html = render_research_brief(normalized, default_view, presentation_state)
+    html = adapter.render(normalized, default_view, presentation_state)
     _validate_html_safety(html)
     _require_size(html, HTML_HARD_LIMIT_BYTES, "html_size_exceeded")
     html_sha256 = sha256_hex(html)
@@ -322,290 +226,31 @@ def write_artifact_packet(packet: ArtifactPacket, output_dir: Path) -> dict[str,
 
 
 def validate_instrument_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a deep-copied valid Instrument snapshot or a safe error code."""
+    """Backward-compatible Instrument validation entrypoint."""
 
-    if not isinstance(snapshot, Mapping):
-        raise ArtifactPacketError("schema_invalid")
-    normalized = copy.deepcopy(dict(snapshot))
-    if normalized.get("schema_version") != SCHEMA_VERSION:
-        raise ArtifactPacketError("schema_version_invalid")
-    if normalized.get("board") != INSTRUMENT_BOARD:
-        raise ArtifactPacketError("board_invalid")
-    if normalized.get("payload_version") != PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_invalid")
-    if normalized.get("renderer_version") != RENDERER_VERSION:
-        raise ArtifactPacketError("renderer_version_invalid")
-    if normalized.get("privacy") not in {"public_fixture", "private_runtime"}:
-        raise ArtifactPacketError("privacy_invalid")
-    if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
-        raise ArtifactPacketError("artifact_lifecycle_invalid")
-    _validate_public_privacy(normalized)
-    _validate_snapshot_action_safety(normalized)
-    _validate_v1_field_sets(normalized)
-    if not isinstance(normalized.get("payload"), dict):
-        raise ArtifactPacketError("payload_invalid")
-    payload = normalized["payload"]
-    if payload.get("board") != normalized["board"]:
-        raise ArtifactPacketError("board_mismatch")
-    if payload.get("payload_version") != normalized["payload_version"]:
-        raise ArtifactPacketError("payload_version_mismatch")
-    if not _is_nonempty_string(normalized.get("snapshot_id")):
-        raise ArtifactPacketError("snapshot_id_invalid")
-    _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
-    _validate_envelope_fields(normalized)
-    _require_size(canonical_json_bytes(normalized), SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
-    _validate_sources(normalized)
-    _validate_diagnostics(normalized)
-    _validate_payload(normalized)
-    _validate_content_hash(normalized)
-    return normalized
+    from artifact_packet_board_adapters import validate_instrument_snapshot as validate
+
+    return validate(snapshot)
 
 
 def validate_board_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Dispatch a versioned Board snapshot without weakening Instrument validation."""
+    """Dispatch a versioned Board snapshot through the static adapter registry."""
 
     if not isinstance(snapshot, Mapping):
         raise ArtifactPacketError("schema_invalid")
-    if snapshot.get("board") == MACRO_BOARD:
-        return validate_macro_snapshot(snapshot)
-    return validate_instrument_snapshot(snapshot)
+    if snapshot.get("schema_version") != SCHEMA_VERSION:
+        raise ArtifactPacketError("schema_version_invalid")
+    from artifact_packet_board_adapters import resolve_board_adapter
+
+    return resolve_board_adapter(snapshot).validate_snapshot(snapshot)
 
 
 def validate_macro_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Validate the independently versioned, plan-linked Macro Board payload."""
+    """Backward-compatible Macro validation entrypoint."""
 
-    normalized = copy.deepcopy(dict(snapshot))
-    if normalized.get("schema_version") != SCHEMA_VERSION:
-        raise ArtifactPacketError("schema_version_invalid")
-    if normalized.get("board") != MACRO_BOARD:
-        raise ArtifactPacketError("board_invalid")
-    if normalized.get("payload_version") != MACRO_PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_invalid")
-    if normalized.get("renderer_version") != RENDERER_VERSION:
-        raise ArtifactPacketError("renderer_version_invalid")
-    if normalized.get("privacy") not in {"public_fixture", "private_runtime"}:
-        raise ArtifactPacketError("privacy_invalid")
-    if normalized.get("artifact_lifecycle") not in {"transient", "durable"}:
-        raise ArtifactPacketError("artifact_lifecycle_invalid")
-    _validate_public_privacy(normalized)
-    _validate_snapshot_action_safety(normalized)
-    _validate_macro_field_sets(normalized)
-    payload = normalized.get("payload")
-    if not isinstance(payload, dict) or payload.get("board") != MACRO_BOARD:
-        raise ArtifactPacketError("board_mismatch")
-    if payload.get("payload_version") != MACRO_PAYLOAD_VERSION:
-        raise ArtifactPacketError("payload_version_mismatch")
-    if not _is_nonempty_string(normalized.get("snapshot_id")):
-        raise ArtifactPacketError("snapshot_id_invalid")
-    _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
-    _validate_envelope_fields(normalized)
-    _validate_sources(normalized)
-    _validate_diagnostics(normalized)
-    _validate_macro_payload(normalized)
-    _validate_content_hash(normalized)
-    return normalized
+    from artifact_packet_board_adapters import validate_macro_snapshot as validate
 
-
-def _validate_macro_field_sets(snapshot: Mapping[str, Any]) -> None:
-    _reject_unknown_fields(snapshot, SNAPSHOT_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("builder"), BUILDER_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("coverage"), COVERAGE_V1_FIELDS)
-    payload = snapshot.get("payload")
-    _reject_unknown_fields(payload, MACRO_PAYLOAD_FIELDS)
-    if isinstance(payload, Mapping):
-        modules = payload.get("modules")
-        if isinstance(modules, list):
-            for module in modules:
-                _reject_unknown_fields(module, MODULE_V1_FIELDS)
-    sources = snapshot.get("source_registry")
-    if isinstance(sources, list):
-        for source in sources:
-            _reject_unknown_fields(source, SOURCE_V1_FIELDS)
-
-
-def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
-    payload = snapshot["payload"]
-    if not all(_is_nonempty_string(payload.get(key)) for key in ("question", "decision")):
-        raise ArtifactPacketError("payload_invalid")
-    if payload.get("views") != MACRO_VIEWS:
-        raise ArtifactPacketError("views_invalid")
-    modules = payload.get("modules")
-    if not isinstance(modules, list):
-        raise ArtifactPacketError("modules_invalid")
-    by_id = {item.get("id"): item for item in modules if isinstance(item, Mapping)}
-    if len(modules) != len(REQUIRED_MACRO_MODULES) or set(by_id) != set(REQUIRED_MACRO_MODULES):
-        raise ArtifactPacketError("modules_invalid")
-    source_ids = {source["id"] for source in snapshot["source_registry"]}
-    source_by_id = {source["id"]: source for source in snapshot["source_registry"]}
-    cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
-    complete_count = 0
-    for module_id in REQUIRED_MACRO_MODULES:
-        module = by_id[module_id]
-        if (
-            module.get("requirement") != "required"
-            or module.get("evidence_state") not in EVIDENCE_STATES
-            or not _is_nonempty_string(module.get("summary"))
-            or not isinstance(module.get("gap_reason"), str)
-        ):
-            raise ArtifactPacketError("modules_invalid")
-        _validate_macro_module_data(module_id, module.get("data"), module["evidence_state"], cutoff)
-        refs = module.get("source_refs")
-        if not isinstance(refs, list) or not refs or not set(refs).issubset(source_ids):
-            raise ArtifactPacketError("modules_invalid")
-        as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
-        policy_id = module.get("freshness_policy_id")
-        if as_of > cutoff or policy_id not in FRESHNESS_POLICIES:
-            raise ArtifactPacketError("module_freshness_invalid")
-        if evaluate_freshness(policy_id, as_of, cutoff) == "stale" and module["evidence_state"] != "stale":
-            raise ArtifactPacketError("module_freshness_invalid")
-        if module["evidence_state"] in {"complete", "partial"} and not any(
-            source_by_id[source_id]["freshness_status"] == "fresh"
-            and source_by_id[source_id]["priority"] != "S4"
-            for source_id in refs
-        ):
-            raise ArtifactPacketError("module_source_support_invalid")
-        if module["evidence_state"] == "complete":
-            complete_count += 1
-    if snapshot.get("coverage") != {"required_complete": complete_count, "required_total": len(REQUIRED_MACRO_MODULES)}:
-        raise ArtifactPacketError("coverage_mismatch")
-
-    holdings = payload.get("holdings_context")
-    if not isinstance(holdings, Mapping) or set(holdings) != {"conditional", "status", "summary"} or not isinstance(
-        holdings.get("conditional"), bool
-    ) or not all(_is_nonempty_string(holdings.get(key)) for key in ("status", "summary")):
-        raise ArtifactPacketError("holdings_invalid")
-    if by_id["holdings_context"]["evidence_state"] != "complete" and not holdings["conditional"]:
-        raise ArtifactPacketError("holdings_conditional_required")
-
-    exposures = payload.get("exposure_lens")
-    if not isinstance(exposures, list) or not exposures:
-        raise ArtifactPacketError("exposure_invalid")
-    exposure_ids: set[str] = set()
-    for item in exposures:
-        if not isinstance(item, Mapping) or set(item) != {"id", "impact", "kind", "label", "plan_rule", "sensitivity"} or not all(
-            _is_nonempty_string(item.get(key)) for key in item
-        ) or item["id"] in exposure_ids:
-            raise ArtifactPacketError("exposure_invalid")
-        if by_id["holdings_context"]["evidence_state"] != "complete" and "conditional" not in item["impact"].casefold():
-            raise ArtifactPacketError("holdings_conditional_required")
-        exposure_ids.add(item["id"])
-
-    evidence = payload.get("evidence")
-    if not isinstance(evidence, list) or not evidence:
-        raise ArtifactPacketError("evidence_invalid")
-    evidence_ids: set[str] = set()
-    seen_categories: set[str] = set()
-    category_priorities = {
-        "actual": {"S0", "S1"},
-        "forecast": {"S1", "S3"},
-        "media": {"S2"},
-        "thesis": {"S3"},
-    }
-    for item in evidence:
-        allowed = {"as_of", "category", "exposure_id", "family", "id", "label", "plan_effect", "reading", "source_ref", "status", "transmission"}
-        if not isinstance(item, Mapping) or set(item) != allowed or not all(_is_nonempty_string(item.get(key)) for key in allowed):
-            raise ArtifactPacketError("evidence_invalid")
-        if item["id"] in evidence_ids or item["family"] not in MACRO_DECISION_FAMILIES or item["exposure_id"] not in exposure_ids:
-            raise ArtifactPacketError("evidence_invalid")
-        if item["source_ref"] not in source_by_id or item["category"] not in category_priorities:
-            raise ArtifactPacketError("evidence_invalid")
-        if source_by_id[item["source_ref"]]["priority"] not in category_priorities[item["category"]]:
-            raise ArtifactPacketError("evidence_invalid")
-        if _parse_timestamp(item["as_of"], "evidence_invalid") > cutoff:
-            raise ArtifactPacketError("evidence_cutoff_invalid")
-        evidence_ids.add(item["id"])
-        seen_categories.add(item["category"])
-    if seen_categories != set(category_priorities):
-        raise ArtifactPacketError("evidence_invalid")
-
-    posture = payload.get("posture")
-    if not isinstance(posture, Mapping) or set(posture) != {"consequence", "derived_from", "label"} or not all(
-        _is_nonempty_string(posture.get(key)) for key in ("consequence", "label")
-    ) or not isinstance(posture.get("derived_from"), list) or not posture["derived_from"] or not set(posture["derived_from"]).issubset(evidence_ids):
-        raise ArtifactPacketError("posture_derivation_invalid")
-    evidence_by_id = {item["id"]: item for item in evidence}
-    if not any(
-        evidence_by_id[item_id]["category"] == "thesis"
-        and evidence_by_id[item_id]["source_ref"] in by_id["plan_context"]["source_refs"]
-        for item_id in posture["derived_from"]
-    ):
-        raise ArtifactPacketError("posture_derivation_invalid")
-
-    if by_id["plan_context"]["evidence_state"] != "complete":
-        if posture["label"] != MACRO_PLAN_UNAVAILABLE_POSTURE:
-            raise ArtifactPacketError("plan_context_invalid")
-        if payload["decision"] != MACRO_PLAN_UNAVAILABLE_DECISION:
-            raise ArtifactPacketError("plan_context_invalid")
-
-    scenarios = payload.get("scenarios")
-    if not isinstance(scenarios, list) or not scenarios:
-        raise ArtifactPacketError("scenarios_invalid")
-    previous_rank = 0
-    for item in scenarios:
-        allowed = {"affected_exposures", "confirms", "cross_asset", "impact_rank", "name", "posture", "trigger"}
-        if not isinstance(item, Mapping) or set(item) != allowed or not isinstance(item.get("impact_rank"), int) or item["impact_rank"] <= previous_rank or not isinstance(item.get("affected_exposures"), list) or not item["affected_exposures"] or not set(item["affected_exposures"]).issubset(exposure_ids) or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"affected_exposures", "impact_rank"}):
-            raise ArtifactPacketError("scenarios_invalid")
-        if any(term in " ".join(str(value) for value in item.values()).casefold() for term in ("buy ", "sell ", "order", "enter ", "exit ")):
-            raise ArtifactPacketError("scenario_prescriptive")
-        previous_rank = item["impact_rank"]
-
-    chart_series = payload.get("chart_series")
-    if not isinstance(chart_series, list) or not chart_series or not all(
-        isinstance(item, Mapping) and set(item) == {"label", "value"} and _is_nonempty_string(item.get("label")) and isinstance(item.get("value"), (int, float))
-        for item in chart_series
-    ):
-        raise ArtifactPacketError("chart_series_invalid")
-    derived_state = _derive_macro_evidence_state(by_id)
-    if snapshot.get("evidence_state") != derived_state:
-        raise ArtifactPacketError("evidence_state_mismatch")
-    if derived_state == "source_error" and "regime" in posture["label"].casefold():
-        raise ArtifactPacketError("posture_derivation_invalid")
-
-
-def _derive_macro_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> str:
-    states = {module_id: modules[module_id]["evidence_state"] for module_id in REQUIRED_MACRO_MODULES}
-    if states["plan_context"] != "complete":
-        return "source_error"
-    if states["cross_asset"] not in {"complete", "partial"}:
-        return "source_error"
-    usable_families = sum(states[module_id] in {"complete", "partial"} for module_id in MACRO_DECISION_FAMILIES)
-    if usable_families < 3:
-        return "source_error"
-    if all(state == "complete" for state in states.values()):
-        return "complete"
-    if any(state == "stale" for state in states.values()):
-        return "stale"
-    return "partial"
-
-
-def _validate_macro_module_data(
-    module_id: str, data: Any, evidence_state: str, cutoff: datetime
-) -> None:
-    if module_id != "plan_context":
-        if not isinstance(data, Mapping) or set(data) != {"rule", "scope"} or not all(
-            isinstance(value, str) for value in data.values()
-        ):
-            raise ArtifactPacketError("module_data_invalid")
-        if evidence_state in {"complete", "partial", "stale"} and not all(
-            _is_nonempty_string(value) for value in data.values()
-        ):
-            raise ArtifactPacketError("module_data_invalid")
-        if evidence_state == "source_error" and any(data.values()):
-            raise ArtifactPacketError("module_data_invalid")
-        return
-
-    if not isinstance(data, Mapping) or set(data) != MACRO_PLAN_CONTEXT_FIELDS or not all(
-        isinstance(value, str) for value in data.values()
-    ):
-        raise ArtifactPacketError("plan_context_invalid")
-    if evidence_state == "source_error":
-        if any(data.values()):
-            raise ArtifactPacketError("plan_context_invalid")
-        return
-    if not all(_is_nonempty_string(value) for value in data.values()):
-        raise ArtifactPacketError("plan_context_invalid")
-    if _parse_timestamp(data["applicable_session"], "plan_context_invalid").date() != cutoff.date():
-        raise ArtifactPacketError("plan_context_invalid")
+    return validate(snapshot)
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -628,14 +273,13 @@ def render_research_brief(
 ) -> bytes:
     """Render one Board through its purpose-specific renderer."""
 
-    if snapshot["board"] == MACRO_BOARD:
-        return render_macro_regime_board(
-            snapshot,
-            default_view,
-            presentation_state,
-            echarts_source=_load_macro_echarts_source(),
-        )
-    return render_instrument_research_board(snapshot, default_view, presentation_state)
+    from artifact_packet_board_adapters import resolve_board_adapter
+
+    return resolve_board_adapter(snapshot).render(
+        snapshot,
+        default_view,
+        presentation_state,
+    )
 
 
 def render_instrument_research_brief(
@@ -646,13 +290,10 @@ def render_instrument_research_brief(
     return render_research_brief(snapshot, default_view, presentation_state)
 
 
-def _load_macro_echarts_source() -> str:
-    """Load the bundled offline chart library in the packet-builder layer."""
-
-    return ECHARTS_ASSET.read_text(encoding="utf-8").replace("</script", "<\\/script")
-
-
-def _validate_sources(snapshot: Mapping[str, Any]) -> None:
+def _validate_sources(
+    snapshot: Mapping[str, Any],
+    freshness_policies: Mapping[str, timedelta | None] = FRESHNESS_POLICIES,
+) -> None:
     cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
     sources = snapshot.get("source_registry")
     if not isinstance(sources, list) or not sources:
@@ -669,7 +310,7 @@ def _validate_sources(snapshot: Mapping[str, Any]) -> None:
             or not _is_nonempty_string(alias)
             or _contains_unsafe_text(alias)
             or source_id in source_ids
-            or policy not in FRESHNESS_POLICIES
+            or policy not in freshness_policies
         ):
             raise ArtifactPacketError("source_registry_invalid")
         source_ids.add(source_id)
@@ -697,29 +338,6 @@ def _validate_envelope_fields(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("schema_invalid")
 
 
-def _validate_v1_field_sets(snapshot: Mapping[str, Any]) -> None:
-    """Reject extension fields until a newer snapshot contract explicitly defines them."""
-
-    _reject_unknown_fields(snapshot, SNAPSHOT_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("builder"), BUILDER_V1_FIELDS)
-    _reject_unknown_fields(snapshot.get("coverage"), COVERAGE_V1_FIELDS)
-
-    payload = snapshot.get("payload")
-    _reject_unknown_fields(payload, PAYLOAD_V1_FIELDS)
-    if not isinstance(payload, Mapping):
-        return
-    _reject_unknown_fields(payload.get("subject"), SUBJECT_V1_FIELDS)
-    modules = payload.get("modules")
-    if isinstance(modules, list):
-        for module in modules:
-            _reject_unknown_fields(module, MODULE_V1_FIELDS)
-
-    sources = snapshot.get("source_registry")
-    if isinstance(sources, list):
-        for source in sources:
-            _reject_unknown_fields(source, SOURCE_V1_FIELDS)
-
-
 def _reject_unknown_fields(value: Any, allowed_fields: frozenset[str]) -> None:
     if isinstance(value, Mapping) and set(value) - allowed_fields:
         raise ArtifactPacketError("schema_invalid")
@@ -732,358 +350,6 @@ def evaluate_freshness(policy_id: str, observed_at: datetime, decision_cutoff: d
     if limit is None:
         return "fresh"
     return "fresh" if decision_cutoff - observed_at <= limit else "stale"
-
-
-def _validate_payload(snapshot: Mapping[str, Any]) -> None:
-    payload = snapshot["payload"]
-    if not all(_is_nonempty_string(payload.get(key)) for key in ("question", "decision", "posture")):
-        raise ArtifactPacketError("payload_invalid")
-    subject = payload.get("subject")
-    if not isinstance(subject, dict) or not all(
-        _is_nonempty_string(subject.get(key))
-        for key in (
-            "product_type",
-            "market",
-            "currency",
-            "analysis_horizon",
-        )
-    ):
-        raise ArtifactPacketError("subject_invalid")
-    identity_status = subject.get("identity_status")
-    identity_fields = ("instrument", "underlying", "product_name")
-    if identity_status not in {"complete", "source_error"} or not all(
-        isinstance(subject.get(key), str) for key in identity_fields
-    ):
-        raise ArtifactPacketError("subject_invalid")
-    if identity_status == "complete" and not all(_is_nonempty_string(subject[key]) for key in identity_fields):
-        raise ArtifactPacketError("subject_invalid")
-    if identity_status == "source_error" and any(subject[key] for key in identity_fields):
-        raise ArtifactPacketError("subject_invalid")
-    if not isinstance(subject.get("path_dependent"), bool):
-        raise ArtifactPacketError("subject_invalid")
-    views = payload.get("views")
-    if not isinstance(views, list) or views != ["Overview", "Price & Setup", "Industry & Peers", "Catalysts & Flows"]:
-        raise ArtifactPacketError("views_invalid")
-    modules = payload.get("modules")
-    if not isinstance(modules, list):
-        raise ArtifactPacketError("modules_invalid")
-    by_id = {module.get("id"): module for module in modules if isinstance(module, dict)}
-    if (
-        len(modules) != len(ALL_INSTRUMENT_MODULES)
-        or len(by_id) != len(modules)
-        or set(by_id) != set(ALL_INSTRUMENT_MODULES)
-    ):
-        raise ArtifactPacketError("modules_invalid")
-    source_ids = {source["id"] for source in snapshot["source_registry"]}
-    sources_by_id = {source["id"]: source for source in snapshot["source_registry"]}
-    cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
-    required_complete = 0
-    for module_id in ALL_INSTRUMENT_MODULES:
-        module = by_id[module_id]
-        expected_requirement = "required" if module_id in REQUIRED_INSTRUMENT_MODULES else "supporting"
-        if module.get("requirement") != expected_requirement or module.get("evidence_state") not in EVIDENCE_STATES:
-            raise ArtifactPacketError("modules_invalid")
-        if not _is_nonempty_string(module.get("summary")) or not isinstance(module.get("gap_reason"), str):
-            raise ArtifactPacketError("modules_invalid")
-        _validate_module_data(module_id, module.get("data"), module["evidence_state"])
-        module_as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
-        refs = module.get("source_refs")
-        if (
-            not isinstance(refs, list)
-            or not refs
-            or not all(_is_nonempty_string(reference) for reference in refs)
-            or not set(refs).issubset(source_ids)
-        ):
-            raise ArtifactPacketError("modules_invalid")
-        policy_id = module.get("freshness_policy_id")
-        if policy_id not in FRESHNESS_POLICIES:
-            raise ArtifactPacketError("modules_invalid")
-        module_freshness = evaluate_freshness(policy_id, module_as_of, cutoff)
-        if module_as_of > cutoff:
-            raise ArtifactPacketError("module_freshness_invalid")
-        if module_freshness == "stale" and module["evidence_state"] != "stale":
-            raise ArtifactPacketError("module_freshness_invalid")
-        if module["evidence_state"] in {"complete", "partial"} and not any(
-            sources_by_id[reference]["freshness_status"] == "fresh"
-            and sources_by_id[reference]["priority"] != "S4"
-            for reference in refs
-        ):
-            raise ArtifactPacketError("module_source_support_invalid")
-        if module_id in REQUIRED_INSTRUMENT_MODULES and module["evidence_state"] == "complete":
-            required_complete += 1
-    coverage = snapshot.get("coverage")
-    if coverage != {"required_complete": required_complete, "required_total": 4}:
-        raise ArtifactPacketError("coverage_mismatch")
-    derived_state = _derive_instrument_evidence_state(by_id, identity_status)
-    if snapshot.get("evidence_state") != derived_state:
-        raise ArtifactPacketError("evidence_state_mismatch")
-    _validate_instrument_details(payload, source_ids, derived_state, cutoff, by_id)
-
-
-def _validate_module_data(module_id: str, data: Any, evidence_state: str) -> None:
-    required_keys = {
-        "industry": {"demand", "supply_capacity", "inventory_pricing", "cycle_position", "competitive_structure"},
-        "fundamentals": {"business_quality", "earnings_cash_flow", "valuation_context", "operating_risks"},
-        "catalysts": {"next_event", "event_time", "expected_transmission"},
-        "market_instrument": {"price_structure", "relative_strength", "liquidity", "volatility"},
-        "flows": {"participation", "positioning", "methodology"},
-    }[module_id]
-    if not isinstance(data, Mapping) or set(data) != required_keys:
-        raise ArtifactPacketError("module_data_invalid")
-    if not all(isinstance(data[key], str) for key in required_keys):
-        raise ArtifactPacketError("module_data_invalid")
-    if evidence_state in {"complete", "partial", "stale"} and not all(
-        _is_nonempty_string(data[key]) for key in required_keys
-    ):
-        raise ArtifactPacketError("module_data_invalid")
-    if evidence_state == "source_error" and any(data[key] for key in required_keys):
-        raise ArtifactPacketError("module_data_invalid")
-
-
-def _validate_instrument_details(
-    payload: Mapping[str, Any],
-    source_ids: set[str],
-    evidence_state: str,
-    cutoff: datetime,
-    modules: Mapping[str, Mapping[str, Any]],
-) -> None:
-    claims = payload.get("claims")
-    if not isinstance(claims, list) or not claims:
-        raise ArtifactPacketError("claims_invalid")
-    claim_ids: set[str] = set()
-    for claim in claims:
-        allowed = {"id", "kind", "claim", "evidence_gate", "evidence_refs", "status", "impact"}
-        if not isinstance(claim, Mapping) or set(claim) != allowed:
-            raise ArtifactPacketError("claims_invalid")
-        claim_id = claim.get("id")
-        refs = claim.get("evidence_refs")
-        if (
-            not _is_nonempty_string(claim_id)
-            or claim_id in claim_ids
-            or claim.get("kind") not in CLAIM_KINDS
-            or claim.get("status") not in CLAIM_STATUSES
-            or claim.get("impact") not in CLAIM_IMPACTS
-            or not _is_nonempty_string(claim.get("claim"))
-            or claim.get("evidence_gate") not in ALL_INSTRUMENT_MODULES
-            or not isinstance(refs, list)
-            or not refs
-            or not set(refs).issubset(source_ids)
-        ):
-            raise ArtifactPacketError("claims_invalid")
-        gate = claim["evidence_gate"]
-        if not set(refs).issubset(set(modules[gate]["source_refs"])):
-            raise ArtifactPacketError("claim_source_mismatch")
-        if gate == "flows" and claim["kind"] != "market_reaction":
-            raise ArtifactPacketError("claim_source_mismatch")
-        if gate != "flows" and claim["kind"] == "market_reaction":
-            raise ArtifactPacketError("claim_source_mismatch")
-        if modules[gate]["evidence_state"] == "source_error" and claim["status"] == "verified":
-            raise ArtifactPacketError("claim_source_mismatch")
-        claim_ids.add(claim_id)
-
-    queue = payload.get("verification_queue")
-    if not isinstance(queue, list):
-        raise ArtifactPacketError("verification_queue_invalid")
-    for item in queue:
-        allowed = {"claim_id", "check", "due_event", "status"}
-        if (
-            not isinstance(item, Mapping)
-            or set(item) != allowed
-            or item.get("claim_id") not in claim_ids
-            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"status"})
-            or item.get("status") not in QUEUE_STATUSES
-        ):
-            raise ArtifactPacketError("verification_queue_invalid")
-
-    peers = payload.get("peers")
-    if not isinstance(peers, list) or not peers:
-        raise ArtifactPacketError("peers_invalid")
-    for peer in peers:
-        allowed = {
-            "symbol", "role", "revenue_growth_pct", "gross_margin_pct", "valuation_multiple",
-            "status", "source_refs", "as_of", "comparability_gap",
-        }
-        refs = peer.get("source_refs") if isinstance(peer, Mapping) else None
-        metrics = ("revenue_growth_pct", "gross_margin_pct", "valuation_multiple")
-        if (
-            not isinstance(peer, Mapping)
-            or set(peer) != allowed
-            or not all(_is_nonempty_string(peer.get(key)) for key in ("symbol", "role", "as_of"))
-            or peer.get("status") not in PEER_STATUSES
-            or not isinstance(peer.get("comparability_gap"), str)
-            or not isinstance(refs, list)
-            or not refs
-            or not set(refs).issubset(source_ids)
-        ):
-            raise ArtifactPacketError("peers_invalid")
-        if peer["status"] == "source_error":
-            if any(peer.get(key) is not None for key in metrics) or not _is_nonempty_string(peer["comparability_gap"]):
-                raise ArtifactPacketError("peers_invalid")
-        elif not all(isinstance(peer.get(key), (int, float)) for key in metrics):
-            raise ArtifactPacketError("peers_invalid")
-        if _parse_timestamp(peer["as_of"], "peers_invalid") > cutoff:
-            raise ArtifactPacketError("evidence_cutoff_invalid")
-
-    transmissions = payload.get("event_transmission")
-    if not isinstance(transmissions, list) or not transmissions:
-        raise ArtifactPacketError("event_transmission_invalid")
-    for item in transmissions:
-        allowed = {
-            "event_id", "event_time", "catalyst", "claim_ids", "expected_evidence", "confirmation",
-            "invalidation", "decision_consequence", "source_refs", "status",
-        }
-        refs = item.get("source_refs") if isinstance(item, Mapping) else None
-        linked_claims = item.get("claim_ids") if isinstance(item, Mapping) else None
-        if (
-            not isinstance(item, Mapping)
-            or set(item) != allowed
-            or not all(_is_nonempty_string(item.get(key)) for key in allowed - {"claim_ids", "source_refs", "status"})
-            or item.get("status") not in EVENT_STATUSES
-            or not isinstance(linked_claims, list)
-            or not linked_claims
-            or not set(linked_claims).issubset(claim_ids)
-            or not isinstance(refs, list)
-            or not refs
-            or not set(refs).issubset(source_ids)
-        ):
-            raise ArtifactPacketError("event_transmission_invalid")
-        if not set(refs).issubset(set(modules["catalysts"]["source_refs"])):
-            raise ArtifactPacketError("event_transmission_source_mismatch")
-        _parse_timestamp(item["event_time"], "event_transmission_invalid")
-
-    _validate_price_setup(payload.get("price_setup"), evidence_state, cutoff)
-
-
-def _validate_price_setup(price_setup: Any, evidence_state: str, cutoff: datetime) -> None:
-    allowed = {
-        "main_timeframe", "auxiliary_timeframe", "setup_state", "research_gate_status", "invalidation",
-        "liquidity", "volatility", "product_path", "candles", "overlays", "levels", "zones", "scenarios",
-    }
-    if not isinstance(price_setup, Mapping) or set(price_setup) != allowed:
-        raise ArtifactPacketError("price_setup_invalid")
-    if (
-        not all(_is_nonempty_string(price_setup.get(key)) for key in ("main_timeframe", "auxiliary_timeframe"))
-        or price_setup.get("setup_state") not in SETUP_STATES
-        or price_setup.get("research_gate_status") not in {"ready", "blocked"}
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    expected_gate = "ready" if evidence_state == "complete" else "blocked"
-    if price_setup["research_gate_status"] != expected_gate:
-        raise ArtifactPacketError("research_gate_mismatch")
-
-    invalidation = price_setup.get("invalidation")
-    if (
-        not isinstance(invalidation, Mapping)
-        or set(invalidation) != {"price", "condition"}
-        or not isinstance(invalidation.get("price"), (int, float))
-        or not _is_nonempty_string(invalidation.get("condition"))
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    liquidity = price_setup.get("liquidity")
-    if (
-        not isinstance(liquidity, Mapping)
-        or set(liquidity) != {"average_daily_volume", "bid_ask_bps", "status"}
-        or not isinstance(liquidity.get("average_daily_volume"), (int, float))
-        or not isinstance(liquidity.get("bid_ask_bps"), (int, float))
-        or liquidity.get("status") not in LIQUIDITY_STATUSES
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    volatility = price_setup.get("volatility")
-    if (
-        not isinstance(volatility, Mapping)
-        or set(volatility) != {"atr_percent", "realized_20d_percent", "status"}
-        or not isinstance(volatility.get("atr_percent"), (int, float))
-        or not isinstance(volatility.get("realized_20d_percent"), (int, float))
-        or volatility.get("status") not in VOLATILITY_STATUSES
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    product = price_setup.get("product_path")
-    if (
-        not isinstance(product, Mapping)
-        or set(product) != {"underlying_identity", "leverage_multiple", "reset_frequency", "path_dependency", "risk_note"}
-        or not isinstance(product.get("leverage_multiple"), (int, float))
-        or not all(_is_nonempty_string(product.get(key)) for key in ("underlying_identity", "reset_frequency", "path_dependency", "risk_note"))
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    candles = price_setup.get("candles")
-    if not isinstance(candles, list) or len(candles) < 10:
-        raise ArtifactPacketError("price_setup_invalid")
-    previous_time: int | float | None = None
-    for candle in candles:
-        if not isinstance(candle, Mapping) or set(candle) != {"time", "open", "high", "low", "close", "volume"}:
-            raise ArtifactPacketError("price_setup_invalid")
-        if not all(isinstance(candle.get(key), (int, float)) for key in candle):
-            raise ArtifactPacketError("price_setup_invalid")
-        if candle["low"] > min(candle["open"], candle["close"]) or candle["high"] < max(candle["open"], candle["close"]):
-            raise ArtifactPacketError("price_setup_invalid")
-        if previous_time is not None and candle["time"] <= previous_time:
-            raise ArtifactPacketError("price_setup_invalid")
-        if candle["time"] > cutoff.timestamp():
-            raise ArtifactPacketError("evidence_cutoff_invalid")
-        previous_time = candle["time"]
-    _validate_price_collections(price_setup, cutoff)
-
-
-def _validate_price_collections(price_setup: Mapping[str, Any], cutoff: datetime) -> None:
-    overlays = price_setup.get("overlays")
-    if not isinstance(overlays, list):
-        raise ArtifactPacketError("price_setup_invalid")
-    for overlay in overlays:
-        if not isinstance(overlay, Mapping) or set(overlay) != {"id", "label", "points"}:
-            raise ArtifactPacketError("price_setup_invalid")
-        points = overlay.get("points")
-        if not _is_nonempty_string(overlay.get("id")) or not _is_nonempty_string(overlay.get("label")) or not isinstance(points, list):
-            raise ArtifactPacketError("price_setup_invalid")
-        if not all(isinstance(point, Mapping) and set(point) == {"time", "value"} and all(isinstance(point[key], (int, float)) for key in point) for point in points):
-            raise ArtifactPacketError("price_setup_invalid")
-        if any(point["time"] > cutoff.timestamp() for point in points):
-            raise ArtifactPacketError("evidence_cutoff_invalid")
-    levels = price_setup.get("levels")
-    if not isinstance(levels, list) or not all(
-        isinstance(item, Mapping)
-        and set(item) == {"price", "label", "kind"}
-        and isinstance(item["price"], (int, float))
-        and _is_nonempty_string(item["label"])
-        and _is_nonempty_string(item["kind"])
-        for item in levels
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    zones = price_setup.get("zones")
-    if not isinstance(zones, list) or not all(
-        isinstance(item, Mapping)
-        and set(item) == {"low", "high", "label", "kind"}
-        and isinstance(item["low"], (int, float))
-        and isinstance(item["high"], (int, float))
-        and item["low"] <= item["high"]
-        and _is_nonempty_string(item["label"])
-        and _is_nonempty_string(item["kind"])
-        for item in zones
-    ):
-        raise ArtifactPacketError("price_setup_invalid")
-    scenarios = price_setup.get("scenarios")
-    scenario_keys = {"name", "bias", "trigger", "evidence_required", "invalidation", "response"}
-    if not isinstance(scenarios, list) or not scenarios:
-        raise ArtifactPacketError("price_setup_invalid")
-    if not all(isinstance(item, Mapping) and set(item) == scenario_keys and all(_is_nonempty_string(item[key]) for key in scenario_keys) for item in scenarios):
-        raise ArtifactPacketError("price_setup_invalid")
-
-
-def _derive_instrument_evidence_state(
-    modules: Mapping[str, Mapping[str, Any]], identity_status: str
-) -> str:
-    states = {module_id: modules[module_id]["evidence_state"] for module_id in REQUIRED_INSTRUMENT_MODULES}
-    if identity_status == "source_error":
-        return "source_error"
-    usable = {module_id for module_id, state in states.items() if state in {"complete", "partial"}}
-    if states["industry"] != "complete" or states["fundamentals"] != "complete":
-        return "source_error"
-    if len(usable) < 3:
-        return "source_error"
-    if any(state == "stale" for state in states.values()):
-        return "stale"
-    if all(state == "complete" for state in states.values()):
-        return "complete"
-    return "partial"
 
 
 def _validate_content_hash(snapshot: Mapping[str, Any]) -> None:
@@ -1103,7 +369,10 @@ def _validate_public_privacy(value: Any) -> None:
             raise ArtifactPacketError("privacy_violation")
 
 
-def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
+def _validate_diagnostics(
+    snapshot: Mapping[str, Any],
+    allowed_modules: frozenset[str],
+) -> None:
     diagnostics = snapshot.get("diagnostics")
     if not isinstance(diagnostics, list):
         raise ArtifactPacketError("diagnostics_invalid")
@@ -1138,7 +407,9 @@ def _validate_diagnostics(snapshot: Mapping[str, Any]) -> None:
                 raise ArtifactPacketError("diagnostic_unsafe")
         if not DIAGNOSTIC_CODE_PATTERN.fullmatch(code):
             raise ArtifactPacketError("diagnostics_invalid")
-        if module is not None and (not _is_nonempty_string(module) or module not in ALL_INSTRUMENT_MODULES):
+        if module is not None and (
+            not _is_nonempty_string(module) or module not in allowed_modules
+        ):
             raise ArtifactPacketError("diagnostic_reference_invalid")
         if source_alias is not None and (
             not _is_nonempty_string(source_alias) or source_alias not in known_aliases

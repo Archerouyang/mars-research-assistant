@@ -237,10 +237,10 @@ Completion evidence:
 
 ## Conditional Architecture Optimization: Artifact Packet Internal Board Seam
 
-Status: approved for post-Macro revalidation after the behavior-contract task.
-The Macro Regime Board is now integrated in `dev@7ab4ab0`, so the follow-up must
-reapply the deletion test to the integrated Instrument and Macro
-implementations before implementation starts.
+Status: complete after post-Macro deletion-test revalidation on
+`codex/behavior-contract-matrix`. The integrated `dev@7ab4ab0` implementation
+still mixed two payload policies and renderers into the shared packet core, so
+the approved private Board seam remained justified.
 
 Proceed only when the integrated baseline still shows all of the following:
 
@@ -259,6 +259,24 @@ renderer selection inside each adapter. Modify only canonical
 `skills/trading-research-system/` behavior, generate Native Plugin wrappers via
 `scripts/sync_native_plugin.py`, and replace duplicated shared tests with one
 core conformance matrix plus Board-specific semantic tests.
+
+Completion evidence:
+
+- `artifact_packet.py` now owns shared packet validation, canonical JSON,
+  privacy, diagnostics, size limits, HTML safety, manifests, and immutable
+  writes; it no longer contains Instrument or Macro payload/renderer policy;
+- `artifact_packet_instrument_adapter.py` and
+  `artifact_packet_macro_adapter.py` own their Board-specific schema,
+  evidence/freshness rules, and renderer selection;
+- `artifact_packet_board_adapters.py` is an explicit static registry keyed by
+  `(board_id, payload major)` with no dynamic discovery;
+- the shared conformance test pins exact JSON/HTML/manifest SHA-256 bytes for
+  both complete public fixtures, while existing Instrument and Macro tests
+  retain Board-specific semantic coverage;
+- canonical Skill changes were projected only through
+  `scripts/sync_native_plugin.py`; compile, plugin, MVP, Instrument browser
+  (12 checks), and Macro browser (15 checks) gates pass;
+- the external Artifact Packet contract and ADR 0008 are unchanged.
 
 ## Canonical Instrument Research Board
 
