@@ -1,4 +1,41 @@
-# Canonical Instrument Research Artifact Packet
+# Canonical Research Artifact Packets
+
+The canonical Macro Regime Board uses the same immutable packet seam through
+`scripts/macro_regime_board_artifact.py`: one validated `macro_regime` snapshot
+produces canonical JSON, directly openable offline HTML, and a manifest. Its
+purpose-specific renderer owns Overview, Rates & Liquidity, Inflation & Growth,
+Cross-Asset Impact, and Event Scenarios. It requires a fresh plan context and
+never supplies a generic regime label when that gate fails. The four committed
+Macro fixtures are synthetic and privacy-safe: `complete`, `partial`, `stale`,
+and `source_error`.
+
+Macro has its own payload version constant (`1.0`). A complete, partial, or
+stale `plan_context` structurally names the active plan identity, applicable
+horizon and timestamped session, current posture, constraints, assumptions, and
+decision rules; the session date must match the decision cutoff. An unavailable
+plan uses empty structured plan fields plus the explicit `Plan context
+unavailable` state. Its rendered Board retains views and evidence coverage, but
+does not expose payload posture/consequences, plan effects, exposure plan rules
+or impacts, or scenario posture consequences. The artifact-packet builder loads
+the bundled ECharts source and passes it to the pure Macro renderer; the
+renderer does not access the filesystem.
+
+Every Macro cascade and family evidence row identifies its source alias and
+reference, priority, freshness status, and as-of timestamp. Actual, forecast,
+media, and thesis provenance therefore remains auditable at the decision row.
+
+This canonical entrypoint deliberately coexists with
+`scripts/macro_regime_artifact.py`, the legacy static SVG mini-panel generator.
+The SVG path is not a fallback, is not included in a Macro packet manifest, and
+is not changed by the canonical Board flow. Public SVG cutover remains separate.
+
+For focused local browser acceptance, generate a packet from the complete Macro
+fixture and run `scripts/verify_macro_regime_browser.py` with a local
+Chrome/Chromium executable. It checks all five views at 1200, 700, and 320
+pixels with zero external requests, selected controls, nonblank SVG chart,
+responsive layout, and a semantic no-JavaScript Overview.
+
+## Instrument Research Packet
 
 The Instrument Research renderer consumes one validated snapshot and produces
 exactly three immutable files: canonical JSON, directly openable offline HTML,

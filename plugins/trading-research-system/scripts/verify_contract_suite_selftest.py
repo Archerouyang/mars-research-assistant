@@ -51,6 +51,8 @@ def main() -> None:
         raise AssertionError("core suite should include artifact packet selftest")
     if "instrument-research-board-selftest" not in names:
         raise AssertionError("core suite should include Instrument Research Board selftest")
+    if "macro-regime-board-selftest" not in names:
+        raise AssertionError("core suite should include Macro Regime Board selftest")
     if len(names) != len(set(names)):
         raise AssertionError("core suite should not contain duplicate names")
 

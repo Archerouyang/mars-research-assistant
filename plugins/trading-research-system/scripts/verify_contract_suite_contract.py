@@ -41,6 +41,7 @@ REQUIRED = {
         "verify_visual_artifact_selftest.py",
         "verify_visual_artifact_contract.py",
         "verify_instrument_research_board_selftest.py",
+        "verify_macro_regime_board_selftest.py",
         "verify_broker_snapshot_ingest_contract.py",
     ],
     "runner": [
@@ -63,6 +64,7 @@ REQUIRED = {
         "longbridge-skill-adapter",
         "broker-snapshot-ingest-contract",
         "instrument-research-board-selftest",
+        "macro-regime-board-selftest",
     ],
     "verify_plugin": [
         "verify_contract_suite.py",

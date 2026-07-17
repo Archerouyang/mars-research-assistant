@@ -9,6 +9,16 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
+from research_brief_shell import (
+    render_decision_framing,
+    render_evidence_rail,
+    render_main_open,
+    render_masthead,
+    render_safety_footer,
+    render_summary,
+    render_view_tabs,
+    shared_shell_styles,
+)
 
 LIGHTWEIGHT_CHARTS_VERSION = "5.2.0"
 LIGHTWEIGHT_CHARTS_ASSET = (
@@ -50,26 +60,11 @@ def render_instrument_research_board(
 </style>
 </head>
 <body>
-<main id="instrument-board">
-<header class="masthead">
-<div>
-<p class="eyebrow">Instrument Research</p>
-<h1>{escape(instrument_label)} Research brief</h1>
-<p class="lede">{escape(payload['question'])}</p>
-</div>
-<dl class="provenance" aria-label="Provenance">
-<div><dt>Provenance</dt><dd>{escape(snapshot['snapshot_id'])}</dd></div>
-<div><dt>Decision cutoff</dt><dd>{escape(snapshot['decision_cutoff'])}</dd></div>
-<div><dt>Privacy</dt><dd>{privacy_label}</dd></div>
-</dl>
-</header>
-<nav class="view-tabs" aria-label="Research views">{_render_view_buttons(payload['views'], default_view)}</nav>
-<section class="summary" aria-label="Research summary">
-<article><span>Current decision</span><strong>{escape(payload['decision'])}</strong></article>
-<article><span>Coverage</span><strong>{snapshot['coverage']['required_complete']} of {snapshot['coverage']['required_total']} required gates complete</strong></article>
-<article><span>Status</span><strong>Evidence: {escape(snapshot['evidence_state'])}<br>Presentation: {escape(presentation_state)}</strong></article>
-</section>
-<p class="thesis-boundary">Four-evidence balance. Price Action is timing evidence, not the research thesis.</p>
+{render_main_open('instrument-board')}
+{render_masthead(eyebrow='Instrument Research', title=f'{instrument_label} Research brief', question=payload['question'], snapshot_id=snapshot['snapshot_id'], decision_cutoff=snapshot['decision_cutoff'], privacy=privacy_label)}
+{render_view_tabs(payload['views'], default_view, VIEW_IDS, 'Research views')}
+{render_summary((('Current decision', payload['decision'], None), ('Coverage', f"{snapshot['coverage']['required_complete']} of {snapshot['coverage']['required_total']} required gates complete", None), ('Status', f"Evidence: {snapshot['evidence_state']} | Presentation: {presentation_state}", None)), 'Research summary')}
+{render_decision_framing('Research boundary', 'Four-evidence balance. Price Action is timing evidence, not the research thesis.')}
 <div class="board-layout">
 <div class="view-stack">
 {_render_overview(payload, modules, default_view_id)}
@@ -77,12 +72,9 @@ def render_instrument_research_board(
 {_render_industry_peers(payload, modules, default_view_id)}
 {_render_catalysts_flows(payload, modules, default_view_id)}
 </div>
-{_render_evidence_rail(snapshot, payload)}
+{render_evidence_rail(snapshot, payload['modules'], 'industry, fundamentals, catalysts/events, and market/instrument data. Flows are supporting-only.')}
 </div>
-<footer>
-<h2>Safety boundary</h2>
-<p>Synthetic fixture. Not investment advice. No external requests or state-changing actions occur when this file is opened.</p>
-</footer>
+{render_safety_footer('Synthetic fixture. Not investment advice. No external requests or state-changing actions occur when this file is opened.')}
 </main>
 <script data-library="TradingView Lightweight Charts" data-version="{LIGHTWEIGHT_CHARTS_VERSION}">
 {_load_lightweight_charts_script()}
@@ -98,7 +90,7 @@ const instrumentBoardPayload = {chart_json};
 
 
 def _styles() -> str:
-    return """
+    return shared_shell_styles() + """
 :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.45; --ink:#18212b; --muted:#5c6874; --line:#d7dde3; --paper:#fff; --wash:#f4f6f8; --green:#137a4b; --amber:#a15c00; --red:#bf3b33; --blue:#1769aa; }
 * { box-sizing: border-box; }
 body { margin:0; color:var(--ink); background:var(--paper); }
@@ -123,7 +115,7 @@ h3 { font-size:15px; }
 .summary article { min-width:0; padding:11px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .summary span,.field-label { display:block; margin-bottom:4px; color:var(--muted); font-size:11px; text-transform:uppercase; }
 .summary strong { font-size:13px; font-weight:600; }
-.thesis-boundary { margin:12px 0; padding:9px 11px; border-left:3px solid var(--amber); background:#fff8e7; font-size:13px; }
+    .decision-framing { margin:12px 0; padding:9px 11px; border-left:3px solid var(--amber); background:#fff8e7; font-size:13px; }
 .board-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:18px; align-items:start; }
 .view-panel { padding-top:4px; }
 .enhanced .view-panel[hidden] { display:none; }
@@ -166,14 +158,6 @@ footer h2 { margin-bottom:4px; font-size:14px; color:var(--ink); }
 @media (max-width:420px) { main{padding:10px}.view-tabs button{flex:1 1 46%;white-space:normal}.provenance div{grid-template-columns:1fr}.summary article{padding:9px 0}th,td{padding:6px 4px;font-size:11px} }
 @media (max-width:520px) { .peer-table thead{display:none}.peer-table,.peer-table tbody,.peer-table tr,.peer-table td{display:block;width:100%}.peer-table tr{display:grid;grid-template-columns:1fr 1fr;padding:8px 0;border-bottom:1px solid var(--line)}.peer-table td{min-width:0;padding:4px;border:0;overflow-wrap:anywhere}.peer-table td::before{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;content:attr(data-label)} }
 """.strip()
-
-
-def _render_view_buttons(views: list[str], default_view: str) -> str:
-    return "".join(
-        f'<button type="button" role="tab" id="tab-{VIEW_IDS[view]}" data-view-target="{VIEW_IDS[view]}" '
-        f'aria-controls="view-{VIEW_IDS[view]}" aria-selected="{str(view == default_view).lower()}">{escape(view)}</button>'
-        for view in views
-    )
 
 
 def _render_overview(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], default_view: str) -> str:
@@ -283,24 +267,6 @@ def _render_catalysts_flows(payload: Mapping[str, Any], modules: Mapping[str, Ma
 <div class="section-head"><h2>Supporting flow boundary</h2><p>Flow cannot prove or replace a required gate</p></div>
 {_render_module_row(modules['flows'])}
 </section>"""
-
-
-def _render_evidence_rail(snapshot: Mapping[str, Any], payload: Mapping[str, Any]) -> str:
-    modules = payload["modules"]
-    sources = "".join(
-        f'<li><strong>{escape(source["alias"])}</strong><span class="source-time">{escape(source["priority"])} · {escape(source["freshness_status"])} · {escape(source["as_of"])}</span></li>'
-        for source in snapshot["source_registry"]
-    )
-    gaps = [module for module in modules if module["evidence_state"] != "complete" or module["gap_reason"]]
-    gap_rows = "".join(
-        f'<li><strong>{escape(module["id"])}</strong><span class="source-time">{escape(module["evidence_state"])} · {escape(module["gap_reason"] or "No explicit gap")}</span></li>'
-        for module in gaps
-    ) or "<li>No evidence gaps in this snapshot.</li>"
-    return f"""<aside class="evidence-rail" aria-labelledby="evidence-rail-title">
-<h2 id="evidence-rail-title">Evidence rail</h2><ul>{sources}</ul>
-<h3>Visible gaps</h3><ul>{gap_rows}</ul>
-<p><strong>Minimum evidence:</strong> industry, fundamentals, catalysts/events, and market/instrument data. Flows are supporting-only.</p>
-</aside>"""
 
 
 def _hidden(view_id: str, default_view: str) -> str:
