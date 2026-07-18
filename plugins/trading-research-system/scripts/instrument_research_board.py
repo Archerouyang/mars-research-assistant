@@ -107,7 +107,8 @@ h3 { font-size:15px; }
 .provenance div { display:grid; grid-template-columns:110px minmax(0,1fr); gap:8px; padding:3px 0; }
 .provenance dt { color:var(--muted); }
 .provenance dd { overflow-wrap:anywhere; }
-.view-tabs { display:flex; flex-wrap:wrap; gap:6px; padding:12px 0; }
+.view-tabs { display:none; flex-wrap:wrap; gap:6px; padding:12px 0; }
+.enhanced .view-tabs { display:flex; }
 .view-tabs button { min-height:32px; padding:4px 10px; border:1px solid var(--line); border-radius:5px; color:var(--ink); background:var(--paper); cursor:pointer; }
 .view-tabs button[aria-selected="true"] { border-color:var(--ink); color:var(--paper); background:var(--ink); }
 .view-tabs button:focus-visible { outline:3px solid #7db9e8; outline-offset:2px; }

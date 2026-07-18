@@ -35,11 +35,11 @@ history.
 Staged only. These synthetic, non-interactive captures are hash-linked to the same canonical HTML used by Codex and Claude Code.
 
 ### Instrument Research
-![Synthetic instrument-research Overview; png sha256 0589a67b4b64](docs/assets/canonical-gallery/captures/instrument-research/overview-1200x840.png)
+![Synthetic instrument-research Overview; png sha256 b0b472b23ddb](docs/assets/canonical-gallery/captures/instrument-research/overview-1200x840.png)
 [Open canonical HTML](docs/assets/canonical-gallery/artifacts/instrument-research/research-brief.html) · non-interactive screenshot · synthetic fixture
 
 ### Macro Regime
-![Synthetic macro-regime Overview; png sha256 3b563c6be2ca](docs/assets/canonical-gallery/captures/macro-regime/overview-1200x840.png)
+![Synthetic macro-regime Overview; png sha256 d009c0a070c9](docs/assets/canonical-gallery/captures/macro-regime/overview-1200x840.png)
 [Open canonical HTML](docs/assets/canonical-gallery/artifacts/macro-regime/research-brief.html) · non-interactive screenshot · synthetic fixture
 
 ### Portfolio Risk

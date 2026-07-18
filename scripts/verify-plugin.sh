@@ -46,6 +46,7 @@ uv_run python scripts/verify_behavior_contract_matrices_contract.py
 uv_run python scripts/verify_readme_gallery_contract_selftest.py
 uv_run python scripts/verify_readme_gallery_contract.py
 uv_run python scripts/verify_canonical_gallery_selftest.py
+uv_run python scripts/verify_visual_acceptance_selftest.py
 uv_run python scripts/stage_canonical_gallery.py \
   --verify-only \
   --output-dir docs/staging/canonical-gallery-v1

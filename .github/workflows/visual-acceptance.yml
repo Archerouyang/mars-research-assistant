@@ -1,0 +1,41 @@
+name: canonical-visual-acceptance
+
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - ".github/workflows/visual-acceptance.yml"
+      - "docs/staging/canonical-gallery-v1/**"
+      - "docs/visual-acceptance/**"
+      - "plugins/trading-research-system/**"
+      - "scripts/*visual_acceptance*"
+      - "skills/trading-research-system/**"
+  workflow_dispatch:
+
+jobs:
+  visual-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install project and Chromium
+        run: |
+          uv sync --group dev --locked
+          uv run playwright install --with-deps chromium
+      - name: Unit contract
+        run: uv run python scripts/verify_visual_acceptance_selftest.py
+      - name: Automated fresh-temp visual acceptance
+        run: |
+          uv run python scripts/verify_visual_acceptance.py \
+            --output-dir "${RUNNER_TEMP}/canonical-visual-corpus" \
+            --failure-dir "${RUNNER_TEMP}/canonical-visual-failures"
+      - name: Preserve failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-visual-failures
+          if-no-files-found: ignore
+          path: |
+            ${{ runner.temp }}/canonical-visual-failures
+            ${{ runner.temp }}/canonical-visual-corpus/visual-acceptance-report.json

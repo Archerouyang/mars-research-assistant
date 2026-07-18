@@ -29,11 +29,11 @@ npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -
 仅在 staging 中。以下合成、非交互截图与 Codex 和 Claude Code 使用的同一份 canonical HTML 通过哈希关联。
 
 ### Instrument Research
-![合成 instrument-research Overview；PNG SHA-256 0589a67b4b64](docs/assets/canonical-gallery/captures/instrument-research/overview-1200x840.png)
+![合成 instrument-research Overview；PNG SHA-256 b0b472b23ddb](docs/assets/canonical-gallery/captures/instrument-research/overview-1200x840.png)
 [打开 canonical HTML](docs/assets/canonical-gallery/artifacts/instrument-research/research-brief.html) · 非交互截图 · 合成 fixture
 
 ### Macro Regime
-![合成 macro-regime Overview；PNG SHA-256 3b563c6be2ca](docs/assets/canonical-gallery/captures/macro-regime/overview-1200x840.png)
+![合成 macro-regime Overview；PNG SHA-256 d009c0a070c9](docs/assets/canonical-gallery/captures/macro-regime/overview-1200x840.png)
 [打开 canonical HTML](docs/assets/canonical-gallery/artifacts/macro-regime/research-brief.html) · 非交互截图 · 合成 fixture
 
 ### Portfolio Risk

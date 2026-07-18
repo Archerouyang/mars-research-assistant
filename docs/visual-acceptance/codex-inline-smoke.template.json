@@ -1,0 +1,47 @@
+{
+  "records": [
+    {
+      "all_views_switched": true,
+      "board": "instrument_research",
+      "browser_wrapper": false,
+      "default_view": "Overview",
+      "external_requests": [],
+      "host": "codex_inline",
+      "html_sha256": "REPLACE_FROM_GALLERY_MANIFEST",
+      "keyboard_pass": true,
+      "page_errors": [],
+      "responsive_pass": true,
+      "reviewed_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "reviewer": "REPLACE_WITH_REVIEWER"
+    },
+    {
+      "all_views_switched": true,
+      "board": "macro_regime",
+      "browser_wrapper": false,
+      "default_view": "Overview",
+      "external_requests": [],
+      "host": "codex_inline",
+      "html_sha256": "REPLACE_FROM_GALLERY_MANIFEST",
+      "keyboard_pass": true,
+      "page_errors": [],
+      "responsive_pass": true,
+      "reviewed_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "reviewer": "REPLACE_WITH_REVIEWER"
+    },
+    {
+      "all_views_switched": true,
+      "board": "portfolio_risk",
+      "browser_wrapper": false,
+      "default_view": "Overview",
+      "external_requests": [],
+      "host": "codex_inline",
+      "html_sha256": "REPLACE_FROM_GALLERY_MANIFEST",
+      "keyboard_pass": true,
+      "page_errors": [],
+      "responsive_pass": true,
+      "reviewed_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "reviewer": "REPLACE_WITH_REVIEWER"
+    }
+  ],
+  "version": "1.0"
+}
