@@ -119,3 +119,42 @@ Playwright dependency; screenshots go only to the caller's temporary output
 path. The repository-wide mandatory browser gate is delivered separately by
 the visual acceptance ticket; this command is the focused local acceptance for
 the Instrument vertical slice.
+
+## Staged Cross-Host Gallery
+
+`scripts/stage_canonical_gallery.py` validates the exact twelve-snapshot public
+corpus: three Boards times `complete`, `partial`, `stale`, and `source_error`.
+Only complete snapshots are captured. The approved permanent capture matrix is:
+
+- Instrument Research: Overview and Price & Setup;
+- Macro Regime: Overview and Cross-Asset Impact;
+- Portfolio Risk: Overview and Stress Tests;
+- each approved View at 1200 by 840 and 700 by 840, for twelve PNGs total.
+
+The staging manifest records the canonical JSON, artifact manifest, exact HTML,
+PNG, documentation-proposal, size, and timing identities. Codex exact-byte
+copy, Claude Code local-open, and GitHub static-reference records all point to
+the same per-Board HTML path and SHA-256. PNG metadata also records Board, View,
+and synthetic-fixture identity. A replaced PNG, edited manifest hash, stale HTML
+link, invalid dimensions, missing file, or over-budget artifact fails closed.
+
+Generation requires a caller-supplied local Chrome or Chromium and an absent
+output directory. It builds in a fresh sibling temporary directory, verifies
+the complete hash chain, then publishes the staging directory with one atomic
+rename:
+
+```bash
+uv run --frozen python scripts/stage_canonical_gallery.py \
+  --browser /path/to/chrome-or-chromium \
+  --output-dir docs/staging/canonical-gallery-v1
+
+uv run --frozen python scripts/stage_canonical_gallery.py \
+  --verify-only \
+  --output-dir docs/staging/canonical-gallery-v1
+```
+
+The staged English/Chinese README and detailed visual document are proposals.
+This workflow does not edit the active root READMEs, `docs/assets/readme`, or
+legacy SVG files and records `public_cutover=not_performed`. Public switching,
+full browser/privacy/distribution matrices, and real Codex inline smoke remain
+separate acceptance and cutover tickets.

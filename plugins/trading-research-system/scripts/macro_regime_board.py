@@ -248,10 +248,11 @@ def _interaction_script(default_id: str) -> str:
 document.documentElement.classList.add('enhanced');
 const macroViews=document.querySelectorAll('.view-panel');
 const macroTabs=[...document.querySelectorAll('[data-view-target]')];
-function selectMacroView(button){{const target=button.dataset.viewTarget;macroViews.forEach((panel)=>{{panel.hidden=panel.dataset.view!==target;}});macroTabs.forEach((item)=>item.setAttribute('aria-selected',String(item===button)));}}
+let macroChartInstance=null;
+function selectMacroView(button){{const target=button.dataset.viewTarget;macroViews.forEach((panel)=>{{panel.hidden=panel.dataset.view!==target;}});macroTabs.forEach((item)=>item.setAttribute('aria-selected',String(item===button)));if(target==='cross-asset-impact'&&macroChartInstance){{requestAnimationFrame(()=>macroChartInstance.resize());}}}}
 macroTabs.forEach((button,index)=>{{button.addEventListener('click',()=>selectMacroView(button));button.addEventListener('keydown',(event)=>{{if(!['ArrowRight','ArrowLeft'].includes(event.key))return;event.preventDefault();const step=event.key==='ArrowRight'?1:-1;const next=macroTabs[(index+step+macroTabs.length)%macroTabs.length];next.focus();selectMacroView(next);}});}});
 document.querySelectorAll('[data-exposure-select]').forEach((select)=>select.addEventListener('change',()=>{{const list=select.closest('.view-panel').querySelectorAll('[data-exposure]');list.forEach((row)=>{{row.hidden=row.dataset.exposure!==select.value;}});}}));
 const chart=document.getElementById('macro-cross-asset-chart');
-if(chart&&window.echarts){{const chartInstance=echarts.init(chart,null,{{renderer: 'svg'}});chartInstance.setOption({{animation: false,aria: {{ enabled: true }},tooltip:{{show:false}},xAxis:{{type:'category',data:macroBoardPayload.chart_series.map((item)=>item.label)}},yAxis:{{type:'value'}},series:[{{type:'bar',data:macroBoardPayload.chart_series.map((item)=>item.value),itemStyle:{{color:'#1769aa'}}}}]}});document.documentElement.classList.add('chart-ready');window.addEventListener('resize',()=>chartInstance.resize());}}
+if(chart&&window.echarts){{macroChartInstance=echarts.init(chart,null,{{renderer: 'svg'}});macroChartInstance.setOption({{animation: false,aria: {{ enabled: true }},tooltip:{{show:false}},xAxis:{{type:'category',data:macroBoardPayload.chart_series.map((item)=>item.label)}},yAxis:{{type:'value'}},series:[{{type:'bar',data:macroBoardPayload.chart_series.map((item)=>item.value),itemStyle:{{color:'#1769aa'}}}}]}});document.documentElement.classList.add('chart-ready');window.addEventListener('resize',()=>macroChartInstance.resize());}}
 window.__dailytradesBoardReady=true;
 """
