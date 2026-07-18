@@ -6,8 +6,8 @@ Each screenshot is synthetic and non-interactive. Codex exact-byte copy, Claude 
 
 ## instrument_research · Overview
 
-HTML SHA-256: `792c9dfd579372fad78aa4945eaa73267cd10d9769319913282ec773d3b54fc7`
-PNG SHA-256: `0589a67b4b642872513f81121315838f15837a883ada74952b2d115502a748e7`
+HTML SHA-256: `8bb59a93baf860b5a23137df127066f0fb42efc347ab707205ea3e5ae7d4909a`
+PNG SHA-256: `b0b472b23ddb5f0b1fe072aae35d32d46a1c4b3973aa0e7672712be1cf8b738e`
 
 ![Synthetic instrument_research Overview](docs/assets/canonical-gallery/captures/instrument-research/overview-1200x840.png)
 
@@ -15,8 +15,8 @@ Narrow capture: [700x840](docs/assets/canonical-gallery/captures/instrument-rese
 
 ## instrument_research · Price & Setup
 
-HTML SHA-256: `792c9dfd579372fad78aa4945eaa73267cd10d9769319913282ec773d3b54fc7`
-PNG SHA-256: `f37c9f561b8f5fce9a4dd73dcbadf3d9bbd397b99065624a616426dfb2ad502c`
+HTML SHA-256: `8bb59a93baf860b5a23137df127066f0fb42efc347ab707205ea3e5ae7d4909a`
+PNG SHA-256: `c3b7a0363ea9403fc912f20e17538de9fbdd19ceaa06dfd6ba70caf1ff7e25de`
 
 ![Synthetic instrument_research Price & Setup](docs/assets/canonical-gallery/captures/instrument-research/price-and-setup-1200x840.png)
 
@@ -24,8 +24,8 @@ Narrow capture: [700x840](docs/assets/canonical-gallery/captures/instrument-rese
 
 ## macro_regime · Overview
 
-HTML SHA-256: `c30676ab9d248faea6b8df4ddb220c5fbcfa441b2db9853b63665844b0d6f2d9`
-PNG SHA-256: `3b563c6be2cadc975cc9dcb588fbc43a87cc453c86d4781f276572c87af68c19`
+HTML SHA-256: `ce39715ff0bfbaa3eb9e8df84e522c7616394da7714d054474187b1f7d85c086`
+PNG SHA-256: `d009c0a070c98eca652000131b39e4988df5ac9b56cbf494c5142fbac5a6173a`
 
 ![Synthetic macro_regime Overview](docs/assets/canonical-gallery/captures/macro-regime/overview-1200x840.png)
 
@@ -33,8 +33,8 @@ Narrow capture: [700x840](docs/assets/canonical-gallery/captures/macro-regime/ov
 
 ## macro_regime · Cross-Asset Impact
 
-HTML SHA-256: `c30676ab9d248faea6b8df4ddb220c5fbcfa441b2db9853b63665844b0d6f2d9`
-PNG SHA-256: `bbc5247f32c634882fbd5fa1578af1407dbbe4388daa296f417866c858c4ac54`
+HTML SHA-256: `ce39715ff0bfbaa3eb9e8df84e522c7616394da7714d054474187b1f7d85c086`
+PNG SHA-256: `58257d5016acc4a46a2cf735ca5f6dda6221877fba4413dfc6cbc4cd0ef8f595`
 
 ![Synthetic macro_regime Cross-Asset Impact](docs/assets/canonical-gallery/captures/macro-regime/cross-asset-impact-1200x840.png)
 

@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "c64f989dbb4bde9c82c3c1ed463c4773e2832299c69e09e26bd4273a02920838"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "6d0649a47ca03b2ec7bd4a60d09cc5d051130e14d3ffe073a14d7999815d03e1"
+    },
+    {
+      "path": "docs/assets/readme/macro-regime-panel.svg",
+      "sha256": "f7c6d5db82d91fce78ac55abfebd1ada88fb2d2d9c163a0b5797a5332ae4516b"
+    },
+    {
+      "path": "docs/assets/readme/position-risk-panel.svg",
+      "sha256": "33b15cb3eac13d3c860a9b3cb2d0752587a40d3a23a712ac6779c31b840c22ab"
+    },
+    {
+      "path": "docs/assets/readme/price-action-panel-fallback.svg",
+      "sha256": "2fa994d12ead7b36ce4cd5ce559fd4ade52dd68886288f8ff4e6920f2801eed9"
+    }
+  ],
+  "purpose": "Prove issue 58 does not perform issue 57 public cutover or mutate unrelated SVG/Mermaid sources.",
+  "version": "1.0"
+}
