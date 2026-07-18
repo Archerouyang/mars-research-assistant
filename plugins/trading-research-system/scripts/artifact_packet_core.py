@@ -153,6 +153,8 @@ class ArtifactPacket:
 
 ValidatePayload = Callable[[Mapping[str, Any]], None]
 RenderBoard = Callable[[Mapping[str, Any], str, str], bytes]
+AllowSnapshotActionTerm = Callable[[tuple[str, ...], str, str], bool]
+ValidateSnapshotText = Callable[[tuple[str, ...], str], None]
 
 
 @dataclass(frozen=True)
@@ -165,7 +167,8 @@ class BoardAdapter:
     render: RenderBoard
     allowed_modules: frozenset[str]
     freshness_policies: Mapping[str, timedelta | None]
-    allowed_snapshot_action_terms: frozenset[str] = frozenset()
+    allow_snapshot_action_term: AllowSnapshotActionTerm | None = None
+    validate_snapshot_text: ValidateSnapshotText | None = None
 
 
 def validate_snapshot(
@@ -192,7 +195,8 @@ def validate_snapshot(
     _validate_public_privacy(normalized)
     _validate_snapshot_action_safety(
         normalized,
-        adapter.allowed_snapshot_action_terms,
+        adapter.allow_snapshot_action_term,
+        adapter.validate_snapshot_text,
     )
     _validate_common_field_sets(normalized)
     payload = normalized.get("payload")
@@ -495,14 +499,32 @@ def _validate_html_safety(html: bytes) -> None:
 
 def _validate_snapshot_action_safety(
     snapshot: Mapping[str, Any],
-    allowed_terms: frozenset[str] = frozenset(),
+    allow_term: AllowSnapshotActionTerm | None = None,
+    validate_text: ValidateSnapshotText | None = None,
 ) -> None:
-    forbidden_terms = tuple(
-        term for term in FORBIDDEN_SNAPSHOT_TERMS if term not in allowed_terms
-    )
-    for text in _iter_snapshot_text(snapshot.get("payload", {})):
-        if any(term in text.casefold() for term in forbidden_terms):
+    for path, text in _iter_snapshot_text_with_path(snapshot.get("payload", {})):
+        if validate_text is not None:
+            validate_text(path, text)
+        lowered = text.casefold()
+        for term in FORBIDDEN_SNAPSHOT_TERMS:
+            if term not in lowered:
+                continue
+            if allow_term is not None and allow_term(path, text, term):
+                continue
             raise ArtifactPacketError("html_safety_violation")
+
+
+def _iter_snapshot_text_with_path(value: Any, path: tuple[str, ...] = ()):
+    if isinstance(value, Mapping):
+        for key, nested_value in value.items():
+            key_path = (*path, str(key))
+            yield key_path, str(key)
+            yield from _iter_snapshot_text_with_path(nested_value, key_path)
+    elif isinstance(value, list):
+        for index, nested_value in enumerate(value):
+            yield from _iter_snapshot_text_with_path(nested_value, (*path, str(index)))
+    elif isinstance(value, str):
+        yield path, value
 
 
 def _parse_timestamp(value: Any, error_code: str) -> datetime:

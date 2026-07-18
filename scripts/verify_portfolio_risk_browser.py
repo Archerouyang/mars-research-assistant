@@ -11,7 +11,7 @@ import tempfile
 from playwright.sync_api import sync_playwright
 
 
-WIDTHS = (1200, 700, 320)
+WIDTHS = (1200, 700, 736, 320)
 VIEWS = ("overview", "by-symbol", "by-theme-industry", "by-product", "by-broker", "stress-tests")
 
 
@@ -59,6 +59,43 @@ def main() -> None:
                       const selected = document.querySelector('[data-view-target][aria-selected="true"]');
                       const visible = [...document.querySelectorAll('[data-view]')].filter(item => !item.hidden).map(item => item.dataset.view);
                       const chart = document.querySelector('#portfolio-stress-chart svg');
+                      const chartTextOverlaps = [];
+                      if (chart) {
+                        const labels = [...chart.querySelectorAll('text')]
+                          .filter(item => item.textContent.trim() && item.getClientRects().length)
+                          .map(item => ({text: item.textContent.trim(), box: item.getBoundingClientRect()}));
+                        for (let leftIndex = 0; leftIndex < labels.length; leftIndex += 1) {
+                          for (let rightIndex = leftIndex + 1; rightIndex < labels.length; rightIndex += 1) {
+                            const left = labels[leftIndex];
+                            const right = labels[rightIndex];
+                            const overlapWidth = Math.min(left.box.right, right.box.right) - Math.max(left.box.left, right.box.left);
+                            const overlapHeight = Math.min(left.box.bottom, right.box.bottom) - Math.max(left.box.top, right.box.top);
+                            if (overlapWidth > 1 && overlapHeight > 1) chartTextOverlaps.push(`${left.text} <> ${right.text}`);
+                          }
+                        }
+                      }
+                      const clipSelector = '.view-tabs,button,.summary article,.decision-card,.section-head,.module-row,.ledger-row,.spine-row,.aggregation-row,.product-detail,.broker-row,.stress-row,.exclusions,.evidence-rail,footer';
+                      const clipped = [...document.querySelectorAll(clipSelector)]
+                        .filter(item => item.getClientRects().length)
+                        .filter(item => item.scrollWidth > item.clientWidth + 1 || item.scrollHeight > item.clientHeight + 1)
+                        .map(item => item.tagName + '.' + item.className)
+                        .slice(0, 10);
+                      const overlapContainers = document.querySelectorAll('.view-tabs,.summary,.primary-flow,.broker-list,.stress-list,.product-grid,.aggregation-list,.ledger,.spine,.fact-grid,dl');
+                      const overlaps = [];
+                      for (const container of overlapContainers) {
+                        const children = [...container.children].filter(item => item.getClientRects().length);
+                        for (let leftIndex = 0; leftIndex < children.length; leftIndex += 1) {
+                          const left = children[leftIndex].getBoundingClientRect();
+                          for (let rightIndex = leftIndex + 1; rightIndex < children.length; rightIndex += 1) {
+                            const right = children[rightIndex].getBoundingClientRect();
+                            const overlapWidth = Math.min(left.right, right.right) - Math.max(left.left, right.left);
+                            const overlapHeight = Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top);
+                            if (overlapWidth > 1 && overlapHeight > 1) {
+                              overlaps.push(container.className || container.tagName);
+                            }
+                          }
+                        }
+                      }
                       return {
                         panelVisible: Boolean(panel && !panel.hidden),
                         selected: selected?.dataset.viewTarget,
@@ -67,6 +104,9 @@ def main() -> None:
                         panelText: panel?.textContent.trim().length || 0,
                         chartPaths: chart ? chart.querySelectorAll('path').length : 0,
                         chartBox: chart ? chart.getBoundingClientRect().width * chart.getBoundingClientRect().height : 0,
+                        clipped,
+                        overlaps: [...new Set(overlaps)].slice(0, 10),
+                        chartTextOverlaps: chartTextOverlaps.slice(0, 10),
                       };
                     }""",
                     view,
@@ -78,6 +118,9 @@ def main() -> None:
                     or state["visible"] != [view]
                     or state["overflow"] > 1
                     or state["panelText"] < 120
+                    or state["clipped"]
+                    or state["overlaps"]
+                    or state["chartTextOverlaps"]
                     or (view == "stress-tests" and (state["chartPaths"] < 3 or state["chartBox"] < 10000))
                 )
                 if invalid:
@@ -116,6 +159,8 @@ def main() -> None:
             failures.append({"no_js": "Overview has horizontal overflow"})
         if no_js_requests:
             failures.append({"no_js_external_requests": no_js_requests})
+        if page.locator(".view-tabs").is_visible():
+            failures.append({"no_js": "inert view controls remain visible"})
         no_js.close()
         browser.close()
 

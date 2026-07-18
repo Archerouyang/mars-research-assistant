@@ -35,7 +35,8 @@ BOARD_ADAPTERS: Mapping[tuple[str, str], BoardAdapter] = {
         render=portfolio.render_board,
         allowed_modules=frozenset(portfolio.REQUIRED_PORTFOLIO_MODULES),
         freshness_policies=portfolio.FRESHNESS_POLICIES,
-        allowed_snapshot_action_terms=portfolio.ALLOWED_SNAPSHOT_ACTION_TERMS,
+        allow_snapshot_action_term=portfolio.allow_snapshot_action_term,
+        validate_snapshot_text=portfolio.validate_snapshot_text,
     ),
 }
 

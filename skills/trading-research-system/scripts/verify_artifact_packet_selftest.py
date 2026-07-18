@@ -36,9 +36,9 @@ EXPECTED_BOARD_PACKET_HASHES = {
     ),
     ("portfolio_risk", "1"): (
         "portfolio-risk-complete.json",
-        "5b4206434ad6f1a8e071741b21af116d15653ffe26736d6039374f76af7f7d73",
-        "c1d13b5ef31869f8804d89a4974d19f71a2ee0a3496c36f74fd17cca83553182",
-        "fcf4ed20bcdd201f28d80c93b4ee841e254bef99181a61e98005d6726bdb2b6a",
+        "17bcae8005789b307b038620b7f1d55a4bf03b2b9b8ea02da463d6e1fce863de",
+        "9ec506ae9064d0ab513b4b7f8c66bf6f4dfea819be99dda0d241a0456b3236b1",
+        "ab1f363d9964d584a33dd3481424c65c2a397235ba73b74c6075d103042d4700",
     ),
 }
 
