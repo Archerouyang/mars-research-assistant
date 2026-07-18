@@ -34,6 +34,12 @@ EXPECTED_BOARD_PACKET_HASHES = {
         "6540819b6cd538bdb8a0bcf4495190430176e23f4ac5f096f31c376e8450c195",
         "a6747a084b007ad61307a36c78b41035e7b4cb9e77979f5bce9e8b4dc8768921",
     ),
+    ("portfolio_risk", "1"): (
+        "portfolio-risk-complete.json",
+        "17bcae8005789b307b038620b7f1d55a4bf03b2b9b8ea02da463d6e1fce863de",
+        "9ec506ae9064d0ab513b4b7f8c66bf6f4dfea819be99dda0d241a0456b3236b1",
+        "ab1f363d9964d584a33dd3481424c65c2a397235ba73b74c6075d103042d4700",
+    ),
 }
 
 
@@ -144,6 +150,9 @@ class ArtifactPacketSelftest(unittest.TestCase):
             encoding="utf-8"
         )
         macro = (scripts / "artifact_packet_macro_adapter.py").read_text(encoding="utf-8")
+        portfolio = (scripts / "artifact_packet_portfolio_adapter.py").read_text(
+            encoding="utf-8"
+        )
 
         for shared_term in (
             "canonical_json_bytes",
@@ -159,6 +168,7 @@ class ArtifactPacketSelftest(unittest.TestCase):
             "def _validate_macro_payload",
             "render_instrument_research_board",
             "render_macro_regime_board",
+            "render_portfolio_risk_board",
         ):
             self.assertNotIn(board_policy_term, core)
 
@@ -168,12 +178,15 @@ class ArtifactPacketSelftest(unittest.TestCase):
         self.assertNotIn("payload_major", registry)
         self.assertNotIn("from artifact_packet import", instrument)
         self.assertNotIn("from artifact_packet import", macro)
+        self.assertNotIn("from artifact_packet import", portfolio)
         self.assertIn("def validate_snapshot", core)
         self.assertIn("adapter.validate_payload", core)
         self.assertIn("def _validate_payload", instrument)
         self.assertIn("render_instrument_research_board", instrument)
         self.assertIn("def _validate_macro_payload", macro)
         self.assertIn("render_macro_regime_board", macro)
+        self.assertIn("def validate_payload", portfolio)
+        self.assertIn("render_portfolio_risk_board", portfolio)
 
     def test_rejects_forbidden_network_and_action_references(self) -> None:
         for injected in (

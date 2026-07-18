@@ -54,6 +54,12 @@ def validate_macro_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     return validate_snapshot(snapshot, BOARD_ADAPTERS[("macro_regime", "1")])
 
 
+def validate_portfolio_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
+    """Backward-compatible Portfolio validation entrypoint."""
+
+    return validate_snapshot(snapshot, BOARD_ADAPTERS[("portfolio_risk", "1")])
+
+
 def render_research_brief(
     snapshot: Mapping[str, Any],
     default_view: str,
