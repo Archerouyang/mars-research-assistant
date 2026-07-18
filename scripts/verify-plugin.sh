@@ -45,6 +45,10 @@ uv_run python scripts/verify_behavior_contract_matrix_selftest.py
 uv_run python scripts/verify_behavior_contract_matrices_contract.py
 uv_run python scripts/verify_readme_gallery_contract_selftest.py
 uv_run python scripts/verify_readme_gallery_contract.py
+uv_run python scripts/verify_canonical_gallery_selftest.py
+uv_run python scripts/stage_canonical_gallery.py \
+  --verify-only \
+  --output-dir docs/staging/canonical-gallery-v1
 uv_run python plugins/trading-research-system/scripts/verify_position_risk_artifact_selftest.py
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
 uv_run python plugins/trading-research-system/scripts/verify_contract_suite.py core

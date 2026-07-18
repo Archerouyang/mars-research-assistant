@@ -100,6 +100,7 @@ class MacroRegimeBoardSelftest(unittest.TestCase):
 
         self.assertIn("Plan-linked Macro decision unavailable", html)
         self.assertEqual(html.count('data-view-target="'), 5)
+        self.assertIn("requestAnimationFrame(()=>macroChartInstance.resize())", html)
         self.assertIn("Evidence rail", html)
         for value in (
             payload["posture"]["label"],
