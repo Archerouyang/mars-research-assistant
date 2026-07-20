@@ -13,70 +13,11 @@ import csv
 from pathlib import Path
 from typing import Mapping
 
+from product_knowledge import normalize_symbol, product_knowledge
 from record_schemas import CSV_SCHEMAS
 
 
 PORTFOLIO_HEADER = list(CSV_SCHEMAS["portfolio_snapshot.csv"])
-MARKET_SUFFIXES = (".US", ".HK", ".SG", ".SH", ".SZ")
-
-BROAD_ETFS = {"DIA", "IWM", "QQQ", "SPY", "VOO"}
-RATES_CREDIT_ETFS = {"HYG", "IEF", "LQD", "SHY", "TLT"}
-COMMODITY_ETFS = {"GLD", "SLV"}
-SECTOR_ETFS = {
-    "DRAM": "memory_storage",
-    "SMH": "semiconductor",
-    "SOXX": "semiconductor",
-    "XLK": "tech_beta",
-    "XLV": "defensive_healthcare",
-    "XLY": "consumer_discretionary",
-}
-LEVERAGED_ETFS = {
-    "KORU": "leveraged_etf",
-    "MVLL": "leveraged_etf",
-    "MUU": "leveraged_etf",
-    "NVDL": "leveraged_etf",
-    "SOXL": "leveraged_etf",
-    "SQQQ": "leveraged_etf",
-    "TQQQ": "leveraged_etf",
-    "TSLL": "leveraged_etf",
-    "TSMX": "leveraged_etf",
-}
-LEVERAGED_THEMES = {
-    "KORU": "korea_equity_leverage",
-    "MVLL": "ai_hardware_leverage",
-    "MUU": "memory_storage_leverage",
-    "NVDL": "ai_hardware_leverage",
-    "SOXL": "semiconductor_leverage",
-    "SQQQ": "tech_inverse_leverage",
-    "TQQQ": "tech_beta_leverage",
-    "TSLL": "tesla_leverage",
-    "TSMX": "ai_hardware_leverage",
-}
-STOCK_THEMES = {
-    "AMD": "ai_hardware",
-    "ARM": "ai_hardware",
-    "BE": "ai_power",
-    "CRDO": "ai_infra_momentum",
-    "GLW": "ai_networking",
-    "GOOGL": "mag7",
-    "LITE": "ai_networking",
-    "META": "mag7",
-    "MRVL": "ai_hardware",
-    "MU": "memory_storage",
-    "NVDA": "ai_hardware",
-    "SKHY": "memory_storage",
-    "SKHYV": "memory_storage",
-    "SNDK": "memory_storage",
-    "TSM": "ai_hardware",
-}
-THEME_OVERRIDES = {
-    **{symbol: "tech_beta" for symbol in BROAD_ETFS},
-    **{symbol: "rates_credit" for symbol in RATES_CREDIT_ETFS},
-    **{symbol: "gold_precious_metals" for symbol in COMMODITY_ETFS},
-    **SECTOR_ETFS,
-    **LEVERAGED_THEMES,
-    **STOCK_THEMES,
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,57 +34,45 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def root_symbol(symbol: str) -> str:
-    upper = symbol.strip().upper()
-    for suffix in MARKET_SUFFIXES:
-        if upper.endswith(suffix):
-            return upper[: -len(suffix)]
-    return upper
-
-
 def clean(value: str | None) -> str:
     return (value or "").strip()
 
 
 def inferred_instrument_type(row: Mapping[str, str]) -> str:
     symbol = clean(row.get("symbol")).upper()
-    root = root_symbol(symbol)
     current = clean(row.get("instrument_type")) or "unspecified"
-    notes = clean(row.get("notes")).upper()
+    product = product_knowledge(symbol)
 
-    if symbol == "CASH" or root == "CASH":
+    if normalize_symbol(symbol) == "CASH":
         return "cash"
     if "option" in current.lower() or current.lower() == "opt":
         return "option"
     if "future" in current.lower() or current.lower() == "fut":
         return "future"
-    if root in LEVERAGED_ETFS or any(marker in notes for marker in (" 2X", " 3X", "LEVERAGED", "BULL", "BEAR")):
-        return "leveraged_etf"
-    if root in SECTOR_ETFS:
-        return "sector_etf"
-    if root in BROAD_ETFS or root in RATES_CREDIT_ETFS or root in COMMODITY_ETFS:
-        return "etf_common"
-    return "stock_common" if current in {"", "unspecified", "STK", "stk", "stock", "stock_common"} else current
+    if product.known:
+        return product.product_type
+    normalized_source_types = {"STK": "stock_common", "stk": "stock_common", "stock": "stock_common"}
+    return normalized_source_types.get(current, current)
 
 
 def inferred_theme_id(row: Mapping[str, str]) -> str:
     symbol = clean(row.get("symbol")).upper()
-    root = root_symbol(symbol)
     current = clean(row.get("theme_id"))
-    if symbol == "CASH" or root == "CASH":
+    product = product_knowledge(symbol)
+    if normalize_symbol(symbol) == "CASH":
         return "cash"
-    return THEME_OVERRIDES.get(root, current or "unmapped")
+    return product.theme if product.known else current or "unmapped"
 
 
 def inferred_underlying(row: Mapping[str, str]) -> str:
     symbol = clean(row.get("symbol")).upper()
     current = clean(row.get("underlying")).upper()
-    if symbol == "CASH":
+    product = product_knowledge(symbol)
+    if normalize_symbol(symbol) == "CASH":
         return current or clean(row.get("currency")).upper() or "CASH"
-    root = root_symbol(symbol)
-    if not current or current == symbol:
-        return root
-    return current
+    if product.known:
+        return product.underlying or ""
+    return normalize_symbol(current) if current else ""
 
 
 def repair_row(row: Mapping[str, str]) -> dict[str, str]:

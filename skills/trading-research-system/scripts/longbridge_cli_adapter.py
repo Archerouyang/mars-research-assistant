@@ -17,31 +17,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from product_knowledge import effective_exposure, normalize_symbol, product_knowledge
 from record_schemas import CSV_SCHEMAS
 
 
 PORTFOLIO_HEADER = list(CSV_SCHEMAS["portfolio_snapshot.csv"])
-COMMON_MARKET_SUFFIXES = {".US", ".HK", ".SG", ".SH", ".SZ"}
-COMMON_ETF_ROOTS = {
-    "DIA",
-    "DRAM",
-    "GLD",
-    "HYG",
-    "IEF",
-    "IWM",
-    "KORU",
-    "LQD",
-    "MVLL",
-    "QQQ",
-    "SHY",
-    "SLV",
-    "SMH",
-    "SOXX",
-    "SPY",
-    "TLT",
-    "TSMX",
-    "VOO",
-}
 ETF_NAME_MARKERS = (
     " ETF",
     " EXCHANGE TRADED",
@@ -107,18 +87,15 @@ def read_json(path_text: str) -> dict[str, Any]:
 
 
 def underlying_from_symbol(symbol: str, currency: str) -> str:
-    upper = symbol.upper()
-    for suffix in COMMON_MARKET_SUFFIXES:
-        if upper.endswith(suffix):
-            return upper[: -len(suffix)]
-    return upper or currency.upper()
+    product = product_knowledge(symbol)
+    return product.underlying if product.known and product.underlying else normalize_symbol(symbol) or currency.upper()
 
 
 def infer_instrument_type(symbol: str, name: str, currency: str) -> str:
-    underlying = underlying_from_symbol(symbol, currency)
+    product = product_knowledge(symbol)
+    if product.known:
+        return product.product_type
     upper_name = name.upper()
-    if underlying in COMMON_ETF_ROOTS:
-        return "etf_common"
     if "QQQ TRUST" in upper_name:
         return "etf_common"
     if any(marker in upper_name for marker in ETF_NAME_MARKERS):
@@ -144,6 +121,8 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
         market_value = quantity * market_price
     unrealized = market_value - (quantity * avg_cost)
     name = str(holding.get("name") or "").strip()
+    product = product_knowledge(symbol)
+    delta_exposure = effective_exposure(symbol, float(abs(market_value)))
     note = "Longbridge CLI portfolio JSON"
     if name:
         note = f"{note}; {name}"
@@ -163,9 +142,9 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
         "currency": currency,
         "unrealized_pnl": decimal_text(unrealized),
         "realized_pnl": "0",
-        "delta_exposure": decimal_text(abs(market_value)),
-        "notional_exposure": decimal_text(abs(market_value)),
-        "theme_id": "unmapped",
+        "delta_exposure": decimal_text(delta_exposure),
+        "notional_exposure": decimal_text(delta_exposure),
+        "theme_id": product.theme,
         "source_timestamp": as_of,
         "notes": note,
     }

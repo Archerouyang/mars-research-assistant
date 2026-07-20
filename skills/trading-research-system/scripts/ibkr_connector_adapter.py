@@ -16,30 +16,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from product_knowledge import effective_exposure, product_knowledge
 from record_schemas import CSV_SCHEMAS
 
 
 PORTFOLIO_HEADER = list(CSV_SCHEMAS["portfolio_snapshot.csv"])
-COMMON_ETF_ROOTS = {
-    "DIA",
-    "DRAM",
-    "GLD",
-    "HYG",
-    "IEF",
-    "IWM",
-    "KORU",
-    "LQD",
-    "MVLL",
-    "QQQ",
-    "SHY",
-    "SLV",
-    "SMH",
-    "SOXX",
-    "SPY",
-    "TLT",
-    "TSMX",
-    "VOO",
-}
 ASSET_CLASS_MAP = {
     "CASH": "cash",
     "FUT": "future",
@@ -108,9 +89,12 @@ def position_symbol(position: dict[str, Any]) -> str:
 
 
 def infer_instrument_type(symbol: str, asset_class: str) -> str:
+    product = product_knowledge(symbol)
+    if product.known:
+        return product.product_type
     upper_asset = asset_class.strip().upper()
     if upper_asset == "STK":
-        return "etf_common" if symbol in COMMON_ETF_ROOTS else "stock_common"
+        return "stock_common"
     return ASSET_CLASS_MAP.get(upper_asset, upper_asset.lower() or "unspecified")
 
 
@@ -133,13 +117,16 @@ def position_row(position: dict[str, Any], *, as_of: str, account_id: str) -> di
     unrealized = decimal_or_zero(position.get("unrealized_pnl"))
     asset_class = str(position.get("asset_class") or "").strip().upper()
     instrument_type = infer_instrument_type(symbol, asset_class)
+    product = product_knowledge(symbol)
+    underlying = product.underlying if product.known and product.underlying else symbol
+    delta_exposure = effective_exposure(symbol, float(abs(market_value))) if instrument_type != "cash" else 0.0
 
     return {
         "as_of": as_of,
         "broker": "IBKR",
         "account_id": account_id,
         "symbol": symbol,
-        "underlying": currency if instrument_type == "cash" else symbol,
+        "underlying": currency if instrument_type == "cash" else underlying,
         "instrument_type": instrument_type,
         "direction": direction(quantity),
         "quantity": decimal_text(abs(quantity)),
@@ -149,9 +136,9 @@ def position_row(position: dict[str, Any], *, as_of: str, account_id: str) -> di
         "currency": currency,
         "unrealized_pnl": decimal_text(unrealized),
         "realized_pnl": "0",
-        "delta_exposure": decimal_text(abs(market_value)) if instrument_type != "cash" else "0",
-        "notional_exposure": decimal_text(abs(market_value)) if instrument_type != "cash" else "0",
-        "theme_id": "unmapped",
+        "delta_exposure": decimal_text(delta_exposure),
+        "notional_exposure": decimal_text(delta_exposure),
+        "theme_id": "cash" if instrument_type == "cash" else product.theme,
         "source_timestamp": as_of,
         "notes": f"IBKR connector positions JSON; asset_class={asset_class or 'unknown'}",
     }

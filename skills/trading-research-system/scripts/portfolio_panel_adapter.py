@@ -15,34 +15,13 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from product_knowledge import effective_exposure, normalize_symbol, product_knowledge
 from record_schemas import CSV_SCHEMAS
-from repair_portfolio_snapshot import repair_row, root_symbol
+from repair_portfolio_snapshot import repair_row
 
 
 SCHEMA_VERSION = "1.0"
 PORTFOLIO_HEADER = list(CSV_SCHEMAS["portfolio_snapshot.csv"])
-LEVERAGE_MULTIPLIERS = {
-    "KORU": 3.0,
-    "MVLL": 2.0,
-    "MUU": 2.0,
-    "NVDL": 2.0,
-    "SOXL": 3.0,
-    "SQQQ": -3.0,
-    "TQQQ": 3.0,
-    "TSLL": 2.0,
-    "TSMX": 2.0,
-}
-UNDERLYING_MAPPINGS = {
-    "KORU": {"underlying": "EWY", "kind": "benchmark_proxy"},
-    "MVLL": {"underlying": "MRVL", "kind": "single_name"},
-    "MUU": {"underlying": "MU", "kind": "single_name"},
-    "NVDL": {"underlying": "NVDA", "kind": "single_name"},
-    "SOXL": {"underlying": "SOXX", "kind": "benchmark_proxy"},
-    "SQQQ": {"underlying": "QQQ", "kind": "benchmark_proxy"},
-    "TQQQ": {"underlying": "QQQ", "kind": "benchmark_proxy"},
-    "TSLL": {"underlying": "TSLA", "kind": "single_name"},
-    "TSMX": {"underlying": "TSM", "kind": "single_name"},
-}
 PRODUCT_LABELS = {
     "cash": "现金",
     "stock_common": "普通股",
@@ -97,10 +76,9 @@ def _effective_exposures(row: Mapping[str, str]) -> tuple[float, float, float]:
     market_value = abs(_number(row.get("market_value")))
     supplied_delta = _number(row.get("delta_exposure"))
     supplied_notional = _number(row.get("notional_exposure"))
-    multiplier = LEVERAGE_MULTIPLIERS.get(root_symbol(str(row.get("symbol") or "")), 1.0)
-    inferred = market_value * multiplier
-    delta = inferred if abs(multiplier) != 1.0 and abs(abs(supplied_delta) - market_value) < 1e-6 else supplied_delta
-    notional = inferred if abs(multiplier) != 1.0 and abs(abs(supplied_notional) - market_value) < 1e-6 else supplied_notional
+    symbol = str(row.get("symbol") or "")
+    delta = effective_exposure(symbol, market_value, supplied_delta)
+    notional = effective_exposure(symbol, market_value, supplied_notional)
     return market_value, delta or market_value, notional or delta or market_value
 
 
@@ -109,23 +87,19 @@ def _positions(rows: Iterable[Mapping[str, str]], excluded: set[str]) -> tuple[l
     exclusions: list[str] = []
     for raw in rows:
         raw = repair_row(raw)
-        symbol = root_symbol(str(raw.get("symbol") or ""))
+        symbol = normalize_symbol(str(raw.get("symbol") or ""))
         if symbol in excluded:
             exclusions.append(symbol)
             continue
         market_value, delta, notional = _effective_exposures(raw)
         instrument = str(raw.get("instrument_type") or "unspecified")
-        mapping = UNDERLYING_MAPPINGS.get(symbol)
-        underlying = (
-            str(mapping["underlying"])
-            if mapping
-            else root_symbol(str(raw.get("underlying") or symbol))
-        )
+        product = product_knowledge(symbol)
+        underlying = product.underlying if product.known else normalize_symbol(str(raw.get("underlying") or symbol))
         positions.append(
             {
                 "symbol": symbol,
                 "underlying": underlying,
-                "underlying_kind": str(mapping["kind"]) if mapping else "direct",
+                "underlying_kind": product.underlying_kind,
                 "broker": str(raw.get("broker") or "Unknown"),
                 "instrument_type": instrument,
                 "product": PRODUCT_LABELS.get(instrument, instrument.replace("_", " ")),
@@ -263,7 +237,7 @@ def build_portfolio_panel(
     if reconciliation not in {"reconciled", "unreconciled"}:
         raise PortfolioPanelError("reconciliation_invalid")
     _timestamp(as_of)
-    positions, exclusions = _positions(rows, {root_symbol(item) for item in excluded_symbols})
+    positions, exclusions = _positions(rows, {normalize_symbol(item) for item in excluded_symbols})
     currencies = {str(row["currency"]).upper() for row in positions}
     if len(currencies) > 1:
         raise PortfolioPanelError("snapshot_currency_mixed")

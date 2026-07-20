@@ -12,9 +12,9 @@ import re
 import sys
 from typing import Callable
 
+from product_knowledge import product_knowledge
+from repair_portfolio_snapshot import repair_row
 
-LEVERAGED_PRODUCT_ROOTS = {"KORU", "MVLL", "MUU", "NVDL", "SOXL", "SQQQ", "TQQQ", "TSLL", "TSMX"}
-LEVERAGED_PRODUCT_MARKERS = ("2X", "3X", "LEVERAGED", "BULL", "BEAR")
 RECONCILABLE_BROKER_SOURCES = {"ibkr", "longbridge"}
 EXCLUDED_SOURCE_PATTERN = re.compile(
     r"^(?P<source>[A-Za-z]+):(?P<status>[A-Za-z_]+)(?:\((?P<annotation>[^()]+)\))?$"
@@ -90,7 +90,8 @@ def load_positions(path: Path) -> list[Position]:
         if reader.fieldnames is None:
             raise ValueError(f"missing CSV header in {path}")
         positions: list[Position] = []
-        for row in reader:
+        for source_row in reader:
+            row = repair_row(source_row)
             symbol = clean(row.get("symbol")).upper()
             if not symbol:
                 continue
@@ -232,11 +233,8 @@ def broker_account_key(position: Position) -> str:
 
 
 def is_leveraged_product(position: Position) -> bool:
-    text = f"{position.symbol} {position.underlying} {position.instrument_type} {position.notes}".upper()
-    is_etf = "ETF" in position.instrument_type.upper()
-    if position.underlying in LEVERAGED_PRODUCT_ROOTS or position.symbol in LEVERAGED_PRODUCT_ROOTS:
-        return True
-    return is_etf and any(marker in text for marker in LEVERAGED_PRODUCT_MARKERS)
+    product = product_knowledge(position.symbol)
+    return product.known and product.product_type == "leveraged_etf"
 
 
 def leveraged_weight(positions: list[Position], total_assets: float) -> float:
