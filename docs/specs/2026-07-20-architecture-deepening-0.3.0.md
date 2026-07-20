@@ -1,6 +1,6 @@
 # Trading Research System 0.3.0 Architecture Deepening Spec
 
-Status: approved for implementation on 2026-07-20.
+Status: implementation complete; final Standards/Spec review pending.
 
 Baseline: `dev@ab07e2a81aed13132734d06ad6a4797688589db6`
 

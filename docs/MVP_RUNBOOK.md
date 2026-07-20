@@ -1,4 +1,4 @@
-# Trading Research System 0.2.0 Smoke
+# Trading Research System 0.3.0 Smoke
 
 This runbook verifies the smallest useful product path. It is not a private
 runtime rehearsal and it never performs broker or order actions.
@@ -9,10 +9,10 @@ runtime rehearsal and it never performs broker or order actions.
 bash scripts/verify-skill.sh
 ```
 
-The default gate checks only syntax, portable Skill distribution, the stable
-`ResearchResult -> DeliveryPacket` contract, retained ArtifactPacket
-compatibility, and Skill structure. It does not launch a browser or export an
-artifact.
+The default gate checks only syntax, portable Skill distribution, canonical
+Broker-Live product knowledge, Private Runtime preparation/health, the stable
+`ResearchResult -> DeliveryPacket` contract, retained ArtifactPacket behavior,
+and Skill structure. It does not launch a browser or export an artifact.
 
 ## Human Acceptance
 

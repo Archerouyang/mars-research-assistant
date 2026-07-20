@@ -4,7 +4,7 @@
 
 一个 AI-native、基于贝叶斯理念的决策支持 Skill，把市场、宏观、政策、公司、Price Action 和组合证据压缩成可持续更新的决策流程。它不试图预测下一步行情，而是用新证据更新先验、比较条件情景，并明确什么后续观察会改变当前判断。
 
-版本：`0.2.0`
+版本：`0.3.0`
 
 ## 30 秒安装
 
@@ -127,7 +127,8 @@ flowchart TB
 | 无法导出选中的 inline panel | 用户选择性 PNG 导出需要 Chrome/Chromium；chat-inline HTML 仍是主产物。 |
 
 详细文档：[Skill 契约](skills/trading-research-system/SKILL.md)、
-[0.2.0 交付契约](docs/adr/0009-research-result-delivery-contract.md)、
+[交付契约](docs/adr/0009-research-result-delivery-contract.md)、
+[0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md)、
 [MVP Runbook](docs/MVP_RUNBOOK.md) 和
 [分发计划](docs/DISTRIBUTION_AND_README_PLAN.md)。
 

@@ -39,10 +39,33 @@ The architectural source of truth is
 [`ADR 0009`](adr/0009-research-result-delivery-contract.md). The smallest
 release check is documented in [`MVP_RUNBOOK.md`](MVP_RUNBOOK.md).
 
+## 0.3.0 Architecture Contract
+
+Version 0.3.0 preserves the accepted 0.2.0 product behavior while assigning
+four deep module owners:
+
+- Broker-Live Data View owns known product mapping and fails closed for unknown
+  look-through metadata;
+- four purpose-specific chat visual adapters own their payload and rendering
+  implementation behind the shared delivery seam;
+- Private Runtime owns layout, preparation, health expectations, and controlled
+  writes;
+- Artifact Packet exposes one supported facade while registry and neutral core
+  remain private implementation.
+
+The decision is recorded in
+[`ADR 0010`](adr/0010-deep-module-ownership-for-0.3.0.md). Frozen panel
+structures, read-only broker behavior, private-runtime safety, ADR 0008, and ADR
+0009 remain unchanged.
+
 ## Current Status
 
 | Area | Status | Acceptance |
 | --- | --- | --- |
+| Broker-Live product knowledge | implemented | focused known/unknown and leveraged-product self-test |
+| Purpose-specific chat visual adapters | implemented | four frozen reference fragments remain byte-identical |
+| Private Runtime ownership | implemented | temporary-runtime idempotence, health, and data-preservation self-test |
+| Artifact Packet facade | implemented | three Board reference packets and immutable writes remain stable |
 | ResearchResult delivery seam | implemented | focused self-test and deterministic output |
 | ArtifactPacket compatibility | retained | focused compatibility self-test |
 | Bayesian decision support | implemented | Skill and ResearchResult contract name prior, evidence update, posterior decision, and next check |

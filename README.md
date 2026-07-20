@@ -8,7 +8,7 @@ decision process. It does not try to predict the next market move: it updates a
 prior with new evidence, compares conditional scenarios, and identifies the
 next observation that would change the decision.
 
-Version: `0.2.0`
+Version: `0.3.0`
 
 ## Install in 30 Seconds
 
@@ -155,7 +155,8 @@ submits real orders.
 | A selected inline panel cannot be exported | User-selected PNG export requires Chrome/Chromium; chat-inline HTML remains the primary artifact. |
 
 Detailed documents: [Skill contract](skills/trading-research-system/SKILL.md),
-[0.2.0 delivery contract](docs/adr/0009-research-result-delivery-contract.md),
+[delivery contract](docs/adr/0009-research-result-delivery-contract.md),
+[0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md),
 [MVP runbook](docs/MVP_RUNBOOK.md), and
 [distribution plan](docs/DISTRIBUTION_AND_README_PLAN.md).
 
