@@ -74,12 +74,27 @@ def load_snapshot(path: Path) -> list[dict[str, str]]:
 
 def _effective_exposures(row: Mapping[str, str]) -> tuple[float, float, float]:
     market_value = abs(_number(row.get("market_value")))
-    supplied_delta = _number(row.get("delta_exposure"))
-    supplied_notional = _number(row.get("notional_exposure"))
+    raw_delta = row.get("delta_exposure")
+    raw_notional = row.get("notional_exposure")
+    supplied_delta = None if raw_delta is None or not str(raw_delta).strip() else _number(raw_delta)
+    supplied_notional = (
+        None if raw_notional is None or not str(raw_notional).strip() else _number(raw_notional)
+    )
     symbol = str(row.get("symbol") or "")
-    delta = effective_exposure(symbol, market_value, supplied_delta)
-    notional = effective_exposure(symbol, market_value, supplied_notional)
-    return market_value, delta or market_value, notional or delta or market_value
+    row_direction = str(row.get("direction") or "long")
+    delta = effective_exposure(
+        symbol,
+        market_value,
+        supplied_delta,
+        position_direction=row_direction,
+    )
+    notional = effective_exposure(
+        symbol,
+        market_value,
+        supplied_notional,
+        position_direction=row_direction,
+    )
+    return market_value, delta, notional
 
 
 def _positions(rows: Iterable[Mapping[str, str]], excluded: set[str]) -> tuple[list[dict[str, Any]], list[str]]:

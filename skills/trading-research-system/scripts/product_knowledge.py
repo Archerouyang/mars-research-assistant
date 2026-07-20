@@ -152,16 +152,23 @@ def effective_exposure(
     symbol: str,
     market_value: float,
     supplied_exposure: float | None = None,
+    *,
+    position_direction: str = "long",
 ) -> float:
     """Return known product look-through while preserving explicit source exposure."""
     product = product_knowledge(symbol)
     direct = abs(float(market_value))
+    position_sign = -1.0 if position_direction == "short" else 1.0
     if supplied_exposure is not None:
         supplied = float(supplied_exposure)
+        if supplied == 0.0:
+            return 0.0
         if not product.known or product.product_type != "leveraged_etf":
-            return supplied or direct
+            return supplied
         if abs(abs(supplied) - direct) >= 1e-6:
             return supplied
     if product.known and product.product_type == "leveraged_etf":
-        return direct * float(product.signed_leverage or 0.0)
-    return direct if supplied_exposure is None else float(supplied_exposure or direct)
+        return direct * float(product.signed_leverage or 0.0) * position_sign
+    if supplied_exposure is not None:
+        return float(supplied_exposure)
+    return direct * position_sign

@@ -119,7 +119,16 @@ def position_row(position: dict[str, Any], *, as_of: str, account_id: str) -> di
     instrument_type = infer_instrument_type(symbol, asset_class)
     product = product_knowledge(symbol)
     underlying = product.underlying if product.known and product.underlying else symbol
-    delta_exposure = effective_exposure(symbol, float(abs(market_value))) if instrument_type != "cash" else 0.0
+    row_direction = direction(quantity)
+    delta_exposure = (
+        effective_exposure(
+            symbol,
+            float(abs(market_value)),
+            position_direction=row_direction,
+        )
+        if instrument_type != "cash"
+        else 0.0
+    )
 
     return {
         "as_of": as_of,
@@ -128,7 +137,7 @@ def position_row(position: dict[str, Any], *, as_of: str, account_id: str) -> di
         "symbol": symbol,
         "underlying": currency if instrument_type == "cash" else underlying,
         "instrument_type": instrument_type,
-        "direction": direction(quantity),
+        "direction": row_direction,
         "quantity": decimal_text(abs(quantity)),
         "avg_cost": decimal_text(avg_cost),
         "market_price": decimal_text(market_price),

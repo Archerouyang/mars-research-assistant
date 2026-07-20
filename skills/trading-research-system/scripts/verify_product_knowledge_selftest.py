@@ -65,6 +65,18 @@ def verify_known_products() -> None:
 
     require(effective_exposure("NVDA", 100.0) == 100.0, "ordinary equity exposure drifted")
     require(effective_exposure("SQQQ", 100.0) == -300.0, "inverse ETF exposure drifted")
+    require(
+        effective_exposure("TSMX", 100.0, position_direction="short") == -200.0,
+        "short leveraged ETF direction drifted",
+    )
+    require(
+        effective_exposure("SQQQ", 100.0, position_direction="short") == 300.0,
+        "short inverse ETF direction drifted",
+    )
+    require(
+        effective_exposure("NVDA", 100.0, 0.0) == 0.0,
+        "explicit zero source exposure was replaced",
+    )
 
 
 def verify_unknown_fails_closed() -> None:
@@ -156,6 +168,33 @@ def verify_adapter_consistency() -> None:
         "IBKR adapter did not consume canonical product knowledge",
     )
 
+    short_longbridge = longbridge_position_row(
+        {
+            "symbol": "TSMX.US",
+            "currency": "USD",
+            "quantity": "-1",
+            "market_price": "100",
+            "market_value": "-100",
+        },
+        as_of="2026-07-20T00:00:00Z",
+        account_id="fixture",
+    )
+    require(short_longbridge["delta_exposure"] == "-200", "short TSMX sign drifted")
+
+    short_ibkr = ibkr_position_row(
+        {
+            "contract_description": "SQQQ",
+            "asset_class": "STK",
+            "currency": "USD",
+            "position": "-1",
+            "market_price": "100",
+            "market_value": "-100",
+        },
+        as_of="2026-07-20T00:00:00Z",
+        account_id="fixture",
+    )
+    require(short_ibkr["delta_exposure"] == "300", "short inverse ETF sign drifted")
+
     repaired = repair_row(snapshot_row("MVLL.US"))
     require(
         (
@@ -226,6 +265,16 @@ def verify_unknown_consumers_fail_closed() -> None:
         notes="Mystery Daily Bull 2X ETF",
     )
     require(not is_leveraged_product(position), "daily report invented unknown leverage")
+
+    zero_panel = build_portfolio_panel(
+        [snapshot_row("NVDA", delta_exposure="0", notional_exposure="0")],
+        as_of="2026-07-20T00:00:00Z",
+        reconciliation="reconciled",
+        privacy="public_fixture",
+    )
+    zero_totals = zero_panel["payload"]["totals"]
+    require(zero_totals["net_delta_exposure"] == 0.0, "explicit zero delta was replaced")
+    require(zero_totals["gross_notional_exposure"] == 0.0, "explicit zero notional was replaced")
 
 
 def main() -> int:

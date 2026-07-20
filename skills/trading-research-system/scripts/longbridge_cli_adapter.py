@@ -122,7 +122,12 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
     unrealized = market_value - (quantity * avg_cost)
     name = str(holding.get("name") or "").strip()
     product = product_knowledge(symbol)
-    delta_exposure = effective_exposure(symbol, float(abs(market_value)))
+    row_direction = position_direction(quantity)
+    delta_exposure = effective_exposure(
+        symbol,
+        float(abs(market_value)),
+        position_direction=row_direction,
+    )
     note = "Longbridge CLI portfolio JSON"
     if name:
         note = f"{note}; {name}"
@@ -134,7 +139,7 @@ def position_row(holding: dict[str, Any], *, as_of: str, account_id: str) -> dic
         "symbol": symbol,
         "underlying": underlying_from_symbol(symbol, currency),
         "instrument_type": infer_instrument_type(symbol, name, currency),
-        "direction": position_direction(quantity),
+        "direction": row_direction,
         "quantity": decimal_text(abs(quantity)),
         "avg_cost": decimal_text(avg_cost),
         "market_price": decimal_text(market_price),
