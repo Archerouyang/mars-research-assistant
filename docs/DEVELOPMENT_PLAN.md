@@ -112,7 +112,7 @@ Use these statuses:
 
 | Priority | Status | Task | Why It Matters | Next Action |
 | --- | --- | --- | --- | --- |
-| P0 | review | Deepen the four 0.3.0 architecture modules | Centralizes Broker-Live product knowledge, isolates purpose-specific chat visuals, gives Private Runtime one layout owner, and narrows the Artifact Packet facade without redesigning accepted outputs. | Four bounded commits and the 0.3.0 release gate pass; complete final Standards/Spec review before any remote `dev` integration. |
+| P0 | done | Deepen the four 0.3.0 architecture modules | Centralizes Broker-Live product knowledge, isolates purpose-specific chat visuals, gives Private Runtime one layout owner, and narrows the Artifact Packet facade without redesigning accepted outputs. | Focused module checks, the 0.3.0 Skill gate, and final Standards/Spec review pass. Remote `dev` integration remains user-approved only. |
 | P0 | done | Refactor Trading Research System around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific inline visuals, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | User accepted the frozen output structures and authorized integration to remote `dev` on 2026-07-20. Minimal release gates, isolated install, and final Standards/Spec review passed; public `master` cutover remains separate. |
 | P2 | done | Accepted inline Panel PNG export | Opt-in only: exports the full accepted chat-inline HTML fragment as an on-demand PNG by measuring rendered content height; no automatic save, static frontend, or hosting. | Run only after explicit user selection. Keep private exports local; a separately requested README example may use reviewed public-market data but must contain no broker, private runtime, account, or private portfolio information. |
 | P1 | done | Re-scope retained read-only commands | Prevents supported runtime, broker, macro, PA, and Alpha adapters from becoming unreachable leftovers. | Progressive references now name the retained runtime, broker, macro, OHLCV, and Alpha helpers; future additions require an active caller or compatibility obligation. |
@@ -353,9 +353,10 @@ marked passed until the coordinator runs them after integration to `master`.
 Date: 2026-07-20
 
 - Main task: implement the approved 0.3.0 architecture-deepening spec.
-- Current stage: all four bounded workstreams are integrated and the minimal
-  0.3.0 Skill gate passes.
-- Next task: complete final Standards/Spec review and resolve any findings.
+- Current stage: all four bounded workstreams are integrated; the minimal 0.3.0
+  Skill gate and final Standards/Spec review pass.
+- Next task: present the local candidate for user acceptance before any remote
+  `dev` integration.
 - Definition of done: all four modules meet the spec, accepted inline outputs
   remain stable, obsolete compatibility paths are removed, focused verification
   and final Standards/Spec review pass, and no public cutover occurs without
@@ -365,6 +366,15 @@ Date: 2026-07-20
 
 ### 2026-07-20
 
+- Completed the approved 0.3.0 architecture-deepening spec: canonical
+  Broker-Live product knowledge, four purpose-specific chat visual adapters,
+  one Private Runtime owner, and a narrowed Artifact Packet facade.
+- Initial review found and closed signed-exposure defects for explicit zero,
+  short leveraged ETFs, and short inverse ETFs. Fragile full-inline SHA checks
+  were removed in favor of semantic structure, interaction, safety, and size
+  checks consistent with manual visual acceptance.
+- The focused module tests, portable Skill gate, generated-state scan,
+  `git diff --check`, and final Standards/Spec review pass. Nothing was pushed.
 - User removed Native Plugin distribution from the current product plan. The
   repository now ships only `skills/trading-research-system/`; wrapper copies,
   repository marketplaces, sync code, and wrapper-only validation are deleted.
