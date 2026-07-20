@@ -21,13 +21,15 @@ import tempfile
 from typing import Callable, Mapping, Sequence
 import zlib
 
-from artifact_packet import build_artifact_packet, sha256_hex, write_artifact_packet
-from artifact_packet_core import (
+from artifact_packet import (
     ArtifactPacketError,
     HTML_HARD_LIMIT_BYTES,
     MANIFEST_HARD_LIMIT_BYTES,
     SNAPSHOT_HARD_LIMIT_BYTES,
+    build_artifact_packet,
     canonical_json_bytes,
+    sha256_hex,
+    write_artifact_packet,
 )
 
 
