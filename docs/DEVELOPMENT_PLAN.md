@@ -112,6 +112,7 @@ Use these statuses:
 
 | Priority | Status | Task | Why It Matters | Next Action |
 | --- | --- | --- | --- | --- |
+| P0 | in_progress | Deepen the four 0.3.0 architecture modules | Centralizes Broker-Live product knowledge, isolates purpose-specific chat visuals, gives Private Runtime one layout owner, and narrows the Artifact Packet facade without redesigning accepted outputs. | Execute the bounded sequence in `docs/specs/2026-07-20-architecture-deepening-0.3.0.md`; use focused checks and manual visual acceptance, then complete Standards/Spec review before any remote `dev` integration. |
 | P0 | done | Refactor Trading Research System around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific inline visuals, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | User accepted the frozen output structures and authorized integration to remote `dev` on 2026-07-20. Minimal release gates, isolated install, and final Standards/Spec review passed; public `master` cutover remains separate. |
 | P2 | done | Accepted inline Panel PNG export | Opt-in only: exports the full accepted chat-inline HTML fragment as an on-demand PNG by measuring rendered content height; no automatic save, static frontend, or hosting. | Run only after explicit user selection. Keep private exports local; a separately requested README example may use reviewed public-market data but must contain no broker, private runtime, account, or private portfolio information. |
 | P1 | done | Re-scope retained read-only commands | Prevents supported runtime, broker, macro, PA, and Alpha adapters from becoming unreachable leftovers. | Progressive references now name the retained runtime, broker, macro, OHLCV, and Alpha helpers; future additions require an active caller or compatibility obligation. |
@@ -351,14 +352,15 @@ marked passed until the coordinator runs them after integration to `master`.
 
 Date: 2026-07-20
 
-- Main task: keep 0.2.0 distributed as one portable Agent Skill.
-- Current stage: native plugin wrappers, marketplace manifests, synchronization
-  code, and wrapper-only verification are removed by explicit user decision.
-- Next task: run the focused Skill gate and isolated install smoke, then update
-  remote `dev`.
-- Definition of done: stable `ResearchResult -> DeliveryPacket`, no obsolete
-  public cache/database or native-wrapper path, focused verification, no private
-  data or broker write action, and no public cutover without explicit approval.
+- Main task: implement the approved 0.3.0 architecture-deepening spec.
+- Current stage: plan approved; implementation begins with Broker-Live product
+  knowledge and proceeds through visual adapters, Private Runtime, and Artifact
+  Packet facade in that order.
+- Next task: capture focused baseline behavior and implement Workstream 1.
+- Definition of done: all four modules meet the spec, accepted inline outputs
+  remain stable, obsolete compatibility paths are removed, focused verification
+  and final Standards/Spec review pass, and no public cutover occurs without
+  explicit approval.
 
 ## Progress Log
 
