@@ -42,55 +42,6 @@ Price Action 面板把观察与行动分开，同时展示周期与数据来源�
 
 交互式 chat-inline HTML 仍是主要视觉产物；只有用户明确选择导出时才保存 PNG。TradingView attribution 和 Apache-2.0 许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
-## 工作流
-
-```mermaid
-flowchart TB
-  GOAL(["自然语言研究目标"])
-
-  subgraph PUBLIC["PUBLIC SKILL · 研究循环"]
-    direction TB
-    subgraph DISCOVER["01 · 建立研究判断"]
-      direction LR
-      ROUTE{"识别任务"} --> RESEARCH["研究<br/>宏观 · 个股 · 研报"]
-      RESEARCH --> VERIFY["校验<br/>观点 · 信源"]
-    end
-    subgraph OPERATE["02 · 执行市场计划"]
-      direction LR
-      PLAN(["Active Market Plan"]) --> TRACK["追踪<br/>setup · 点位"]
-      TRACK --> REVIEW["复核<br/>风险 · 交易"]
-    end
-    VERIFY --> PLAN
-    REVIEW -. "沉淀经验" .-> PLAN
-  end
-
-  subgraph PRIVATE["PRIVATE RUNTIME · 用户所有"]
-    direction LR
-    RUNTIME[("偏好 · 观察清单 · 持仓 · 历史")]
-  end
-
-  GOAL --> ROUTE
-  PRIVATE -. "仅提供本地上下文" .-> ROUTE
-  REVIEW --> RESULT(["决策摘要 · 下一检查点"])
-
-  classDef terminal fill:#1f2328,stroke:#1f2328,color:#ffffff,stroke-width:1.5px
-  classDef gate fill:#fff8c5,stroke:#9a6700,color:#1f2328,stroke-width:1.5px
-  classDef step fill:#ffffff,stroke:#57606a,color:#1f2328,stroke-width:1.5px
-  classDef plan fill:#dafbe1,stroke:#1a7f37,color:#1f2328,stroke-width:2px
-  classDef runtime fill:#f6f8fa,stroke:#8c959f,color:#57606a,stroke-width:1.5px
-  class GOAL,RESULT terminal
-  class ROUTE gate
-  class RESEARCH,VERIFY,TRACK,REVIEW step
-  class PLAN plan
-  class RUNTIME runtime
-  style PUBLIC fill:#f6f8fa,stroke:#d0d7de,stroke-width:1.5px
-  style DISCOVER fill:#ffffff,stroke:#d8dee4,stroke-width:1px
-  style OPERATE fill:#ffffff,stroke:#d8dee4,stroke-width:1px
-  style PRIVATE fill:#ffffff,stroke:#8c959f,stroke-width:1.5px,stroke-dasharray:5 5
-```
-
-用户只需用自然语言描述研究目标，Skill 会自主选择内部 workflow；新用户不需要记住 focused workflow 名称。
-
 ## 能力与数据来源
 
 | 能力 | Skill 输出 | 信源规则 |
@@ -111,7 +62,7 @@ flowchart TB
 
 | Public Skill | Private Runtime |
 | --- | --- |
-| 一个可安装的 `trading-research-system` 包，包含 workflow、references、scripts、空白模板和合成 fixtures | 用户自己的交易偏好、观察清单、持仓、Active Market Plan、setup、复盘、凭据和 connector 授权 |
+| 一个可安装的 `trading-research-system` 包，包含研究规范、references、scripts、空白模板和合成 fixtures | 用户自己的交易偏好、观察清单、持仓、Active Market Plan、setup、复盘、凭据和 connector 授权 |
 | 可以公开发布和升级 | 始终位于公开仓库和分发包之外 |
 | 不内置个人默认值 | 只有用户明确授权本地写入后才创建 |
 
