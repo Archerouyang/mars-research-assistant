@@ -8,7 +8,8 @@ Current public package content is defined by:
 - `skills/trading-research-system/SKILL.md`;
 - `skills/trading-research-system/references/`;
 - `skills/trading-research-system/scripts/research_result.py`;
-- `skills/trading-research-system/scripts/inline_visual.py`;
+- `skills/trading-research-system/scripts/chat_visual.py`;
+- `skills/trading-research-system/scripts/*_chat_visual.py`;
 - `docs/adr/0009-research-result-delivery-contract.md`.
 
 Use `docs/0.2.0_CLEANUP_LEDGER.md` for retained, migrated, and removed content.

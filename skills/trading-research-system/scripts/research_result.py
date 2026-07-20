@@ -12,10 +12,7 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-from artifact_packet import build_artifact_packet
-from chart_artifact import build_chart_payload
-from inline_visual import render_board_fragment, render_price_action_fragment
-from portfolio_panel_adapter import validate_portfolio_panel
+from chat_visual import ChatVisualError, normalize_chat_visual, render_chat_visual
 
 
 SCHEMA_VERSION = "1.0"
@@ -28,11 +25,6 @@ RISK_LEVELS = frozenset({"low", "medium", "high", "critical"})
 MAX_RESULT_BYTES = 500_000
 MAX_MARKDOWN_BYTES = 50_000
 MAX_INLINE_BYTES = 100_000
-BOARD_BY_ADAPTER = {
-    "macro": "macro_regime",
-    "instrument": "instrument_research",
-    "portfolio": "portfolio_risk",
-}
 PUBLIC_SENTINELS = (
     "/Users/",
     "account_id",
@@ -241,29 +233,12 @@ def render_markdown(result: Mapping[str, Any]) -> str:
 
 
 def render_inline_html(result: Mapping[str, Any]) -> bytes | None:
-    """Dispatch the optional visual through one purpose-specific adapter."""
+    """Render optional chat HTML through the shared visual seam."""
 
-    visual = result["visual"]
-    if visual is None:
-        return None
-    adapter = visual["adapter"]
-    if adapter == "portfolio":
-        panel = copy.deepcopy(visual["panel"])
-        panel["privacy"] = result["privacy"]
-        validate_portfolio_panel(panel)
-        return render_board_fragment(adapter, panel)
-    if adapter in BOARD_BY_ADAPTER:
-        build_artifact_packet(
-            visual["snapshot"],
-            default_view=visual["default_view"],
-            presentation_state="ready",
-        )
-        return render_board_fragment(adapter, visual["snapshot"])
-    if adapter == "price_action":
-        chart_payload = copy.deepcopy(visual["payload"])
-        chart_payload["privacy"] = result["privacy"]
-        return render_price_action_fragment(chart_payload)
-    raise ResearchResultError("visual_adapter_invalid")
+    try:
+        return render_chat_visual(result["visual"], str(result["privacy"]))
+    except ChatVisualError as error:
+        raise ResearchResultError(str(error)) from error
 
 
 def canonical_json_bytes(value: Mapping[str, Any]) -> bytes:
@@ -344,110 +319,10 @@ def _normalize_sources(value: Any) -> list[dict[str, Any]]:
 
 
 def _normalize_visual(value: Any, result_kind: str) -> dict[str, Any] | None:
-    if value is None:
-        return None
-    if not isinstance(value, Mapping):
-        raise ResearchResultError("visual_invalid")
-    visual = copy.deepcopy(dict(value))
-    adapter = _required_text(visual, "adapter")
-    if adapter != result_kind or adapter not in {*BOARD_BY_ADAPTER, "price_action"}:
-        raise ResearchResultError("visual_adapter_invalid")
-    if adapter == "portfolio":
-        _exact_fields(visual, {"adapter", "panel"}, "visual_fields_invalid")
-        panel = visual.get("panel")
-        if not isinstance(panel, Mapping):
-            raise ResearchResultError("visual_panel_invalid")
-        visual["panel"] = copy.deepcopy(dict(panel))
-        validate_portfolio_panel(visual["panel"])
-    elif adapter in BOARD_BY_ADAPTER:
-        _exact_fields(visual, {"adapter", "snapshot", "default_view"}, "visual_fields_invalid")
-        snapshot = visual.get("snapshot")
-        if not isinstance(snapshot, Mapping) or snapshot.get("board") != BOARD_BY_ADAPTER[adapter]:
-            raise ResearchResultError("visual_snapshot_invalid")
-        visual["snapshot"] = copy.deepcopy(dict(snapshot))
-        visual["default_view"] = str(visual.get("default_view") or "Overview")
-    else:
-        _exact_fields(visual, {"adapter", "payload", "title"}, "visual_fields_invalid")
-        raw_payload = visual.get("payload")
-        if not isinstance(raw_payload, Mapping):
-            raise ResearchResultError("visual_payload_invalid")
-        if "title" in visual:
-            visual["title"] = str(visual["title"])
-        payload = copy.deepcopy(dict(raw_payload))
-        _validate_price_action_payload(payload)
-        try:
-            visual["payload"] = build_chart_payload(payload, visual.get("title"))
-        except SystemExit as error:
-            raise ResearchResultError("visual_payload_invalid") from error
-    return visual
-
-
-def _validate_price_action_payload(payload: Mapping[str, Any]) -> None:
-    for key in (
-        "ticker",
-        "trade_horizon",
-        "instrument",
-        "primary_timeframe",
-        "auxiliary_timeframes",
-        "decision_summary",
-        "structure_summary",
-    ):
-        _required_text(payload, key)
-
-    scenarios = payload.get("scenarios")
-    if not isinstance(scenarios, Mapping) or set(scenarios) != {"bull", "base", "bear"}:
-        raise ResearchResultError("price_action_scenarios_invalid")
-    for row in scenarios.values():
-        if not isinstance(row, Mapping) or set(row) != {"target", "condition", "path", "action"}:
-            raise ResearchResultError("price_action_scenarios_invalid")
-        for key in ("condition", "path", "action"):
-            _required_text(row, key)
-        try:
-            float(row["target"])
-        except (TypeError, ValueError):
-            raise ResearchResultError("price_action_scenarios_invalid") from None
-
-    notes = payload.get("notes", [])
-    if not isinstance(notes, list) or any(not isinstance(item, str) or not item.strip() for item in notes):
-        raise ResearchResultError("visual_payload_invalid")
-
-    daily = payload.get("daily_context", {})
-    if not isinstance(daily, Mapping) or set(daily) - {"ema20", "ema50", "ema200"}:
-        raise ResearchResultError("visual_payload_invalid")
-    for value in daily.values():
-        if value is not None:
-            try:
-                float(value)
-            except (TypeError, ValueError):
-                raise ResearchResultError("visual_payload_invalid") from None
-
-    for key in ("atr14_primary", "atr14_4h"):
-        if payload.get(key) is not None:
-            try:
-                float(payload[key])
-            except (TypeError, ValueError):
-                raise ResearchResultError("visual_payload_invalid") from None
-
-    _validate_price_action_rows(
-        payload.get("entry_plan", []),
-        {"stage", "allocation", "condition", "invalidation"},
-    )
-    _validate_price_action_rows(
-        payload.get("event_watch", []),
-        {"time", "event", "importance", "transmission", "watch"},
-    )
-    if "event_note" in payload and not isinstance(payload["event_note"], str):
-        raise ResearchResultError("visual_payload_invalid")
-
-
-def _validate_price_action_rows(value: Any, fields: set[str]) -> None:
-    if not isinstance(value, list):
-        raise ResearchResultError("visual_payload_invalid")
-    for row in value:
-        if not isinstance(row, Mapping) or set(row) != fields:
-            raise ResearchResultError("visual_payload_invalid")
-        for key in fields:
-            _required_text(row, key)
+    try:
+        return normalize_chat_visual(value, result_kind)
+    except ChatVisualError as error:
+        raise ResearchResultError(str(error)) from error
 
 
 def _required_text(value: Mapping[str, Any], key: str) -> str:

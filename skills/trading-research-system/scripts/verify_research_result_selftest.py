@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -23,7 +24,11 @@ from portfolio_panel_adapter import build_portfolio_panel
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "assets" / "fixtures" / "input"
+EXPECTED = ROOT / "assets" / "fixtures" / "expected"
 AS_OF = "2026-07-17T10:00:00Z"
+CHAT_VISUAL_REFERENCE = json.loads(
+    (EXPECTED / "chat-visual-reference.json").read_text(encoding="utf-8")
+)
 
 
 def result(kind: str, visual: dict[str, object] | None) -> dict[str, object]:
@@ -73,6 +78,15 @@ def load(name: str) -> dict[str, object]:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
+
+
+def require_reference(kind: str, output: bytes) -> None:
+    expected = CHAT_VISUAL_REFERENCE[kind]
+    require(len(output) == expected["bytes"], f"{kind} reference byte size changed")
+    require(
+        hashlib.sha256(output).hexdigest() == expected["sha256"],
+        f"{kind} reference bytes changed",
+    )
 
 
 def main() -> int:
@@ -154,6 +168,7 @@ def main() -> int:
     require(b"<iframe" not in first.inline_html.lower(), "inline output must not wrap a standalone board")
     require(b"<html" not in first.inline_html.lower(), "standalone html leaked into inline output")
     require(len(first.inline_html) < 100_000, "macro inline output is too large")
+    require_reference("macro", first.inline_html)
     macro_gap = result(
         "macro",
         {"adapter": "macro", "snapshot": load("macro-regime-partial.json"), "default_view": "Overview"},
@@ -171,6 +186,16 @@ def main() -> int:
         and "待核验".encode() in macro_gap_packet.inline_html,
         "macro degraded state is hidden",
     )
+    wrong_adapter = result(
+        "macro",
+        {"adapter": "instrument", "snapshot": load("macro-regime-complete.json"), "default_view": "Overview"},
+    )
+    try:
+        build_delivery_packet(wrong_adapter)
+    except ResearchResultError as error:
+        require(str(error) == "visual_adapter_invalid", "wrong visual-adapter error code")
+    else:
+        raise AssertionError("mismatched visual adapter was accepted")
 
     longbridge_rows = portfolio_rows(
         load("longbridge-portfolio-cli-2026-06-24.json"),
@@ -334,6 +359,7 @@ def main() -> int:
     require(b"drawFundamental" not in portfolio_packet.inline_html, "portfolio fundamentals leaked client-side rendering")
     portfolio_script = portfolio_packet.inline_html.split(b"<script>", 1)[1].split(b"</script>", 1)[0]
     require(len(portfolio_script) < 12_000, "portfolio client script exceeds the document.write-safe budget")
+    require_reference("portfolio", portfolio_packet.inline_html)
 
     instrument = result(
         "instrument",
@@ -342,6 +368,7 @@ def main() -> int:
     instrument_packet = build_delivery_packet(instrument)
     require(instrument_packet.inline_html is not None and b'data-view="price"' in instrument_packet.inline_html, "instrument inline adapter missing")
     require(b"<iframe" not in instrument_packet.inline_html.lower(), "instrument inline output is not native")
+    require_reference("instrument", instrument_packet.inline_html)
 
     pa = result(
         "price_action",
@@ -443,6 +470,7 @@ def main() -> int:
         require(expected.encode() in pa_full_html, f"price action requirement missing: {expected}")
     require("20Y美债".encode() not in pa_full_html, "macro liquidity event leaked into price action template")
     require(len(pa_full_html) < 100_000, "complete price action inline output is too large")
+    require_reference("price_action", pa_full_html)
 
     gap = result("report", None)
     gap["data_gaps"] = [{"label": "Primary source", "reason": "Unavailable", "status": "partial"}]
