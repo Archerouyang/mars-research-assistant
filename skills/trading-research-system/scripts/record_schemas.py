@@ -224,19 +224,3 @@ CSV_SCHEMAS: Mapping[str, tuple[str, ...]] = {
         "next_check",
     ),
 }
-
-DAILY_TEMPLATE_TARGETS: Mapping[str, str] = {
-    "watchlist.csv": "watchlist.csv",
-    "trade-plans.csv": "trade-plans.csv",
-    "intraday-watchlist.csv": "intraday-watchlist.csv",
-    "trades.csv": "trades.csv",
-    "holdings.csv": "portfolio.csv",
-    "portfolio_snapshot.csv": "portfolio_snapshot.csv",
-    "broker_executions.csv": "broker_executions.csv",
-    "broker_orders.csv": "broker_orders.csv",
-    "research-note-log.csv": "research-note-log.csv",
-    "research-report-log.csv": "research-report-log.csv",
-    "daily-macro-checklist.md": "daily-macro-checklist.md",
-    "daily-market-tracking.md": "daily-market-tracking.md",
-    "reviews.md": "reviews.md",
-}

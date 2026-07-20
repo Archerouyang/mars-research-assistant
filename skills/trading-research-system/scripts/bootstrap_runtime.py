@@ -11,18 +11,8 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from record_schemas import DAILY_TEMPLATE_TARGETS
-from runtime_state import RuntimeWriter, default_runtime_dir, template_dir_from_script as runtime_template_dir
-
-
-ROOT_TEMPLATES = {
-    "config.toml": "config.toml",
-    "market-plan.md": "market-plan.md",
-    "trading-profile.md": "trading-profile.md",
-    "ops-state.md": "ops-state.md",
-}
-
-RUNTIME_DIRS = ("daily", "updates", "momentum", "charts", "reports")
+from private_runtime import PreparationScope, prepare_private_runtime
+from runtime_state import default_runtime_dir, template_dir_from_script as runtime_template_dir
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,23 +38,6 @@ def template_dir_from_script() -> Path:
     return runtime_template_dir(__file__)
 
 
-def update_note_template(trading_date: str) -> str:
-    return f"""# Daily Update {trading_date}
-
-## Changes
-
--
-
-## Decisions Needed
-
--
-
-## Next Checks
-
--
-"""
-
-
 def bootstrap_runtime(
     runtime_dir: Path,
     trading_date: str,
@@ -73,38 +46,15 @@ def bootstrap_runtime(
     dry_run: bool,
     include_daily: bool,
 ) -> list[str]:
-    messages: list[str] = []
-    writer = RuntimeWriter(dry_run=dry_run, overwrite=overwrite)
-    for directory in RUNTIME_DIRS:
-        messages.append(writer.ensure_dir(runtime_dir / directory))
-
-    for template_name, target_name in ROOT_TEMPLATES.items():
-        messages.append(
-            writer.copy_template(
-                template_dir / template_name,
-                runtime_dir / target_name,
-            )
-        )
-
-    messages.append(
-        writer.write_text(
-            runtime_dir / "updates" / f"{trading_date}.md",
-            update_note_template(trading_date),
-        )
+    return prepare_private_runtime(
+        runtime_dir,
+        trading_date,
+        template_dir,
+        scope=PreparationScope.BOOTSTRAP,
+        dry_run=dry_run,
+        overwrite=overwrite,
+        include_daily=include_daily,
     )
-
-    if include_daily:
-        daily_dir = runtime_dir / "daily" / trading_date
-        messages.append(writer.ensure_dir(daily_dir))
-        for template_name, target_name in DAILY_TEMPLATE_TARGETS.items():
-            messages.append(
-                writer.copy_template(
-                    template_dir / template_name,
-                    daily_dir / target_name,
-                )
-            )
-
-    return messages
 
 
 def main() -> None:

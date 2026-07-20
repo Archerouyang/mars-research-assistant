@@ -7,28 +7,9 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from record_schemas import DAILY_TEMPLATE_TARGETS
-from runtime_state import RuntimeWriter, default_runtime_dir, resolve_daily_dir
+from private_runtime import PreparationScope, prepare_private_runtime
+from runtime_state import default_runtime_dir, resolve_daily_dir
 from runtime_state import template_dir_from_script as runtime_template_dir
-
-RESEARCH_NOTES = """# Research Notes
-
-## Information Collection
-
--
-
-## Information Processing
-
--
-
-## Trade Ideas
-
--
-
-## Verification
-
--
-"""
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,14 +42,14 @@ def main() -> None:
     args = parse_args()
     target_dir = resolve_daily_dir(args.runtime_dir, args.date, root=args.root)
     template_dir = Path(args.templates) if args.templates else template_dir_from_script()
-    messages: list[str] = []
-    writer = RuntimeWriter(overwrite=args.overwrite)
-
-    for template_name, target_name in DAILY_TEMPLATE_TARGETS.items():
-        source = template_dir / template_name
-        messages.append(writer.copy_template(source, target_dir / target_name))
-
-    messages.append(writer.write_text(target_dir / "research-notes.md", RESEARCH_NOTES))
+    messages = prepare_private_runtime(
+        args.runtime_dir,
+        args.date,
+        template_dir,
+        scope=PreparationScope.DAILY_ONLY,
+        overwrite=args.overwrite,
+        daily_root=args.root,
+    )
 
     print(f"Daily research folder: {target_dir}")
     for message in messages:

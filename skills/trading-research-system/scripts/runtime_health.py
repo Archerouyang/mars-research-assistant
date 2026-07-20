@@ -10,7 +10,8 @@ import json
 from pathlib import Path
 import time
 
-from runtime_state import default_runtime_dir, resolve_daily_dir, resolve_runtime_selection
+from private_runtime import runtime_health_expectations, startup_required_check_ids
+from runtime_state import default_runtime_dir, resolve_runtime_selection
 
 
 STATUSES = {"available", "missing", "stale", "unauthorized", "needs_review"}
@@ -112,45 +113,14 @@ def build_runtime_health(
     runtime_origin: str = "explicit_argument",
 ) -> dict[str, object]:
     runtime_dir = runtime_dir.expanduser()
-    daily_dir = resolve_daily_dir(runtime_dir, trading_date)
     broker_health = build_broker_source_health(broker_sources)
     capability_health = build_source_capability_health(
         source_capabilities or [],
         broker_health["source_statuses"],
     )
     runtime_checks = [
-        path_check("runtime_dir", "Runtime directory", runtime_dir, stale_after_days),
-        path_check("market_plan", "Active Market Plan", runtime_dir / "market-plan.md", stale_after_days),
-        path_check("ops_state", "Daily Ops State", runtime_dir / "ops-state.md", stale_after_days),
-        path_check("trading_profile", "Trading Profile", runtime_dir / "trading-profile.md", stale_after_days),
-        path_check("updates_dir", "Updates directory", runtime_dir / "updates", stale_after_days),
-        path_check("daily_dir", "Daily directory", daily_dir, stale_after_days),
-        path_check("trade_plans", "Trade plans", daily_dir / "trade-plans.csv", stale_after_days),
-        path_check(
-            "intraday_watchlist",
-            "Intraday watchlist",
-            daily_dir / "intraday-watchlist.csv",
-            stale_after_days,
-        ),
-        path_check("macro_panel", "Macro panel", daily_dir / "macro-panel.json", stale_after_days),
-        path_check(
-            "portfolio_snapshot",
-            "Portfolio snapshot",
-            daily_dir / "portfolio_snapshot.csv",
-            stale_after_days,
-        ),
-        path_check(
-            "alpha_leaderboard_store",
-            "Alpha Leaderboard store",
-            runtime_dir / "alpha" / "leaderboard.sqlite",
-            stale_after_days,
-        ),
-        path_check(
-            "analysis_store",
-            "Analysis snapshot store",
-            runtime_dir / "knowledge" / "analysis.sqlite",
-            stale_after_days,
-        ),
+        path_check(expectation.id, expectation.label, expectation.path, stale_after_days)
+        for expectation in runtime_health_expectations(runtime_dir, trading_date)
     ]
     checks = runtime_checks + capability_health["checks"] + broker_health["checks"]
     return {
@@ -172,7 +142,7 @@ def infer_startup_status(checks: list[RuntimeCheck]) -> str:
     statuses = {check.id: check.status for check in checks}
     if statuses.get("runtime_dir") != "available":
         return "uninitialized"
-    required = ("market_plan", "trading_profile", "updates_dir", "daily_dir")
+    required = startup_required_check_ids()
     if all(statuses.get(check_id) == "available" for check_id in required):
         return "ready"
     return "partial"

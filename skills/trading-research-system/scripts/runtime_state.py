@@ -6,7 +6,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
-import shutil
 from typing import Mapping
 
 
@@ -70,45 +69,3 @@ def resolve_daily_dir(
     if daily_dir is not None:
         return Path(daily_dir).expanduser()
     return resolve_daily_root(runtime_dir, root) / trading_date
-
-
-@dataclass(frozen=True)
-class RuntimeWriter:
-    """Apply runtime writes consistently, with dry-run and overwrite policy."""
-
-    dry_run: bool = False
-    overwrite: bool = False
-
-    def ensure_dir(self, path: str | Path) -> str:
-        target = Path(path).expanduser()
-        if self.dry_run:
-            if target.exists():
-                return f"would keep existing dir {target}"
-            return f"would create dir {target}"
-        target.mkdir(parents=True, exist_ok=True)
-        return f"created dir {target}"
-
-    def copy_template(self, source: str | Path, target: str | Path) -> str:
-        source_path = Path(source).expanduser()
-        target_path = Path(target).expanduser()
-        if not source_path.is_file():
-            raise SystemExit(f"missing template: {source_path}")
-        if target_path.exists() and not self.overwrite:
-            return f"kept existing {target_path}"
-        if self.dry_run:
-            action = "would overwrite" if target_path.exists() else "would write"
-            return f"{action} {target_path}"
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source_path, target_path)
-        return f"wrote {target_path}"
-
-    def write_text(self, path: str | Path, text: str) -> str:
-        target = Path(path).expanduser()
-        if target.exists() and not self.overwrite:
-            return f"kept existing {target}"
-        if self.dry_run:
-            action = "would overwrite" if target.exists() else "would write"
-            return f"{action} {target}"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding="utf-8")
-        return f"wrote {target}"

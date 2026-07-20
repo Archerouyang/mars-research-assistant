@@ -12,32 +12,9 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from bootstrap_runtime import update_note_template
-from record_schemas import CSV_SCHEMAS, DAILY_TEMPLATE_TARGETS
-from runtime_state import RuntimeWriter, default_runtime_dir, resolve_daily_dir
+from private_runtime import PreparationScope, prepare_private_runtime
+from runtime_state import default_runtime_dir, resolve_daily_dir
 from runtime_state import template_dir_from_script as runtime_template_dir
-
-
-EXTRA_DAILY_NOTES = {
-    "research-notes.md": """# Research Notes
-
-## Information Collection
-
--
-
-## Information Processing
-
--
-
-## Trade Ideas
-
--
-
-## Verification
-
--
-""",
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,18 +39,6 @@ def template_dir_from_script() -> Path:
     return runtime_template_dir(__file__)
 
 
-def csv_header_text(schema_name: str) -> str:
-    return ",".join(CSV_SCHEMAS[schema_name]) + "\n"
-
-
-def template_schema_name(template_name: str) -> str | None:
-    if not template_name.endswith(".csv"):
-        return None
-    if template_name not in CSV_SCHEMAS:
-        raise SystemExit(f"missing schema for daily template: {template_name}")
-    return template_name
-
-
 def prepare_daily_runtime(
     runtime_dir: Path,
     trading_date: str,
@@ -82,42 +47,14 @@ def prepare_daily_runtime(
     dry_run: bool,
     overwrite: bool,
 ) -> list[str]:
-    writer = RuntimeWriter(dry_run=dry_run, overwrite=overwrite)
-    daily_dir = resolve_daily_dir(runtime_dir, trading_date)
-    messages: list[str] = [
-        writer.ensure_dir(runtime_dir),
-        writer.ensure_dir(runtime_dir / "updates"),
-        writer.ensure_dir(runtime_dir / "daily"),
-        writer.ensure_dir(daily_dir),
-    ]
-
-    messages.append(writer.copy_template(template_dir / "ops-state.md", runtime_dir / "ops-state.md"))
-    messages.append(
-        writer.write_text(
-            runtime_dir / "updates" / f"{trading_date}.md",
-            update_note_template(trading_date),
-        )
+    return prepare_private_runtime(
+        runtime_dir,
+        trading_date,
+        template_dir,
+        scope=PreparationScope.DAILY,
+        dry_run=dry_run,
+        overwrite=overwrite,
     )
-
-    for template_name, target_name in DAILY_TEMPLATE_TARGETS.items():
-        schema_name = template_schema_name(template_name)
-        if schema_name is not None:
-            messages.append(writer.write_text(daily_dir / target_name, csv_header_text(schema_name)))
-            continue
-        messages.append(writer.copy_template(template_dir / template_name, daily_dir / target_name))
-
-    for target_name, text in EXTRA_DAILY_NOTES.items():
-        messages.append(writer.write_text(daily_dir / target_name, text))
-
-    messages.append(prerequisite_status(runtime_dir / "market-plan.md", "Active Market Plan"))
-    messages.append(prerequisite_status(runtime_dir / "trading-profile.md", "Trading Profile"))
-    return messages
-
-
-def prerequisite_status(path: Path, label: str) -> str:
-    if path.exists():
-        return f"{label}: available at {path}"
-    return f"{label}: missing; run bootstrap or complete the plan before full Daily Ops analysis"
 
 
 def main() -> int:
