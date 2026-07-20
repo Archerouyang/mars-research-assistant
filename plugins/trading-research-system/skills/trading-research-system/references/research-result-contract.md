@@ -1,0 +1,48 @@
+# ResearchResult Contract
+
+Use this reference only when creating a stable chat delivery packet.
+
+The model may research and reason freely. Before delivery, express the answer as
+one `ResearchResult` with:
+
+- `result_kind`: `operations`, `macro`, `instrument`, `portfolio`,
+  `price_action`, or `report`;
+- `as_of` and `decision`;
+- `key_evidence`, `risks`, `scenarios`, `next_checks`, and visible `data_gaps`;
+- compact `sources` with priority and timestamp;
+- optional `visual` using the adapter matching the result kind.
+
+The result is a Bayesian decision snapshot, not a prediction record. Use the
+existing fields rather than adding ceremonial schema:
+
+- `decision` states the current posterior judgment and the reasonable action;
+- `key_evidence` contains observations that preserve or change the prior;
+- `risks` and counter-theses contain evidence that could reverse the update;
+- `scenarios` are conditional paths with observable triggers, not forecasts;
+- `next_checks` identify the next evidence that would update the decision.
+
+When the prior is material to understanding the change, state it briefly in the
+decision or evidence. Do not invent numerical probabilities when the evidence
+does not support calibration.
+
+Every key-evidence row requires an `evidence_type` (`fact`, `inference`,
+`thesis`, or `counter_thesis`), at least one valid `source_ref`, and its own
+`as_of`. Any non-complete evidence requires a visible `data_gaps` row. The
+delivery Markdown preserves this classification and provenance.
+
+Run `scripts/research_result.py` when deterministic Markdown or inline HTML is
+needed. Macro, Instrument, and Portfolio visuals accept their existing canonical
+Board snapshot. Price Action accepts the existing OHLCV chart payload.
+
+Inline output is a compact Codex-native HTML fragment modeled after the proven
+chat panels: a few decision-sensitive values, one dominant interactive visual,
+and only the controls or detail required for the decision. Never wrap the
+standalone canonical Board in an iframe.
+
+Do not invent fields to fill the contract. Use empty lists when a section has no
+decision-useful content and use `data_gaps` when required evidence is absent.
+
+The validator rejects broker/order action keys, imperative order language,
+private sentinels in public fixtures, and oversized results or rendered
+artifacts. `DeliveryPacket.diagnostics` contains only safe data-gap labels and
+states; it must not contain raw broker responses or credentials.

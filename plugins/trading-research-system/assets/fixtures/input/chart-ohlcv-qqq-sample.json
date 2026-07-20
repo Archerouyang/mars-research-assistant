@@ -2,9 +2,16 @@
   "title": "QQQ / VIX Plan View",
   "subtitle": "Synthetic fixture for Lightweight Charts contract tests; not live market data",
   "symbol": "QQQ",
+  "ticker": "QQQ",
+  "trade_horizon": "medium-term swing",
+  "instrument": "ETF",
   "source": "fixture",
   "data_as_of": "2026-06-12",
   "setup_status": "active market plan fixture",
+  "primary_timeframe": "4H",
+  "auxiliary_timeframes": "1D / 1H",
+  "decision_summary": "等待4H价格结构确认。",
+  "structure_summary": "当前价格位于触发区上方，但尚未重新测试前高。",
   "display_from": "2026-04-01",
   "ema50": [],
   "candles": [
@@ -93,6 +100,11 @@
     {"low": 686.40, "high": 695, "label": "invalidation / review zone", "kind": "invalidation"},
     {"low": 742, "high": 748.63, "label": "TP/rebalance zone", "kind": "rebalance"}
   ],
+  "scenarios": {
+    "bull": {"target": 748.63, "condition": "4H收盘站稳724上方", "path": "重新测试前高供给区", "action": "按确认程度复核分段计划"},
+    "base": {"target": 715, "condition": "价格维持711至724区间", "path": "触发区上方继续整理", "action": "等待区间方向确认"},
+    "bear": {"target": 695, "condition": "4H收盘跌破711", "path": "回测深度支撑区", "action": "暂停新增风险并复核失效"}
+  },
   "notes": [
     "Fixture only; use authorized OHLCV data for live analysis.",
     "QQQ is a synthetic fixture symbol here, not a recommendation, default holding, or watchlist entry."

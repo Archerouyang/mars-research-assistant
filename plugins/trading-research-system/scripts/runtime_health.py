@@ -139,7 +139,6 @@ def build_runtime_health(
             daily_dir / "portfolio_snapshot.csv",
             stale_after_days,
         ),
-        path_check("kvn_store", "KVN store", runtime_dir / "momentum" / "kvn.sqlite", stale_after_days),
         path_check(
             "alpha_leaderboard_store",
             "Alpha Leaderboard store",

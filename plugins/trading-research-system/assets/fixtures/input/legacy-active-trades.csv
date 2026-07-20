@@ -1,3 +1,0 @@
-entry_date,symbol,direction,trade_type,product,timeframe,信号k类型,background,辅助信号,入场价格,初始止损,初始目标,初始盈亏比,总成本,盈亏,思考复盘,信心,tradingview_link,currency
-2026-01-15,qqq,long,daytrade,call,5min,强信号,合成测试：高开突破关键压力后回撤，重新站上短周期均线,合成测试：50%回撤支撑和三推后出现信号K,"100,101",95,110,2,1000,250.00,合成测试：早期入场背景一般，二次确认背景更清楚。止盈离场的时机偏慢，强反转K出现后应更快减仓。,中等,https://www.tradingview.com/x/example/,usd
-2026-01-15,mu,long,swing,bull call spread,15min,强信号,合成测试：高开回踩后出现信号K，但尚未确认突破,合成测试：4h 突破 20EMA,90,84,105,2,600,,合成测试：这笔交易已经结束但未计入统计。,强,,usd

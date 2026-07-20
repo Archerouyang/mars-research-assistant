@@ -38,18 +38,12 @@ def sync() -> None:
 
     copy_tree(SOURCE / "assets", PLUGIN / "assets")
     scripts_root = PLUGIN / "scripts"
-    scripts_root.mkdir(parents=True, exist_ok=True)
-    generated_names = {source.name for source in (SOURCE / "scripts").glob("*.py")}
-    development_harness = {"contract_suite.py", "contract_verifier.py"}
-    for target in scripts_root.glob("*.py"):
-        if (
-            target.name not in generated_names
-            and target.name not in development_harness
-            and not target.name.startswith("verify_")
-        ):
-            target.unlink()
-    for source in sorted((SOURCE / "scripts").glob("*.py")):
-        shutil.copy2(source, PLUGIN / "scripts" / source.name)
+    if scripts_root.exists():
+        shutil.rmtree(scripts_root)
+    scripts_root.mkdir(parents=True)
+    for pattern in ("*.py", "*.mjs"):
+        for source in sorted((SOURCE / "scripts").glob(pattern)):
+            shutil.copy2(source, PLUGIN / "scripts" / source.name)
     shutil.copy2(SOURCE / "LICENSE", PLUGIN / "LICENSE")
 
 

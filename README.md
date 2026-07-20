@@ -2,10 +2,13 @@
 
 # DailyTrades: Trading Research System
 
-An AI-native research Skill that compresses market, macro, policy, company,
-price-action, and portfolio evidence into an updateable decision process.
+An AI-native, Bayesian decision-support Skill that compresses market, macro,
+policy, company, price-action, and portfolio evidence into an updateable
+decision process. It does not try to predict the next market move: it updates a
+prior with new evidence, compares conditional scenarios, and identifies the
+next observation that would change the decision.
 
-Version: `0.1.1`
+Version: `0.2.0`
 
 ## Install in 30 Seconds
 
@@ -30,31 +33,33 @@ optional authorized read-only data sources. It does not restore or infer a
 watchlist, profile, portfolio, plan, credential, connector grant, or research
 history.
 
-## Synthetic Output Gallery
+## Accepted Output Examples
 
-Every image below is generated from an explicitly labeled synthetic fixture.
-No screenshot uses a broker account, private runtime, or real user data.
+These screenshots are user-selected PNG exports of accepted chat-inline
+panels. They use dated public market data and contain no broker account,
+private runtime, or private portfolio information. They are research snapshots,
+not live quotes or trade instructions.
 
 ### Macro Regime Panel
 
-![Synthetic Macro Regime Panel](docs/assets/readme/macro-regime-panel.svg)
+![Macro Regime Panel showing rates, inflation, risk breadth, and one-month trend analysis](docs/assets/readme/macro-regime-live-2026-07-19.png)
 
-### Price Action Panel
+The Macro panel connects the current liquidity regime with rates, inflation,
+NDX/RUT breadth, volatility, the dollar, credit, oil, and the next material
+events.
 
-![Synthetic TradingView Lightweight Charts price-action panel](docs/assets/readme/price-action-panel.png)
+### NVDA 4H Price Action Panel
 
-The static image is a browser capture of the same
-[interactive HTML](docs/assets/readme/price-action-panel.html), rendered with
-TradingView Lightweight Charts 5.2.0. The handcrafted SVG remains only as a
-no-browser fallback and is not the README component image.
+![NVDA 4H Price Action entry plan with scenarios, key levels, staged entries, and company events](docs/assets/readme/nvda-4h-pa-entry-plan.png)
 
-### Position Risk Panel
+The Price Action panel separates observation from action: timeframe and data
+provenance, current structure, conditional paths, key levels, invalidation,
+staged execution, and stock-specific event checks remain visible together.
 
-![Synthetic Position Risk Panel](docs/assets/readme/position-risk-panel.svg)
-
-Regenerate all gallery assets with `python3 scripts/generate_readme_gallery.py`.
-See [third-party notices](THIRD_PARTY_NOTICES.md) for TradingView attribution
-and Apache-2.0 licensing.
+Interactive chat-inline HTML remains the primary visual artifact. PNG is saved
+only when the user explicitly selects a panel for export. See
+[third-party notices](THIRD_PARTY_NOTICES.md) for TradingView attribution and
+Apache-2.0 licensing.
 
 ## Workflow
 
@@ -170,10 +175,12 @@ Reload or open a new task after installing or upgrading a native wrapper.
 | Skill is not discovered | Confirm the repository is reachable and the install output names exactly `trading-research-system`. |
 | A new task starts without personal data | Expected: first run is blank until the user explicitly initializes a private runtime. |
 | Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
-| A chart cannot be captured | Use Chrome/Chromium for the canonical PNG; the generated SVG is a no-browser fallback only. |
+| A selected inline panel cannot be exported | User-selected PNG export requires Chrome/Chromium; chat-inline HTML remains the primary artifact. |
 
 Detailed documents: [Plugin usage](plugins/trading-research-system/README.md),
-[workflow design](docs/PLUGIN_DESIGN.md), [MVP runbook](docs/MVP_RUNBOOK.md),
-and [distribution decision](docs/adr/0007-command-first-agent-skill-distribution.md).
+[canonical Skill](skills/trading-research-system/SKILL.md),
+[0.2.0 delivery contract](docs/adr/0009-research-result-delivery-contract.md),
+[MVP runbook](docs/MVP_RUNBOOK.md), and
+[distribution decision](docs/adr/0007-command-first-agent-skill-distribution.md).
 
 DailyTrades is MIT licensed. Third-party components retain their own licenses.

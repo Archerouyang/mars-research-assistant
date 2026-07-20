@@ -2,9 +2,9 @@
 
 # DailyTrades：交易投研系统
 
-一个 AI-native 研究 Skill，把市场、宏观、政策、公司、Price Action 和组合证据压缩成可持续更新的决策流程。
+一个 AI-native、基于贝叶斯理念的决策支持 Skill，把市场、宏观、政策、公司、Price Action 和组合证据压缩成可持续更新的决策流程。它不试图预测下一步行情，而是用新证据更新先验、比较条件情景，并明确什么后续观察会改变当前判断。
 
-版本：`0.1.1`
+版本：`0.2.0`
 
 ## 30 秒安装
 
@@ -24,25 +24,23 @@ npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -
 
 同一个 Skill 会先检查 runtime health；如果不存在 private runtime，就自动进入空白首次设置，确认本地 runtime 位置，并询问是否启用可选的授权只读数据源。它不会恢复或推断观察清单、交易偏好、持仓、计划、凭据、connector 授权或研究历史。
 
-## 合成输出示例
+## 已验收输出示例
 
-以下图片全部由明确标注的 synthetic fixture 生成，不包含券商账户、private runtime 或真实用户数据。
+以下图片是用户选择性导出的已验收 chat-inline 面板 PNG。数据来自有明确日期的公开市场快照，不包含券商账户、private runtime 或私人持仓信息；它们是研究快照，不是实时行情或交易指令。
 
 ### 宏观环境面板
 
-![合成 Macro Regime Panel](docs/assets/readme/macro-regime-panel.svg)
+![展示收益率曲线、通胀、风险广度和一个月趋势分析的宏观环境面板](docs/assets/readme/macro-regime-live-2026-07-19.png)
 
-### Price Action 面板
+宏观面板把当前流动性环境与长短端利率、通胀、NDX/RUT 市场广度、波动率、美元、信用、油价及下一阶段重点事件联系起来。
 
-![合成 TradingView Lightweight Charts Price Action 面板](docs/assets/readme/price-action-panel.png)
+### NVDA 4H Price Action 面板
 
-静态图片由浏览器从同一份[交互 HTML](docs/assets/readme/price-action-panel.html) 截取，使用 TradingView Lightweight Charts 5.2.0。手写 SVG 只作为无浏览器环境的 fallback，不是 README 展示组件。
+![包含情景、关键位、分段建仓和公司事件的 NVDA 4H Price Action 面板](docs/assets/readme/nvda-4h-pa-entry-plan.png)
 
-### 持仓风险面板
+Price Action 面板把观察与行动分开，同时展示周期与数据来源、当前结构、条件路径、关键位、失效条件、分段执行和股票自身事件。
 
-![合成 Position Risk Panel](docs/assets/readme/position-risk-panel.svg)
-
-运行 `python3 scripts/generate_readme_gallery.py` 可重建全部图片。TradingView attribution 和 Apache-2.0 许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
+交互式 chat-inline HTML 仍是主要视觉产物；只有用户明确选择导出时才保存 PNG。TradingView attribution 和 Apache-2.0 许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ## 工作流
 
@@ -147,8 +145,12 @@ codex plugin marketplace add Archerouyang/dailytrades --ref master
 | 找不到 Skill | 确认仓库可访问，并检查安装输出是否只列出 `trading-research-system`。 |
 | 新任务没有个人数据 | 这是预期行为；首次运行保持空白，直到用户明确初始化 private runtime。 |
 | 券商或宏观数据不可用 | 单独授权对应的可选只读来源；安装 Skill 不会授予 connector 权限。 |
-| 无法截图图表 | canonical PNG 需要 Chrome/Chromium；生成的 SVG 只作为无浏览器 fallback。 |
+| 无法导出选中的 inline panel | 用户选择性 PNG 导出需要 Chrome/Chromium；chat-inline HTML 仍是主产物。 |
 
-详细文档：[Plugin 使用说明](plugins/trading-research-system/README.md)、[工作流设计](docs/PLUGIN_DESIGN.md)、[MVP Runbook](docs/MVP_RUNBOOK.md) 和[分发决策](docs/adr/0007-command-first-agent-skill-distribution.md)。
+详细文档：[Plugin 使用说明](plugins/trading-research-system/README.md)、
+[canonical Skill](skills/trading-research-system/SKILL.md)、
+[0.2.0 交付契约](docs/adr/0009-research-result-delivery-contract.md)、
+[MVP Runbook](docs/MVP_RUNBOOK.md) 和
+[分发决策](docs/adr/0007-command-first-agent-skill-distribution.md)。
 
 DailyTrades 使用 MIT License；第三方组件保留各自许可证。

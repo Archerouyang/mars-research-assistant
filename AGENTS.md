@@ -12,10 +12,17 @@ Keep it limited to reusable plugin assets and user-readable project docs.
   `scripts/sync_native_plugin.py`; do not maintain duplicate behavior there.
 - Project docs live under `docs/`, `CONTEXT.md`, and top-level Markdown files.
 - Never commit private trading records, watchlists, profiles, broker exports,
-  runtime plans, credentials, account data, or user-generated charts.
+  runtime plans, credentials, account data, or private/user-specific charts.
+  A dated README example may use public market data only when the user
+  explicitly requests publication and the exported image passes a privacy
+  review; this exception never permits account or private-runtime content.
 - Private runtime state belongs outside this repository.
 - The plugin is decision support only. It may use authorized read-only data,
   but must never create, modify, cancel, or imply approval of real orders.
+- The system does not exist to predict market direction. It applies Bayesian
+  decision support: begin with an explicit prior, update confidence as new
+  observations arrive, and choose a conditional action with acceptable risk.
+  Scenarios, levels, and forecasts are evidence inputs, not certainty claims.
 
 ## Coordinator Workflow
 
@@ -123,6 +130,27 @@ not dispatch merely to move context elsewhere.
 - P0 debug work precedes feature work. Broad architecture changes require a
   triggered debt item, regression baseline, bounded plan, and ADR when the
   decision is hard to reverse.
+
+## Product Prototyping And Acceptance
+
+- Start from first principles and build the smallest viable prototype that can
+  answer the product question. Preserve product quality in hierarchy,
+  information density, interaction, and failure behavior; MVP does not mean a
+  disposable user experience.
+- Keep automated acceptance minimal and decision-relevant. Prefer focused
+  checks for schema, provenance, privacy, safety, and artifact openability;
+  present the real artifact or workflow for user-owned manual acceptance.
+- Before replying, compare the result with every explicit requirement and
+  identify missing evidence, weak assumptions, unclear copy, or unmet product
+  expectations. Correct them in the current iteration when feasible.
+- Record explicit dissatisfaction and improvement requests in `DEBUG_PLAN` or
+  `DEVELOPMENT_PLAN` as appropriate. Do not let product feedback remain only in
+  chat history.
+- Once the user explicitly freezes an accepted workflow or surface, treat it
+  as a release contract. Do not change its information architecture, source
+  routing, interaction model, or safety boundary without renewed acceptance;
+  source-backed data, timestamps, concise copy, accessibility, and compatible
+  defect fixes remain allowed.
 
 ## Skill Routing
 

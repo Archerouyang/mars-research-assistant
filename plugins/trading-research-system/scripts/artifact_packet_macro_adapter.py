@@ -57,7 +57,8 @@ MACRO_PAYLOAD_FIELDS = frozenset(
     {
         "board", "chart_series", "decision", "evidence", "exposure_lens",
         "holdings_context", "modules", "payload_version", "posture", "question",
-        "scenarios", "views",
+        "scenarios", "views", "trend_series", "event_watch",
+        "asset_preferences", "liquidity_background",
     }
 )
 
@@ -211,6 +212,11 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         for item in chart_series
     ):
         raise ArtifactPacketError("chart_series_invalid")
+    _validate_trend_series(payload.get("trend_series"), cutoff)
+    _validate_event_watch(payload.get("event_watch"), cutoff)
+    _validate_asset_preferences(
+        payload.get("asset_preferences"), payload.get("liquidity_background")
+    )
     derived_state = _derive_macro_evidence_state(by_id)
     if snapshot.get("evidence_state") != derived_state:
         raise ArtifactPacketError("evidence_state_mismatch")
@@ -232,6 +238,81 @@ def _derive_macro_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> st
     if any(state == "stale" for state in states.values()):
         return "stale"
     return "partial"
+
+
+def _validate_trend_series(value: Any, cutoff: datetime) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list) or not value:
+        raise ArtifactPacketError("trend_series_invalid")
+    labels: set[str] = set()
+    for series in value:
+        if not isinstance(series, Mapping) or set(series) != {"label", "unit", "points", "implication"}:
+            raise ArtifactPacketError("trend_series_invalid")
+        label = series.get("label")
+        if (
+            not _is_nonempty_string(label)
+            or label in labels
+            or not _is_nonempty_string(series.get("unit"))
+            or not _is_nonempty_string(series.get("implication"))
+        ):
+            raise ArtifactPacketError("trend_series_invalid")
+        points = series.get("points")
+        if not isinstance(points, list) or len(points) < 2:
+            raise ArtifactPacketError("trend_series_invalid")
+        previous: datetime | None = None
+        for point in points:
+            if (
+                not isinstance(point, Mapping)
+                or set(point) != {"time", "value"}
+                or not isinstance(point.get("value"), (int, float))
+            ):
+                raise ArtifactPacketError("trend_series_invalid")
+            observed = _parse_timestamp(point.get("time"), "trend_series_invalid")
+            if observed > cutoff or (previous is not None and observed <= previous):
+                raise ArtifactPacketError("trend_series_invalid")
+            previous = observed
+        labels.add(label)
+
+
+def _validate_event_watch(value: Any, cutoff: datetime) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list) or not value:
+        raise ArtifactPacketError("event_watch_invalid")
+    previous: datetime | None = None
+    required = {"time", "event", "why_it_matters", "watch", "if_hot", "if_cool"}
+    allowed = required | {"importance"}
+    for item in value:
+        if not isinstance(item, Mapping) or not required.issubset(item) or set(item) - allowed or not all(
+            _is_nonempty_string(item.get(key)) for key in required
+        ):
+            raise ArtifactPacketError("event_watch_invalid")
+        if item.get("importance", "normal") not in {"normal", "high"}:
+            raise ArtifactPacketError("event_watch_invalid")
+        scheduled = _parse_timestamp(item["time"], "event_watch_invalid")
+        if scheduled <= cutoff or (previous is not None and scheduled <= previous):
+            raise ArtifactPacketError("event_watch_invalid")
+        previous = scheduled
+
+
+def _validate_asset_preferences(value: Any, background: Any) -> None:
+    if value is None and background is None:
+        return
+    if not _is_nonempty_string(background) or not isinstance(value, list) or not value:
+        raise ArtifactPacketError("asset_preferences_invalid")
+    allowed = {"segment", "bias", "impact", "watch"}
+    segments: set[str] = set()
+    for item in value:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != allowed
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed)
+            or item["bias"] not in {"overweight", "neutral", "underweight"}
+            or item["segment"] in segments
+        ):
+            raise ArtifactPacketError("asset_preferences_invalid")
+        segments.add(item["segment"])
 
 
 def _validate_macro_module_data(

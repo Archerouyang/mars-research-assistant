@@ -38,7 +38,9 @@ CLAUDE_INSTALL="$CLAUDE_CONFIG_DIR/skills/trading-research-system"
 
 for installed in "$CODEX_INSTALL" "$CLAUDE_INSTALL"; do
   test -f "$installed/SKILL.md"
-  test -f "$installed/references/output-templates.md"
+  test -f "$installed/references/research-result-contract.md"
+  test -f "$installed/scripts/research_result.py"
+  test -f "$installed/scripts/export_inline_png.mjs"
   test -f "$installed/scripts/position_risk_artifact.py"
   test -f "$installed/assets/vendor/lightweight-charts-5.2.0/LICENSE"
   diff -qr "$CANONICAL" "$installed" >/dev/null

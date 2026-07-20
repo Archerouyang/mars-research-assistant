@@ -89,7 +89,7 @@ def is_allowed_portable_path(relative: Path) -> bool:
     if len(parts) == 2 and parts[0] == "references":
         return relative.suffix == ".md"
     if len(parts) == 2 and parts[0] == "scripts":
-        return relative.suffix == ".py"
+        return relative.suffix in {".py", ".mjs"}
     if parts[:2] == ("assets", "templates"):
         return len(parts) == 3 and relative.suffix in TEMPLATE_FILE_SUFFIXES
     if relative == Path("assets/fixtures/README.md"):
@@ -140,7 +140,7 @@ def validate_skill() -> None:
     require("Start today's trading research." in skill_text, "English first-run prompt missing")
     require("开始今日交易研究" in skill_text, "Chinese first-run prompt missing")
     require("blank first-run setup" in skill_text, "blank first-run setup behavior missing")
-    require("No order actions" in skill_text, "no-order safety boundary missing")
+    require("No order creation" in skill_text, "no-order safety boundary missing")
 
     nested_skills = sorted(
         path.relative_to(PORTABLE) for path in PORTABLE.rglob("SKILL.md")
@@ -154,7 +154,7 @@ def validate_skill() -> None:
             f"unsupported portable Skill path: {relative}",
         )
         require(path.name not in PRIVATE_FILE_NAMES, f"private runtime-shaped file bundled: {path}")
-        if path.suffix.lower() in {".md", ".json", ".toml", ".csv", ".py", ".yaml", ".yml"}:
+        if path.suffix.lower() in {".md", ".json", ".toml", ".csv", ".py", ".mjs", ".yaml", ".yml"}:
             text = path.read_text(encoding="utf-8")
             require(
                 PRIVATE_PATH_RE.search(text) is None,
@@ -209,17 +209,21 @@ def validate_native_wrappers() -> None:
         set(regular_files(PORTABLE / "assets")) == set(regular_files(PLUGIN / "assets")),
         "native wrapper asset file set drift",
     )
-    source_scripts = {path.name for path in (PORTABLE / "scripts").glob("*.py")}
-    wrapper_scripts = {path.name for path in (PLUGIN / "scripts").glob("*.py")}
-    allowed_harness = {"contract_suite.py", "contract_verifier.py"}
-    unexpected_scripts = {
-        name
-        for name in wrapper_scripts - source_scripts
-        if name not in allowed_harness and not name.startswith("verify_")
+    source_scripts = {
+        path.name
+        for pattern in ("*.py", "*.mjs")
+        for path in (PORTABLE / "scripts").glob(pattern)
+    }
+    wrapper_scripts = {
+        path.name
+        for pattern in ("*.py", "*.mjs")
+        for path in (PLUGIN / "scripts").glob(pattern)
     }
     require(
-        not unexpected_scripts,
-        f"native wrapper contains non-canonical behavior scripts: {sorted(unexpected_scripts)}",
+        wrapper_scripts == source_scripts,
+        "native wrapper scripts must exactly mirror the canonical Skill: "
+        f"missing={sorted(source_scripts - wrapper_scripts)} "
+        f"unexpected={sorted(wrapper_scripts - source_scripts)}",
     )
 
     mappings = (

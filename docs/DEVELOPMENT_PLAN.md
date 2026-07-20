@@ -112,78 +112,24 @@ Use these statuses:
 
 | Priority | Status | Task | Why It Matters | Next Action |
 | --- | --- | --- | --- | --- |
-| P0 | done | Establish public planning baseline | Gives the project capability boundaries, execution method, task breakdown, and progress tracking. | Keep roadmap and project log updated as decisions change. |
-| P0 | done | Publish a newcomer installation path | Makes the root README start with one copyable marketplace-install command, an installation check, and the first dry-run prompt. | Keep `.agents/plugins/marketplace.json` and the root README command synchronized with the published Git marketplace. |
-| P0 | done | Define token-efficient Sol Ultra review | Preserves Sol as final quality authority while minimizing subagent count and context duplication. | Default to zero subagents; formal review uses exactly two Terra axes, with Luna reserved for materially large or ambiguous preparation. |
-| P0 | done | Define branch strategy | Keeps Codex/Claude task work isolated and gives GitHub a clear trajectory. | Use `codex/<task> -> dev -> master`. |
-| P0 | done | Establish daily development automation loop | Gives each weekday a repeatable brief, task-priority review, planning interaction, and end-of-day progress update. | Use the weekday brief and end-of-day review to keep this document current. |
-| P0 | done | Define development workflow and test scope | Keeps Claude/Codex work bounded while avoiding live external service tests. | Use it as the acceptance gate for implementation tasks. |
-| P0 | done | Separate development, debug, and technical-debt planning | Keeps product delivery, reproducible defects, and systemic maintenance cost independently visible. | Use `docs/DEVELOPMENT_PLAN.md`, `docs/DEBUG_PLAN.md`, and `docs/TECHNICAL_DEBT.md`; trigger bounded architecture work only through the debt policy. |
-| P0 | done | Define AI-native synthesis contract | Keeps the plugin focused on agent-heavy reading and concise user-facing decision notes instead of verbose report generation. | Apply this rule to every skill output and fixture expectation. |
-| P0 | done | Define basic plugin content plan | Makes the minimum useful skill, reference, template, script, and fixture content explicit before implementation work continues. | Use `docs/PLUGIN_CONTENT_PLAN.md` as the checklist for the fixture package and next scripts. |
-| P0 | done | Accept plugin design contract | Locks the product shape around natural-language task UX, internal focused skills, private runtime boundaries, draft-mode automations, broker source configuration, KVN snapshot consumption, and chart artifact behavior. | Use `docs/PLUGIN_DESIGN.md` as the source for the next implementation issues. |
-| P0 | done | Align README with AI-native task UX | Keeps user docs from presenting focused skills as the default user interface. | Maintain root/plugin README examples around natural-language tasks as the default UX. |
-| P0 | done | Add router intent fixtures | Makes agent autonomous routing testable before adding more scripts. | Extend fixture prompts as new user task types are added. |
-| P0 | done | Add router contract verifier | Gives the router a local acceptance gate. | Run `verify_router_contract.py` with the existing contract checks. |
-| P0 | done | Add Daily Ops Orchestrator contract | Gives the user proactive workflow guidance instead of requiring manual call-out of every module. | Use `daily-ops-orchestrator.md`, `ops-state.md`, and `verify_daily_ops_orchestrator_contract.py`; every tradable idea must be grouped by `ticker + trade_horizon + instrument`. |
-| P0 | done | Add Source Routing Boundary | Prevents Longbridge stock/broker selection from collapsing macro, policy, industry, and news research into one connector. | Use `verify_source_routing_contract.py`; Longbridge macrodata can support macro reads but must not become the default source for news. |
-| P0 | done | Standardize Python verification on uv | Makes plugin validation reproducible and removes dependence on global `python3` packages such as PyYAML. | Use `bash scripts/verify-plugin.sh` as the standard local acceptance check. |
+| P0 | done | Refactor Trading Research System around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific inline visuals, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | User accepted the frozen output structures and authorized integration to remote `dev` on 2026-07-20. Minimal release gates, isolated install, and final Standards/Spec review passed; public `master` cutover remains separate. |
 | P0 | review | Add Git-backed cross-device plugin distribution | Gives each device one public repository marketplace while keeping account login, plugin installation, connector authorization, and private runtime setup as separate operations. | Candidate branch and `dev` both resolve to `9096c9b`; an authenticated isolated remote install passed for Codex and Claude Code. The GitHub repository is still private, so public release still requires an intentional visibility change followed by an anonymous clean install from the stable `master` or release tag and new-task UAT evidence. |
-| P0 | done | Ship command-first portable Agent Skill and newcomer README | Makes one cross-agent command the primary install path while native Codex/Claude plugins remain optional wrappers; gives newcomers reproducible synthetic output evidence instead of a script-heavy README. | WP1 and WP2 were reviewed, integrated into `dev` at `9096c9b`, remote-installed in isolated Codex/Claude Code homes, and reverified in the pinned non-quant UAT worktree. Fresh-chat visual UAT remains a separate release gate. |
-| P1 | done | Polish README price-action warm-up and workflow diagram | Removes the leading EMA20 gap in the visible Lightweight Charts example and makes the bilingual workflow easier to scan without weakening the public/private boundary. | Added 20 synthetic warm-up sessions while preserving the original display start; the first visible candle now has EMA20 coverage and the public example intentionally omits EMA50. Rebuilt both Mermaid blocks as compact two-stage workflow trees, completed English/Chinese full-screen visual QA, and passed browser capture plus plugin/MVP gates. |
-| P1 | done | Fixture-backed local MVP | Gives a one-command smoke check for plugin validation, runtime health, KVN snapshots, intraday scan, position daily report, and core contracts without live external services. | Use `scripts/verify-mvp.sh` before claiming Local MVP readiness. |
-| P1 | done | Define 1.0 acceptance plan | Turns the MVP module list into fresh-chat user-workflow Acceptance Prompts before any public 1.0 claim. | Use `docs/1.0_ACCEPTANCE.md` and `verify_1_0_acceptance_contract.py` before claiming the local trading workflow is complete. |
-| P1 | done | Run 1.0 fresh-chat acceptance and close P0 gaps | Turns the acceptance plan into observed fresh-chat results and a short list of blockers before any `dev` to `master` promotion. | Current results in `docs/1.0_ACCEPTANCE_RESULTS.md`: 6 PASS, 0 PARTIAL, 0 FAIL plus targeted Prompt 5/7 closure evidence. The user authorized promotion; final repository gates and pushes remain. |
-| P0 | done | Harden 1.0 runtime/broker startup semantics after 2026-07-11 forward debugging | Prevents UAT/runtime ambiguity, partial broker data being mislabeled as unauthorized, and unsupported multi-broker exposure aggregation. | Final targeted fresh-chat UAT passed at `19ca4ae` with plugin `0.1.0+codex.20260714041242`; all six debug items are closed. |
-| P1 | done | Architecture Optimization: high-risk behavior contract matrices | Repeated green suites missed reconciliation-mode, startup-state, setup-key, and cross-document behavior combinations. | The repo-level test Module now covers all three replace-not-layer slices; focused, compile, plugin, and MVP gates pass, final two-axis review has no findings, and `TD-20260711-03` is removed. |
-| P1 | done | Runtime bootstrap | Lets users initialize private runtime files from blank templates before broker adapters or real Daily Ops automations exist. | Use `bootstrap_runtime.py --dry-run` first, then initialize the chosen runtime directory. |
-| P1 | done | Daily runtime package preparation | Lets a Daily Ops run prepare today's runtime containers before formal intraday setup scanning. | Use `prepare_daily_runtime.py --dry-run`; it creates header-only daily files and keeps existing user files by default. Follow-up ran the 2026-07-09 package privately; prompt 3 behavior rerun passed, but real setup states still need prepared rows. |
-| P1 | done | Setup row preparation | Bridges confirmed setup planning into scanner-ready daily rows without parsing free-form ideas or inventing plans. | Use `prepare_setup_rows.py --setup-json` after the user confirms setup rows; it fills header-only `trade-plans.csv` and `intraday-watchlist.csv` and keeps populated files unless `--overwrite` is confirmed. |
-| P1 | done | Deepen Runtime State module | Centralizes private runtime root, daily path, template path, dry-run, and overwrite behavior behind one tested module. | Use `runtime_state.py`, `verify_runtime_state_selftest.py`, and `verify_runtime_state_contract.py` before adding new runtime-aware scripts. |
-| P1 | done | Deepen Contract Suite module | Centralizes plugin path factories and core contract-suite orchestration behind one tested runner. | Use `contract_suite.py` and `verify_contract_suite.py core`; register new core checks in `CORE_SUITE` instead of expanding `verify-plugin.sh`. |
-| P1 | done | Broker snapshot ingest | Maps user-approved read-only IBKR/Longbridge export CSVs into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `broker_snapshot_ingest.py`; live connector reads remain a later adapter layer. |
-| P1 | done | IBKR connector adapter | Maps saved read-only IBKR connector positions/balances JSON into the standard `portfolio_snapshot.csv` view for position daily reports. | Use `ibkr_connector_adapter.py`; live read remains explicit and read-only, while the adapter consumes saved JSON and performs no order actions. |
-| P1 | done | Longbridge Terminal CLI adapter | Maps saved `longbridge portfolio --format json` output into the standard `portfolio_snapshot.csv` view without live broker reads or order actions. | Use `longbridge_cli_adapter.py`; runtime health exposes `longbridge_terminal_cli` separately from Longbridge skill and macrodata. |
-| P1 | done | Runtime snapshot normalization repair | Repairs stale product/theme mapping in the standard `portfolio_snapshot.csv` before position daily reports. | Use `repair_portfolio_snapshot.py`; default output is a separate repaired CSV unless `--allow-same-path` is explicitly passed. |
-| P1 | done | Define Trade Plan Preparation contract | Keeps macro, financial conditions, policy/event risk, industry strength, company thesis checks, and imported KVN snapshots from turning into loose reports or premature intraday setup calls. | Use `verify_trade_plan_preparation_contract.py` as the acceptance gate before adding setup-pool or intraday-scan behavior. |
-| P1 | done | Define runtime health contract | Lets the agent know which private runtime state is available before planning or automation work. | Run `runtime_health.py`, `verify_runtime_health_selftest.py`, and `verify_runtime_health_contract.py` as the local acceptance gate before runtime-dependent work. |
-| P1 | done | Harden fresh-chat Daily Ops startup health | Makes new Daily Ops chats show formal runtime health, per-source broker health, and current mode before analysis. | Use `verify_daily_ops_orchestrator_contract.py` and `verify_runtime_health_contract.py`; do not treat repo fixtures as active runtime state. |
-| P1 | done | Add macro-panel runtime health check | Makes Daily Ops report whether today's standard macro panel is available, missing, or stale before macro/rates strategy posture claims. | `runtime_health.py` now checks `daily/YYYY-MM-DD/macro-panel.json`; runtime-health selftest/contract are registered in the core suite. |
-| P1 | done | Add Macro Data Source Contract | Prevents macro/rates output from defaulting to IBKR or web-only reads when Longbridge macrodata should supply actual macro values. | Use `verify_macro_data_source_contract.py`; macro outputs must show Longbridge macrodata status, IBKR market data status, official fallback, and actual macro indicator reads. |
-| P1 | done | Define Longbridge Skill Adapter contract | Distinguishes `longbridge_broker_skill` from `longbridge_macrodata` and makes runtime health report `source_capability_health` before Daily Ops uses either. | Use `verify_longbridge_skill_adapter_contract.py`; current-chat visibility is a capability status, not proof that Longbridge does not exist. |
-| P1 | done | Macro panel runtime preparation | Connects saved Longbridge macrodata or official fallback JSON to the dated runtime `macro-panel.json` without inventing macro reads. | Use `prepare_macro_panel.py --macrodata-json`; official fallback must pass `--source-capability official_source_fallback`; missing input should produce next-step guidance, not a fake macro panel. |
-| P1 | done | Official fallback macro-panel forward smoke | Proves today's private runtime can receive actual macro reads without Longbridge macrodata visibility. | 2026-07-09 runtime now has `macro-panel.json` from Treasury/FRED fallback; runtime health recognizes `official_source_fallback=available`; Gold is optional for posture and must be disclosed when absent. |
-| P1 | done | Define KVN Model module planning contract | Keeps future KVN score construction separate from the plugin while specifying output schema, universe rules, factor groups, validation gates, and daily-job handoff. | Use `docs/KVN_MODEL_PLAN.md` before implementing any KVN model prototype outside this plugin. |
-| P1 | done | Define external momentum snapshot compatibility | Keeps separately generated quantitative momentum outputs consumable without making this plugin own or publicly expose the model. | Keep model construction and standalone leaderboard UX hidden for 1.0 RC; use the compatibility scripts only when the user explicitly provides a snapshot. |
-| P1 | done | Add release surface hidden-quant contract | Prevents unfinished external quantitative modules from leaking into the default README, router, skill list, or daily templates. | Use `verify_release_surface_contract.py` in the core suite before 1.0 RC claims. |
-| P1 | done | Add PA rollforward output contract | Makes PA updates usable for DRAM/SOXX-style follow-ups by requiring prior-analysis comparison, explicit timeframe roles, support/resistance, cost/buy-record context, proportional sizing, and weekly event mapping. | Use `verify_price_action_rollforward_contract.py`; PA outputs should not default to exact share counts. |
-| P1 | done | PA OHLCV rollforward / Longbridge OHLCV adapter | Adds `price_action_rollforward.py` and `longbridge_ohlcv_adapter.py` as the bridge from authorized/user-provided or saved Longbridge kline OHLCV into a consistent rolling PA note before agent judgement. | Use `verify_price_action_rollforward_selftest.py` and `verify_longbridge_ohlcv_adapter_selftest.py`; fresh-chat prompt 5 rerun passed with saved Longbridge OHLCV artifacts. |
-| P1 | done | Define research report intake contract | Gives `research-report-intake` a first-class workflow for report discovery, user-provided report digestion, Claim Ledger creation, verification queues, and Trade Plan Preparation impact. | Keep the fixture-backed user-provided report and discovery/access-boundary examples current as the workflow changes. |
-| P1 | done | Add Active Market Plan fixture data | Gives scripts stable inputs for tests and demos without using live broker or Google data. | Use `verify_active_market_plan_fixture_contract.py` before building position daily report or intraday scan scripts. |
-| P1 | done | Add Active Market Plan and broker-live contracts | Aligns the workflow around one living market plan, setup-level tracking, and read-only broker sources. | Use these contracts in the fixture package and later script flows. |
-| P1 | review | Re-scope canonical record schema registry | Existing CSV schemas are useful for fixtures and compatibility, but broker-live reads are now the default source for objective broker facts. | Decide which schemas stay as fixture/debug artifacts and which scripts should be deprecated or converted to snapshot tools. |
-| P1 | done | Add trading profile template | Lets setup selection account for personal trading style and instrument preferences without storing account allocation in the public repo. | Use it as a private input for Active Market Plan fixtures and setup translation tests. |
-| P1 | done | Implement Plan-scoped intraday scan script | Turns documented setup states into executable status and attention-priority summaries. | Next: layer authorized real-time price/chart data on top of the fixture-backed status renderer. |
-| P1 | done | Re-scope Two-stage review context output | The review flow should capture user context while objective facts come from broker-live sources. | Next: connect broker execution/result adapters to review-context fields when authorized. |
-| P1 | deferred | legacy active Sheet CSV importer | Kept only as migration/compatibility tooling after Google Sheets trade records left the main path. | Do not prioritize unless the user asks to import old records again. |
-| P1 | done | Add lightweight test harness | Gives product implementation tasks a local acceptance gate before CI exists. | Extend the shared contract verifier as new product contracts gain executable checks. |
-| P1 | done | Add broker-live position daily report | Gives the user a scheduled holdings/risk summary similar to broker-native reminders while preserving the no-trade-record-spreadsheet boundary. | `position_daily_report.py` summarizes concentration, instrument/product exposure, broker/account exposure, cash, and leveraged ETF path risk from `portfolio_snapshot.csv`; IBKR connector and Longbridge Terminal CLI paths have been forward-smoked into the standard runtime view. |
-| P1 | done | Add Longbridge macrodata adapter | Makes macro/rates and financial-condition reads use the Longbridge skill's `macrodata` capability when available, instead of falling back to IBKR market data or web-only commentary. | `longbridge_macrodata_adapter.py` maps saved or tool-returned Longbridge macrodata JSON into standard `macro-panel.json` for 10Y, 30Y, credit, USD, oil, gold, and liquidity inputs; next forward-test with live Longbridge macrodata output in a trading research chat. |
-| P2 | deferred | Google Sheets summary display | Sheets is no longer a trade-record layer; only non-sensitive summaries or report indexes may be mirrored later. | Reconsider after position daily reports and visualization snapshots are stable. |
-| P2 | done | Add Active Plan automation prompts | Turns deep update, quick update, intraday monitor, post-market review, and position daily report into recurring Codex prompts after the user confirms cadence and broker data permissions. | Actual Codex automations remain user-confirmed; use `automation-active-plan-deep-update.md`, the sibling prompt templates, and `verify_active_plan_automation_contract.py` before enabling cadence. |
-| P2 | done | Add scheduled macro/industry research monitor | After the weekly plan locks the week's P0/P1 macro, rates, policy, industry, and company-confirmation variables, the plugin can schedule focused searches and return concise analysis/report leads instead of re-running a full plan. | Use `automation-macro-industry-research-monitor.md`, `macro-industry-monitor-2026-07-06.md`, and `verify_macro_industry_research_monitor_contract.py`; real Codex automation still needs cadence and source permission confirmation. |
-| P2 | done | Add Automation setup checklist | Defines the required setup interview before creating real Daily Ops schedules. | Use `automation-setup-checklist.md` and `verify_automation_setup_contract.py`; real Codex automations still require setup confirmation. |
-| P2 | review | Content & Visualization Artifact System MVP | Supports chat-first price action and macro/regime visuals without adding a frontend or saving artifacts by default. | Review fixture-backed implementation and PR; next slice is richer chart rendering or save-on-confirm runtime integration. |
-| P2 | review | Visual Trigger Policy | Prevents chart scripts from staying invisible while also avoiding chart spam in every update. | Use `visual-trigger-policy.md` and `verify_visual_trigger_contract.py`; next forward-test whether Daily Ops/weekly/PA/intraday/position outputs trigger charts at the right time. |
-| P2 | review | Add OHLCV chart artifact generator | Supports price action and multi-timeframe setup review from authorized market data. | Fold into the Content & Visualization Artifact System MVP; keep HTML generation as optional inspection output. |
-| P2 | done | Complete the canonical Instrument Research Board (#62) | Establishes the first production Board vertical slice with four evidence-gated views, immutable synthetic snapshots, offline chart assets, and visible degraded states. | PR #66 is merged into `dev`; its four-state corpus is an input to #63. |
-| P2 | done | Complete the canonical Macro Regime Board (#56) | Adds a plan-linked Macro Board with five evidence-gated views, Decision Cascade, holding-first Exposure Lens, event scenario playbook, immutable synthetic snapshots, and bundled offline ECharts. | PR #67 is merged into `dev`; its four-state corpus is an input to #63. |
-| P2 | done | Complete the canonical Portfolio Risk Board (#59) | Adds six source-reconciled Portfolio views with explicit NAV-only separation, look-through/product/currency risk, exclusions, and additive stress scenarios. | PR #68 is merged into `dev` at `ccdf3ea`; Issue #59 is closed and its four-state corpus is an input to #63. |
-| P2 | review | Deliver exact-byte cross-host packet and staged canonical Gallery (#63) | Proves all three Boards share one immutable host identity and produces the approved six-view, twelve-capture documentation packet without switching public references. | Local staging and fresh-temp byte reproduction pass for 3 Boards, 15 complete Views, 3 no-JS Overviews, and 12 approved captures; publish a Draft PR against `dev` after the local commit, without public cutover. |
-| P2 | review | Enforce the canonical visual acceptance gate (#58) | Makes the three canonical Boards release-gated by complete/degraded/dark browser matrices, privacy and static-safety scans, distribution identity, preserved diagnostics, and real Codex inline evidence. | Automated matrix, formal two-axis review, and exact-byte Codex inline human sign-off pass locally. Publish the isolated branch for review without Issue #57 cutover; keep Issue #38 isolated. |
+| P2 | done | Accepted inline Panel PNG export | Opt-in only: exports the full accepted chat-inline HTML fragment as an on-demand PNG by measuring rendered content height; no automatic save, static frontend, or hosting. | Run only after explicit user selection. Keep private exports local; a separately requested README example may use reviewed public-market data but must contain no broker, private runtime, account, or private portfolio information. |
+| P1 | done | Re-scope retained read-only commands | Prevents supported runtime, broker, macro, PA, and Alpha adapters from becoming unreachable leftovers. | Progressive references now name the retained runtime, broker, macro, OHLCV, and Alpha helpers; future additions require an active caller or compatibility obligation. |
+| P1 | done | Redesign Portfolio Risk chat-inline panel | The old generic bar shell hid the relationship between capital, look-through concentration, product leverage, source coverage, exclusions, scenario loss, and underlying fundamentals. | Structure accepted and frozen by the user on 2026-07-20. Preserve the summary, primary-risk line, ordered views, look-through fundamentals, dedicated stress meaning, and source/exclusion disclosures defined in `references/portfolio-research.md`; structural changes require renewed acceptance. |
+| P1 | completed | Add the default weekly research cadence | Daily Ops lacked a compact weekday priority, so fresh sessions could start with the wrong scope. | Monday builds the market framework and weekly watchlist; Tuesday-Friday update information, ideas, and plans; Saturday reviews markets and trades and prepares next week's watchlist. The cadence remains overridable by the user's current request. |
+| P1 | completed | Establish Bayesian decision-support philosophy | The system should help the user update beliefs and choose risk-bounded actions, not imply that research can predict the next market move. | Treat thesis and regime as priors, separate observations from interpretation, express posterior confidence and conditional scenarios, and name the next evidence that would change the decision. Do not force numerical probabilities without calibration. |
+| P2 | deferred | Public visual cutover | Keeps accepted chat-inline artifacts separate from the paused public Board/gallery release. | Proceed only after explicit 0.2.0 release-candidate approval. |
 | P2 | planned | Research option-flow data vendor | Needed before implementing abnormal options signal analysis. | Define minimum anomaly schema and candidate vendor requirements. |
 
-## Architecture Optimization: High-Risk Behavior Contract Matrices
+## Historical 0.1.x Architecture Records
+
+The sections below are preserved as implementation history. Their commands,
+versions, fixtures, and compatibility modules are not current 0.2.0 release
+instructions. Use the active task table, ADR 0009, `docs/ROADMAP.md`, and
+`docs/MVP_RUNBOOK.md` for current work.
+
+### Architecture Optimization: High-Risk Behavior Contract Matrices
 
 Status: complete on `codex/behavior-contract-matrix` from `dev@7ab4ab0`.
 
@@ -238,7 +184,7 @@ Completion evidence:
   `bash scripts/verify-mvp.sh` pass after the final review fixes;
 - final Standards and Spec reviews report no findings.
 
-## Conditional Architecture Optimization: Artifact Packet Internal Board Seam
+### Conditional Architecture Optimization: Artifact Packet Internal Board Seam
 
 Status: complete after post-Macro deletion-test revalidation on
 `codex/behavior-contract-matrix`. The integrated `dev@7ab4ab0` implementation
@@ -404,23 +350,60 @@ marked passed until the coordinator runs them after integration to `master`.
 
 ## Today
 
-Date: 2026-07-14
+Date: 2026-07-19
 
-- Main task: implement command-first Agent Skill distribution and the
-  newcomer-first bilingual README/visual gallery.
-- Current stage: requirements are user-approved and recorded in
-  `docs/DISTRIBUTION_AND_README_PLAN.md`; implementation has not started.
-- Next task: create the development goal and dispatch the portable-distribution
-  and README/visual work packages with non-overlapping ownership.
-- Definition of done: one `npx skills` command installs a self-contained public
-  Skill; optional native wrappers remain available; bilingual READMEs and
-  reproducible synthetic visuals pass contract checks; the Drive development
-  journal is created; no private runtime or broker data enters Git.
-- Verification: focused install/visual/doc contracts, `verify-plugin`,
-  `verify-mvp`, isolated homes, diff checks, generated-artifact scans, and
-  coordinator review pass.
+- Main task: complete the approved 0.2.0 replace-not-layer refactor from issue
+  #72 and ADR 0009.
+- Current stage: frozen Macro/PA inline templates and opt-in PNG export are
+  user-accepted; cleanup and release-candidate verification are in progress.
+- Next task: sync generated wrappers, run the minimal gate and isolated install
+  smoke, perform the two-axis review, and present the candidate for manual
+  acceptance.
+- Definition of done: stable `ResearchResult -> DeliveryPacket`, no obsolete
+  public cache/database compatibility path, canonical/native parity, focused
+  verification, no private data or broker write action, and no public cutover
+  without explicit approval.
 
 ## Progress Log
+
+### 2026-07-20
+
+- User accepted the 0.2.0 frozen Macro, Price Action, and Portfolio panel
+  structures and authorized integration to remote `dev`.
+- README positioning now states the Bayesian decision-support model explicitly:
+  priors are updated with observations, scenarios stay conditional, and the
+  system identifies the next evidence that would change the current action.
+- The user-selected Macro and NVDA Price Action PNG exports are embedded as
+  reviewed public-market examples; they contain no broker, runtime, account,
+  or private portfolio data.
+- The minimal plugin gate, isolated portable install, canonical/native parity,
+  cleanup scan, ResearchResult regression suite, and final Standards/Spec
+  review passed for the 0.2.0 candidate.
+
+### 2026-07-19
+
+- User acceptance froze the 0.2.0 PA inline template after the NVDA real-chat
+  prototype. The accepted structure is decision hierarchy -> continuous metric
+  strip -> Chinese trigger/path/action scenarios -> dominant PA chart ->
+  current-price-anchored level ladder -> proportional staged plan -> company and
+  direct supply-chain events -> compact data-method disclosure. Macro liquidity
+  events remain owned by the Macro panel. Structural or interaction changes
+  require renewed real-chat acceptance.
+- User acceptance froze the working Macro research and Longbridge CLI workflow
+  for 0.2.0. The release contract is now capability check -> `macrodata`
+  discovery/history -> supported Longbridge market history -> purpose-specific
+  Treasury/Cboe/exact-DXY completion -> one-month session alignment ->
+  `ResearchResult -> DeliveryPacket` -> compact native inline. Changes to this
+  sequence or its source/safety boundaries require renewed user acceptance.
+- Manual acceptance feedback for #72 requires the native macro inline fragment
+  to localize visible transmission states and scenario descriptions in Chinese.
+  The stable macro observation set now includes 2Y/10Y/30Y rates, CPI and PPI,
+  NDX/RUT, and VXN, while retaining decision-relevant USD, credit, commodity,
+  and liquidity context. Acceptance remains user-owned in the real chat surface.
+- Follow-up acceptance rejected cross-unit single-value bars. Macro inline now
+  needs time-series direction for NDX/RUT, VXN, DXY, and rates, plus an explicit
+  causal chain from current state through next-week event outcomes to scenario
+  and plan consequences.
 
 ### 2026-07-14
 

@@ -1,272 +1,132 @@
 ---
 name: trading-research-system
-description: Run the complete DailyTrades Trading Research System as one portable Agent Skill. Use when a user starts today's trading research, updates an Active Market Plan, reviews macro or equity evidence, tracks setups, checks portfolio risk, reads research reports, or reviews completed trades.
+description: Research markets, instruments, price action, portfolio risk, and external reports; maintain private research plans; and deliver concise Markdown plus chat-native interactive visuals when useful. Use for DailyTrades trading research and risk decision support.
 ---
 
 # Trading Research System
 
-Use this one self-contained Agent Skill as the general entrypoint for Trading
-Research System. Choose the relevant internal workflow reference; do not ask the
-user to install or invoke a separate focused skill.
+Use natural-language intent. The user does not need to name an internal
+workflow. Research broadly, reason from current evidence, and return only what
+changes the decision, risk, confidence, or next check.
 
-All relative file paths and commands in this package are relative to the
-installed `trading-research-system` Skill root.
+All package-relative paths start at this Skill root.
 
-This is decision support, not automated trading. Do not present outputs as guaranteed returns, personalized financial advice, or certainty. Always separate facts, assumptions, thesis, counter-thesis, invalidation, and risk controls.
+## Core Philosophy
 
-This Skill is AI-native. The agent should absorb large volumes of market, macro, research, chart, broker, and journal information, then return a compact decision note. Do not dump raw readings, long source summaries, or every intermediate observation unless the user asks for audit detail.
+The system is not a market-prediction engine. It is Bayesian decision support:
 
-## Routing
+1. start from an explicit prior based on the current thesis, regime, position,
+   price structure, and known risks;
+2. separate new observations from interpretation and judge how strongly each
+   observation should update the prior;
+3. express the posterior as changed confidence, scenario weight, or risk, not
+   as certainty about the next market move;
+4. choose the most reasonable conditional action for the posterior while
+   preserving invalidation, downside limits, and the ability to update again.
 
-The canonical first prompt is `Start today's trading research.`; the Chinese
-equivalent is `开始今日交易研究`. Treat both as Daily Ops first start. If the
-private runtime does not exist, enter blank first-run setup in this same Skill:
-confirm the private runtime location, explain that it starts empty, and offer
-optional read-only source setup. Do not copy, infer, restore, or synchronize a
-watchlist, trading profile, positions, plans, credentials, connector grants, or
-research history during installation or first run.
+Forecasts, consensus, targets, technical levels, and scenarios are inputs to
+this update process. They are never proof. A useful answer makes clear what was
+believed, what changed, why confidence changed, and what observation would
+change the decision again. Do not force Bayesian terminology into every visible
+response when plain language is clearer; preserve the reasoning discipline.
 
-No order actions. This Skill never creates, modifies, cancels, or submits real
-orders.
+## Hard Invariants
 
-- General Daily Ops guidance, vague requests such as "Start today's trading research.", "start today", "begin daily ops", "开始今日交易研究", "开始今天的交易研究", "开始今天的交易研究日程", "周末首次启动，先看看下周", "现在该做什么", or any request where the user wants active process guidance:
-  read `references/daily-ops-orchestrator.md` first. The Daily Ops Orchestrator detects stage, checks runtime health, asks for missing confirmations, and then routes to the focused workflow.
+1. Decision support only. No order creation, modification, cancellation,
+   submission, or implied approval.
+2. Never invent prices, positions, macro values, sources, events, or missing
+   evidence. Preserve `partial`, `stale`, `source_error`, and conflicting states.
+3. Keep private runtime, account, broker, credential, and user-generated data
+   out of public fixtures and artifacts.
+4. Broker reads and private runtime writes require the user's authorization.
+   Reads never authorize writes.
+5. Keep fact, inference, thesis, counter-thesis, invalidation, and data gaps
+   distinguishable.
+6. A visual must use authorized, user-provided, or explicitly synthetic data and
+   show its source state and `as_of`.
+7. Never present a scenario, forecast, model output, or price path as a certain
+   prediction. Tie actions to observable conditions and update them when the
+   evidence changes.
 
-### Exact Generic First Start
+## Core Loop
 
-For the exact generic first-start request `开始今天的交易研究`, return the
-fixed Daily Ops startup block before analysis or `daily-market-tracking`.
+1. Infer the requested outcome and inspect only the state needed for it.
+2. Ask one short question only when the answer materially changes the result or
+   authorization boundary. Otherwise proceed with explicit assumptions.
+3. Select current primary or authorized sources by purpose, not by one global
+   source preference.
+4. Update the prior with the strongest new evidence, then synthesize the
+   posterior decision, risks, conditional scenarios, next checks, and visible
+   gaps.
+5. Deliver concise Chinese Markdown unless the user requests another language.
+6. When a visual materially improves inspection, build the real chat-inline HTML
+   and present it early for user acceptance.
 
-#### 运行状态检查
+Do not follow a fixed workflow sequence when a shorter valid path reaches the
+user's outcome.
 
-Render `runtime_dir`, `runtime_origin`, `formal runtime`, `startup_status`,
-`startup_reason` when available, `current_mode`, and status-only runtime files.
+## Intent Routing
 
-#### 券商来源健康
+| Intent | Read when needed |
+| --- | --- |
+| Start/continue Daily Ops, plans, runtime state, broker coverage | `references/operations.md` |
+| Macro, rates, liquidity, policy, cross-asset transmission | `references/macro-research.md` |
+| Company, industry, fundamentals, catalysts, instrument thesis | `references/instrument-research.md` |
+| Holdings, concentration, leverage, stress, portfolio impact | `references/portfolio-research.md` |
+| Chart, setup, rolling analysis, levels, reduction/entry scenarios | `references/price-action.md` |
+| Report, PDF, link, excerpt, claim verification | `references/report-intake.md` |
 
-Render `source_capability_health` before `broker_source_health`, then show the
-exact `portfolio_reconciliation` status. If it is `unavailable`, list excluded
-sources, preserve fail-closed wording, and include the missing confirmation.
+For source or privacy ambiguity, read `references/safety-and-sources.md`.
+For deterministic delivery, read `references/research-result-contract.md`.
 
-#### 宏观数据来源状态
+Several intents may be combined. Prefer the order that resolves the user's
+decision with the fewest reads. Portfolio risk should precede a proposed
+increase in concentrated exposure. Report intake should precede claims derived
+from a supplied report.
 
-Render `macro-panel.json` and its source status, with fixture/debug disclosure
-and no invented macro values.
+## Runtime And Setup Boundary
 
-Then ask the first-start broker read-only question and route to a focused
-workflow. Do not replace this structure with a generic market-update status
-table.
+The formal private runtime defaults to `~/Documents/dailytrades-runtime` unless
+the user or `TRADING_RESEARCH_RUNTIME_DIR` selects another path. Repository
+fixtures are never current user state.
 
-### Exact Weekend First Start
+For `Start today's trading research.` or `开始今日交易研究`, inspect runtime
+availability and source coverage, then provide useful public-source research
+before asking for the smallest missing authorization. A missing runtime enters
+blank first-run setup; never restore or infer private state from fixtures.
 
-For the exact request `周末首次启动，先看看下周`, run a first-start status-only
-runtime health check before analysis and route through Daily Ops before weekly
-analysis.
+Before concrete entry or exit levels, establish `ticker + trade_horizon +
+instrument`. A reduced-scope watch-only read may proceed without that grouping.
 
-#### 运行状态检查
+## Delivery Contract
 
-Before analytical claims, explicitly render `runtime_origin`, formal runtime,
-and startup status. Preserve the deterministic `runtime_origin` value from
-`runtime_health.py` (`environment` when `TRADING_RESEARCH_RUNTIME_DIR` selects
-the empty formal path). When that selected path does not exist, render
-`formal runtime=missing` and `startup_status=uninitialized`; keep formal-runtime
-availability and startup completeness as independent axes. Do not read private
-runtime file contents during this status-only check.
+Default Markdown order is stable but compact:
 
-#### 可用研究摘要
+1. conclusion;
+2. key evidence;
+3. risks and invalidation;
+4. scenarios;
+5. next checks;
+6. data gaps when present.
 
-After the status-only block, keep the user-facing order “先摘要，后授权/初始化”:
-give a concise current public-source weekly summary before requesting any
-authorization or initialization. Clearly label missing personalization and do
-not turn the summary into a setup or trading instruction.
+Stability comes from `scripts/research_result.py`, not from reproducing a prose
+template. The model may vary analysis depth and wording while preserving the
+validated result fields.
 
-#### 摘要后缺失确认
+Visual adapters are purpose-specific:
 
-After the summary, request all three missing choices:
+- Macro: numeric regime metrics, transmission, and scenarios first;
+- Instrument: industry, fundamentals, events, and market evidence;
+- Portfolio: concentration, product exposure, broker scope, and stress;
+- Price Action: chart, timeframes, levels, scenario paths, and invalidation.
 
-- broker read-only preference; this records read intent only and does not read
-  an account;
-- the complete `ticker + trade_horizon + instrument` key;
-- whether to dry-run or initialize the private runtime.
+Use the actual inline HTML as the primary visual acceptance artifact. Automated
+visual checks are limited to deterministic output, safety, and one openability
+smoke unless the user requests more.
 
-Initializing the private runtime requires separate explicit runtime-write
-authorization. Broker read-only preference, a setup-key confirmation, or a
-dry-run choice never authorizes a runtime write.
-
-#### 安全边界
-
-Do not write runtime. Do not read broker or private account data. Do not
-generate setups or buy/sell instructions in this first response.
-
-- Active Market Plan initialization or deep update with last-week trade review, macro/policy/news/event preview, optional external momentum context, and setup discovery:
-  use `weekly-trading-plan`.
-- Daily quick update against `market-plan.md`: macro/policy/news/event delta, momentum change, setup status changes, and level updates:
-  use `daily-market-tracking`.
-- Several active setups, multiple tickers/charts, trigger checks, and attention priority:
-  use `intraday-setup-scan`.
-- Actual trade record, broker execution facts, post-order note, post-exit review:
-  use `trade-review`.
-- Research report discovery, user-provided PDF/link/text digestion, report thesis extraction, claim ledger, and verification queue:
-  use `research-report-intake`.
-- Macro policy, rates/yields, research-note verification, stock screening:
-  use `macro-equity-research`.
-- Alpha Leaderboard, multi-factor ranking, strongest stocks, rank changes, or a
-  full-universe ticker query:
-  read `references/alpha-leaderboard.md`, check runtime health, and use
-  `scripts/alpha_leaderboard_adapter.py`. Preserve the stored Alpha Rank.
-  If the Alpha store is unavailable, disclose the gap; use a legacy snapshot
-  only when an explicitly configured legacy snapshot exists, and never rebuild
-  or re-rank a private model inside the plugin.
-- Holdings, sizing, portfolio exposure, risk budget, trade impact:
-  use `portfolio-risk`.
-- Win rate, R-multiple, setup performance, mistake tags, system review:
-  use `trading-stats`.
-- Automation design, recurring brief, scheduled Active Market Plan update, or monitor:
-  read `references/automation-contract.md` and use the Codex automation tool when creating or updating actual automations.
-
-Before workflows that depend on private runtime state, use
-`references/runtime-health.md` and `scripts/runtime_health.py` to check
-whether required state is available, missing, stale, unauthorized,
-`partial_data`, `upstream_error`, `empty_positions_unverified`, or
-`needs_review`. Preserve the returned status; do not translate a partial/error
-result into unauthorized. Do not read private file contents just to perform the
-health check.
-
-Before repeating a ticker/scope analysis, read `references/analysis-delta.md`
-and use `scripts/analysis_delta_adapter.py` with the exact symbol/scope,
-analysis type, primary timeframe, and strategy horizon. If no prior snapshot
-exists, state `本次作为基准分析`; otherwise default the user-facing note to the
-stored incremental changes.
-
-If the current trading date is missing its daily runtime package, ask before
-writing and then use `scripts/prepare_daily_runtime.py` to create safe
-header-only daily containers such as `trade-plans.csv` and
-`intraday-watchlist.csv`. This prepares files for the workflow; it does not
-create setup rows, read brokers, read market data, or place orders.
-
-After the user confirms concrete setup rows from the Active Market Plan, use
-`scripts/prepare_setup_rows.py` with user-confirmed setup JSON to populate
-`trade-plans.csv` and `intraday-watchlist.csv`. This bridges plan preparation
-to formal scanning; it does not parse free-form trade ideas, read brokers, read
-market data, or place orders.
-
-Use the formal runtime as the only active Daily Ops state root:
-`runtime_dir`, defaulting to `~/Documents/dailytrades-runtime` unless
-`TRADING_RESEARCH_RUNTIME_DIR` or a user-confirmed runtime path overrides it.
-Repo fixtures, bundled templates, and example plans are development inputs only;
-do not treat them as the current Active Market Plan in a new chat.
-
-On every Daily Ops first start, enter `券商只读来源设置`, including when
-unspecified live broker sources default to `needs_review`. On later turns,
-`missing` or `unauthorized` enters `券商只读来源设置`. Ask
-whether to enable Longbridge read-only, IBKR read-only, both, or continue without
-broker facts for this run. `券商只读来源设置` configures read intent only; it
-must not read accounts, install software, or call broker write actions.
-
-On later turns, `needs_review` asks for matching verification/retry and does not
-repeat authorization setup. `stale`, `partial_data`, `upstream_error`, and
-`empty_positions_unverified` retain distinct availability or verification paths;
-report the exact state instead of routing them through authorization setup.
-
-If a ticker or setup lacks `trade_horizon`, do not generate concrete entry or
-exit triggers. Ask for the intended `ticker + trade_horizon + instrument`
-grouping first. If trade horizon is missing, the correct output is a compact
-blocking question, not a forced setup.
-
-Apply this gate before deep research on a specific tradable idea: confirm the complete
-`ticker + trade_horizon + instrument` key. A brief watch-only or reduced-scope
-research summary may still be useful while the key is missing, but do not start
-expensive company/setup research or produce entry/exit levels until the user
-confirms it.
-
-For a weekend first start with a missing or partial runtime, do not make runtime
-initialization or broker authorization a prerequisite for all value. First
-return a current, public-source reduced-scope research summary that clearly
-states what cannot be personalized; then ask for the smallest confirmations
-needed for broker reads, the setup key, and optional runtime initialization.
-Do not write runtime during this first response.
-
-Before macro regime, financial-conditions, rates/liquidity, or strategy posture
-claims, read `references/macro-data-source-contract.md`. Use Longbridge
-macrodata as the preferred source for macro values when available, use
-IBKR market data for price/OHLCV transmission, and official source fallback for
-S0 facts or when Longbridge macrodata is unavailable.
-
-If a request spans multiple workflows, run them in the natural order:
-
-1. Daily Ops Orchestrator when the user asks to start, continue, or decide what to do next.
-2. Read the Alpha Leaderboard when cross-sectional ranking or candidate discovery is needed.
-3. `research-report-intake` when the task starts from research reports, PDFs, links, excerpts, or report discovery.
-4. `macro-equity-research` when deeper source verification, screening, or macro/policy analysis is needed.
-5. `weekly-trading-plan` to initialize or deep-update the Active Market Plan.
-6. `daily-market-tracking` to quick-update the same plan against today's market.
-7. `intraday-setup-scan` to classify setup-level status during the session.
-8. `portfolio-risk` before increasing or concentrating exposure, using canonical broker data when available.
-9. `trade-review` after orders/fills and after exits.
-10. `trading-stats` after enough closed-trade records exist.
-
-## Shared Resources
-
-Detailed domain rules remain in:
-
-- `references/macro-policy-filter.md`
-- `references/macro-data-source-contract.md`
-- `references/research-report-intake.md`
-- `references/equity-screening.md`
-- `references/daily-ops-orchestrator.md`
-- `references/active-market-plan.md`
-- `references/runtime-health.md`
-- `references/alpha-leaderboard.md`
-- `references/analysis-delta.md`
-- `references/trading-profile.md`
-- `references/broker-data-contract.md`
-- `references/automation-contract.md`
-- `references/price-action-timing.md`
-- `references/intraday-setup-scan.md`
-- `references/interactive-trade-review.md`
-- `references/trade-journal.md`
-- `references/portfolio-risk.md`
-- `references/output-templates.md`
-
-Shared scripts and templates are bundled in this Skill:
-
-- `scripts/`
-- `assets/templates/`
-
-Runtime health:
+## Useful Commands
 
 ```bash
 python3 scripts/runtime_health.py --format json
+python3 scripts/research_result.py --input result.json --output-dir output
 ```
-
-Position daily report from a standard runtime snapshot:
-
-```bash
-python3 scripts/position_daily_report.py {runtime_dir}/daily/YYYY-MM-DD/portfolio_snapshot.csv --date YYYY-MM-DD
-```
-
-## Output Style
-
-Use Chinese unless the user asks otherwise. Prefer Markdown notes suitable for Obsidian.
-
-Default to compressed output:
-
-- conclusion first;
-- changed variables only;
-- setup status and next check;
-- invalidation and risk constraints;
-- evidence only when it changes confidence;
-- no long narrative source dumps.
-
-Use clear labels when applicable:
-
-- `事实`
-- `假设`
-- `多头逻辑`
-- `空头逻辑`
-- `失效条件`
-- `择时`
-- `组合风险`
-- `下一步`
-
-When a task needs current facts, use browsing or authorized connectors. Do not rely on memory for policy, market data, yields, company facts, or current prices.

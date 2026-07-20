@@ -41,6 +41,17 @@ LEVERAGED_ETFS = {
     "TSLL": "leveraged_etf",
     "TSMX": "leveraged_etf",
 }
+LEVERAGED_THEMES = {
+    "KORU": "korea_equity_leverage",
+    "MVLL": "ai_hardware_leverage",
+    "MUU": "memory_storage_leverage",
+    "NVDL": "ai_hardware_leverage",
+    "SOXL": "semiconductor_leverage",
+    "SQQQ": "tech_inverse_leverage",
+    "TQQQ": "tech_beta_leverage",
+    "TSLL": "tesla_leverage",
+    "TSMX": "ai_hardware_leverage",
+}
 STOCK_THEMES = {
     "AMD": "ai_hardware",
     "ARM": "ai_hardware",
@@ -53,6 +64,8 @@ STOCK_THEMES = {
     "MRVL": "ai_hardware",
     "MU": "memory_storage",
     "NVDA": "ai_hardware",
+    "SKHY": "memory_storage",
+    "SKHYV": "memory_storage",
     "SNDK": "memory_storage",
     "TSM": "ai_hardware",
 }
@@ -61,7 +74,7 @@ THEME_OVERRIDES = {
     **{symbol: "rates_credit" for symbol in RATES_CREDIT_ETFS},
     **{symbol: "gold_precious_metals" for symbol in COMMODITY_ETFS},
     **SECTOR_ETFS,
-    **{symbol: "ai_hardware_leverage" for symbol in LEVERAGED_ETFS},
+    **LEVERAGED_THEMES,
     **STOCK_THEMES,
 }
 

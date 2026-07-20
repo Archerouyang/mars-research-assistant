@@ -1,3 +1,0 @@
-order_id,broker,account_id,symbol,underlying,side,order_type,status,quantity,filled_quantity,limit_price,avg_fill_price,currency,created_time,updated_time,instrument_type,setup_id,source_timestamp,notes
-SIM-ORD-001,IBKR,SIM-IBKR,QQQ 0DTE 726C,QQQ,buy,limit,submitted,1,0,2.10,,USD,2026-06-24T15:04:00Z,2026-06-24T15:05:00Z,qqq_0dte_call,qqq-0dte-breakout-pullback,2026-06-24T15:05:10Z,submitted fixture order
-SIM-ORD-002,Longbridge,SIM-LB,CRDO,CRDO,buy,limit,filled,100,100,120.50,120.50,USD,2026-06-24T14:34:00Z,2026-06-24T14:35:00Z,stock_common,crdo-ai-infra-pullback,2026-06-24T14:36:00Z,filled fixture order

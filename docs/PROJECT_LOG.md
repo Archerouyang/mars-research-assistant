@@ -29,6 +29,40 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-19
+
+- Commit: pending `Refactor delivery contract for 0.2.0`
+- Scope: skill, script, documentation, decision, validation
+- What changed: replaced prompt-heavy 0.1.x delivery ownership with a validated
+  `ResearchResult -> DeliveryPacket` seam; retained purpose-specific Macro,
+  Instrument, Portfolio, and Price Action inline adapters; froze the
+  user-accepted Macro and PA layouts; removed obsolete mutable KVN, legacy trade
+  compatibility, generated caches, database paths, fixtures, and redundant
+  wording/browser test suites. Public PNG export now requires a marked synthetic
+  fixture and remains user-selected only.
+- Why it matters: the model keeps research freedom while deterministic code
+  owns provenance, evidence classification, visible gaps, no-order safety,
+  privacy, size limits, and stable delivery format. The distributed Skill is
+  materially smaller and the release gate is focused on product boundaries.
+- Verification: canonical/native projections match; the minimal plugin gate,
+  one non-saving Chrome interaction smoke, public-fixture rejection check, and
+  isolated portable install smoke passed. No broker, order, or private-runtime
+  operation ran.
+- Next step: present the 0.2.0 release candidate for manual acceptance; do not
+  integrate, install, or publish without explicit approval.
+
+- Commit: pending `Add opt-in inline Panel PNG export`
+- Scope: skill, script, decision
+- What changed: added an opt-in exporter that renders an accepted chat-inline
+  Panel at its actual content height and writes a complete PNG. The interactive
+  HTML remains canonical; no static frontend, automatic save, batch export, or
+  hosting path was added.
+- Why it matters: users can explicitly request a portable image without
+  maintaining a second visual implementation or silently persisting private
+  research artifacts.
+- Next step: keep README integration deferred unless separately requested; any
+  public image must use synthetic fixtures and the fail-closed public mode.
+
 ## 2026-07-15
 
 - Commit: pending `Polish README chart and workflow`

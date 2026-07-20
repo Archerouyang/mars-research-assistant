@@ -33,23 +33,26 @@ export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
 
 cd "$ROOT"
 
+PUBLIC_ROOTS=(
+  "$ROOT/skills/trading-research-system"
+  "$ROOT/plugins/trading-research-system"
+)
+GENERATED_STATE="$(find "${PUBLIC_ROOTS[@]}" \
+  \( -type d -name __pycache__ \
+  -o -type f \( -name '*.pyc' -o -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) \) \
+  -print)"
+if [[ -n "$GENERATED_STATE" ]]; then
+  echo "error: generated cache or database state found under public package roots:" >&2
+  printf '%s\n' "$GENERATED_STATE" >&2
+  exit 1
+fi
+
 uv_run() {
   uv run --python "$PYTHON_BIN" "$@"
 }
 
-uv_run python scripts/verify_plugin_compile_gate_selftest.py
 PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-plugin-compile.sh
-uv_run python scripts/verify_plugin_distribution_selftest.py
 uv_run python scripts/verify_plugin_distribution.py
-uv_run python scripts/verify_behavior_contract_matrix_selftest.py
-uv_run python scripts/verify_behavior_contract_matrices_contract.py
-uv_run python scripts/verify_readme_gallery_contract_selftest.py
-uv_run python scripts/verify_readme_gallery_contract.py
-uv_run python scripts/verify_canonical_gallery_selftest.py
-uv_run python scripts/verify_visual_acceptance_selftest.py
-uv_run python scripts/stage_canonical_gallery.py \
-  --verify-only \
-  --output-dir docs/staging/canonical-gallery-v1
-uv_run python plugins/trading-research-system/scripts/verify_position_risk_artifact_selftest.py
+uv_run python plugins/trading-research-system/scripts/verify_research_result_selftest.py
+uv_run python plugins/trading-research-system/scripts/verify_artifact_packet_selftest.py
 uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
-uv_run python plugins/trading-research-system/scripts/verify_contract_suite.py core

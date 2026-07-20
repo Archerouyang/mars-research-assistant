@@ -6,10 +6,9 @@ It is a project workflow document, not an internal agent prompt. Do not include 
 
 ## Portable Skill Distribution
 
-Run the command-first distribution contracts without network access:
+Run the narrow distribution contract without network access:
 
 ```bash
-uv run python scripts/verify_plugin_distribution_selftest.py
 uv run python scripts/verify_plugin_distribution.py
 ```
 
@@ -27,18 +26,9 @@ The smoke sets temporary `HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, and
 Skill, scans for private configuration and absolute user paths, and removes the
 temporary directory on exit.
 
-For release or manual visual acceptance, require a fresh browser capture:
-
-```bash
-uv run python scripts/verify_readme_gallery_contract_selftest.py
-uv run python scripts/verify_readme_gallery_contract.py --require-browser-capture
-```
-
-The required-browser command rebuilds the gallery in a new temporary directory
-with `generate_readme_gallery.py --browser-mode required`. It validates the HTML
-and newly captured PNG from that run; the committed README PNG is not accepted
-as browser-capture evidence. Cross-version Chrome pixel identity is not
-required.
+Visual acceptance is manual. Generate one representative inline HTML artifact,
+open it in the Codex in-app browser, and give the user the artifact early. Do
+not replace user judgment with screenshot matrices or pixel-diff gates.
 
 ## Branch Model
 
@@ -147,18 +137,14 @@ Use a separate worktree for:
 
 If the current worktree has uncommitted user/Codex changes, prefer a separate worktree before starting Claude Code.
 
-## TDD Policy
+## Test Policy
 
-Use TDD for repo-owned behavior logic:
+Use one focused self-test when repo-owned deterministic behavior changes:
 
-- intraday scan state machine;
-- CSV parsing and schema validation;
-- trade statistics;
-- portfolio/risk calculations;
-- watchlist scoring;
-- Google Sheets row mapping;
-- chart artifact data preparation;
-- future pure data transformation modules.
+- schema and privacy validation;
+- deterministic ResearchResult delivery;
+- chart payload preparation;
+- high-risk safety boundaries.
 
 TDD is not required for:
 
@@ -170,26 +156,18 @@ TDD is not required for:
 - skill references;
 - prompt/template prose.
 
-For TDD tasks:
-
-1. Add or update fixture inputs.
-2. Add the expected output or assertion.
-3. Run the failing test, or explain why the test harness does not exist yet.
-4. Implement the smallest useful change.
-5. Run tests and relevant smoke checks.
-6. Return a self-review.
+Do not add workflow matrices, browser screenshot suites, duplicate contract
+tests, or a self-test for another test. Prefer a narrow red-green loop for the
+changed invariant, then deliver one real artifact for human acceptance.
 
 ## Test Scope
 
 Tests should cover only repo-owned behavior.
 
-Required test coverage as modules are added:
-
-- happy path;
-- missing or invalid required fields;
-- edge cases for status transitions or calculations;
-- fixture-based smoke tests for scripts;
-- no live external service calls.
+The default gate is intentionally small: compile, plugin distribution,
+ResearchResult delivery, ArtifactPacket compatibility, and plugin structure.
+It does not launch Chrome or export artifacts. Run broader checks only when a
+concrete risk or release boundary requires them.
 
 External connectors are outside this repo's test scope. In particular, do not test live IBKR behavior here:
 
@@ -217,13 +195,12 @@ The script runs the external plugin validator and key contract checks through
 global cache directories. It prefers the Codex bundled Python 3.12 when
 available; otherwise it falls back to `python3.12` or `python3`.
 
-## MVP smoke
+## Product smoke
 
-Use `scripts/verify-mvp.sh` when a change affects the Local MVP path. It runs
-`scripts/verify-plugin.sh` plus fixture-backed runtime health, KVN import/show/
-query/changes, intraday scan, position daily report, and contract checks. It
-must not perform live broker reads, real Codex automations, or live market data
-calls.
+Use `docs/MVP_RUNBOOK.md` for the 0.2.0 smoke. It runs the narrow verification
+gate, generates one ResearchResult delivery, and stops for user acceptance of
+the actual inline HTML. It does not exercise private runtime state, brokers,
+automations, or obsolete KVN databases.
 
 For individual scripts, use:
 
@@ -285,3 +262,23 @@ Codex can accept a task only when:
 - public/private repo boundary is preserved;
 - `docs/PROJECT_LOG.md` is updated when the change affects project trajectory;
 - no live external service behavior is required to prove the change.
+## Inline Panel PNG Export
+
+Keep the chat-inline Panel as the canonical interactive artifact. PNG export is
+opt-in only: run it only after the user explicitly asks for a downloadable
+image. Export that accepted HTML fragment on demand:
+
+```bash
+node scripts/export_inline_png.mjs \
+  --input /absolute/path/to/panel.html \
+  --output /absolute/path/to/panel.png
+```
+
+The exporter measures the rendered document and captures the complete content,
+not a fixed browser viewport. Do not auto-save, batch-export, or update README
+as a side effect of generating an inline Panel. Use `--public` for an explicitly
+requested README or other public asset; it fails closed on common private-data
+sentinels. Public images may use synthetic fixtures or dated public market data
+after explicit user approval and privacy review. They must never contain
+account, broker, private-runtime, or private-portfolio information. Do not add
+hosting or a static frontend for this path.

@@ -1,3 +1,0 @@
-execution_id,broker,account_id,trade_id,order_id,symbol,underlying,side,quantity,price,fees,currency,execution_time,instrument_type,setup_id,source_timestamp,notes
-SIM-EXEC-001,Longbridge,SIM-LB,20260624-CRDO-001,SIM-ORD-002,CRDO,CRDO,buy,100,120.50,1.00,USD,2026-06-24T14:35:00Z,stock_common,crdo-ai-infra-pullback,2026-06-24T14:36:00Z,post_order fixture
-SIM-EXEC-002,IBKR,SIM-IBKR,20260624-QQQ-001,SIM-ORD-001,QQQ 0DTE 726C,QQQ,buy,1,2.15,0.65,USD,2026-06-24T15:06:00Z,qqq_0dte_call,qqq-0dte-breakout-pullback,2026-06-24T15:06:30Z,post_order fixture

@@ -206,10 +206,13 @@ def build_chart_payload(payload: dict[str, Any], title_override: str | None) -> 
     display_from = str(payload.get("display_from") or "")
     if display_from and not any(candle["time"] == display_from for candle in candles):
         raise SystemExit("display_from must match a candle time")
-    return {
+    chart_payload = {
         "title": title,
         "subtitle": str(payload.get("subtitle") or ""),
-        "symbol": str(payload.get("symbol") or ""),
+        "symbol": str(payload.get("symbol") or payload.get("ticker") or ""),
+        "ticker": str(payload.get("ticker") or ""),
+        "trade_horizon": str(payload.get("trade_horizon") or ""),
+        "instrument": str(payload.get("instrument") or ""),
         "setup_status": str(payload.get("setup_status") or ""),
         "data_as_of": str(payload.get("data_as_of") or payload.get("as_of") or ""),
         "display_from": display_from,
@@ -222,6 +225,22 @@ def build_chart_payload(payload: dict[str, Any], title_override: str | None) -> 
         "notes": payload.get("notes") or [],
         "source": str(payload.get("source") or ""),
     }
+    for key in (
+        "primary_timeframe",
+        "auxiliary_timeframes",
+        "daily_context",
+        "atr14_primary",
+        "atr14_4h",
+        "decision_summary",
+        "structure_summary",
+        "scenarios",
+        "entry_plan",
+        "event_watch",
+        "event_note",
+    ):
+        if key in payload:
+            chart_payload[key] = payload[key]
+    return chart_payload
 
 
 def _svg_escape(value: Any) -> str:

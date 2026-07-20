@@ -22,7 +22,6 @@ without specifying every internal workflow.
 - `market-plan.md`:
 - `trading-profile.md`:
 - `daily/YYYY-MM-DD/`:
-- optional external momentum snapshot:
 - broker source:
 - missing data:
 

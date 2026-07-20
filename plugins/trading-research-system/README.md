@@ -1,379 +1,55 @@
-# Trading Research System Native Wrapper
+# Trading Research System 0.2.0
 
-This optional Codex and Claude Code wrapper resolves the same public,
-self-contained `trading-research-system` Agent Skill distributed from the
-repository root. The root Skill is the behavior authority; wrapper copies are
-generated and drift-checked.
-
-It is designed for research, screening, risk review, and decision support. It does not provide guaranteed returns, personalized financial advice, or trading instructions that ignore user constraints.
-
-It is AI-native: the agent should read broadly, verify current facts, compare conflicting signals, and tell the user only the compressed decision-useful result. User-facing output should prioritize conclusions, changed variables, invalidations, setup status, portfolio constraints, and next checks over raw article summaries or long narrative.
-
-## Public plugin / private user state boundary
-
-| Area | Contents | Distribution rule |
-| --- | --- | --- |
-| Public plugin | Generic skills, references, scripts, blank templates, synthetic sanitized fixtures, and generic validation contracts. Fixture tickers are test examples, not recommendations, a default watchlist, or a user profile. | Repository marketplace installation and upgrades distribute this area only. |
-| Private user state | Stock pools and watchlists, `trading-profile.md`, Active Market Plans, setups, positions, executions, reviews, broker data, runtime files, account or connector authorization, personal risk parameters, and research history. | It remains local to each user and is never packaged, restored, or synchronized by this plugin. |
-
-Installation and upgrades distribute public plugin capability only. They never
-copy, package, commit, restore, or synchronize private user state. Each user
-initializes a blank private runtime locally; the repository does not restore a
-personal profile or market plan. Preference synchronization is not part of this
-public plugin distribution. Any future design must be separate, private, and
-explicitly opt-in.
-
-## Capabilities
-
-- Macro and policy filtering focused on market-moving variables.
-- Trump policy, Treasury policy, rates, yields, and liquidity monitoring.
-- Longbridge `macrodata` as an optional macro and financial-conditions source when installed and authorized.
-- Equity screening with thesis verification against primary sources.
-- Research report discovery from public or authorized sources, with source priority and access status.
-- User-provided report intake for PDFs, links, excerpts, screenshots, or copied text, producing a digest, claim ledger, verification queue, and plan impact.
-- Seeking Alpha and similar research-note synthesis when accessible or provided by the user.
-- High-level Al Brooks price action timing framework.
-- Read-only Alpha Leaderboard consumption from the separate private Alpha Lab:
-  Top10 display, full-universe ticker lookup, Top20 candidate routing, Top5 deep
-  research priority, trajectory, probability, and uncertainty. The agent never
-  re-ranks model output.
-- Legacy external quantitative snapshot consumption only as a disclosed
-  configured fallback; legacy scores are never merged with Alpha scores.
-- Active Market Plan maintenance with an overwriteable current state and append-only update trail.
-- Trading profile template for personal strategy scoring, pool definitions, ETF groups, instrument preference, timeframe rules, crowding model, and setup-to-instrument translation.
-- Automation-ready deep update, quick update, intraday monitor, post-market review, and position daily report workflows.
-- Deep updates for weekend/weekly review, including prior trades, future events, momentum, and setup discovery.
-- Quick updates for weekday premarket and intraday level/status changes.
-- setup-scoped intraday scanning for prepared setup plans.
-- Broker-live position daily reports with concise risk summaries and visualization-ready outputs.
-- Interactive post-order and post-exit review context intake from read-only broker facts and user context.
-- Broker-agnostic portfolio risk exposure checks.
-- Broker-live runtime view templates for read-only Longbridge skill/plugin and IBKR connector sources, with manual CSV as a reduced one-off fallback.
-- Local planning, report snapshot, and review-context templates.
-- Daily folder initialization, portfolio exposure, watchlist ranking, and trade statistics scripts.
-- `repair_portfolio_snapshot.py` for stale/unmapped product/theme cleanup in standard `portfolio_snapshot.csv` before position daily reports.
-- `longbridge_ohlcv_adapter.py` for saved Longbridge kline JSON to standard OHLCV JSON before rolling price-action notes.
-- `price_action_rollforward.py` for OHLCV-backed rolling price-action notes with timeframe-labeled support/resistance, proportional add/trim zones, and weekly event mapping.
-- On-demand TradingView `lightweight-charts` HTML artifacts for price-action review from local OHLCV JSON.
-
-## User Interaction
-
-Use natural-language trading research tasks in Codex. The agent should route the
-task to the right internal workflow.
+This native wrapper is generated from the canonical portable Skill at:
 
 ```text
-帮我做下周交易计划，先看宏观、利率、政策、新闻和当前持仓影响。
+skills/trading-research-system/
 ```
+
+Do not maintain behavior separately under `plugins/`. Run:
+
+```bash
+python3 scripts/sync_native_plugin.py
+```
+
+## Product Contract
+
+The model may choose the shortest useful research path. Stable delivery comes
+from one validated boundary:
 
 ```text
-盘前更新一下今天需要盯的 setup，告诉我哪些接近触发。
+ResearchResult -> DeliveryPacket
 ```
 
-```text
-现在检查今天计划里的 QQQ 和 MU setup，哪些接近触发，哪些失效？
-```
+The system is Bayesian decision support, not a market-prediction engine. It
+starts from an explicit prior, updates that view with current evidence, and
+returns a conditional decision plus the next observation that would change it.
 
-```text
-读这篇 NVDA 研报，提炼 thesis 和 counter-thesis，并告诉我是否影响 Active Market Plan。
-```
+Every delivery contains:
 
-```text
-生成今天的持仓日报，只告诉我风险暴露和需要决策的事项。
-```
+- canonical ResearchResult JSON;
+- concise Markdown with a stable section order;
+- optional Codex chat-inline interactive HTML.
 
-```text
-这笔 QQQ 0DTE 已经结束了，帮我做出场复盘和系统标签。
-```
+Macro, Instrument, Portfolio, and Price Action use purpose-specific visual
+adapters. Canonical standalone Board artifacts remain available through the
+separate ArtifactPacket API.
 
-## Internal Workflow Surface
+## Hard Boundaries
 
-`trading-research-system` is the only installable Skill. Focused workflows such
-as weekly planning, daily tracking, intraday scanning, trade review, report
-intake, macro/equity research, portfolio risk, and trading statistics remain
-internal routing references and development/test boundaries. They are not
-independent install targets or a user-facing menu.
+- decision support only;
+- no order creation, modification, cancellation, or implied approval;
+- no invented evidence or silent replacement of missing data;
+- public fixtures contain no private runtime, broker, account, credential, or
+  user-chart data;
+- opened artifacts are offline and read-only.
 
-## Data Boundaries
-
-For current policy, market prices, rates, yields, financial statements, or news, Codex must verify against current sources. Paywalled sources such as Seeking Alpha can only be analyzed from publicly accessible content or user-provided excerpts.
-
-For large source sets, the plugin should not show every source detail by default. It should store or cite enough evidence to support confidence, then surface the few facts that change the plan.
-
-## Capability Boundaries
-
-This plugin does not:
-
-- place trades or automate order execution;
-- modify or cancel broker orders;
-- generate guaranteed buy/sell instructions;
-- scan the entire market for unplanned intraday trades outside the Active Market Plan, watchlist, or prepared setups in the initial scope;
-- use Google Sheets as the canonical source of truth;
-- provide tax, legal, or regulated investment advice.
-
-## Local Records
-
-Use a private runtime directory as the first source of truth. By default:
-
-```text
-~/Documents/dailytrades-runtime/
-```
-
-This can be overridden with `TRADING_RESEARCH_RUNTIME_DIR` or script-level
-`--runtime-dir`.
-
-The directory is created independently for each user from blank templates. A
-plugin install or upgrade does not copy, restore, or synchronize runtime state.
-
-The runtime directory should contain:
-
-```text
-market-plan.md
-trading-profile.md
-updates/YYYY-MM-DD.md
-daily/YYYY-MM-DD/
-charts/
-alpha/leaderboard.sqlite
-```
-
-The plugin includes templates for Active Market Plans, update notes, holdings, broker-live runtime views, watchlists, trade plans, report snapshots, reviews, research-note logs, research-report logs, and macro checklists.
-
-Use `trading-profile.md` in the runtime directory for private strategy scoring, pool definitions, ETF groups, instrument preferences, timeframe rules, crowding model, and avoid rules. The public repo only ships a blank template and does not store personal account allocation or a hard-coded personal strategy model.
-
-## Runtime bootstrap
-
-Use the bootstrap script to initialize a private runtime from blank bundled
-templates. It does not perform live broker reads, live market data calls, real
-Codex automations, or order actions.
-
-```bash
-uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --dry-run
-uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
-```
-
-## Daily runtime package
-
-Use `prepare_daily_runtime.py` at the start of a trading day to prepare the
-date-specific Daily runtime package. It creates header-only daily containers
-such as `trade-plans.csv` and `intraday-watchlist.csv`, plus the daily update
-note and missing `ops-state.md`. It does not perform live broker reads, live
-market data calls, real Codex automations, or order actions, and it does not
-overwrite existing files by default.
-
-```bash
-uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08 --dry-run
-uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08
-```
-
-After setup rows are confirmed by the user or Active Market Plan workflow,
-`prepare_setup_rows.py` can populate `trade-plans.csv` and
-`intraday-watchlist.csv` from user-confirmed setup JSON. It does not parse
-free-form trade ideas, read broker accounts, call market data, or perform order
-actions.
-
-```bash
-uv run python plugins/trading-research-system/scripts/prepare_setup_rows.py \
-  --date 2026-07-08 \
-  --setup-json /tmp/confirmed-setups.json
-```
-
-## Macro panel runtime preparation
-
-Use `prepare_macro_panel.py` after an authorized Longbridge macrodata read or
-official fallback collection has been saved as private JSON. It writes the
-standard `daily/YYYY-MM-DD/macro-panel.json` view used by Daily Ops, weekly
-updates, macro visuals, and strategy posture checks. If `--macrodata-json` is
-not supplied, it prints the missing-input next step and does not invent macro
-values.
-
-```bash
-uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
-  --date 2026-07-06 \
-  --macrodata-json /tmp/longbridge-macrodata.json \
-  --as-of 2026-07-06T20:00:00Z
-```
-
-For official fallback JSON, set the source capability explicitly so official
-values are not mislabeled as Longbridge macrodata:
-
-```bash
-uv run python plugins/trading-research-system/scripts/prepare_macro_panel.py \
-  --date 2026-07-06 \
-  --macrodata-json /tmp/official-macrodata.json \
-  --as-of 2026-07-06T20:00:00Z \
-  --source-capability official_source_fallback
-```
-
-The script consumes saved JSON only. It reports `No live macrodata reads`,
-`not a broker account source`, and `No order actions`, and it keeps an existing
-`macro-panel.json` unless `--overwrite` is passed.
-
-## Broker snapshot ingest
-
-Use `broker_snapshot_ingest.py` after a read-only broker export or connector
-adapter has produced local CSV files. It maps those files into the standard
-`portfolio_snapshot.csv` view consumed by `position_daily_report.py`.
-
-```bash
-uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py \
-  --input IBKR:/path/to/ibkr-positions.csv \
-  --input Longbridge:/path/to/longbridge-positions.csv \
-  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
-  --as-of 2026-07-06T20:00:00Z
-```
-
-This script consumes read-only broker export files only. It does not perform
-live broker reads, live market data calls, real Codex automations, or order
-actions.
-
-## IBKR connector adapter
-
-When the IBKR connector is installed and authorized, read-only positions and
-balances can be saved as JSON and mapped into the standard
-`portfolio_snapshot.csv` view with `ibkr_connector_adapter.py`.
-
-```bash
-uv run python plugins/trading-research-system/scripts/ibkr_connector_adapter.py \
-  --positions-json /tmp/ibkr-positions.json \
-  --balances-json /tmp/ibkr-balances.json \
-  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
-  --as-of 2026-07-06T20:00:00Z
-```
-
-The adapter consumes saved IBKR connector JSON only. It reports the required
-contract phrases `No live broker reads` and `No order actions`; it never
-creates, modifies, cancels, or submits orders.
-
-## Longbridge Terminal CLI adapter
-
-When the user has installed and authorized the Longbridge Terminal CLI, a
-read-only portfolio JSON snapshot can be mapped into the same standard
-`portfolio_snapshot.csv` view with `longbridge_cli_adapter.py`.
-
-```bash
-longbridge portfolio --format json > /tmp/longbridge-portfolio.json
-
-uv run python plugins/trading-research-system/scripts/longbridge_cli_adapter.py \
-  --portfolio-json /tmp/longbridge-portfolio.json \
-  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
-  --as-of 2026-07-06T20:00:00Z
-```
-
-The adapter consumes saved Longbridge CLI JSON only. It reports the required
-contract phrases `No live broker reads` and `No order actions`; it never
-creates, modifies, cancels, or submits orders.
-
-The adapter preserves each row's source currency and does not perform FX
-conversion. Multi-currency position reports need a separate authorized FX
-conversion step before totals are treated as one-currency exposure.
-
-## Portfolio Snapshot Repair
-
-When a standard `portfolio_snapshot.csv` has stale/unmapped product/theme fields
-after an adapter run, use `repair_portfolio_snapshot.py` before rendering the
-position daily report:
-
-```bash
-uv run python plugins/trading-research-system/scripts/repair_portfolio_snapshot.py \
-  --input ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv \
-  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.repaired.csv
-```
-
-The repair script consumes existing runtime CSV only. It reports
-`No live broker reads` and `No order actions`; it never reads live broker
-accounts or creates orders.
-
-## Longbridge OHLCV Adapter
-
-Saved Longbridge `kline` JSON can be normalized into the standard OHLCV JSON
-consumed by `price_action_rollforward.py`:
-
-```bash
-longbridge kline QQQ.US --period day --count 90 --adjust forward --format json \
-  > /tmp/longbridge-kline-QQQ.US-day.json
-
-uv run python plugins/trading-research-system/scripts/longbridge_ohlcv_adapter.py \
-  --kline-json /tmp/longbridge-kline-QQQ.US-day.json \
-  --symbol QQQ.US \
-  --period day \
-  --output /tmp/longbridge-ohlcv-QQQ.US-day.json
-```
-
-The adapter consumes saved Longbridge kline JSON only. It reports
-`No live market data calls`, `No live broker reads`, and `No order actions`.
-
-Broker adapters are read-only sources. During onboarding or runtime
-initialization, ask which broker sources to enable. V1 formally supports the
-Longbridge skill/plugin/Terminal CLI and IBKR connector. Manual CSV remains a reduced fallback
-for one-off runs or fixtures. Local files are fixtures, debug artifacts, or
-user-confirmed derived snapshots, not the default broker fact source of truth.
-Longbridge `macrodata` is a separate macro-data source, not an account source.
-Saved or tool-returned Longbridge `macrodata` JSON can be normalized into the
-standard `macro-panel.json` runtime view:
-
-```bash
-uv run python plugins/trading-research-system/scripts/longbridge_macrodata_adapter.py \
-  --macrodata-json /tmp/longbridge-macrodata.json \
-  --output ~/Documents/dailytrades-runtime/daily/2026-07-06/macro-panel.json \
-  --as-of 2026-07-06T20:00:00Z
-```
-
-The adapter reports `No live macrodata reads`; it is not a broker account
-source and performs `No order actions`.
-
-The Longbridge skill adapter is split into `longbridge_broker_skill`,
-`longbridge_terminal_cli`, and `longbridge_macrodata`. `runtime_health.py --format json` reports
-`source_capability_health` so Daily Ops can tell whether Longbridge skill,
-Longbridge Terminal CLI, and Longbridge macrodata are available, unauthorized,
-missing, stale, or simply not visible in the current chat.
-
-Codex automations can be used to schedule prompts around the Active Market Plan loop and position daily report, but they should ask before editing local records and must not touch broker write actions.
-
-Google Sheets is optional summary display only. It should not be used as a trade-record layer.
-
-## Project Plan
-
-In the source repository, `docs/ROADMAP.md` is the public planning document for capability boundaries, execution method, task breakdown, and progress tracking.
-
-Use `docs/PROJECT_LOG.md` for the public GitHub trajectory of milestone updates and important plugin changes.
-
-## MVP smoke
-
-From the repository root:
-
-```bash
-bash scripts/verify-mvp.sh
-```
-
-This is a fixture-backed local MVP check. It does not perform live broker
-reads, real Codex automations, or live market data calls.
-
-## Scripts
-
-```bash
-uv run python plugins/trading-research-system/scripts/bootstrap_runtime.py --date 2026-07-06
-uv run python plugins/trading-research-system/scripts/prepare_daily_runtime.py --date 2026-07-08 --dry-run
-uv run python plugins/trading-research-system/scripts/broker_snapshot_ingest.py --input IBKR:/path/to/ibkr-positions.csv --output ~/Documents/dailytrades-runtime/daily/2026-07-06/portfolio_snapshot.csv --as-of 2026-07-06T20:00:00Z
-uv run python plugins/trading-research-system/scripts/runtime_health.py --date 2026-07-04 --format json
-uv run python plugins/trading-research-system/scripts/init_daily.py --date 2026-06-12
-uv run python plugins/trading-research-system/scripts/portfolio_risk.py ~/Documents/dailytrades-runtime/daily/2026-06-12/portfolio.csv
-uv run python plugins/trading-research-system/scripts/watchlist_score.py ~/Documents/dailytrades-runtime/daily/2026-06-12/watchlist.csv
-uv run python plugins/trading-research-system/scripts/trade_stats.py ~/Documents/dailytrades-runtime/daily/2026-06-12/trades.csv --group-by instrument_type
-uv run python plugins/trading-research-system/scripts/write_trade_review_context.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/review-context-fields.json --review-file /path/to/review.md
-uv run python plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-001 --fields-json /path/to/fields.json --review-file /path/to/review.md
-uv run python plugins/trading-research-system/scripts/update_trade_record.py --date 2026-06-12 --stage post-order --trade-id 20260612-QQQ-LEGACY --fields-json /path/to/legacy-fields.json --review-file /path/to/review.md --allow-unknown-execution-fields
-uv run python plugins/trading-research-system/scripts/import_legacy_active_csv.py plugins/trading-research-system/assets/fixtures/input/legacy-active-trades.csv --runtime-dir ~/Documents/dailytrades-runtime
-uv run python plugins/trading-research-system/scripts/append_review.py --date 2026-06-12 --trade-id 20260612-QQQ-001 --symbol QQQ --review-file /path/to/review.md
-uv run python plugins/trading-research-system/scripts/chart_artifact.py plugins/trading-research-system/assets/fixtures/input/chart-ohlcv-qqq-sample.json --output ~/Documents/dailytrades-runtime/charts/qqq-plan.html
-uv run python plugins/trading-research-system/scripts/intraday_scan.py ~/Documents/dailytrades-runtime/daily/2026-06-12/intraday-watchlist.csv --date 2026-06-12
-```
-
-For plugin validation and key contract checks, run:
+## Verification
 
 ```bash
 bash scripts/verify-plugin.sh
 ```
 
-`runtime_health.py --format json` includes `current_mode` and
-`broker_source_health` so a fresh Daily Ops chat can distinguish
-`live read-only`, `manual snapshot`, and `dry-run` before reading broker facts
-or interpreting portfolio risk.
+The default gate is intentionally narrow. Visual acceptance uses one real
+inline artifact reviewed by the user; screenshot matrices and legacy runtime
+test suites are not part of the default workflow.

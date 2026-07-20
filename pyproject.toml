@@ -1,6 +1,6 @@
 [project]
 name = "dailytrades"
-version = "0.1.1"
+version = "0.2.0"
 description = "Development tooling for the DailyTrades Trading Research System repository."
 license = "MIT"
 requires-python = ">=3.12,<3.13"
@@ -8,7 +8,6 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-  "playwright==1.61.0",
   "PyYAML>=6.0.3",
 ]
 

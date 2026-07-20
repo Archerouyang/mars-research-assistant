@@ -15,7 +15,6 @@
 - missing blockers:
 - broker source:
 - Alpha Leaderboard store:
-- optional legacy external momentum snapshot:
 - 数据时间戳:
 - 行情数据: as of
 - 宏观/利率数据: as of
@@ -31,7 +30,6 @@ status.
 - News catalysts:
 - Event preview:
 - Alpha Leaderboard: available / missing / stale; preserve stored rank and read only the latest delta.
-- Legacy external momentum snapshot: fallback / missing / skipped; never merge its score with Alpha.
 - Do not rebuild, rank, or backtest a private quantitative model inside this plugin.
 - Portfolio exposure concern:
 

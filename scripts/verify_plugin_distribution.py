@@ -59,14 +59,14 @@ def main() -> int:
                 / "plugin.json"
             ).read_text(encoding="utf-8")
         )
-        require(manifest.get("version") == "0.1.1", "published version drift")
+        require(manifest.get("version") == "0.2.0", "published version drift")
         require(manifest.get("license") == "MIT", "published license drift")
         require((repo / "LICENSE").is_file(), "root MIT license missing")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"plugin distribution contract failed: {exc}", file=sys.stderr)
         return 1
 
-    print("Plugin distribution contract ok: trading-research-system 0.1.1")
+    print("Plugin distribution contract ok: trading-research-system 0.2.0")
     return 0
 
 
