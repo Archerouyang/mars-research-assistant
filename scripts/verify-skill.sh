@@ -2,17 +2,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PLUGIN_ROOT="${PLUGIN_ROOT:-$ROOT/plugins/trading-research-system}"
-VALIDATE_PLUGIN="${VALIDATE_PLUGIN:-$HOME/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py}"
+SKILL_ROOT="${SKILL_ROOT:-$ROOT/skills/trading-research-system}"
 
 if ! command -v uv >/dev/null 2>&1; then
   echo "error: uv is required. Install it with: brew install uv" >&2
   exit 127
-fi
-
-if [[ ! -f "$VALIDATE_PLUGIN" ]]; then
-  echo "error: plugin validator not found: $VALIDATE_PLUGIN" >&2
-  exit 1
 fi
 
 if [[ -z "${PYTHON_BIN:-}" ]]; then
@@ -35,7 +29,6 @@ cd "$ROOT"
 
 PUBLIC_ROOTS=(
   "$ROOT/skills/trading-research-system"
-  "$ROOT/plugins/trading-research-system"
 )
 GENERATED_STATE="$(find "${PUBLIC_ROOTS[@]}" \
   \( -type d -name __pycache__ \
@@ -51,8 +44,7 @@ uv_run() {
   uv run --python "$PYTHON_BIN" "$@"
 }
 
-PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-plugin-compile.sh
-uv_run python scripts/verify_plugin_distribution.py
-uv_run python plugins/trading-research-system/scripts/verify_research_result_selftest.py
-uv_run python plugins/trading-research-system/scripts/verify_artifact_packet_selftest.py
-uv_run --group dev python "$VALIDATE_PLUGIN" "$PLUGIN_ROOT"
+PYTHON_BIN="$PYTHON_BIN" bash scripts/verify-skill-compile.sh
+uv_run python scripts/verify_portable_distribution_contract.py
+uv_run python "$SKILL_ROOT/scripts/verify_research_result_selftest.py"
+uv_run python "$SKILL_ROOT/scripts/verify_artifact_packet_selftest.py"

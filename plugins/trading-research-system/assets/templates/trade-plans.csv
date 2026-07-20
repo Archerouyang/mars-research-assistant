@@ -1,1 +1,0 @@
-date,trade_id,setup_id,theme_id,status,ticker,underlying,direction,trade_horizon,instrument_type,strategy_type,analysis_timeframe,trigger_timeframe,setup_type,entry_trigger,trigger_zone,invalidation,stop_price,target_1,target_2,ema_context,price_action_context,options_context,macro_context,risk_per_trade,max_position_size,time_stop,notes

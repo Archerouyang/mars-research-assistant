@@ -1,3 +1,0 @@
-Account,Symbol,SecType,Position,AvgCost,MarkPrice,MarketValue,Currency,UnrealizedPNL,RealizedPNL,Delta,Notional,Theme,Timestamp,Notes
-SIM-IBKR,QQQ,ETF,50,700,725,36250,USD,1250,0,36250,36250,tech_beta,2026-06-24T20:00:00Z,core ETF fixture
-SIM-IBKR,SOXX,ETF,80,245,260,20800,USD,1200,0,20800,20800,semiconductor,2026-06-24T20:00:00Z,semiconductor fixture

@@ -73,19 +73,16 @@ verification baseline.
 | TD-20260711-01 | accepted | Canonical record schemas | `docs/DEVELOPMENT_PLAN.md` task "Re-scope canonical record schema registry" | Fixture and compatibility schemas have unclear long-term ownership, making future adapters and migrations harder to change safely. | 6 | Define canonical, compatibility, and deprecated schema ownership before new record adapters are added. | One registry names each schema owner, compatibility policy, and test boundary. |
 | TD-20260711-02 | removed | Runtime capability/state taxonomy | `DBG-20260711-01`, `DBG-20260711-02`; final accepted Prompt 7 UAT session `019f5ed4-9994-7832-bcef-82f6681a34fd` | The shared taxonomy cost was retired after branch coverage, direct-entry propagation, and accepted fresh UAT preserved the runtime and startup axes. | 5 | None; monitor through the retained runtime-health and Daily Ops contracts. | Shared taxonomy has full branch coverage, affected consumers preserve it, and accepted UAT passes. |
 | TD-20260711-03 | removed | Behavioral contract depth | `DBG-20260711-04` to `DBG-20260711-06`; repo-level Behavior Contract Matrix modules and final two-axis review on `codex/behavior-contract-matrix` | The shallow-contract cost was retired by replacing duplicated subprocess scenarios with reconciliation, startup-surface, and setup-key/OHLCV matrices that preflight harness state and aggregate behavior mismatches. | 6 | None; retain the focused matrices in the plugin and MVP gates. | Focused, compile, plugin, and MVP gates pass; direct activation, state/input combinations, validation precedence, cwd, and forbidden side effects are covered; final review has no findings. |
-| TD-20260714-01 | accepted | Behavior ownership and plugin release propagation | Router and weekly entry duplication; Prompt 7 failures across `70b5787`, `f739019`, and final `19ca4ae`; `.agents/plugins/marketplace.json`; `scripts/verify_plugin_distribution.py` | The repo distribution seam now has one root marketplace and a manifest-owned version, but one behavior is still distributed across router, focused skill, reference, fixture, and verifier. Local source can still differ from the installed cache until post-publication clean-install UAT proves propagation. | 6 | Map the authoritative behavior owner and injected entry surfaces; after publication, run the coordinator-owned remote clean-install/new-task UAT against `master`. | Each exact behavior has one named owner, all direct activation surfaces derive or validate against it, and remote UAT proves the installed plugin matches the accepted repository source. |
+| TD-20260714-01 | accepted | Behavior ownership across routing surfaces | Router and weekly entry duplication; Prompt 7 failures across `70b5787`, `f739019`, and final `19ca4ae` | One behavior is still distributed across router, focused workflow, reference, fixture, and verifier, so a change can remain internally inconsistent even though the repository now has only one portable distribution surface. | 4 | Map the authoritative behavior owner and injected entry surfaces before adding another cross-workflow rule. | Each exact behavior has one named owner and all direct activation surfaces derive from or validate against it. |
 
 `TD-20260711-03` previously met Architecture Optimization Trigger 3. The
 bounded test-seam task recorded in `docs/DEVELOPMENT_PLAN.md` is complete, so
 the debt is removed and no longer contributes to the open-score threshold.
 
-The Git-backed distribution tracer bullet reduces only the release-propagation
-part of `TD-20260714-01`: repository marketplace ownership, source resolution,
-version ownership, recursive public-package shape, and structured install docs
-are now deterministic local contracts. The debt remains `accepted`, not
-`removed`, because behavior ownership across router/direct activation surfaces
-is unresolved and remote installed-cache propagation still needs coordinator
-UAT after publication.
+The native-plugin release-propagation part of `TD-20260714-01` was retired on
+2026-07-20 when the wrappers, marketplace manifests, synchronization code, and
+wrapper-only checks were removed. The debt remains `accepted` only for behavior
+ownership across router and direct-activation surfaces.
 
 ## Review Cadence
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Verify command-first Agent Skill distribution and native wrapper drift."""
+"""Verify the command-first portable Agent Skill distribution."""
 
 from __future__ import annotations
 
-import hashlib
-import json
 import argparse
+import hashlib
 from pathlib import Path
 import re
 import sys
@@ -14,7 +13,6 @@ import sys
 REPO = Path(__file__).resolve().parents[1]
 SKILL_NAME = "trading-research-system"
 PORTABLE = REPO / "skills" / SKILL_NAME
-PLUGIN = REPO / "plugins" / SKILL_NAME
 INSTALL_COMMAND = (
     "npx skills@latest add Archerouyang/dailytrades "
     "--skill trading-research-system -g"
@@ -172,78 +170,6 @@ def validate_skill() -> None:
         require(len(populated) == 1, f"public CSV template must be header-only: {template}")
 
 
-def validate_native_wrappers() -> None:
-    codex_manifest = json.loads(
-        (PLUGIN / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
-    )
-    claude_manifest = json.loads(
-        (PLUGIN / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
-    )
-    for label, manifest in (("Codex", codex_manifest), ("Claude", claude_manifest)):
-        require(manifest.get("name") == SKILL_NAME, f"{label} wrapper name drift")
-        require(manifest.get("license") == "MIT", f"{label} wrapper license must be MIT")
-    for field in ("name", "version", "description", "homepage", "repository", "license"):
-        require(
-            codex_manifest.get(field) == claude_manifest.get(field),
-            f"native wrapper metadata drift: {field}",
-        )
-    require(
-        codex_manifest.get("skills") == "./skills",
-        "Codex wrapper must expose its validated skills directory",
-    )
-    require(
-        claude_manifest.get("skills") == "./skills/trading-research-system",
-        "Claude wrapper must target the one public skill",
-    )
-
-    wrapper_skill = PLUGIN / "skills" / SKILL_NAME
-    wrapper_skill_dirs = sorted(
-        path.parent.name for path in (PLUGIN / "skills").glob("*/SKILL.md") if path.is_file()
-    )
-    require(wrapper_skill_dirs == [SKILL_NAME], f"native wrapper exposes focused skills: {wrapper_skill_dirs}")
-    require(
-        set(regular_files(PORTABLE)) == set(regular_files(wrapper_skill)),
-        "native wrapper Skill file set drift",
-    )
-    require(
-        set(regular_files(PORTABLE / "assets")) == set(regular_files(PLUGIN / "assets")),
-        "native wrapper asset file set drift",
-    )
-    source_scripts = {
-        path.name
-        for pattern in ("*.py", "*.mjs")
-        for path in (PORTABLE / "scripts").glob(pattern)
-    }
-    wrapper_scripts = {
-        path.name
-        for pattern in ("*.py", "*.mjs")
-        for path in (PLUGIN / "scripts").glob(pattern)
-    }
-    require(
-        wrapper_scripts == source_scripts,
-        "native wrapper scripts must exactly mirror the canonical Skill: "
-        f"missing={sorted(source_scripts - wrapper_scripts)} "
-        f"unexpected={sorted(wrapper_scripts - source_scripts)}",
-    )
-
-    mappings = (
-        (PORTABLE, wrapper_skill),
-        (PORTABLE / "scripts", PLUGIN / "scripts"),
-        (PORTABLE / "assets", PLUGIN / "assets"),
-        (PORTABLE / "LICENSE", PLUGIN / "LICENSE"),
-    )
-    for source, target in mappings:
-        require(source.exists() and target.exists(), f"wrapper mapping missing: {source} -> {target}")
-        if source.is_file():
-            require(digest(source) == digest(target), f"native wrapper drift: {target}")
-            continue
-        source_files = regular_files(source)
-        for relative, source_file in source_files.items():
-            target_file = target / relative
-            require(target_file.is_file(), f"native wrapper missing generated file: {target_file}")
-            require(digest(source_file) == digest(target_file), f"native wrapper drift: {target_file}")
-
-
 def validate_readme_command() -> None:
     for readme in (REPO / "README.md", REPO / "README.zh-CN.md"):
         text = readme.read_text(encoding="utf-8")
@@ -275,17 +201,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    global REPO, PORTABLE, PLUGIN
+    global REPO, PORTABLE
     args = parse_args()
     REPO = args.repo_root.resolve()
     PORTABLE = REPO / "skills" / SKILL_NAME
-    PLUGIN = REPO / "plugins" / SKILL_NAME
     try:
         validate_skill()
-        validate_native_wrappers()
         validate_readme_command()
         validate_isolated_smoke()
-    except (ContractError, OSError, json.JSONDecodeError) as exc:
+    except (ContractError, OSError) as exc:
         print(f"portable distribution contract failed: {exc}", file=sys.stderr)
         return 1
     print("portable distribution contract ok")

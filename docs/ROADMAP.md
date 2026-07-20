@@ -15,8 +15,7 @@ privacy, data-gap handling, concise Markdown, and optional chat-inline HTML.
 Macro, Instrument, Portfolio, and Price Action keep purpose-specific visual
 adapters behind that shared boundary.
 
-The canonical behavior source is `skills/trading-research-system/`. Native
-plugin wrappers are generated with `scripts/sync_native_plugin.py`.
+The only distributed behavior source is `skills/trading-research-system/`.
 
 ## 0.2.0 Release Contract
 
@@ -52,7 +51,7 @@ release check is documented in [`MVP_RUNBOOK.md`](MVP_RUNBOOK.md).
 | Portfolio Risk inline panel | user accepted | manual inline inspection with authorized read-only data |
 | Optional PNG export | user accepted | explicit export and visual inspection |
 | Legacy code, cache, database, fixture, and test cleanup | verified candidate | cleanup ledger and repository scan passed |
-| Portable/native distribution | verified candidate | sync, plugin gate, isolated install smoke passed |
+| Portable Skill distribution | verified candidate | Skill gate and isolated install smoke passed |
 | Public cutover | blocked on user approval | no silent publish, install, or private-state migration |
 
 ## Next Release Steps

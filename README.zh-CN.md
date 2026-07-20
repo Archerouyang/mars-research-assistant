@@ -117,27 +117,6 @@ flowchart TB
 
 安装和升级绝不会复制、推断、同步或恢复 private state。券商和行情集成是可选能力，必须单独授权且只读。**No order actions：**Skill 永远不会创建、修改、取消或提交真实订单。
 
-## 可选 Native Plugins
-
-上面的 portable Agent Skill 是主分发方式。Codex 与 Claude Code native plugin 只是对同一公共 Skill 的可选托管 wrapper；它们没有第二套行为源，也不会同步 private state。
-
-**Codex**
-
-```bash
-codex plugin marketplace add Archerouyang/dailytrades --ref master
-```
-
-然后在 `/plugins` 或 Codex Plugins 页面安装 `trading-research-system`。
-
-**Claude Code**
-
-```text
-/plugin marketplace add Archerouyang/dailytrades
-/plugin install trading-research-system@dailytrades
-```
-
-安装或升级 native wrapper 后需要 reload 或新开任务。
-
 ## 故障排查与详细文档
 
 | 现象 | 检查 |
@@ -147,10 +126,9 @@ codex plugin marketplace add Archerouyang/dailytrades --ref master
 | 券商或宏观数据不可用 | 单独授权对应的可选只读来源；安装 Skill 不会授予 connector 权限。 |
 | 无法导出选中的 inline panel | 用户选择性 PNG 导出需要 Chrome/Chromium；chat-inline HTML 仍是主产物。 |
 
-详细文档：[Plugin 使用说明](plugins/trading-research-system/README.md)、
-[canonical Skill](skills/trading-research-system/SKILL.md)、
+详细文档：[Skill 契约](skills/trading-research-system/SKILL.md)、
 [0.2.0 交付契约](docs/adr/0009-research-result-delivery-contract.md)、
 [MVP Runbook](docs/MVP_RUNBOOK.md) 和
-[分发决策](docs/adr/0007-command-first-agent-skill-distribution.md)。
+[分发计划](docs/DISTRIBUTION_AND_README_PLAN.md)。
 
 DailyTrades 使用 MIT License；第三方组件保留各自许可证。

@@ -6,12 +6,12 @@ runtime rehearsal and it never performs broker or order actions.
 ## Automated Check
 
 ```bash
-bash scripts/verify-plugin.sh
+bash scripts/verify-skill.sh
 ```
 
-The default gate checks only syntax, plugin distribution, the stable
+The default gate checks only syntax, portable Skill distribution, the stable
 `ResearchResult -> DeliveryPacket` contract, retained ArtifactPacket
-compatibility, and plugin structure. It does not launch a browser or export an
+compatibility, and Skill structure. It does not launch a browser or export an
 artifact.
 
 ## Human Acceptance

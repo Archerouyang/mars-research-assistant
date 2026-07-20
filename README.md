@@ -145,29 +145,6 @@ state. Broker and market integrations are optional, separately authorized, and
 read-only. **No order actions:** the Skill never creates, modifies, cancels, or
 submits real orders.
 
-## Optional Native Plugins
-
-The portable Agent Skill above is the primary distribution. Codex and Claude
-Code native plugins are optional managed wrappers over the same public Skill;
-they do not contain a second behavior source or synchronize private state.
-
-**Codex**
-
-```bash
-codex plugin marketplace add Archerouyang/dailytrades --ref master
-```
-
-Then install `trading-research-system` from `/plugins` or the Codex Plugins UI.
-
-**Claude Code**
-
-```text
-/plugin marketplace add Archerouyang/dailytrades
-/plugin install trading-research-system@dailytrades
-```
-
-Reload or open a new task after installing or upgrading a native wrapper.
-
 ## Troubleshooting and Detailed Docs
 
 | Symptom | Check |
@@ -177,10 +154,9 @@ Reload or open a new task after installing or upgrading a native wrapper.
 | Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
 | A selected inline panel cannot be exported | User-selected PNG export requires Chrome/Chromium; chat-inline HTML remains the primary artifact. |
 
-Detailed documents: [Plugin usage](plugins/trading-research-system/README.md),
-[canonical Skill](skills/trading-research-system/SKILL.md),
+Detailed documents: [Skill contract](skills/trading-research-system/SKILL.md),
 [0.2.0 delivery contract](docs/adr/0009-research-result-delivery-contract.md),
 [MVP runbook](docs/MVP_RUNBOOK.md), and
-[distribution decision](docs/adr/0007-command-first-agent-skill-distribution.md).
+[distribution plan](docs/DISTRIBUTION_AND_README_PLAN.md).
 
 DailyTrades is MIT licensed. Third-party components retain their own licenses.

@@ -1,6 +1,6 @@
 # Development Workflow
 
-This document defines the public development workflow for the Dailytrades plugin repository.
+This document defines the public development workflow for the DailyTrades portable Skill repository.
 
 It is a project workflow document, not an internal agent prompt. Do not include private trade records, credentials, account details, unpublished research excerpts, or broker-specific secrets.
 
@@ -9,7 +9,7 @@ It is a project workflow document, not an internal agent prompt. Do not include 
 Run the narrow distribution contract without network access:
 
 ```bash
-uv run python scripts/verify_plugin_distribution.py
+uv run python scripts/verify_portable_distribution_contract.py
 ```
 
 Run the actual `npx skills` discovery and install smoke in isolated temporary
@@ -164,8 +164,8 @@ changed invariant, then deliver one real artifact for human acceptance.
 
 Tests should cover only repo-owned behavior.
 
-The default gate is intentionally small: compile, plugin distribution,
-ResearchResult delivery, ArtifactPacket compatibility, and plugin structure.
+The default gate is intentionally small: compile, portable Skill distribution,
+ResearchResult delivery, ArtifactPacket compatibility, and Skill structure.
 It does not launch Chrome or export artifacts. Run broader checks only when a
 concrete risk or release boundary requires them.
 
@@ -186,11 +186,11 @@ on global Python packages, user site-packages, or ad-hoc `pip install` state.
 Standard local verification:
 
 ```bash
-bash scripts/verify-plugin.sh
+bash scripts/verify-skill.sh
 ```
 
-The script runs the external plugin validator and key contract checks through
-`uv run`. It sets `UV_CACHE_DIR`, `UV_PROJECT_ENVIRONMENT`, and
+The script compiles the canonical Skill and runs its focused distribution and
+delivery checks through `uv run`. It sets `UV_CACHE_DIR`, `UV_PROJECT_ENVIRONMENT`, and
 `UV_PYTHON_INSTALL_DIR` under `.scratch/` so Codex sandbox runs do not write to
 global cache directories. It prefers the Codex bundled Python 3.12 when
 available; otherwise it falls back to `python3.12` or `python3`.
@@ -205,7 +205,7 @@ automations, or obsolete KVN databases.
 For individual scripts, use:
 
 ```bash
-uv run python plugins/trading-research-system/scripts/<script>.py
+uv run python skills/trading-research-system/scripts/<script>.py
 ```
 
 ## CI Policy
@@ -214,11 +214,11 @@ Lightweight CI is useful once the first repo-owned test harness exists.
 
 Initial CI should check:
 
-- Python syntax for plugin scripts;
+- Python syntax for Skill scripts;
 - unit tests against fixtures;
 - script smoke tests against fixture CSV files;
-- basic plugin file-structure sanity;
-- plugin validation through `scripts/verify-plugin.sh`;
+- basic Skill file-structure sanity;
+- portable distribution validation through `scripts/verify-skill.sh`;
 - no tests require live IBKR, Google Drive, Gmail, Calendar, or other external services.
 
 CI should not:
@@ -257,7 +257,7 @@ Codex can accept a task only when:
 
 - changed behavior is covered by fixture-based checks when practical;
 - relevant scripts or docs were inspected;
-- plugin structure remains valid when plugin files changed;
+- Skill structure remains valid when public Skill files changed;
 - Python checks are run through `uv` or the reason for skipping `uv` is stated;
 - public/private repo boundary is preserved;
 - `docs/PROJECT_LOG.md` is updated when the change affects project trajectory;

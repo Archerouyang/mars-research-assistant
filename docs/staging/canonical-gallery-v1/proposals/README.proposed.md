@@ -130,29 +130,6 @@ state. Broker and market integrations are optional, separately authorized, and
 read-only. **No order actions:** the Skill never creates, modifies, cancels, or
 submits real orders.
 
-## Optional Native Plugins
-
-The portable Agent Skill above is the primary distribution. Codex and Claude
-Code native plugins are optional managed wrappers over the same public Skill;
-they do not contain a second behavior source or synchronize private state.
-
-**Codex**
-
-```bash
-codex plugin marketplace add Archerouyang/dailytrades --ref master
-```
-
-Then install `trading-research-system` from `/plugins` or the Codex Plugins UI.
-
-**Claude Code**
-
-```text
-/plugin marketplace add Archerouyang/dailytrades
-/plugin install trading-research-system@dailytrades
-```
-
-Reload or open a new task after installing or upgrading a native wrapper.
-
 ## Troubleshooting and Detailed Docs
 
 | Symptom | Check |
@@ -162,7 +139,7 @@ Reload or open a new task after installing or upgrading a native wrapper.
 | Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
 | A chart cannot be captured | Use Chrome/Chromium for the canonical PNG; the generated SVG is a no-browser fallback only. |
 
-Detailed documents: [Plugin usage](plugins/trading-research-system/README.md),
+Detailed documents: [Skill contract](skills/trading-research-system/SKILL.md),
 [workflow design](docs/PLUGIN_DESIGN.md), [MVP runbook](docs/MVP_RUNBOOK.md),
 and [distribution decision](docs/adr/0007-command-first-agent-skill-distribution.md).
 

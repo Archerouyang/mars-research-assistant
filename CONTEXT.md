@@ -9,20 +9,16 @@ The public project, repository, and distribution brand for Trading Research Syst
 _Avoid_: plugin name, private runtime
 
 **Trading Research System**:
-The user-facing trading research product delivered as a portable Agent Skill with optional native plugin wrappers.
+The user-facing trading research product delivered as one portable Agent Skill.
 _Avoid_: Codex plugin, Claude plugin
 
 **Agent Skill package**:
 The single self-contained `trading-research-system` package installed across compatible coding agents; it includes every public workflow resource required to run without partial focused-skill selection.
 _Avoid_: partial skill set, native plugin
 
-**Native Plugin wrapper**:
-An optional Codex or Claude managed-install container for the same public Agent Skill behavior; it is a distribution surface, not the product identity or private-state store.
-_Avoid_: primary product, account sync
-
 **Command-first distribution**:
-The default installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill; official directory submission and native plugin commands are secondary paths.
-_Avoid_: marketplace-first distribution, per-agent main install commands
+The installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill.
+_Avoid_: marketplace-first distribution, per-agent install paths
 
 **交易投研系统**:
 一套从信息收集到交易复盘的研究与决策支持系统。它服务于主动交易，不是自动下单系统，也不是保证收益的荐股系统。

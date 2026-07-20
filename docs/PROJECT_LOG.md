@@ -1,8 +1,8 @@
 # Project Log
 
-This file records the public trajectory of the Trading Research System plugin. It complements Git commit history, ADRs, and `docs/ROADMAP.md`.
+This file records the public trajectory of the Trading Research System Skill. It complements Git commit history, ADRs, and `docs/ROADMAP.md`.
 
-Keep this log focused on user-visible plugin progress. Do not include private trade records, credentials, internal agent coordination, or non-public research material.
+Keep this log focused on user-visible Skill progress. Do not include private trade records, credentials, internal agent coordination, or non-public research material.
 
 This project is not using public release versioning yet. Until the initial complete workflow, production chain, and interaction model are settled, treat this log as a planning and implementation trajectory, not a changelog for shipped versions.
 
@@ -12,7 +12,7 @@ Add an entry when one of these changes:
 
 - capability boundary;
 - roadmap milestone;
-- plugin skill behavior;
+- Skill behavior;
 - local record schema;
 - external integration decision;
 - important deferred decision.
@@ -28,6 +28,22 @@ Use this shape:
 - Why it matters:
 - Next step:
 ```
+
+## 2026-07-20
+
+- Commit: pending `Remove native plugin distribution`
+- Scope: distribution, cleanup, documentation, validation
+- What changed: made `skills/trading-research-system/` the only distributed
+  product source; removed generated native-wrapper copies, repository
+  marketplace manifests, wrapper synchronization code, and wrapper-only
+  validators; renamed the focused release checks from plugin gates to Skill
+  gates.
+- Why it matters: DailyTrades now has one install and release surface. This
+  removes duplicated package bytes, version drift, cache ambiguity, and a
+  distribution path that is no longer part of the product plan.
+- Verification: the focused Skill gate, isolated portable-install smoke,
+  `git diff --check`, and explicit removed-path checks passed.
+- Next step: commit the portable-only cleanup and update remote `dev`.
 
 ## 2026-07-19
 

@@ -113,7 +113,6 @@ Use these statuses:
 | Priority | Status | Task | Why It Matters | Next Action |
 | --- | --- | --- | --- | --- |
 | P0 | done | Refactor Trading Research System around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific inline visuals, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | User accepted the frozen output structures and authorized integration to remote `dev` on 2026-07-20. Minimal release gates, isolated install, and final Standards/Spec review passed; public `master` cutover remains separate. |
-| P0 | review | Add Git-backed cross-device plugin distribution | Gives each device one public repository marketplace while keeping account login, plugin installation, connector authorization, and private runtime setup as separate operations. | Candidate branch and `dev` both resolve to `9096c9b`; an authenticated isolated remote install passed for Codex and Claude Code. The GitHub repository is still private, so public release still requires an intentional visibility change followed by an anonymous clean install from the stable `master` or release tag and new-task UAT evidence. |
 | P2 | done | Accepted inline Panel PNG export | Opt-in only: exports the full accepted chat-inline HTML fragment as an on-demand PNG by measuring rendered content height; no automatic save, static frontend, or hosting. | Run only after explicit user selection. Keep private exports local; a separately requested README example may use reviewed public-market data but must contain no broker, private runtime, account, or private portfolio information. |
 | P1 | done | Re-scope retained read-only commands | Prevents supported runtime, broker, macro, PA, and Alpha adapters from becoming unreachable leftovers. | Progressive references now name the retained runtime, broker, macro, OHLCV, and Alpha helpers; future additions require an active caller or compatibility obligation. |
 | P1 | done | Redesign Portfolio Risk chat-inline panel | The old generic bar shell hid the relationship between capital, look-through concentration, product leverage, source coverage, exclusions, scenario loss, and underlying fundamentals. | Structure accepted and frozen by the user on 2026-07-20. Preserve the summary, primary-risk line, ordered views, look-through fundamentals, dedicated stress meaning, and source/exclusion disclosures defined in `references/portfolio-research.md`; structural changes require renewed acceptance. |
@@ -142,7 +141,7 @@ Trigger and target invariant:
   observable assertions for the affected workflows;
 - the Module is development harness only, tests the canonical
   `skills/trading-research-system/` behavior source, and is not distributed in
-  the public Agent Skill or generated Native Plugin wrapper;
+  the public Agent Skill;
 - migrated behavior must be tested through existing CLI and document surfaces;
   no public Trading Research System behavior changes are in scope.
 
@@ -350,24 +349,24 @@ marked passed until the coordinator runs them after integration to `master`.
 
 ## Today
 
-Date: 2026-07-19
+Date: 2026-07-20
 
-- Main task: complete the approved 0.2.0 replace-not-layer refactor from issue
-  #72 and ADR 0009.
-- Current stage: frozen Macro/PA inline templates and opt-in PNG export are
-  user-accepted; cleanup and release-candidate verification are in progress.
-- Next task: sync generated wrappers, run the minimal gate and isolated install
-  smoke, perform the two-axis review, and present the candidate for manual
-  acceptance.
+- Main task: keep 0.2.0 distributed as one portable Agent Skill.
+- Current stage: native plugin wrappers, marketplace manifests, synchronization
+  code, and wrapper-only verification are removed by explicit user decision.
+- Next task: run the focused Skill gate and isolated install smoke, then update
+  remote `dev`.
 - Definition of done: stable `ResearchResult -> DeliveryPacket`, no obsolete
-  public cache/database compatibility path, canonical/native parity, focused
-  verification, no private data or broker write action, and no public cutover
-  without explicit approval.
+  public cache/database or native-wrapper path, focused verification, no private
+  data or broker write action, and no public cutover without explicit approval.
 
 ## Progress Log
 
 ### 2026-07-20
 
+- User removed Native Plugin distribution from the current product plan. The
+  repository now ships only `skills/trading-research-system/`; wrapper copies,
+  repository marketplaces, sync code, and wrapper-only validation are deleted.
 - User accepted the 0.2.0 frozen Macro, Price Action, and Portfolio panel
   structures and authorized integration to remote `dev`.
 - README positioning now states the Bayesian decision-support model explicitly:
@@ -376,7 +375,7 @@ Date: 2026-07-19
 - The user-selected Macro and NVDA Price Action PNG exports are embedded as
   reviewed public-market examples; they contain no broker, runtime, account,
   or private portfolio data.
-- The minimal plugin gate, isolated portable install, canonical/native parity,
+- The minimal Skill gate, isolated portable install,
   cleanup scan, ResearchResult regression suite, and final Standards/Spec
   review passed for the 0.2.0 candidate.
 

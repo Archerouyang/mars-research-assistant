@@ -1,15 +1,13 @@
 # Project Agent Instructions
 
-This is the public DailyTrades / Trading Research System plugin repository.
-Keep it limited to reusable plugin assets and user-readable project docs.
+This is the public DailyTrades / Trading Research System portable Skill
+repository. Keep it limited to reusable Skill assets and user-readable project
+docs.
 
 ## Repository Boundary
 
 - The only canonical portable Skill behavior source is
   `skills/trading-research-system/`.
-- `plugins/trading-research-system/` is the Codex/Claude native wrapper,
-  generated deterministically from the canonical Skill by
-  `scripts/sync_native_plugin.py`; do not maintain duplicate behavior there.
 - Project docs live under `docs/`, `CONTEXT.md`, and top-level Markdown files.
 - Never commit private trading records, watchlists, profiles, broker exports,
   runtime plans, credentials, account data, or private/user-specific charts.
@@ -17,7 +15,7 @@ Keep it limited to reusable plugin assets and user-readable project docs.
   explicitly requests publication and the exported image passes a privacy
   review; this exception never permits account or private-runtime content.
 - Private runtime state belongs outside this repository.
-- The plugin is decision support only. It may use authorized read-only data,
+- The Skill is decision support only. It may use authorized read-only data,
   but must never create, modify, cancel, or imply approval of real orders.
 - The system does not exist to predict market direction. It applies Bayesian
   decision support: begin with an explicit prior, update confidence as new
