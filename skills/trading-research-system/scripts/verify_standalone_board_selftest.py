@@ -68,6 +68,17 @@ def main() -> int:
     assert b"connect-src 'none'" in html, "offline network boundary missing"
     assert b'data-view="trend"' in html, "accepted visual views changed"
     assert b"<iframe" not in html.lower(), "standalone board must not wrap another page"
+    manifest = json.loads(packet.standalone_board.manifest)
+    assert manifest["views"] == ["trend", "current", "events", "scenarios"]
+    assert manifest["default_view"] == "trend"
+    assert manifest["decision_cutoff"] == AS_OF
+
+    private_result = _result()
+    private_result.pop("privacy")
+    private_packet = build_delivery_packet(private_result)
+    assert private_packet.standalone_board is not None
+    private_manifest = json.loads(private_packet.standalone_board.manifest)
+    assert private_manifest["privacy"] == "private"
 
     with tempfile.TemporaryDirectory(prefix="standalone-board-selftest-") as temporary:
         output = Path(temporary) / "delivery"

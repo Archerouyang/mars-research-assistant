@@ -77,12 +77,7 @@ def main() -> int:
 
 
 def _verify_standalone_safety_gate() -> None:
-    snapshot = {
-        "artifact_kind": "standalone_board",
-        "privacy": "public_fixture",
-        "schema_version": "1.0",
-        "visual": {"adapter": "macro"},
-    }
+    snapshot = _standalone_snapshot("public_fixture")
     safe_html = b"<!doctype html><html><body>Board</body></html>"
     packet = artifact_packet.build_standalone_artifact_packet(
         snapshot,
@@ -113,6 +108,45 @@ def _verify_standalone_safety_gate() -> None:
                 raise SystemExit(f"standalone_safety_error_changed:{error}") from error
         else:
             raise SystemExit("standalone_unsafe_html_accepted")
+
+    private_snapshot = _standalone_snapshot("private")
+    artifact_packet.build_standalone_artifact_packet(
+        private_snapshot,
+        safe_html,
+        privacy="private",
+        visual_adapter="macro",
+    )
+
+    leaked_snapshot = _standalone_snapshot("public_fixture")
+    leaked_snapshot["visual"]["label"] = "/Users/private/account"
+    try:
+        artifact_packet.build_standalone_artifact_packet(
+            leaked_snapshot,
+            safe_html,
+            privacy="public_fixture",
+            visual_adapter="macro",
+        )
+    except artifact_packet.ArtifactPacketError as error:
+        if str(error) != "privacy_violation":
+            raise SystemExit(f"standalone_privacy_error_changed:{error}") from error
+    else:
+        raise SystemExit("standalone_public_privacy_leak_accepted")
+
+
+def _standalone_snapshot(privacy: str) -> dict[str, object]:
+    return {
+        "artifact_kind": "standalone_board",
+        "artifact_lifecycle": "durable",
+        "decision_cutoff": "2026-07-22T12:00:00Z",
+        "default_view": "trend",
+        "presentation_state": "ready",
+        "privacy": privacy,
+        "renderer_version": "1.0",
+        "schema_version": "1.0",
+        "snapshot_id": "research-result-macro-test",
+        "views": ["trend", "current", "events", "scenarios"],
+        "visual": {"adapter": "macro"},
+    }
 
 
 def _verify_public_interface() -> None:

@@ -104,7 +104,9 @@ def build_delivery_packet(result: Mapping[str, Any]) -> DeliveryPacket:
     markdown = render_markdown(normalized).encode("utf-8")
     try:
         standalone_board = build_standalone_board(
-            normalized["visual"], str(normalized["privacy"])
+            normalized["visual"],
+            str(normalized["privacy"]),
+            str(normalized["as_of"]),
         )
     except BoardVisualError as error:
         raise ResearchResultError(str(error)) from error

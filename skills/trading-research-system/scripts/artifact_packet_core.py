@@ -73,6 +73,7 @@ SAFE_TEXT_FORBIDDEN_TERMS = UNSAFE_DIAGNOSTIC_TERMS + (
     "full account",
 )
 ACCOUNT_ID_PATTERN = re.compile(r"\b(?:\d[ -]?){7,}\d\b")
+ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 FORBIDDEN_SNAPSHOT_TERMS = (
     "fetch(",
     "xmlhttprequest",
@@ -278,17 +279,46 @@ def build_rendered_artifact_packet(
     if not isinstance(snapshot, Mapping):
         raise ArtifactPacketError("schema_invalid")
     normalized = copy.deepcopy(dict(snapshot))
+    allowed_fields = {
+        "artifact_kind",
+        "artifact_lifecycle",
+        "decision_cutoff",
+        "default_view",
+        "presentation_state",
+        "privacy",
+        "renderer_version",
+        "schema_version",
+        "snapshot_id",
+        "views",
+        "visual",
+    }
     if (
-        normalized.get("artifact_kind") != "standalone_board"
+        set(normalized) != allowed_fields
+        or normalized.get("artifact_kind") != "standalone_board"
+        or normalized.get("artifact_lifecycle") != "durable"
         or normalized.get("schema_version") != SCHEMA_VERSION
+        or normalized.get("renderer_version") != RENDERER_VERSION
         or normalized.get("privacy") != privacy
-        or privacy not in {"public_fixture", "private_runtime"}
+        or privacy not in {"private", "public_fixture"}
         or not _is_nonempty_string(visual_adapter)
+        or not _is_nonempty_string(normalized.get("snapshot_id"))
+        or normalized.get("presentation_state") != "ready"
     ):
         raise ArtifactPacketError("schema_invalid")
+    _parse_timestamp(normalized.get("decision_cutoff"), "decision_cutoff_invalid")
+    views = normalized.get("views")
+    if (
+        not isinstance(views, list)
+        or not views
+        or any(not _is_nonempty_string(view) for view in views)
+        or len(set(views)) != len(views)
+        or normalized.get("default_view") not in views
+    ):
+        raise ArtifactPacketError("views_invalid")
     visual = normalized.get("visual")
     if not isinstance(visual, Mapping) or visual.get("adapter") != visual_adapter:
         raise ArtifactPacketError("schema_invalid")
+    _validate_public_privacy(normalized)
     if not isinstance(html, bytes) or not html.lstrip().lower().startswith(b"<!doctype html>"):
         raise ArtifactPacketError("html_document_invalid")
     if b"<html" not in html.lower() or b"</html>" not in html.lower():
@@ -300,15 +330,25 @@ def build_rendered_artifact_packet(
     _require_size(html, HTML_HARD_LIMIT_BYTES, "html_size_exceeded")
     manifest = canonical_json_bytes(
         {
+            "artifact_identity": f"{normalized['snapshot_id']}:standalone_board",
             "artifact_kind": "standalone_board",
+            "artifact_lifecycle": normalized["artifact_lifecycle"],
+            "board": visual_adapter,
             "canonical_html": "research-brief.html",
             "canonical_json": "snapshot.canonical.json",
             "canonical_json_sha256": sha256_hex(canonical_json),
+            "decision_cutoff": normalized["decision_cutoff"],
+            "default_view": normalized["default_view"],
             "html_sha256": sha256_hex(html),
             "manifest_version": MANIFEST_VERSION,
+            "presentation_state": normalized["presentation_state"],
             "privacy": privacy,
+            "renderer_version": normalized["renderer_version"],
             "schema_version": SCHEMA_VERSION,
+            "snapshot_contract_version": normalized["schema_version"],
+            "snapshot_id": normalized["snapshot_id"],
             "visual_adapter": visual_adapter,
+            "views": views,
         }
     )
     _require_size(manifest, MANIFEST_HARD_LIMIT_BYTES, "manifest_size_exceeded")
@@ -530,7 +570,10 @@ def _iter_snapshot_text(value: Any, *, top_level: bool = True):
 def _contains_public_privacy_sentinel(value: str) -> bool:
     normalized_path = value.replace("\\", "/")
     compact = re.sub(r"[^a-z0-9]+", "", value.casefold())
-    bare_account_id = ACCOUNT_ID_PATTERN.fullmatch(value.strip())
+    stripped = value.strip()
+    bare_account_id = ACCOUNT_ID_PATTERN.fullmatch(stripped) and not ISO_DATE_PATTERN.fullmatch(
+        stripped
+    )
     return (
         any(sentinel.casefold() in value.casefold() for sentinel in PRIVACY_SENTINELS)
         or bool(PUBLIC_PRIVATE_PATH_PATTERN.search(normalized_path))

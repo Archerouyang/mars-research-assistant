@@ -32,6 +32,10 @@ purpose-specific adapters and accepted view order. The system does not emit
 ResearchResult adapters continue to own purpose-specific validation and
 rendering. The Artifact Packet public facade owns final HTML safety, size
 limits, deterministic serialization, manifest construction, and hashes.
+The standalone snapshot records a stable identity, decision cutoff, accepted
+views, default view, presentation state, and `private` or `public_fixture`
+privacy. Public-fixture packets run the shared privacy-sentinel scan before
+serialization.
 
 ## Consequences
 

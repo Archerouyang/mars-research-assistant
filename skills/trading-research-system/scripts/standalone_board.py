@@ -10,16 +10,33 @@ from artifact_packet import (
     ArtifactPacket,
     ArtifactPacketError,
     build_standalone_artifact_packet,
+    canonical_json_bytes,
+    sha256_hex,
 )
 from board_visual import BoardVisualError, render_board_visual
 
 
 SCHEMA_VERSION = "1.0"
+BOARD_VIEWS = {
+    "macro": ("trend", "current", "events", "scenarios"),
+    "instrument": ("overview", "price", "peers", "catalysts"),
+    "portfolio": (
+        "overview",
+        "symbol",
+        "fundamentals",
+        "theme",
+        "product",
+        "broker",
+        "stress",
+    ),
+    "price_action": ("base", "bull", "bear"),
+}
 
 
 def build_standalone_board(
     visual: Mapping[str, Any] | None,
     privacy: str,
+    decision_cutoff: str,
 ) -> ArtifactPacket | None:
     """Return deterministic snapshot, standalone HTML, and manifest bytes."""
 
@@ -29,11 +46,23 @@ def build_standalone_board(
     if fragment is None:
         return None
     adapter = str(visual.get("adapter") or "board")
+    views = BOARD_VIEWS.get(adapter)
+    if views is None:
+        raise BoardVisualError("visual_adapter_invalid")
+    default_view = views[0]
+    visual_hash = sha256_hex(canonical_json_bytes(visual))[:16]
     snapshot = {
         "artifact_kind": "standalone_board",
+        "artifact_lifecycle": "durable",
+        "decision_cutoff": decision_cutoff,
+        "default_view": default_view,
+        "presentation_state": "ready",
         "privacy": privacy,
+        "renderer_version": SCHEMA_VERSION,
         "schema_version": SCHEMA_VERSION,
+        "snapshot_id": f"research-result-{adapter}-{visual_hash}",
         "visual": visual,
+        "views": list(views),
     }
     html = _document(adapter, fragment)
     try:
