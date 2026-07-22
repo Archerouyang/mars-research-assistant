@@ -29,7 +29,13 @@ BOARD_VIEWS = {
         "broker",
         "stress",
     ),
-    "price_action": ("base", "bull", "bear"),
+    "price_action": ("bull", "base", "bear"),
+}
+BOARD_DEFAULT_VIEWS = {
+    "macro": "trend",
+    "instrument": "overview",
+    "portfolio": "overview",
+    "price_action": "base",
 }
 
 
@@ -49,7 +55,7 @@ def build_standalone_board(
     views = BOARD_VIEWS.get(adapter)
     if views is None:
         raise BoardVisualError("visual_adapter_invalid")
-    default_view = views[0]
+    default_view = BOARD_DEFAULT_VIEWS[adapter]
     visual_hash = sha256_hex(canonical_json_bytes(visual))[:16]
     snapshot = {
         "artifact_kind": "standalone_board",
