@@ -29,6 +29,10 @@ component styles. Macro, Instrument, Portfolio, and Price Action keep their
 purpose-specific adapters and accepted view order. The system does not emit
 `inline.html`, iframe wrappers, or a second host-dependent visual.
 
+ResearchResult adapters continue to own purpose-specific validation and
+rendering. The Artifact Packet public facade owns final HTML safety, size
+limits, deterministic serialization, manifest construction, and hashes.
+
 ## Consequences
 
 - Event panels can be retained and reopened from one stable artifact path.

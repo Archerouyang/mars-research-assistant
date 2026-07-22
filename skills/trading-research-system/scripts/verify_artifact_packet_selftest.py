@@ -38,6 +38,7 @@ SUPPORTED_PUBLIC_INTERFACE = {
     "MANIFEST_HARD_LIMIT_BYTES",
     "SNAPSHOT_HARD_LIMIT_BYTES",
     "build_artifact_packet",
+    "build_standalone_artifact_packet",
     "canonical_json_bytes",
     "sha256_hex",
     "write_artifact_packet",
@@ -69,8 +70,49 @@ def main() -> int:
         _verify_safe_html(fixture_name, packet.html)
         _verify_immutable_write(fixture_name, packet)
 
+    _verify_standalone_safety_gate()
+
     print("ArtifactPacket facade contract ok")
     return 0
+
+
+def _verify_standalone_safety_gate() -> None:
+    snapshot = {
+        "artifact_kind": "standalone_board",
+        "privacy": "public_fixture",
+        "schema_version": "1.0",
+        "visual": {"adapter": "macro"},
+    }
+    safe_html = b"<!doctype html><html><body>Board</body></html>"
+    packet = artifact_packet.build_standalone_artifact_packet(
+        snapshot,
+        safe_html,
+        privacy="public_fixture",
+        visual_adapter="macro",
+    )
+    if packet != artifact_packet.build_standalone_artifact_packet(
+        snapshot,
+        safe_html,
+        privacy="public_fixture",
+        visual_adapter="macro",
+    ):
+        raise SystemExit("standalone_artifact_packet_not_deterministic")
+    for unsafe_html in (
+        b"<!doctype html><html><script>fetch('/private')</script></html>",
+        b'<!doctype html><html><img src="https://example.com/a.png"></html>',
+    ):
+        try:
+            artifact_packet.build_standalone_artifact_packet(
+                snapshot,
+                unsafe_html,
+                privacy="public_fixture",
+                visual_adapter="macro",
+            )
+        except artifact_packet.ArtifactPacketError as error:
+            if str(error) != "html_safety_violation":
+                raise SystemExit(f"standalone_safety_error_changed:{error}") from error
+        else:
+            raise SystemExit("standalone_unsafe_html_accepted")
 
 
 def _verify_public_interface() -> None:

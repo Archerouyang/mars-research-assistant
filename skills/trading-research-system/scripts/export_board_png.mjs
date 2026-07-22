@@ -89,75 +89,14 @@ function assertPublicSafe(source) {
   }
 }
 
-function wrapFragment(fragment, width) {
-  if (/<(?:!doctype|html)\b/i.test(fragment)) return fragment;
-
-  return `<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root {
-    color-scheme: light;
-    --background: #ffffff;
-    --foreground: #172033;
-    --muted: #f3f5f7;
-    --muted-foreground: #657083;
-    --border: #d9dee7;
-    --destructive: #c23b48;
-    --viz-series-1: #167a63;
-    --viz-series-2: #2f6fed;
-    --viz-series-3: #b47700;
-    --viz-series-4: #7a58b5;
-    --viz-series-5: #197b9d;
-    --viz-series-6: #8b5a3c;
+export function assertStandaloneDocument(source) {
+  if (
+    !/^\s*<!doctype html>/i.test(source) ||
+    !/<html\b/i.test(source) ||
+    !/<\/html>\s*$/i.test(source)
+  ) {
+    throw new Error("PNG export accepts only a complete standalone Board document");
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; background: var(--background); }
-  body {
-    color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-      "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    font-size: 14px;
-    line-height: 1.45;
-    letter-spacing: 0;
-  }
-  main { width: ${width}px; padding: 28px 34px 34px; }
-  h3 { margin: 7px 0 0; font-size: 15px; line-height: 1.35; }
-  button { font: inherit; }
-  .dt-board { width: 100%; }
-  .viz-row, .viz-controls { display: flex; flex-wrap: wrap; align-items: center; }
-  .viz-controls { gap: 7px; }
-  .viz-badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 23px;
-    padding: 2px 8px;
-    color: var(--viz-series-1);
-    background: color-mix(in srgb, var(--viz-series-1) 9%, transparent);
-    border: 1px solid color-mix(in srgb, var(--viz-series-1) 28%, var(--border));
-    border-radius: 4px;
-  }
-  .btn {
-    min-height: 30px;
-    padding: 4px 12px;
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-  }
-  .btn-primary {
-    color: #ffffff;
-    background: var(--foreground);
-    border-color: var(--foreground);
-  }
-  .text-small { font-size: 12px; }
-  .text-muted { color: var(--muted-foreground); }
-</style>
-</head>
-<body><main>${fragment}</main></body>
-</html>`;
 }
 
 async function waitForFile(file, timeoutMs = 20_000) {
@@ -244,17 +183,18 @@ async function exportPng(options) {
   const input = path.resolve(options.input);
   const output = path.resolve(options.output);
   const browser = path.resolve(options.browser);
+  const source = await readFile(input, "utf8");
+  assertStandaloneDocument(source);
+  if (options.public) assertPublicSafe(source);
   await stat(browser).catch(() => {
     throw new Error(`Chrome/Chromium executable not found: ${browser}`);
   });
-  const fragment = await readFile(input, "utf8");
-  if (options.public) assertPublicSafe(fragment);
   await mkdir(path.dirname(output), { recursive: true });
 
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "dailytrades-png-"));
   const profile = path.join(temporaryRoot, "chrome-profile");
   const page = path.join(temporaryRoot, "panel.html");
-  await writeFile(page, wrapFragment(fragment, options.width), "utf8");
+  await writeFile(page, source, "utf8");
 
   const chrome = spawn(
     browser,
@@ -311,7 +251,7 @@ async function exportPng(options) {
         returnByValue: true,
       });
       if (!interaction.result.value?.ok) {
-        throw new Error(interaction.result.value?.reason || "inline interaction smoke failed");
+        throw new Error(interaction.result.value?.reason || "Board interaction smoke failed");
       }
     }
     const measurement = await cdp.send("Runtime.evaluate", {
@@ -359,13 +299,15 @@ async function exportPng(options) {
   }
 }
 
-let options;
-try {
-  options = parseArgs(process.argv.slice(2));
-  const result = await exportPng(options);
-  process.stdout.write(
-    `PNG exported: ${path.resolve(options.output)} (${result.width}x${result.height} CSS px, ${result.bytes} bytes)\n`,
-  );
-} catch (error) {
-  fail(error instanceof Error ? error.message : String(error));
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  let options;
+  try {
+    options = parseArgs(process.argv.slice(2));
+    const result = await exportPng(options);
+    process.stdout.write(
+      `PNG exported: ${path.resolve(options.output)} (${result.width}x${result.height} CSS px, ${result.bytes} bytes)\n`,
+    );
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error));
+  }
 }

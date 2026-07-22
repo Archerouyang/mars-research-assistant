@@ -26,8 +26,9 @@ The smoke sets temporary `HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, and
 Skill, scans for private configuration and absolute user paths, and removes the
 temporary directory on exit.
 
-Visual acceptance is manual. Generate one representative inline HTML artifact,
-open it in the Codex in-app browser, and give the user the artifact early. Do
+Visual acceptance is manual. Generate one representative standalone Board,
+open its exact `research-brief.html` in the Codex in-app browser, and give the
+user the artifact early. Do
 not replace user judgment with screenshot matrices or pixel-diff gates.
 
 ## Branch Model
@@ -197,9 +198,9 @@ available; otherwise it falls back to `python3.12` or `python3`.
 
 ## Product smoke
 
-Use `docs/MVP_RUNBOOK.md` for the 0.2.0 smoke. It runs the narrow verification
+Use `docs/MVP_RUNBOOK.md` for the current smoke. It runs the narrow verification
 gate, generates one ResearchResult delivery, and stops for user acceptance of
-the actual inline HTML. It does not exercise private runtime state, brokers,
+the actual `standalone_board/research-brief.html`. It does not exercise private runtime state, brokers,
 automations, or obsolete KVN databases.
 
 For individual scripts, use:
@@ -262,21 +263,22 @@ Codex can accept a task only when:
 - public/private repo boundary is preserved;
 - `docs/PROJECT_LOG.md` is updated when the change affects project trajectory;
 - no live external service behavior is required to prove the change.
-## Inline Panel PNG Export
+## Standalone Board PNG Export
 
-Keep the chat-inline Panel as the canonical interactive artifact. PNG export is
+Keep `standalone_board/research-brief.html` as the canonical interactive artifact. PNG export is
 opt-in only: run it only after the user explicitly asks for a downloadable
-image. Export that accepted HTML fragment on demand:
+image. Export that accepted complete HTML document on demand:
 
 ```bash
 node scripts/export_board_png.mjs \
-  --input /absolute/path/to/panel.html \
+  --input /absolute/path/to/standalone_board/research-brief.html \
   --output /absolute/path/to/panel.png
 ```
 
 The exporter measures the rendered document and captures the complete content,
 not a fixed browser viewport. Do not auto-save, batch-export, or update README
-as a side effect of generating an inline Panel. Use `--public` for an explicitly
+as a side effect of generating a Board image. The exporter rejects fragments
+and does not synthesize a wrapper. Use `--public` for an explicitly
 requested README or other public asset; it fails closed on common private-data
 sentinels. Public images may use synthetic fixtures or dated public market data
 after explicit user approval and privacy review. They must never contain

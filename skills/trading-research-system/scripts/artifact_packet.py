@@ -15,6 +15,7 @@ from artifact_packet_core import (
     SCHEMA_VERSION as _SCHEMA_VERSION,
     SNAPSHOT_HARD_LIMIT_BYTES,
     build_artifact_packet as _build_artifact_packet,
+    build_rendered_artifact_packet as _build_rendered_artifact_packet,
     canonical_json_bytes,
     sha256_hex,
     write_artifact_packet,
@@ -28,6 +29,7 @@ __all__ = (
     "MANIFEST_HARD_LIMIT_BYTES",
     "SNAPSHOT_HARD_LIMIT_BYTES",
     "build_artifact_packet",
+    "build_standalone_artifact_packet",
     "canonical_json_bytes",
     "sha256_hex",
     "write_artifact_packet",
@@ -47,6 +49,23 @@ def build_artifact_packet(
         _resolve_valid_schema_adapter(snapshot),
         default_view=default_view,
         presentation_state=presentation_state,
+    )
+
+
+def build_standalone_artifact_packet(
+    snapshot: Mapping[str, Any],
+    html: bytes,
+    *,
+    privacy: str,
+    visual_adapter: str,
+) -> ArtifactPacket:
+    """Package an already validated standalone Board through shared gates."""
+
+    return _build_rendered_artifact_packet(
+        snapshot,
+        html,
+        privacy=privacy,
+        visual_adapter=visual_adapter,
     )
 
 

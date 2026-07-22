@@ -29,6 +29,21 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-22
+
+- Commit: pending `Converge visual delivery on standalone Boards`
+- Scope: skill, script, documentation, decision, validation
+- What changed: removed the parallel inline delivery surface and made one
+  self-contained `standalone_board` packet the only ResearchResult visual
+  output. PNG export now accepts only that complete HTML document.
+- Why it matters: saved event and risk panels reopen with the same views and
+  styling that were accepted originally, without host CSS or a second wrapper.
+- Verification: focused Skill gate, ArtifactPacket safety regression,
+  fragment-rejection contract, isolated portable install, and direct-open
+  interaction smoke.
+- Next step: monitor fresh Daily Ops runs for stable artifact retention and
+  view parity.
+
 ## 2026-07-20
 
 - Commit: pending `Remove native plugin distribution`

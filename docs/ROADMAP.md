@@ -25,8 +25,8 @@ The only distributed behavior source is `skills/trading-research-system/`.
 - no invented data and visible `partial`, `stale`, conflict, and source-error
   states;
 - no broker write or order action;
-- concise Markdown plus real chat-inline HTML when a visual changes the
-  decision;
+- concise Markdown plus one self-contained standalone Board when a visual
+  changes the decision;
 - Bayesian decision support that updates a prior with current evidence instead
   of presenting market research as prediction;
 - frozen Macro, Portfolio Risk, and Price Action panel structures accepted

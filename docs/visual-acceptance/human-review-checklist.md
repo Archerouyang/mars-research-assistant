@@ -7,7 +7,7 @@ It cannot waive, downgrade, or override an automated failure.
 
 - The acceptance report records `automated_status: pass` for the 60 complete,
   90 degraded, 48 dark, and 12 Gallery cases. Its `release_status` remains
-  `pending_human_review` until the real Codex inline evidence is validated.
+  `pending_human_review` until the exact standalone Board evidence is validated.
 - The reviewed HTML files are exact-byte copies of the three complete staged
   Gallery artifacts. Record their SHA-256 values before opening them.
 - No public README or legacy SVG path has been changed. Public cutover remains

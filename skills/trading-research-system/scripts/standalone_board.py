@@ -6,12 +6,15 @@ from __future__ import annotations
 from html import escape
 from typing import Any, Mapping
 
-from artifact_packet import ArtifactPacket, canonical_json_bytes, sha256_hex
+from artifact_packet import (
+    ArtifactPacket,
+    ArtifactPacketError,
+    build_standalone_artifact_packet,
+)
 from board_visual import BoardVisualError, render_board_visual
 
 
 SCHEMA_VERSION = "1.0"
-MAX_STANDALONE_HTML_BYTES = 4 * 1024 * 1024
 
 
 def build_standalone_board(
@@ -26,31 +29,22 @@ def build_standalone_board(
     if fragment is None:
         return None
     adapter = str(visual.get("adapter") or "board")
-    snapshot = canonical_json_bytes(
-        {
-            "artifact_kind": "standalone_board",
-            "privacy": privacy,
-            "schema_version": SCHEMA_VERSION,
-            "visual": visual,
-        }
-    )
+    snapshot = {
+        "artifact_kind": "standalone_board",
+        "privacy": privacy,
+        "schema_version": SCHEMA_VERSION,
+        "visual": visual,
+    }
     html = _document(adapter, fragment)
-    if len(html) > MAX_STANDALONE_HTML_BYTES:
-        raise BoardVisualError("standalone_board_size_invalid")
-    manifest = canonical_json_bytes(
-        {
-            "artifact_kind": "standalone_board",
-            "canonical_html": "research-brief.html",
-            "canonical_json": "snapshot.canonical.json",
-            "canonical_json_sha256": sha256_hex(snapshot),
-            "html_sha256": sha256_hex(html),
-            "manifest_version": SCHEMA_VERSION,
-            "privacy": privacy,
-            "schema_version": SCHEMA_VERSION,
-            "visual_adapter": adapter,
-        }
-    )
-    return ArtifactPacket(canonical_json=snapshot, html=html, manifest=manifest)
+    try:
+        return build_standalone_artifact_packet(
+            snapshot,
+            html,
+            privacy=privacy,
+            visual_adapter=adapter,
+        )
+    except ArtifactPacketError as error:
+        raise BoardVisualError(str(error)) from error
 
 
 def _document(adapter: str, fragment: bytes) -> bytes:

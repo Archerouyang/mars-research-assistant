@@ -266,6 +266,55 @@ def build_artifact_packet(
     return ArtifactPacket(canonical_json=canonical_json, html=html, manifest=manifest)
 
 
+def build_rendered_artifact_packet(
+    snapshot: Mapping[str, Any],
+    html: bytes,
+    *,
+    privacy: str,
+    visual_adapter: str,
+) -> ArtifactPacket:
+    """Package an already validated Board render through shared safety gates."""
+
+    if not isinstance(snapshot, Mapping):
+        raise ArtifactPacketError("schema_invalid")
+    normalized = copy.deepcopy(dict(snapshot))
+    if (
+        normalized.get("artifact_kind") != "standalone_board"
+        or normalized.get("schema_version") != SCHEMA_VERSION
+        or normalized.get("privacy") != privacy
+        or privacy not in {"public_fixture", "private_runtime"}
+        or not _is_nonempty_string(visual_adapter)
+    ):
+        raise ArtifactPacketError("schema_invalid")
+    visual = normalized.get("visual")
+    if not isinstance(visual, Mapping) or visual.get("adapter") != visual_adapter:
+        raise ArtifactPacketError("schema_invalid")
+    if not isinstance(html, bytes) or not html.lstrip().lower().startswith(b"<!doctype html>"):
+        raise ArtifactPacketError("html_document_invalid")
+    if b"<html" not in html.lower() or b"</html>" not in html.lower():
+        raise ArtifactPacketError("html_document_invalid")
+
+    canonical_json = canonical_json_bytes(normalized)
+    _require_size(canonical_json, SNAPSHOT_HARD_LIMIT_BYTES, "snapshot_size_exceeded")
+    _validate_html_safety(html)
+    _require_size(html, HTML_HARD_LIMIT_BYTES, "html_size_exceeded")
+    manifest = canonical_json_bytes(
+        {
+            "artifact_kind": "standalone_board",
+            "canonical_html": "research-brief.html",
+            "canonical_json": "snapshot.canonical.json",
+            "canonical_json_sha256": sha256_hex(canonical_json),
+            "html_sha256": sha256_hex(html),
+            "manifest_version": MANIFEST_VERSION,
+            "privacy": privacy,
+            "schema_version": SCHEMA_VERSION,
+            "visual_adapter": visual_adapter,
+        }
+    )
+    _require_size(manifest, MANIFEST_HARD_LIMIT_BYTES, "manifest_size_exceeded")
+    return ArtifactPacket(canonical_json=canonical_json, html=html, manifest=manifest)
+
+
 def write_artifact_packet(packet: ArtifactPacket, output_dir: Path) -> dict[str, Path]:
     """Write a packet once; pre-existing bytes must exactly match the packet."""
 
