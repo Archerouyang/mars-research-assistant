@@ -23,18 +23,17 @@ It cannot waive, downgrade, or override an automated failure.
 - Confirm charts are nonblank and support the Board decision rather than replace
   its evidence model.
 
-## Real Codex Inline Smoke
+## Standalone Board Smoke
 
 For each complete Board artifact:
 
-1. Deliver the exact HTML bytes through the Codex inline visualization host.
+1. Open the exact `research-brief.html` bytes directly over localhost.
 2. Confirm Overview is the default view.
 3. Switch every view with pointer and keyboard input.
 4. Confirm selected state, visible focus, narrow reflow, no page error, and no
    external request.
-5. Record the result using `codex-inline-smoke.template.json`. Set `host` to
-   `codex_inline` and `browser_wrapper` to `false`; a local browser or iframe
-   wrapper is not Codex evidence.
+5. Record the direct-open result and the sibling snapshot/manifest hashes. An
+   iframe, host-styled fragment, or separately authored wrapper is not evidence.
 
 The evidence file is local release evidence. Do not commit user identifiers,
 session URLs, private paths, account data, or broker/runtime output.

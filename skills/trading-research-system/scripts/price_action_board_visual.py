@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Price Action chat visual adapter."""
+"""Price Action Board visual adapter."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from html import escape
 from typing import Any, Mapping
 
 from chart_artifact import build_chart_payload
-from chat_visual_contract import ChatVisualError, exact_fields, required_text
-from chat_visual_shared import (
+from board_visual_contract import BoardVisualError, exact_fields, required_text
+from board_visual_shared import (
     _base_css,
     _latest_value,
     _num,
@@ -24,7 +24,7 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
     exact_fields(visual, {"adapter", "payload", "title"}, "visual_fields_invalid")
     raw_payload = visual.get("payload")
     if not isinstance(raw_payload, Mapping):
-        raise ChatVisualError("visual_payload_invalid")
+        raise BoardVisualError("visual_payload_invalid")
     normalized = copy.deepcopy(dict(visual))
     if "title" in normalized:
         normalized["title"] = str(normalized["title"])
@@ -33,7 +33,7 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
     try:
         normalized["payload"] = build_chart_payload(payload, normalized.get("title"))
     except SystemExit as error:
-        raise ChatVisualError("visual_payload_invalid") from error
+        raise BoardVisualError("visual_payload_invalid") from error
     return normalized
 
 
@@ -57,37 +57,37 @@ def _validate_payload(payload: Mapping[str, Any]) -> None:
 
     scenarios = payload.get("scenarios")
     if not isinstance(scenarios, Mapping) or set(scenarios) != {"bull", "base", "bear"}:
-        raise ChatVisualError("price_action_scenarios_invalid")
+        raise BoardVisualError("price_action_scenarios_invalid")
     for row in scenarios.values():
         if not isinstance(row, Mapping) or set(row) != {"target", "condition", "path", "action"}:
-            raise ChatVisualError("price_action_scenarios_invalid")
+            raise BoardVisualError("price_action_scenarios_invalid")
         for key in ("condition", "path", "action"):
             required_text(row, key)
         try:
             float(row["target"])
         except (TypeError, ValueError):
-            raise ChatVisualError("price_action_scenarios_invalid") from None
+            raise BoardVisualError("price_action_scenarios_invalid") from None
 
     notes = payload.get("notes", [])
     if not isinstance(notes, list) or any(not isinstance(item, str) or not item.strip() for item in notes):
-        raise ChatVisualError("visual_payload_invalid")
+        raise BoardVisualError("visual_payload_invalid")
 
     daily = payload.get("daily_context", {})
     if not isinstance(daily, Mapping) or set(daily) - {"ema20", "ema50", "ema200"}:
-        raise ChatVisualError("visual_payload_invalid")
+        raise BoardVisualError("visual_payload_invalid")
     for value in daily.values():
         if value is not None:
             try:
                 float(value)
             except (TypeError, ValueError):
-                raise ChatVisualError("visual_payload_invalid") from None
+                raise BoardVisualError("visual_payload_invalid") from None
 
     for key in ("atr14_primary", "atr14_4h"):
         if payload.get(key) is not None:
             try:
                 float(payload[key])
             except (TypeError, ValueError):
-                raise ChatVisualError("visual_payload_invalid") from None
+                raise BoardVisualError("visual_payload_invalid") from None
 
     _validate_rows(
         payload.get("entry_plan", []),
@@ -98,15 +98,15 @@ def _validate_payload(payload: Mapping[str, Any]) -> None:
         {"time", "event", "importance", "transmission", "watch"},
     )
     if "event_note" in payload and not isinstance(payload["event_note"], str):
-        raise ChatVisualError("visual_payload_invalid")
+        raise BoardVisualError("visual_payload_invalid")
 
 
 def _validate_rows(value: Any, fields: set[str]) -> None:
     if not isinstance(value, list):
-        raise ChatVisualError("visual_payload_invalid")
+        raise BoardVisualError("visual_payload_invalid")
     for row in value:
         if not isinstance(row, Mapping) or set(row) != fields:
-            raise ChatVisualError("visual_payload_invalid")
+            raise BoardVisualError("visual_payload_invalid")
         for key in fields:
             required_text(row, key)
 
@@ -207,7 +207,7 @@ def _render_payload(payload: Mapping[str, Any]) -> bytes:
             "scenarios": scenario_payload,
         }
     )
-    html = f"""<div id="{root}" class="dt-inline"{_public_fixture_attr(payload.get('privacy'))}>
+    html = f"""<div id="{root}" class="dt-board"{_public_fixture_attr(payload.get('privacy'))}>
   <style>{_base_css(root)}
     #{root} .pa-chart{{width:100%;height:auto}}
     #{root} .grid{{stroke:var(--border);stroke-width:1}}

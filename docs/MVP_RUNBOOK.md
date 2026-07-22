@@ -1,4 +1,4 @@
-# Trading Research System 0.3.0 Smoke
+# Trading Research System 0.4.0 Smoke
 
 This runbook verifies the smallest useful product path. It is not a private
 runtime rehearsal and it never performs broker or order actions.
@@ -18,11 +18,12 @@ and Skill structure. It does not launch a browser or export an artifact.
 
 1. Generate one representative Macro, Instrument, Portfolio, or Price Action
    `ResearchResult` delivery.
-2. Render the returned inline fragment in the actual Codex chat surface.
+2. Open `standalone_board/research-brief.html` directly in a browser.
 3. Confirm the first viewport shows decision-relevant numbers and a usable
    interactive chart when quantitative evidence exists.
 4. Confirm gaps, source time, privacy, and the no-order boundary remain visible.
-5. Record the user's acceptance or feedback before public cutover.
+5. Confirm the sibling snapshot and manifest exist, then record the user's
+   acceptance or feedback before public cutover.
 
 Do not run screenshot matrices, pixel diffs, broad browser combinations, or
 legacy runtime fixture suites by default. Add a focused test only when a

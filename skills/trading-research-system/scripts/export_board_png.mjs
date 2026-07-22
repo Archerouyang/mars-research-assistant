@@ -59,7 +59,7 @@ function parseArgs(argv) {
 
   if (!options.input || !options.output) {
     throw new Error(
-      "usage: export_inline_png.mjs --input PANEL.html --output PANEL.png [--width 1200] [--scale 1] [--public] [--check-interaction]",
+      "usage: export_board_png.mjs --input PANEL.html --output PANEL.png [--width 1200] [--scale 1] [--public] [--check-interaction]",
     );
   }
 

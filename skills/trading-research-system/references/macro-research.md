@@ -19,7 +19,7 @@ For visuals, put decision-sensitive numbers and charts in the first viewport.
 Show at least the metrics that drive the stated posture, their `as_of`, and
 scenario confirmation. Missing values remain visible.
 
-The stable macro inline surface uses four compact views: `趋势`, `当前状态`,
+The stable macro Board uses four compact views: `趋势`, `当前状态`,
 `下周事件`, and `情景`. Its minimum observation set is:
 
 - short and long rates: 2Y plus 10Y and/or 30Y;
@@ -95,25 +95,25 @@ release:
 6. Preserve actual, forecast, media, and thesis categories, source registry,
    `as_of`, and data-gap disclosure through `ResearchResult -> DeliveryPacket`.
    Public fixtures remain visibly synthetic and can never support a live claim.
-7. Render the compact native inline fragment directly in chat. Do not replace
-   it with an iframe, standalone document, cross-unit bar chart, or saved
-   private runtime artifact by default.
+7. Render one self-contained standalone Board and retain its snapshot and
+   manifest for event follow-up. Do not emit an iframe, parallel inline
+   fragment, or cross-unit bar chart.
 
 Without renewed user acceptance, do not replace this CLI-first sequence with a
 bespoke scraper, collapse purpose-specific sources into Longbridge, reinterpret
 missing data as authorization failure, relabel a proxy as DXY, change the
-one-month default, or alter the direct-inline delivery path.
+one-month default, or add a second visual delivery path.
 
 The retained read-only implementation surface is
 `scripts/longbridge_macrodata_adapter.py` for normalized Longbridge responses
 and `scripts/prepare_macro_panel.py` for an explicitly requested local macro
 panel. Neither helper reads broker positions or performs order actions.
 
-## Frozen Inline Format
+## Frozen Standalone Format
 
-The Macro inline structure accepted on 2026-07-19 is frozen for the 0.2.0
-release: summary strip, `趋势`, `当前状态`, `下周事件`, and `情景`, in that
-order. The trend view uses selectable time series; current state uses the
+The Macro structure accepted on 2026-07-19 and migrated unchanged to standalone
+delivery on 2026-07-22 is frozen: summary strip, `趋势`, `当前状态`, `下周事件`,
+and `情景`, in that order. The trend view uses selectable time series; current state uses the
 liquidity note and asset-preference matrix; events use importance only when the
 research result explicitly supplies it; scenarios use comparison rows with
 `触发`, `确认`, `传导`, and `应对`.

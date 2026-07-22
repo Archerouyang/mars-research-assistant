@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate one research result and build deterministic chat delivery bytes."""
+"""Validate one research result and build deterministic standalone delivery bytes."""
 
 from __future__ import annotations
 
@@ -12,7 +12,9 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-from chat_visual import ChatVisualError, normalize_chat_visual, render_chat_visual
+from artifact_packet import ArtifactPacket, write_artifact_packet
+from board_visual import BoardVisualError, normalize_board_visual
+from standalone_board import build_standalone_board
 
 
 SCHEMA_VERSION = "1.0"
@@ -24,7 +26,6 @@ EVIDENCE_TYPES = frozenset({"fact", "inference", "thesis", "counter_thesis"})
 RISK_LEVELS = frozenset({"low", "medium", "high", "critical"})
 MAX_RESULT_BYTES = 500_000
 MAX_MARKDOWN_BYTES = 50_000
-MAX_INLINE_BYTES = 100_000
 PUBLIC_SENTINELS = (
     "/Users/",
     "account_id",
@@ -87,11 +88,11 @@ class ResearchResultError(ValueError):
 
 @dataclass(frozen=True)
 class DeliveryPacket:
-    """Canonical result, Markdown, and optional chat-inline HTML bytes."""
+    """Canonical result, Markdown, and optional standalone Board packet."""
 
     canonical_result: bytes
     markdown: bytes
-    inline_html: bytes | None
+    standalone_board: ArtifactPacket | None
     diagnostics: tuple[str, ...]
 
 
@@ -101,15 +102,18 @@ def build_delivery_packet(result: Mapping[str, Any]) -> DeliveryPacket:
     normalized = validate_research_result(result)
     canonical = canonical_json_bytes(normalized)
     markdown = render_markdown(normalized).encode("utf-8")
-    inline_html = render_inline_html(normalized)
+    try:
+        standalone_board = build_standalone_board(
+            normalized["visual"], str(normalized["privacy"])
+        )
+    except BoardVisualError as error:
+        raise ResearchResultError(str(error)) from error
     if len(markdown) > MAX_MARKDOWN_BYTES:
         raise ResearchResultError("markdown_size_invalid")
-    if inline_html is not None and len(inline_html) > MAX_INLINE_BYTES:
-        raise ResearchResultError("inline_size_invalid")
     diagnostics = tuple(
         f"data_gap:{item['status']}:{item['label']}" for item in normalized["data_gaps"]
     )
-    return DeliveryPacket(canonical, markdown, inline_html, diagnostics)
+    return DeliveryPacket(canonical, markdown, standalone_board, diagnostics)
 
 
 def validate_research_result(result: Mapping[str, Any]) -> dict[str, Any]:
@@ -232,15 +236,6 @@ def render_markdown(result: Mapping[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def render_inline_html(result: Mapping[str, Any]) -> bytes | None:
-    """Render optional chat HTML through the shared visual seam."""
-
-    try:
-        return render_chat_visual(result["visual"], str(result["privacy"]))
-    except ChatVisualError as error:
-        raise ResearchResultError(str(error)) from error
-
-
 def canonical_json_bytes(value: Mapping[str, Any]) -> bytes:
     return (
         json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -320,8 +315,8 @@ def _normalize_sources(value: Any) -> list[dict[str, Any]]:
 
 def _normalize_visual(value: Any, result_kind: str) -> dict[str, Any] | None:
     try:
-        return normalize_chat_visual(value, result_kind)
-    except ChatVisualError as error:
+        return normalize_board_visual(value, result_kind)
+    except BoardVisualError as error:
         raise ResearchResultError(str(error)) from error
 
 
@@ -379,6 +374,29 @@ def _write_once(path: Path, content: bytes) -> None:
     path.write_bytes(content)
 
 
+def write_delivery_packet(packet: DeliveryPacket, output_dir: Path) -> dict[str, Path]:
+    """Persist one delivery without creating a parallel inline artifact."""
+
+    _write_once(output_dir / "result.canonical.json", packet.canonical_result)
+    _write_once(output_dir / "answer.md", packet.markdown)
+    paths = {
+        "result": output_dir / "result.canonical.json",
+        "markdown": output_dir / "answer.md",
+    }
+    if packet.standalone_board is not None:
+        board_paths = write_artifact_packet(
+            packet.standalone_board, output_dir / "standalone_board"
+        )
+        paths.update(
+            {
+                "board_snapshot": board_paths["json"],
+                "board_html": board_paths["html"],
+                "board_manifest": board_paths["manifest"],
+            }
+        )
+    return paths
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path)
@@ -391,10 +409,7 @@ def main() -> int:
     try:
         raw = json.loads(args.input.read_text(encoding="utf-8"))
         packet = build_delivery_packet(raw)
-        _write_once(args.output_dir / "result.canonical.json", packet.canonical_result)
-        _write_once(args.output_dir / "answer.md", packet.markdown)
-        if packet.inline_html is not None:
-            _write_once(args.output_dir / "inline.html", packet.inline_html)
+        write_delivery_packet(packet, args.output_dir)
     except (OSError, json.JSONDecodeError, ResearchResultError, ValueError) as error:
         print(f"research result failed: {error}")
         return 1

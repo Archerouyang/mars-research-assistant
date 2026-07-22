@@ -1,6 +1,6 @@
 ---
 name: trading-research-system
-description: Research markets, instruments, price action, portfolio risk, and external reports; maintain private research plans; and deliver concise Markdown plus chat-native interactive visuals when useful. Use for DailyTrades trading research and risk decision support.
+description: Research markets, instruments, price action, portfolio risk, and external reports; maintain private research plans; and deliver concise Markdown plus durable standalone Boards when useful. Use for DailyTrades trading research and risk decision support.
 ---
 
 # Trading Research System
@@ -59,8 +59,9 @@ response when plain language is clearer; preserve the reasoning discipline.
    posterior decision, risks, conditional scenarios, next checks, and visible
    gaps.
 5. Deliver concise Chinese Markdown unless the user requests another language.
-6. When a visual materially improves inspection, build the real chat-inline HTML
-   and present it early for user acceptance.
+6. When a visual materially improves inspection, build the self-contained
+   `standalone_board` HTML and present its durable path early for acceptance.
+   Do not emit a second inline, iframe, or host-dependent visual.
 
 Do not follow a fixed workflow sequence when a shorter valid path reaches the
 user's outcome.
@@ -120,9 +121,11 @@ Visual adapters are purpose-specific:
 - Portfolio: concentration, product exposure, broker scope, and stress;
 - Price Action: chart, timeframes, levels, scenario paths, and invalidation.
 
-Use the actual inline HTML as the primary visual acceptance artifact. Automated
-visual checks are limited to deterministic output, safety, and one openability
-smoke unless the user requests more.
+`standalone_board/research-brief.html` is the only visual acceptance artifact.
+It must open without host CSS or network access and remain paired with its
+canonical snapshot and manifest. Automated visual checks are limited to
+deterministic output, safety, and one openability smoke unless the user requests
+more.
 
 ## Useful Commands
 

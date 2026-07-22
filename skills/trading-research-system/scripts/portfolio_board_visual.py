@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Portfolio risk chat visual adapter."""
+"""Portfolio risk Board visual adapter."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import copy
 from html import escape
 from typing import Any, Mapping
 
-from chat_visual_contract import ChatVisualError, exact_fields
-from chat_visual_shared import (
+from board_visual_contract import BoardVisualError, exact_fields
+from board_visual_shared import (
     _base_css,
     _public_fixture_attr,
     _public_fixture_badge,
@@ -22,7 +22,7 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
     exact_fields(visual, {"adapter", "panel"}, "visual_fields_invalid")
     panel = visual.get("panel")
     if not isinstance(panel, Mapping):
-        raise ChatVisualError("visual_panel_invalid")
+        raise BoardVisualError("visual_panel_invalid")
     normalized = copy.deepcopy(dict(visual))
     normalized["panel"] = copy.deepcopy(dict(panel))
     validate_portfolio_panel(normalized["panel"])
@@ -429,7 +429,7 @@ def _render_panel(snapshot: Mapping[str, Any]) -> bytes:
         )
     fundamental_cards_html = "".join(fundamental_cards)
     data = _script_json(views)
-    html = f"""<div id="{root}" class="dt-inline"{_public_fixture_attr(snapshot.get('privacy'))}>
+    html = f"""<div id="{root}" class="dt-board"{_public_fixture_attr(snapshot.get('privacy'))}>
   <style>{_base_css(root)}
     #{root}{{--dt-foreground:var(--foreground,#17212b);--dt-muted-foreground:var(--muted-foreground,#66727d);--dt-border:var(--border,#d7dee4);--dt-muted:var(--muted,#edf1f4);--dt-surface:var(--card,#f8fafb);--dt-series-1:var(--viz-series-1,#147d73);--dt-series-2:var(--viz-series-2,#2a76b8);--dt-series-3:var(--viz-series-3,#d05a48);--dt-success:var(--success,#147d73);--dt-warning:var(--warning,#c98718);--dt-destructive:var(--destructive,#ba3344);color:var(--dt-foreground)}}
     #{root} .portfolio-head{{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}}

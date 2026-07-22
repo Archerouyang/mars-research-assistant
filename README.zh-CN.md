@@ -4,7 +4,7 @@
 
 一个 AI-native、基于贝叶斯理念的决策支持 Skill，把市场、宏观、政策、公司、Price Action 和组合证据压缩成可持续更新的决策流程。它不试图预测下一步行情，而是用新证据更新先验、比较条件情景，并明确什么后续观察会改变当前判断。
 
-版本：`0.3.0`
+版本：`0.4.0`
 
 ## 30 秒安装
 
@@ -26,7 +26,7 @@ npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -
 
 ## 已验收输出示例
 
-以下图片是用户选择性导出的已验收 chat-inline 面板 PNG。数据来自有明确日期的公开市场快照，不包含券商账户、private runtime 或私人持仓信息；它们是研究快照，不是实时行情或交易指令。
+以下图片是用户选择性导出的已验收 standalone Board PNG。数据来自有明确日期的公开市场快照，不包含券商账户、private runtime 或私人持仓信息；它们是研究快照，不是实时行情或交易指令。
 
 ### 宏观环境面板
 
@@ -40,7 +40,7 @@ npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -
 
 Price Action 面板把观察与行动分开，同时展示周期与数据来源、当前结构、条件路径、关键位、失效条件、分段执行和股票自身事件。
 
-交互式 chat-inline HTML 仍是主要视觉产物；只有用户明确选择导出时才保存 PNG。TradingView attribution 和 Apache-2.0 许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
+自包含的 standalone HTML 是唯一主要视觉产物，并与 canonical snapshot 和 manifest 一起保存，便于事件后重新打开和更新。只有用户明确选择导出时才保存 PNG。TradingView attribution 和 Apache-2.0 许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ## 能力与数据来源
 
@@ -75,10 +75,10 @@ Price Action 面板把观察与行动分开，同时展示周期与数据来源�
 | 找不到 Skill | 确认仓库可访问，并检查安装输出是否只列出 `trading-research-system`。 |
 | 新任务没有个人数据 | 这是预期行为；首次运行保持空白，直到用户明确初始化 private runtime。 |
 | 券商或宏观数据不可用 | 单独授权对应的可选只读来源；安装 Skill 不会授予 connector 权限。 |
-| 无法导出选中的 inline panel | 用户选择性 PNG 导出需要 Chrome/Chromium；chat-inline HTML 仍是主产物。 |
+| 无法导出选中的 Board | 用户选择性 PNG 导出需要 Chrome/Chromium；standalone HTML 仍是主产物。 |
 
 详细文档：[Skill 契约](skills/trading-research-system/SKILL.md)、
-[交付契约](docs/adr/0009-research-result-delivery-contract.md)、
+[standalone 交付决策](docs/adr/0011-standalone-board-only-delivery.md)、
 [0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md)、
 [MVP Runbook](docs/MVP_RUNBOOK.md) 和
 [分发计划](docs/DISTRIBUTION_AND_README_PLAN.md)。

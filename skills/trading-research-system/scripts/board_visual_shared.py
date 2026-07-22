@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small styling and serialization helpers shared by chat visual adapters."""
+"""Small styling and serialization helpers shared by Board visual adapters."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def _base_css(root: str) -> str:
 
 def _root_id(adapter: str, value: Mapping[str, Any]) -> str:
     encoded = json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode()
-    return f"dailytrades-{adapter}-inline-{hashlib.sha256(encoded).hexdigest()[:10]}"
+    return f"dailytrades-{adapter}-board-{hashlib.sha256(encoded).hexdigest()[:10]}"
 
 
 def _script_json(value: Any) -> str:

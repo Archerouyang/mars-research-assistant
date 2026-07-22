@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted for Trading Research System 0.2.0.
+Accepted for Trading Research System 0.2.0. The inline-delivery portion was
+superseded by ADR 0011 in 0.4.0.
 
 ## Context
 

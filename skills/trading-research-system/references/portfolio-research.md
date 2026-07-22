@@ -8,14 +8,15 @@ industry, product, broker, currency, cash/collateral, leverage, path dependency,
 and stress scenarios. Disclose user exclusions while omitting them from the
 requested calculation.
 
-The inline view should lead with numeric concentration and product-risk visuals.
+The standalone Board should lead with numeric concentration and product-risk visuals.
 Text explains the decision and constraints after the exposure is inspectable.
 Never expose account identifiers or raw broker rows.
 
-## Frozen Chat-Inline Contract
+## Frozen Standalone Board Contract
 
-The user accepted and froze the Portfolio Risk chat-inline structure on
-2026-07-20. Preserve this information architecture and interaction order:
+The user accepted and froze the Portfolio Risk structure on 2026-07-20, then
+selected standalone-only delivery on 2026-07-22. Preserve this information
+architecture and interaction order in the self-contained Board:
 
 1. summary strip: capital context, cash buffer, delta-equivalent directional
    exposure, and worst standardized stress;

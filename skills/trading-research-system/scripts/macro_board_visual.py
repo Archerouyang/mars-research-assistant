@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Macro chat visual adapter."""
+"""Macro Board visual adapter."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from html import escape
 from typing import Any, Mapping
 
 from artifact_packet import build_artifact_packet
-from chat_visual_contract import ChatVisualError, exact_fields
-from chat_visual_shared import (
+from board_visual_contract import BoardVisualError, exact_fields
+from board_visual_shared import (
     _base_css,
     _num,
     _public_fixture_attr,
@@ -27,7 +27,7 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
     exact_fields(visual, {"adapter", "snapshot", "default_view"}, "visual_fields_invalid")
     snapshot = visual.get("snapshot")
     if not isinstance(snapshot, Mapping) or snapshot.get("board") != BOARD:
-        raise ChatVisualError("visual_snapshot_invalid")
+        raise BoardVisualError("visual_snapshot_invalid")
     normalized = copy.deepcopy(dict(visual))
     normalized["snapshot"] = copy.deepcopy(dict(snapshot))
     normalized["default_view"] = str(normalized.get("default_view") or "Overview")
@@ -107,7 +107,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
         for index, row in enumerate(payload.get("scenarios", []), start=1)
     )
     data = _script_json({"trend_series": trends})
-    html = f"""<div id="{root}" class="dt-inline"{_public_fixture_attr(snapshot.get('privacy'))}>
+    html = f"""<div id="{root}" class="dt-board"{_public_fixture_attr(snapshot.get('privacy'))}>
   <style>{_base_css(root)}
     #{root} .decision-note{{padding:10px 12px;border-left:3px solid var(--viz-series-2);background:var(--muted)}}
     #{root} .macro-panel{{display:none;gap:12px}}

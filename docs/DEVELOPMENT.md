@@ -269,7 +269,7 @@ opt-in only: run it only after the user explicitly asks for a downloadable
 image. Export that accepted HTML fragment on demand:
 
 ```bash
-node scripts/export_inline_png.mjs \
+node scripts/export_board_png.mjs \
   --input /absolute/path/to/panel.html \
   --output /absolute/path/to/panel.png
 ```

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a compact Portfolio Risk chat panel from normalized snapshots.
+"""Build a compact Portfolio Risk Board payload from normalized snapshots.
 
 Inputs must already use the standard ``portfolio_snapshot.csv`` schema. This
 adapter never calls a broker and never performs order actions.

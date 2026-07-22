@@ -1,6 +1,6 @@
 # ResearchResult Contract
 
-Use this reference only when creating a stable chat delivery packet.
+Use this reference only when creating a stable research delivery packet.
 
 The model may research and reason freely. Before delivery, express the answer as
 one `ResearchResult` with:
@@ -30,14 +30,16 @@ Every key-evidence row requires an `evidence_type` (`fact`, `inference`,
 `as_of`. Any non-complete evidence requires a visible `data_gaps` row. The
 delivery Markdown preserves this classification and provenance.
 
-Run `scripts/research_result.py` when deterministic Markdown or inline HTML is
-needed. Macro, Instrument, and Portfolio visuals accept their existing canonical
-Board snapshot. Price Action accepts the existing OHLCV chart payload.
+Run `scripts/research_result.py` when deterministic Markdown or a standalone
+Board is needed. Macro and Instrument visuals accept their existing canonical
+Board snapshot, Portfolio accepts its normalized panel, and Price Action accepts
+the existing OHLCV chart payload.
 
-Inline output is a compact Codex-native HTML fragment modeled after the proven
-chat panels: a few decision-sensitive values, one dominant interactive visual,
-and only the controls or detail required for the decision. Never wrap the
-standalone canonical Board in an iframe.
+When `visual` is present, `DeliveryPacket.standalone_board` contains exactly one
+self-contained packet: `snapshot.canonical.json`, `research-brief.html`, and
+`artifact.manifest.json`. The HTML preserves the accepted purpose-specific view
+structure and includes its own tokens and component styles. It must not depend
+on Codex host CSS, wrap another page in an iframe, or emit `inline.html`.
 
 Do not invent fields to fill the contract. Use empty lists when a section has no
 decision-useful content and use `data_gaps` when required evidence is absent.

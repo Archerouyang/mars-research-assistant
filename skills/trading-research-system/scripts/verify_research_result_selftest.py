@@ -131,29 +131,30 @@ def main() -> int:
         and b"Synthetic fixture @ 2026-07-17T10:00:00Z" in first.markdown,
         "evidence provenance missing",
     )
-    require(first.inline_html is not None and b'data-view="trend"' in first.inline_html, "macro trend view missing")
-    require(b'data-view="current"' in first.inline_html, "macro current-state view missing")
-    require(b'data-view="events"' in first.inline_html, "macro event-watch view missing")
-    require(b"trend-chart" in first.inline_html, "macro trend chart missing")
-    require(b'class="bar-track"' not in first.inline_html, "macro raw-value bar chart must not be used")
-    require(b'class="macro-summary"' in first.inline_html, "macro summary strip missing")
-    require(b'class="scenario-flow"' in first.inline_html, "macro scenario flow missing")
-    require("情景（按冲击排序）".encode() in first.inline_html, "macro scenario comparison header missing")
-    require(b'class="scenario-card"' not in first.inline_html, "macro scenario cards must not be used")
-    require("演示数据，不可用于交易".encode() in first.inline_html, "public fixture is not visibly disclosed")
-    require("已验证".encode() in first.inline_html, "macro transmission status is not localized")
-    require(b'class="liquidity-note"' in first.inline_html, "macro liquidity background missing")
-    require("MAGS".encode() in first.inline_html and "小盘股".encode() in first.inline_html, "macro asset preference coverage missing")
-    require(b'class="event-row event-high"' in first.inline_html, "high-impact event emphasis missing")
+    require(first.standalone_board.html is not None and b'data-view="trend"' in first.standalone_board.html, "macro trend view missing")
+    require(b'data-view="current"' in first.standalone_board.html, "macro current-state view missing")
+    require(b'data-view="events"' in first.standalone_board.html, "macro event-watch view missing")
+    require(b"trend-chart" in first.standalone_board.html, "macro trend chart missing")
+    require(b'class="bar-track"' not in first.standalone_board.html, "macro raw-value bar chart must not be used")
+    require(b'class="macro-summary"' in first.standalone_board.html, "macro summary strip missing")
+    require(b'class="scenario-flow"' in first.standalone_board.html, "macro scenario flow missing")
+    require("情景（按冲击排序）".encode() in first.standalone_board.html, "macro scenario comparison header missing")
+    require(b'class="scenario-card"' not in first.standalone_board.html, "macro scenario cards must not be used")
+    require("演示数据，不可用于交易".encode() in first.standalone_board.html, "public fixture is not visibly disclosed")
+    require("已验证".encode() in first.standalone_board.html, "macro transmission status is not localized")
+    require(b'class="liquidity-note"' in first.standalone_board.html, "macro liquidity background missing")
+    require("MAGS".encode() in first.standalone_board.html and "小盘股".encode() in first.standalone_board.html, "macro asset preference coverage missing")
+    require(b'class="event-row event-high"' in first.standalone_board.html, "high-impact event emphasis missing")
     for label in ("2Y", "10Y", "30Y", "CPI", "PPI", "NDX/RUT", "VXN"):
-        require(label.encode() in first.inline_html, f"macro required observation missing: {label}")
-    require("下周事件".encode() in first.inline_html, "macro next-week linkage missing")
-    require("高利率下的指数分化".encode() in first.inline_html, "macro base scenario missing")
-    require(first.inline_html.lstrip().startswith(b'<div id="dailytrades-macro-inline-'), "inline output is not a native fragment")
-    require(b'data-public-fixture="true"' in first.inline_html, "public fixture marker missing")
-    require(b"<iframe" not in first.inline_html.lower(), "inline output must not wrap a standalone board")
-    require(b"<html" not in first.inline_html.lower(), "standalone html leaked into inline output")
-    require(len(first.inline_html) < 100_000, "macro inline output is too large")
+        require(label.encode() in first.standalone_board.html, f"macro required observation missing: {label}")
+    require("下周事件".encode() in first.standalone_board.html, "macro next-week linkage missing")
+    require("高利率下的指数分化".encode() in first.standalone_board.html, "macro base scenario missing")
+    require(first.standalone_board is not None, "macro standalone Board missing")
+    require(first.standalone_board.html.lstrip().lower().startswith(b"<!doctype html>"), "macro output is not standalone HTML")
+    require(b'dailytrades-macro-board-' in first.standalone_board.html, "macro Board identity missing")
+    require(b'data-public-fixture="true"' in first.standalone_board.html, "public fixture marker missing")
+    require(b"<iframe" not in first.standalone_board.html.lower(), "standalone Board must not wrap another page")
+    require(b"<html" in first.standalone_board.html.lower(), "standalone document shell missing")
     macro_gap = result(
         "macro",
         {"adapter": "macro", "snapshot": load("macro-regime-partial.json"), "default_view": "Overview"},
@@ -166,9 +167,9 @@ def main() -> int:
     require("## 数据缺口".encode() in macro_gap_packet.markdown, "macro gap is not visible in Markdown")
     require(macro_gap_packet.diagnostics == ("data_gap:partial:Macro breadth",), "safe diagnostics missing")
     require(
-        macro_gap_packet.inline_html is not None
-        and "证据 4/6".encode() in macro_gap_packet.inline_html
-        and "待核验".encode() in macro_gap_packet.inline_html,
+        macro_gap_packet.standalone_board.html is not None
+        and "证据 4/6".encode() in macro_gap_packet.standalone_board.html
+        and "待核验".encode() in macro_gap_packet.standalone_board.html,
         "macro degraded state is hidden",
     )
     wrong_adapter = result(
@@ -292,7 +293,7 @@ def main() -> int:
     inverse_packet = build_delivery_packet(
         result("portfolio", {"adapter": "portfolio", "panel": inverse_panel})
     )
-    inverse_html = inverse_packet.inline_html or b""
+    inverse_html = inverse_packet.standalone_board.html or b""
     require(b"--risk-width:-" not in inverse_html, "inverse ETF produced a negative bar width")
     require(b"Net -$300" in inverse_html, "portfolio summary lost inverse net delta")
     require(
@@ -315,34 +316,34 @@ def main() -> int:
         "leveraged product underlying mapping missing",
     )
     portfolio_packet = build_delivery_packet(portfolio)
-    require(portfolio_packet.inline_html is not None and b'data-view="symbol"' in portfolio_packet.inline_html, "portfolio inline adapter missing")
-    require(b"<iframe" not in portfolio_packet.inline_html.lower(), "portfolio inline output is not native")
+    require(portfolio_packet.standalone_board is not None and b'data-view="symbol"' in portfolio_packet.standalone_board.html, "portfolio standalone Board missing")
+    require(b"<iframe" not in portfolio_packet.standalone_board.html.lower(), "portfolio Board wrapped another page")
     for anchor in (b"portfolio-summary", b"portfolio-overview", b"dimension-panel", b"fundamentals-panel", b"risk-ledger-row"):
-        require(anchor in portfolio_packet.inline_html, f"portfolio prototype anchor missing: {anchor.decode()}")
+        require(anchor in portfolio_packet.standalone_board.html, f"portfolio prototype anchor missing: {anchor.decode()}")
     for expected in ("每日杠杆 ETF", "已对账 1/1", "用户排除 0", "历史 Forward P/E 估算", "基本面", "毛利率", "未平仓空头 / 流通股", "当日卖空成交占比", "P/C 成交量", "IV30", "HV20", "隐含30日区间"):
-        require(expected.encode() in portfolio_packet.inline_html, f"portfolio requirement missing: {expected}")
-    require(fifth_symbol.encode() in portfolio_packet.inline_html, "portfolio overview truncated the fifth underlying")
-    require(b'data-fundamental-card="0"' in portfolio_packet.inline_html, "portfolio fundamentals must be pre-rendered")
-    require(b'data-fundamental-view="positioning"' in portfolio_packet.inline_html, "portfolio positioning subview missing")
-    require(b'data-fundamental-pane="volatility"' in portfolio_packet.inline_html, "portfolio volatility subview missing")
-    require(b'class="stress-panel"' in portfolio_packet.inline_html, "portfolio stress must use a dedicated decision view")
+        require(expected.encode() in portfolio_packet.standalone_board.html, f"portfolio requirement missing: {expected}")
+    require(fifth_symbol.encode() in portfolio_packet.standalone_board.html, "portfolio overview truncated the fifth underlying")
+    require(b'data-fundamental-card="0"' in portfolio_packet.standalone_board.html, "portfolio fundamentals must be pre-rendered")
+    require(b'data-fundamental-view="positioning"' in portfolio_packet.standalone_board.html, "portfolio positioning subview missing")
+    require(b'data-fundamental-pane="volatility"' in portfolio_packet.standalone_board.html, "portfolio volatility subview missing")
+    require(b'class="stress-panel"' in portfolio_packet.standalone_board.html, "portfolio stress must use a dedicated decision view")
     for expected in ("估算影响", "资本冲击", "计算假设", "不是价格预测"):
-        require(expected.encode() in portfolio_packet.inline_html, f"portfolio stress meaning missing: {expected}")
+        require(expected.encode() in portfolio_packet.standalone_board.html, f"portfolio stress meaning missing: {expected}")
     top_view_positions = [
-        portfolio_packet.inline_html.find(f'data-view="{view}"'.encode())
+        portfolio_packet.standalone_board.html.find(f'data-view="{view}"'.encode())
         for view in ("overview", "symbol", "fundamentals", "theme", "product", "broker", "stress")
     ]
     require(all(position >= 0 for position in top_view_positions), "portfolio frozen top-level view missing")
     require(top_view_positions == sorted(top_view_positions), "portfolio frozen top-level view order changed")
     fundamental_view_positions = [
-        portfolio_packet.inline_html.find(f'data-fundamental-view="{view}"'.encode())
+        portfolio_packet.standalone_board.html.find(f'data-fundamental-view="{view}"'.encode())
         for view in ("valuation", "earnings", "positioning", "volatility")
     ]
     require(all(position >= 0 for position in fundamental_view_positions), "portfolio frozen fundamental view missing")
     require(fundamental_view_positions == sorted(fundamental_view_positions), "portfolio frozen fundamental view order changed")
-    require(b'--dt-warning:' in portfolio_packet.inline_html, "portfolio component color fallbacks missing")
-    require(b"drawFundamental" not in portfolio_packet.inline_html, "portfolio fundamentals leaked client-side rendering")
-    portfolio_script = portfolio_packet.inline_html.split(b"<script>", 1)[1].split(b"</script>", 1)[0]
+    require(b'--dt-warning:' in portfolio_packet.standalone_board.html, "portfolio component color fallbacks missing")
+    require(b"drawFundamental" not in portfolio_packet.standalone_board.html, "portfolio fundamentals leaked client-side rendering")
+    portfolio_script = portfolio_packet.standalone_board.html.split(b"<script>", 1)[1].split(b"</script>", 1)[0]
     require(len(portfolio_script) < 12_000, "portfolio client script exceeds the document.write-safe budget")
 
     instrument = result(
@@ -350,25 +351,24 @@ def main() -> int:
         {"adapter": "instrument", "snapshot": load("instrument-research-complete.json"), "default_view": "Overview"},
     )
     instrument_packet = build_delivery_packet(instrument)
-    require(instrument_packet.inline_html is not None and b'data-view="price"' in instrument_packet.inline_html, "instrument inline adapter missing")
-    require(b"<iframe" not in instrument_packet.inline_html.lower(), "instrument inline output is not native")
+    require(instrument_packet.standalone_board is not None and b'data-view="price"' in instrument_packet.standalone_board.html, "instrument standalone Board missing")
+    require(b"<iframe" not in instrument_packet.standalone_board.html.lower(), "instrument Board wrapped another page")
 
     pa = result(
         "price_action",
         {"adapter": "price_action", "payload": load("chart-ohlcv-qqq-sample.json"), "title": "QQQ PA Scenario Board"},
     )
     pa_packet = build_delivery_packet(pa)
-    require(pa_packet.inline_html is not None and b"pa-chart" in pa_packet.inline_html, "price action inline adapter missing")
-    require(b"<iframe" not in pa_packet.inline_html.lower(), "price action inline output is not native")
-    require("转强".encode() in pa_packet.inline_html and "分段建仓".encode() not in pa_packet.inline_html, "price action controls are not localized or optional plan leaked")
-    require(len(pa_packet.inline_html) < 100_000, "price action inline output is too large")
-    require(b"204.5" not in pa_packet.inline_html and b"197.5" not in pa_packet.inline_html, "prototype price leaked into PA")
-    controls_at = pa_packet.inline_html.find(b'class="viz-controls"')
-    scenario_copy_at = pa_packet.inline_html.find(b'class="scenario-detail')
-    chart_at = pa_packet.inline_html.find(b'class="pa-chart"')
+    require(pa_packet.standalone_board is not None and b"pa-chart" in pa_packet.standalone_board.html, "price action standalone Board missing")
+    require(b"<iframe" not in pa_packet.standalone_board.html.lower(), "price action Board wrapped another page")
+    require("转强".encode() in pa_packet.standalone_board.html and "分段建仓".encode() not in pa_packet.standalone_board.html, "price action controls are not localized or optional plan leaked")
+    require(b"204.5" not in pa_packet.standalone_board.html and b"197.5" not in pa_packet.standalone_board.html, "prototype price leaked into PA")
+    controls_at = pa_packet.standalone_board.html.find(b'class="viz-controls"')
+    scenario_copy_at = pa_packet.standalone_board.html.find(b'class="scenario-detail')
+    chart_at = pa_packet.standalone_board.html.find(b'class="pa-chart"')
     require(0 <= controls_at < scenario_copy_at < chart_at, "frozen PA scenario hierarchy changed")
     for generic_copy in ("收复上方关键位。", "继续整理。", "复核失效。"):
-        require(generic_copy.encode() not in pa_packet.inline_html, "generic PA scenario copy was invented")
+        require(generic_copy.encode() not in pa_packet.standalone_board.html, "generic PA scenario copy was invented")
 
     missing_pa_context = load("chart-ohlcv-qqq-sample.json")
     missing_pa_context.pop("ticker")
@@ -418,7 +418,7 @@ def main() -> int:
         "price_action",
         {"adapter": "price_action", "payload": pa_alt_payload, "title": "QQQ 1H PA"},
     )
-    pa_alt_html = build_delivery_packet(pa_alt).inline_html or b""
+    pa_alt_html = build_delivery_packet(pa_alt).standalone_board.html or b""
     require("1H EMA20 / 50".encode() in pa_alt_html, "primary EMA label is hard-coded")
     require("1H ATR14".encode() in pa_alt_html, "primary ATR label is hard-coded")
     require(b">2.5<" in pa_alt_html, "primary ATR value was dropped by the adapter")
@@ -446,13 +446,12 @@ def main() -> int:
         "price_action",
         {"adapter": "price_action", "payload": pa_full_payload, "title": "QQQ Complete PA Template"},
     )
-    pa_full_html = build_delivery_packet(pa_full).inline_html or b""
+    pa_full_html = build_delivery_packet(pa_full).standalone_board.html or b""
     for anchor in (b"metric-strip", b"scenario-detail", b"pa-chart", b"level-ladder", b"entry-plan", b"event-list", b"data-notes"):
         require(anchor in pa_full_html, f"frozen price action anchor missing: {anchor.decode()}")
     for expected in ("4H", "1D / 1H", "结构失效", "试仓", "取消"):
         require(expected.encode() in pa_full_html, f"price action requirement missing: {expected}")
     require("20Y美债".encode() not in pa_full_html, "macro liquidity event leaked into price action template")
-    require(len(pa_full_html) < 100_000, "complete price action inline output is too large")
 
     gap = result("report", None)
     gap["data_gaps"] = [{"label": "Primary source", "reason": "Unavailable", "status": "partial"}]

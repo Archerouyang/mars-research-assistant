@@ -5,13 +5,14 @@ details remain in `docs/PROJECT_LOG.md` and the 1.0 acceptance records.
 
 ## Product Direction
 
-DailyTrades is a high-freedom trading-research Skill with one stable chat
+DailyTrades is a high-freedom trading-research Skill with one stable
 delivery boundary:
 
 `Validated ResearchResult -> DeliveryPacket`
 
 The model owns research judgment. Deterministic code owns safety, provenance,
-privacy, data-gap handling, concise Markdown, and optional chat-inline HTML.
+privacy, data-gap handling, concise Markdown, and an optional self-contained
+standalone Board.
 Macro, Instrument, Portfolio, and Price Action keep purpose-specific visual
 adapters behind that shared boundary.
 
@@ -46,7 +47,7 @@ four deep module owners:
 
 - Broker-Live Data View owns known product mapping and fails closed for unknown
   look-through metadata;
-- four purpose-specific chat visual adapters own their payload and rendering
+- four purpose-specific Board visual adapters own their payload and rendering
   implementation behind the shared delivery seam;
 - Private Runtime owns layout, preparation, health expectations, and controlled
   writes;
@@ -56,22 +57,32 @@ four deep module owners:
 The decision is recorded in
 [`ADR 0010`](adr/0010-deep-module-ownership-for-0.3.0.md). Frozen panel
 structures, read-only broker behavior, private-runtime safety, ADR 0008, and ADR
-0009 remain unchanged.
+0009 remained unchanged in 0.3.0. ADR 0011 later superseded the inline-delivery
+portion for 0.4.0.
+
+## 0.4.0 Standalone Delivery Contract
+
+Version 0.4.0 removes the parallel Codex-inline delivery surface. A visual
+`ResearchResult` produces one `standalone_board` packet containing canonical
+snapshot bytes, self-contained HTML, and a hash-linked manifest. Macro,
+Instrument, Portfolio, and Price Action preserve their accepted view structures
+behind purpose-specific Board adapters. The decision is recorded in
+[`ADR 0011`](adr/0011-standalone-board-only-delivery.md).
 
 ## Current Status
 
 | Area | Status | Acceptance |
 | --- | --- | --- |
 | Broker-Live product knowledge | implemented | focused known/unknown and leveraged-product self-test |
-| Purpose-specific chat visual adapters | implemented | four frozen reference fragments remain byte-identical |
+| Purpose-specific Board visual adapters | implemented | four frozen view structures render in standalone HTML |
 | Private Runtime ownership | implemented | temporary-runtime idempotence, health, and data-preservation self-test |
 | Artifact Packet facade | implemented | three Board reference packets and immutable writes remain stable |
 | ResearchResult delivery seam | implemented | focused self-test and deterministic output |
 | ArtifactPacket compatibility | retained | focused compatibility self-test |
 | Bayesian decision support | implemented | Skill and ResearchResult contract name prior, evidence update, posterior decision, and next check |
-| Macro inline panel | user accepted | manual inline inspection with real data |
-| Price Action inline panel | user accepted | manual inline inspection with real data |
-| Portfolio Risk inline panel | user accepted | manual inline inspection with authorized read-only data |
+| Macro standalone Board | user accepted structure | direct-open inspection with real data |
+| Price Action standalone Board | user accepted structure | direct-open inspection with real data |
+| Portfolio Risk standalone Board | user accepted structure | direct-open inspection with authorized read-only data |
 | Optional PNG export | user accepted | explicit export and visual inspection |
 | Legacy code, cache, database, fixture, and test cleanup | verified candidate | cleanup ledger and repository scan passed |
 | Portable Skill distribution | verified candidate | Skill gate and isolated install smoke passed |
@@ -79,7 +90,7 @@ structures, read-only broker behavior, private-runtime safety, ADR 0008, and ADR
 
 ## Next Release Steps
 
-1. Present the verified release candidate and actual inline artifacts for user
+1. Present the verified release candidate and actual standalone Boards for user
    acceptance.
 2. Apply only acceptance feedback or focused safety fixes.
 3. Integrate or publish only after explicit approval.

@@ -8,7 +8,7 @@ decision process. It does not try to predict the next market move: it updates a
 prior with new evidence, compares conditional scenarios, and identifies the
 next observation that would change the decision.
 
-Version: `0.3.0`
+Version: `0.4.0`
 
 ## Install in 30 Seconds
 
@@ -35,8 +35,8 @@ history.
 
 ## Accepted Output Examples
 
-These screenshots are user-selected PNG exports of accepted chat-inline
-panels. They use dated public market data and contain no broker account,
+These screenshots are user-selected PNG exports of accepted standalone Boards.
+They use dated public market data and contain no broker account,
 private runtime, or private portfolio information. They are research snapshots,
 not live quotes or trade instructions.
 
@@ -56,8 +56,10 @@ The Price Action panel separates observation from action: timeframe and data
 provenance, current structure, conditional paths, key levels, invalidation,
 staged execution, and stock-specific event checks remain visible together.
 
-Interactive chat-inline HTML remains the primary visual artifact. PNG is saved
-only when the user explicitly selects a panel for export. See
+Self-contained standalone HTML is the only primary visual artifact. Each Board
+is saved with its canonical snapshot and manifest so it can be reopened and
+updated after an event. PNG is saved only when the user explicitly selects a
+Board for export. See
 [third-party notices](THIRD_PARTY_NOTICES.md) for TradingView attribution and
 Apache-2.0 licensing.
 
@@ -101,10 +103,10 @@ submits real orders.
 | Skill is not discovered | Confirm the repository is reachable and the install output names exactly `trading-research-system`. |
 | A new task starts without personal data | Expected: first run is blank until the user explicitly initializes a private runtime. |
 | Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
-| A selected inline panel cannot be exported | User-selected PNG export requires Chrome/Chromium; chat-inline HTML remains the primary artifact. |
+| A selected Board cannot be exported | User-selected PNG export requires Chrome/Chromium; the standalone HTML remains the primary artifact. |
 
 Detailed documents: [Skill contract](skills/trading-research-system/SKILL.md),
-[delivery contract](docs/adr/0009-research-result-delivery-contract.md),
+[standalone delivery decision](docs/adr/0011-standalone-board-only-delivery.md),
 [0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md),
 [MVP runbook](docs/MVP_RUNBOOK.md), and
 [distribution plan](docs/DISTRIBUTION_AND_README_PLAN.md).
