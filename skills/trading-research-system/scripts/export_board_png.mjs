@@ -126,7 +126,7 @@ function wrapFragment(fragment, width) {
   main { width: ${width}px; padding: 28px 34px 34px; }
   h3 { margin: 7px 0 0; font-size: 15px; line-height: 1.35; }
   button { font: inherit; }
-  .dt-inline { width: 100%; }
+  .dt-board { width: 100%; }
   .viz-row, .viz-controls { display: flex; flex-wrap: wrap; align-items: center; }
   .viz-controls { gap: 7px; }
   .viz-badge {

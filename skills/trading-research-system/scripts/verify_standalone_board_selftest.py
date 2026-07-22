@@ -65,6 +65,7 @@ def main() -> int:
     assert b"<html" in html.lower() and b"</html>" in html.lower(), "document shell missing"
     assert b"--foreground:" in html, "host-independent design tokens missing"
     assert b".btn{" in html and b".card{" in html, "host component styles missing"
+    assert b"connect-src 'none'" in html, "offline network boundary missing"
     assert b'data-view="trend"' in html, "accepted visual views changed"
     assert b"<iframe" not in html.lower(), "standalone board must not wrap another page"
 

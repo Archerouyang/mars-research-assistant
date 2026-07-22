@@ -61,6 +61,7 @@ def _document(adapter: str, fragment: bytes) -> bytes:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'">
   <title>{escape(title)}</title>
   <style>
     :root{{--background:#f7f8fa;--foreground:#17202a;--card:#fff;--card-foreground:#17202a;--muted:#eef1f4;--muted-foreground:#66717d;--border:#dce2e8;--primary:#1769aa;--primary-foreground:#fff;--destructive:#b43b32;--warning:#9a6700;--dt-warning:#9a6700;--viz-series-1:#1769aa;--viz-series-2:#9a6700;--viz-series-3:#6f42c1;--viz-series-4:#2f855a;color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}}
