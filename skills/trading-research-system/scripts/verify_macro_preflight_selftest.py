@@ -241,6 +241,24 @@ def complete_observations() -> list[dict[str, object]]:
             "retrieval_method": source_route["method"],
             "raw_field_path": ["fixture", field["field_id"]],
         }
+        if field["unit"] == "event_set":
+            row["value"] = [
+                {
+                    "id": "synthetic-policy-event",
+                    "title": "Synthetic policy event",
+                    "time": "2026-07-24T12:00:00Z",
+                    "source_url": "https://example.test/events",
+                }
+            ]
+        elif field["unit"] == "policy_evidence_set":
+            row["value"] = [
+                {
+                    "id": "synthetic-policy-evidence",
+                    "title": "Synthetic policy evidence",
+                    "published_at": "2026-07-23T11:00:00Z",
+                    "source_url": "https://example.test/policy",
+                }
+            ]
         timing = field["timing"]
         if timing == "completed_market":
             row["market_reference_date"] = "2026-07-22"
@@ -392,6 +410,28 @@ def main() -> int:
         "invalid registry must be reported through the public blocker seam",
     )
 
+    cyclic_registry = copy.deepcopy(load_field_registry())
+    cyclic_ratio = next(
+        field
+        for field in cyclic_registry["fields"]
+        if field["field_id"] == "equity.ndx_rut_ratio"
+    )
+    cyclic_ratio["derivation_inputs"] = ["equity.ndx_rut_ratio"]
+    cyclic = run_macro_board(
+        config,
+        observations,
+        result,
+        registry=cyclic_registry,
+    )
+    require(
+        cyclic.kind == "blocker",
+        "a cyclic derivation graph must not escape the public Preflight seam",
+    )
+    require(
+        cyclic.blockers[0].field_id == "preflight.contract",
+        "cyclic registry errors must become deterministic contract blockers",
+    )
+
     wrong_contract_rows = copy.deepcopy(observations)
     rut_contract = next(
         row for row in wrong_contract_rows if row["field_id"] == "equity.rut_close"
@@ -527,6 +567,25 @@ def main() -> int:
         "missing normalized value must remain visible",
     )
 
+    unsafe_policy_rows = copy.deepcopy(observations)
+    policy = next(
+        row for row in unsafe_policy_rows if row["field_id"] == "policy.us_executive_actions"
+    )
+    policy["value"] = {"raw_provider_payload": {"account_id": "do-not-leak"}}
+    unsafe_policy = run_macro_board(config, unsafe_policy_rows, result)
+    require(
+        unsafe_policy.kind == "blocker",
+        "raw provider payloads must not satisfy policy evidence fields",
+    )
+    require(
+        any(
+            item.field_id == "policy.us_executive_actions"
+            and item.reason == "field_value_shape_invalid"
+            for item in unsafe_policy.blockers
+        ),
+        "policy evidence must be constrained to its public normalized schema",
+    )
+
     mismatched_market_dates = copy.deepcopy(observations)
     ndx = next(
         row for row in mismatched_market_dates if row["field_id"] == "equity.ndx_close"
@@ -588,6 +647,11 @@ def main() -> int:
         round(allowed.resolved_values["equity.ndx_rut_ratio.change_5d"], 9)
         == round((ratio_history[-1] / ratio_history[-6] - 1.0) * 100.0, 9),
         "NDX/RUT changes must be derived from aligned completed-session history",
+    )
+    require(
+        "events.seven_day_allowlist" not in allowed.resolved_values
+        and "policy.us_executive_actions" not in allowed.resolved_values,
+        "resolved values must not expose event or policy provider payloads",
     )
 
     ibkr_config = dict(config)

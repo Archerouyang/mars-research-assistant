@@ -86,6 +86,23 @@ DEFERRED_SURFACE_TERMS = frozenset(
         "vxn",
     }
 )
+NUMERIC_UNITS = frozenset(
+    {
+        "percent",
+        "usd",
+        "usd_billions",
+        "volatility_index_points",
+        "index_points",
+        "ratio",
+        "z_score",
+    }
+)
+SET_VALUE_SCHEMAS = {
+    "event_set": frozenset({"id", "title", "time", "source_url"}),
+    "policy_evidence_set": frozenset(
+        {"id", "title", "published_at", "source_url"}
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -148,6 +165,10 @@ def run_macro_board(
         fields = _registry_fields(field_registry)
         source_maps = _load_closed_source_maps()
         cutoff = _decision_cutoff(research_result)
+        ordered_field_ids = sorted(
+            fields,
+            key=lambda item: (_derivation_depth(item, fields), item),
+        )
     except (OSError, ValueError, TypeError) as error:
         blocker = FieldBlocker(
             field_id="preflight.contract",
@@ -166,10 +187,6 @@ def run_macro_board(
     blockers: list[FieldBlocker] = []
     available_ids: set[str] = set()
 
-    ordered_field_ids = sorted(
-        fields,
-        key=lambda item: (_derivation_depth(item, fields), item),
-    )
     for field_id in ordered_field_ids:
         field = fields[field_id]
         if field.get("derivation_inputs"):
@@ -440,6 +457,9 @@ def _validate_observation(
         return (str(status), str(row.get("diagnostic_ref") or "field_unavailable"), "")
     if "value" not in row or row.get("value") is None:
         return ("missing", "field_value_missing", "")
+    value_error = _validate_value_shape(row.get("value"), field)
+    if value_error is not None:
+        return ("source_error", value_error, "")
     if row.get("unit") != field["unit"]:
         return ("conflicted", "field_unit_mismatch", "")
     for key in ("data_as_of", "source_id", "retrieval_method"):
@@ -502,6 +522,34 @@ def _validate_observation(
         history_error = _validate_history(row)
         if history_error is not None:
             return history_error
+    return None
+
+
+def _validate_value_shape(value: object, field: Mapping[str, Any]) -> str | None:
+    """Accept only bounded normalized values, never provider payload objects."""
+
+    unit = field.get("unit")
+    if unit in NUMERIC_UNITS:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return "field_value_shape_invalid"
+        if not math.isfinite(float(value)):
+            return "field_value_not_finite"
+        return None
+    allowed_item_keys = SET_VALUE_SCHEMAS.get(unit)
+    if allowed_item_keys is None or not isinstance(value, list):
+        return "field_value_shape_invalid"
+    for item in value:
+        if not isinstance(item, Mapping) or set(item) != allowed_item_keys:
+            return "field_value_shape_invalid"
+        if not all(isinstance(item[key], str) and item[key].strip() for key in allowed_item_keys):
+            return "field_value_shape_invalid"
+        time_key = "time" if unit == "event_set" else "published_at"
+        try:
+            _parse_timestamp(item[time_key], f"{unit}_{time_key}")
+        except ValueError:
+            return "field_value_shape_invalid"
+        if not item["source_url"].startswith("https://"):
+            return "field_value_shape_invalid"
     return None
 
 
@@ -582,9 +630,13 @@ def _derive_values(
     rows_by_id: Mapping[str, Mapping[str, Any]],
 ) -> tuple[dict[str, Any], tuple[FieldBlocker, ...]]:
     values = {
-        field_id: row["value"]
+        field_id: float(row["value"])
         for field_id, row in rows_by_id.items()
-        if field_id in fields and not fields[field_id].get("derivation_inputs")
+        if (
+            field_id in fields
+            and not fields[field_id].get("derivation_inputs")
+            and fields[field_id].get("unit") in NUMERIC_UNITS
+        )
     }
     histories: dict[str, list[tuple[date, float]]] = {}
     for field_id in ("equity.ndx_close", "equity.rut_close"):
