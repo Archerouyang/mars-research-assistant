@@ -19,13 +19,25 @@ UUP, oil ETFs, GLD, generic P/E, or another approximation. Reintroducing any
 of them requires a direct public source map and a synthetic golden case in a
 new field-contract revision.
 
+The configured broker is the only broker source for broker-dependent fields;
+the workflow never switches to the other broker. Generic `qualified_*` source
+labels are prohibited. RUT and VIX3M use their separately verified Cboe maps:
+the normalized record must match the map's exact endpoint, expected columns,
+and raw value path.
+
+Acquire raw fields only. Preflight derives HYG/LQD, VIX/VIX3M, NDX/RUT, its
+completed-session changes, and its 20-day normalization from validated values
+and aligned NDX/RUT history. It rejects any caller-supplied derived record.
+Completed-market rows must precede the timezone-aware decision cutoff and be no
+more than seven calendar days old; a Board is not an intraday view.
+
 The frozen 0.2 workflow below is historical context only. It cannot override
 the Mars 1.0 field contract.
 
 Separate actual data, forecasts, media context, and plan assumptions. Evaluate
 the transmission chain rather than listing headlines:
 
-`event or policy -> rates/liquidity/USD/credit/commodities -> industries and holdings -> plan consequence`
+`event or policy -> rates/liquidity/credit/volatility/breadth -> industries and holdings -> plan consequence`
 
 Use official sources for releases and policy facts, authorized macro/market
 sources for current values, and media only as leads. A forecast never replaces
@@ -33,26 +45,26 @@ an actual release.
 
 When the Longbridge CLI exposes `macrodata`, use it for supported indicator
 history, actuals, forecasts, and release metadata. Do not assume it supplies
-every market series: use U.S. Treasury data for the daily yield curve and Cboe
-data for VXN and RUT when those series are absent. A proxy such as UUP must be
-labelled as a proxy and must never be presented as DXY.
+every market series: use U.S. Treasury data for the daily yield curve and the
+field-specific Cboe maps for exact RUT and VIX3M. A field with neither the
+configured-broker route nor an approved direct map remains a blocker.
 
 For visuals, put decision-sensitive numbers and charts in the first viewport.
 Show at least the metrics that drive the stated posture, their `as_of`, and
-scenario confirmation. Missing values remain visible.
+scenario confirmation. A missing retained core value returns a blocker rather
+than a partial Board.
 
 The stable macro Board uses four compact views: `趋势`, `当前状态`,
 `下周事件`, and `情景`. Its minimum observation set is:
 
 - short and long rates: 2Y plus 10Y and/or 30Y;
 - inflation actuals: headline/core CPI and headline/core PPI when available;
-- cross-asset breadth and volatility: NDX/RUT and VXN;
-- the additional USD, credit, commodity, and liquidity readings that actually
-  drive the stated posture.
+- cross-asset breadth and volatility: NDX/RUT and VIX/VIX3M;
+- credit and liquidity readings that actually drive the stated posture.
 
 Machine states remain stable internally, but visible status labels and scenario
 descriptions use the response locale. Do not use a cross-unit bar chart as the
-primary Macro visual. NDX/RUT, VXN, DXY, and decision-sensitive rates must be
+primary Macro visual. NDX/RUT, VIX/VIX3M, and decision-sensitive rates must be
 shown as time series with visible direction and change over the selected
 window. Unless the user requests another horizon, use one month of aligned
 market sessions. The trend explanation must state the period change, important

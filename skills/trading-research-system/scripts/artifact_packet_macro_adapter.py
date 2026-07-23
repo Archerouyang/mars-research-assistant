@@ -58,7 +58,7 @@ MACRO_PAYLOAD_FIELDS = frozenset(
         "board", "chart_series", "decision", "evidence", "exposure_lens",
         "holdings_context", "modules", "payload_version", "posture", "question",
         "scenarios", "views", "trend_series", "event_watch",
-        "asset_preferences", "liquidity_background",
+        "asset_preferences", "liquidity_background", "preflight",
     }
 )
 
@@ -77,6 +77,7 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("payload_invalid")
     if payload.get("views") != MACRO_VIEWS:
         raise ArtifactPacketError("views_invalid")
+    _validate_preflight_binding_metadata(payload.get("preflight"))
     modules = payload.get("modules")
     if not isinstance(modules, list):
         raise ArtifactPacketError("modules_invalid")
@@ -222,6 +223,49 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("evidence_state_mismatch")
     if derived_state == "source_error" and "regime" in posture["label"].casefold():
         raise ArtifactPacketError("posture_derivation_invalid")
+
+
+def _validate_preflight_binding_metadata(value: Any) -> None:
+    """Validate the optional Macro Preflight marker without owning its policy."""
+
+    if value is None:
+        return
+    required = {
+        "field_contract_version",
+        "market_reference_date",
+        "validated_field_ids",
+        "chart_field_ids",
+        "trend_field_ids",
+    }
+    if not isinstance(value, Mapping) or set(value) != required:
+        raise ArtifactPacketError("preflight_binding_invalid")
+    if not _is_nonempty_string(value.get("field_contract_version")):
+        raise ArtifactPacketError("preflight_binding_invalid")
+    try:
+        datetime.fromisoformat(str(value["market_reference_date"]))
+    except ValueError as error:
+        raise ArtifactPacketError("preflight_binding_invalid") from error
+    field_ids = value.get("validated_field_ids")
+    if (
+        not isinstance(field_ids, list)
+        or not field_ids
+        or not all(_is_nonempty_string(field_id) for field_id in field_ids)
+        or len(field_ids) != len(set(field_ids))
+    ):
+        raise ArtifactPacketError("preflight_binding_invalid")
+    for key in ("chart_field_ids", "trend_field_ids"):
+        labels = value.get(key)
+        if (
+            not isinstance(labels, Mapping)
+            or not labels
+            or not all(
+                _is_nonempty_string(label)
+                and _is_nonempty_string(field_id)
+                and field_id in field_ids
+                for label, field_id in labels.items()
+            )
+        ):
+            raise ArtifactPacketError("preflight_binding_invalid")
 
 
 def _derive_macro_evidence_state(modules: Mapping[str, Mapping[str, Any]]) -> str:

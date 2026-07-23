@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field as dataclass_field
+from datetime import date, datetime, timedelta, timezone
 import json
+import math
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from artifact_packet_core import ArtifactPacketError
 from research_result import DeliveryPacket, ResearchResultError, build_delivery_packet
 
 
@@ -42,8 +44,15 @@ FIELD_RECORD_KEYS = frozenset(
         "lineage",
         "diagnostic_ref",
         "source_symbol",
+        "history",
+        "source_url",
+        "source_columns",
     }
 )
+COMPLETED_MARKET_MAX_AGE = timedelta(days=7)
+OFFICIAL_RELEASE_MAX_AGE = timedelta(days=45)
+EVENT_MAX_AGE = timedelta(days=1)
+POLICY_MAX_AGE = timedelta(hours=24)
 
 
 @dataclass(frozen=True)
@@ -63,6 +72,7 @@ class MacroRunOutcome:
     blockers: tuple[FieldBlocker, ...] = ()
     delivery_packet: DeliveryPacket | None = None
     attempted_brokers: tuple[str, ...] = ()
+    resolved_values: Mapping[str, Any] = dataclass_field(default_factory=dict)
 
 
 def load_field_registry(path: Path | None = None) -> dict[str, Any]:
@@ -100,8 +110,25 @@ def run_macro_board(
             ),
         )
 
-    field_registry = copy.deepcopy(dict(registry or load_field_registry()))
-    fields = _registry_fields(field_registry)
+    try:
+        field_registry = copy.deepcopy(dict(registry or load_field_registry()))
+        fields = _registry_fields(field_registry)
+        source_maps = _load_closed_source_maps()
+        cutoff = _decision_cutoff(research_result)
+    except (OSError, ValueError, TypeError) as error:
+        blocker = FieldBlocker(
+            field_id="preflight.contract",
+            decision_purpose="验证 Macro Board 的字段合同、来源合同和决策截止时间。",
+            attempted_routes=("macro_field_registry", "issue_75_source_contract"),
+            status="source_error",
+            reason=f"preflight_contract_invalid:{error}",
+        )
+        return MacroRunOutcome(
+            kind="blocker",
+            message=_render_blocker((blocker,)),
+            blockers=(blocker,),
+            attempted_brokers=(broker,),
+        )
     rows_by_id, duplicate_ids = _index_observations(observations)
     blockers: list[FieldBlocker] = []
     available_ids: set[str] = set()
@@ -112,6 +139,16 @@ def run_macro_board(
     )
     for field_id in ordered_field_ids:
         field = fields[field_id]
+        if field.get("derivation_inputs"):
+            if field_id in rows_by_id:
+                blockers.append(
+                    _blocker(
+                        field,
+                        "source_error",
+                        "derived_field_must_not_be_supplied",
+                    )
+                )
+            continue
         if field_id in duplicate_ids:
             blockers.append(_blocker(field, "conflicted", "duplicate_observation"))
             continue
@@ -119,7 +156,13 @@ def run_macro_board(
         if row is None:
             blockers.append(_blocker(field, "missing", "required_field_missing"))
             continue
-        reason = _validate_observation(row, field, available_ids, broker)
+        reason = _validate_observation(
+            row,
+            field,
+            broker,
+            cutoff,
+            source_maps,
+        )
         if reason is not None:
             status, code, proxy = reason
             blockers.append(_blocker(field, status, code, proxy))
@@ -130,6 +173,30 @@ def run_macro_board(
         blockers.extend(
             _common_market_date_blockers(fields, rows_by_id, available_ids)
         )
+
+    resolved_values: dict[str, Any] = {}
+    if not blockers:
+        resolved_values, derivation_blockers = _derive_values(fields, rows_by_id)
+        blockers.extend(derivation_blockers)
+
+    if not blockers:
+        binding_error = _validate_board_binding(
+            research_result,
+            fields,
+            rows_by_id,
+            available_ids,
+            resolved_values,
+        )
+        if binding_error is not None:
+            blockers.append(
+                FieldBlocker(
+                    field_id="delivery.research_result",
+                    decision_purpose="将 standalone Macro Board 绑定到本次已验证字段。",
+                    attempted_routes=("research_result_preflight_binding",),
+                    status="source_error",
+                    reason=binding_error,
+                )
+            )
 
     if blockers:
         ordered = tuple(sorted(blockers, key=lambda item: item.field_id))
@@ -142,7 +209,7 @@ def run_macro_board(
 
     try:
         packet = build_delivery_packet(research_result)
-    except ResearchResultError as error:
+    except (ArtifactPacketError, ResearchResultError) as error:
         blocker = FieldBlocker(
             field_id="delivery.research_result",
             decision_purpose="生成通过现有合同验证的 standalone Macro Board。",
@@ -175,6 +242,7 @@ def run_macro_board(
         message="Macro Preflight 已通过；使用最近共同完成收盘数据生成 standalone Board。",
         delivery_packet=packet,
         attempted_brokers=(broker,),
+        resolved_values=resolved_values,
     )
 
 
@@ -205,12 +273,59 @@ def _registry_fields(registry: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
             raise ValueError("macro_field_registry_invalid")
         if not isinstance(field["source_routes"], list) or not field["source_routes"]:
             raise ValueError("macro_field_registry_invalid")
+        if any(
+            isinstance(route, Mapping)
+            and isinstance(route.get("source_id"), str)
+            and route["source_id"].startswith("qualified_")
+            for route in field["source_routes"]
+        ):
+            raise ValueError("generic_source_route_forbidden")
         if field["timing"] not in freshness or not isinstance(
             freshness[field["timing"]], str
         ):
             raise ValueError("macro_field_registry_invalid")
         fields[field_id] = field
     return fields
+
+
+def _load_closed_source_maps(path: Path | None = None) -> dict[str, dict[str, Any]]:
+    contract_path = path or (
+        Path(__file__).resolve().parents[1]
+        / "references"
+        / "issue-75-completed-market-source-contracts.json"
+    )
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    if not isinstance(contract, Mapping) or contract.get("contract_result") != "complete":
+        raise ValueError("source_contract_not_complete")
+    rows = contract.get("field_maps")
+    if not isinstance(rows, list):
+        raise ValueError("source_contract_maps_invalid")
+    maps: dict[str, dict[str, Any]] = {}
+    for item in rows:
+        if not isinstance(item, Mapping):
+            raise ValueError("source_contract_map_invalid")
+        field_id = item.get("field_id")
+        paths = item.get("raw_field_paths")
+        if (
+            not isinstance(field_id, str)
+            or item.get("contract_status") != "closed"
+            or item.get("runtime_availability") != "requires_fresh_authorized_read"
+            or not isinstance(item.get("provider_id"), str)
+            or not isinstance(paths, Mapping)
+            or not _is_path(paths.get("value"))
+        ):
+            raise ValueError("source_contract_map_invalid")
+        maps[field_id] = copy.deepcopy(dict(item))
+    return maps
+
+
+def _decision_cutoff(research_result: Mapping[str, Any]) -> datetime:
+    if not isinstance(research_result, Mapping):
+        raise ValueError("research_result_invalid")
+    value = research_result.get("as_of")
+    if not isinstance(value, str):
+        raise ValueError("decision_cutoff_missing")
+    return _parse_timestamp(value, "decision_cutoff")
 
 
 def _derivation_depth(
@@ -261,10 +376,7 @@ def _common_market_date_blockers(
         for field_id in sorted(available_ids)
         if fields[field_id]["timing"] == "completed_market"
     ]
-    dates = {
-        str(rows_by_id[field_id]["market_reference_date"])
-        for field_id in market_fields
-    }
+    dates = {str(rows_by_id[field_id]["market_reference_date"]) for field_id in market_fields}
     if len(dates) <= 1:
         return ()
     return tuple(
@@ -280,8 +392,9 @@ def _common_market_date_blockers(
 def _validate_observation(
     row: Mapping[str, Any],
     field: Mapping[str, Any],
-    available_ids: set[str],
     configured_broker: str,
+    cutoff: datetime,
+    source_maps: Mapping[str, Mapping[str, Any]],
 ) -> tuple[str, str, str] | None:
     if set(row) - FIELD_RECORD_KEYS:
         return ("source_error", "normalized_field_shape_invalid", "")
@@ -300,9 +413,11 @@ def _validate_observation(
         if not isinstance(row.get(key), str) or not str(row[key]).strip():
             return ("source_error", f"{key}_missing", "")
     try:
-        datetime.fromisoformat(str(row["data_as_of"]).replace("Z", "+00:00"))
+        data_as_of = _parse_timestamp(str(row["data_as_of"]), "data_as_of")
     except ValueError:
         return ("source_error", "data_as_of_invalid", "")
+    if data_as_of > cutoff:
+        return ("source_error", "data_as_of_after_decision_cutoff", "")
     path = row.get("raw_field_path")
     if not isinstance(path, list) or not path or any(not isinstance(item, str) or not item for item in path):
         return ("source_error", "raw_field_path_missing", "")
@@ -319,6 +434,23 @@ def _validate_observation(
         source_allowed = False
     if not source_allowed:
         return ("unsupported", "source_route_not_allowed", "")
+    allowed_methods = {
+        item.get("method")
+        for item in field["source_routes"]
+        if isinstance(item, Mapping)
+        and (
+            item.get("source_id") == source_id
+            or (
+                item.get("source_id") == "configured_broker"
+                and source_id == configured_broker
+            )
+        )
+    }
+    if row.get("retrieval_method") not in allowed_methods:
+        return ("unsupported", "retrieval_method_not_allowed", "")
+    source_map = source_maps.get(str(field["field_id"]))
+    if source_map is not None and not _matches_source_map(row, source_map):
+        return ("source_error", "source_contract_provenance_invalid", "")
     timing_key = (
         "market_reference_date"
         if field["timing"] == "completed_market"
@@ -326,26 +458,268 @@ def _validate_observation(
     )
     if not isinstance(row.get(timing_key), str) or not str(row[timing_key]).strip():
         return ("source_error", f"{timing_key}_missing", "")
+    freshness_error = _validate_freshness(row, field, cutoff, data_as_of)
+    if freshness_error is not None:
+        return freshness_error
     symbol = row.get("source_symbol")
     forbidden = set(field.get("forbidden_substitutes") or ())
     if isinstance(symbol, str) and symbol.upper() in forbidden:
         return ("unsupported", "proxy_not_allowed", symbol.upper())
-    if field.get("change_windows"):
-        for window in field["change_windows"]:
-            if not isinstance(row.get(f"change_{window}d"), (int, float)):
-                return ("source_error", f"change_{window}d_missing", "")
-    inputs = tuple(field.get("derivation_inputs") or ())
-    if inputs:
-        lineage = row.get("lineage")
-        if (
-            not isinstance(lineage, Mapping)
-            or tuple(lineage.get("inputs") or ()) != inputs
-            or lineage.get("formula") != field.get("formula")
-        ):
-            return ("source_error", "derived_lineage_invalid", "")
-        if not set(inputs).issubset(available_ids):
-            return ("source_error", "derived_input_unavailable", "")
+    if field.get("history_required"):
+        history_error = _validate_history(row)
+        if history_error is not None:
+            return history_error
     return None
+
+
+def _matches_source_map(
+    row: Mapping[str, Any], source_map: Mapping[str, Any]
+) -> bool:
+    paths = source_map.get("raw_field_paths")
+    retrieval = source_map.get("retrieval")
+    normalization = source_map.get("normalization")
+    return (
+        row.get("source_id") == source_map.get("provider_id")
+        and isinstance(paths, Mapping)
+        and row.get("raw_field_path") == paths.get("value")
+        and isinstance(retrieval, Mapping)
+        and row.get("source_url") == retrieval.get("endpoint")
+        and isinstance(normalization, Mapping)
+        and row.get("source_columns") == normalization.get("required_columns")
+    )
+
+
+def _validate_freshness(
+    row: Mapping[str, Any],
+    field: Mapping[str, Any],
+    cutoff: datetime,
+    data_as_of: datetime,
+) -> tuple[str, str, str] | None:
+    timing = field["timing"]
+    age = cutoff - data_as_of
+    if timing == "completed_market":
+        try:
+            market_date = _parse_date(str(row["market_reference_date"]))
+        except ValueError:
+            return ("source_error", "market_reference_date_invalid", "")
+        if market_date >= cutoff.date():
+            return ("unsupported", "completed_close_not_proven", "")
+        if cutoff.date() - market_date > COMPLETED_MARKET_MAX_AGE:
+            return ("stale", "market_reference_date_stale", "")
+        return None
+    if timing == "official_release" and age > OFFICIAL_RELEASE_MAX_AGE:
+        return ("stale", "official_release_stale", "")
+    if timing == "event" and age > EVENT_MAX_AGE:
+        return ("stale", "event_metadata_stale", "")
+    if timing == "policy" and age > POLICY_MAX_AGE:
+        return ("stale", "policy_evidence_stale", "")
+    return None
+
+
+def _validate_history(
+    row: Mapping[str, Any],
+) -> tuple[str, str, str] | None:
+    history = row.get("history")
+    if not isinstance(history, list) or len(history) < 21:
+        return ("source_error", "history_window_insufficient", "")
+    parsed: list[tuple[date, float]] = []
+    for item in history:
+        if (
+            not isinstance(item, Mapping)
+            or not isinstance(item.get("date"), str)
+            or not isinstance(item.get("value"), (int, float))
+        ):
+            return ("source_error", "history_shape_invalid", "")
+        try:
+            history_date = _parse_date(item["date"])
+        except ValueError:
+            return ("source_error", "history_date_invalid", "")
+        parsed.append((history_date, float(item["value"])))
+    if any(left[0] >= right[0] for left, right in zip(parsed, parsed[1:])):
+        return ("source_error", "history_dates_not_strictly_increasing", "")
+    if parsed[-1][0].isoformat() != row.get("market_reference_date"):
+        return ("source_error", "history_latest_date_mismatch", "")
+    if not math.isclose(parsed[-1][1], float(row["value"]), rel_tol=0.0, abs_tol=1e-9):
+        return ("source_error", "history_latest_value_mismatch", "")
+    return None
+
+
+def _derive_values(
+    fields: Mapping[str, Mapping[str, Any]],
+    rows_by_id: Mapping[str, Mapping[str, Any]],
+) -> tuple[dict[str, Any], tuple[FieldBlocker, ...]]:
+    values = {
+        field_id: row["value"]
+        for field_id, row in rows_by_id.items()
+        if field_id in fields and not fields[field_id].get("derivation_inputs")
+    }
+    histories: dict[str, list[tuple[date, float]]] = {}
+    for field_id in ("equity.ndx_close", "equity.rut_close"):
+        row = rows_by_id[field_id]
+        histories[field_id] = [
+            (_parse_date(str(item["date"])), float(item["value"]))
+            for item in row["history"]
+        ]
+    blockers: list[FieldBlocker] = []
+    ratio_history: list[tuple[date, float]] = []
+    for field_id in sorted(fields, key=lambda item: (_derivation_depth(item, fields), item)):
+        field = fields[field_id]
+        inputs = tuple(field.get("derivation_inputs") or ())
+        if not inputs:
+            continue
+        if not set(inputs).issubset(values):
+            blockers.append(_blocker(field, "source_error", "derived_input_unavailable"))
+            continue
+        if field.get("formula") not in {
+            "credit.hyg_close / credit.lqd_close",
+            "volatility.vix_close / volatility.vix3m_close",
+            "equity.ndx_close / equity.rut_close",
+            "(ratio - mean_20d) / stddev_20d",
+        }:
+            blockers.append(_blocker(field, "source_error", "derived_formula_unsupported"))
+            continue
+        if field_id == "equity.ndx_rut_normalized_20d":
+            if len(ratio_history) < 20:
+                blockers.append(_blocker(field, "source_error", "derived_history_insufficient"))
+                continue
+            window = [item[1] for item in ratio_history[-20:]]
+            mean = sum(window) / len(window)
+            variance = sum((item - mean) ** 2 for item in window) / len(window)
+            if variance <= 0:
+                blockers.append(_blocker(field, "source_error", "derived_history_zero_variance"))
+                continue
+            values[field_id] = (window[-1] - mean) / math.sqrt(variance)
+            continue
+        if not all(isinstance(values[input_id], (int, float)) for input_id in inputs):
+            blockers.append(_blocker(field, "source_error", "derived_input_not_numeric"))
+            continue
+        denominator = float(values[inputs[1]])
+        if denominator == 0:
+            blockers.append(_blocker(field, "source_error", "derived_denominator_zero"))
+            continue
+        values[field_id] = float(values[inputs[0]]) / denominator
+        if field_id == "equity.ndx_rut_ratio":
+            ndx_history = histories["equity.ndx_close"]
+            rut_history = histories["equity.rut_close"]
+            if [item[0] for item in ndx_history] != [item[0] for item in rut_history]:
+                blockers.append(_blocker(field, "conflicted", "derived_history_dates_not_aligned"))
+                continue
+            if any(rut_value == 0 for _, rut_value in rut_history):
+                blockers.append(_blocker(field, "source_error", "derived_history_denominator_zero"))
+                continue
+            ratio_history = [
+                (ndx_date, ndx_value / rut_value)
+                for (ndx_date, ndx_value), (_, rut_value) in zip(ndx_history, rut_history)
+            ]
+    return values, tuple(blockers)
+
+
+def _validate_board_binding(
+    research_result: Mapping[str, Any],
+    fields: Mapping[str, Mapping[str, Any]],
+    rows_by_id: Mapping[str, Mapping[str, Any]],
+    available_ids: set[str],
+    resolved_values: Mapping[str, Any],
+) -> str | None:
+    visual = research_result.get("visual") if isinstance(research_result, Mapping) else None
+    snapshot = visual.get("snapshot") if isinstance(visual, Mapping) else None
+    payload = snapshot.get("payload") if isinstance(snapshot, Mapping) else None
+    binding = payload.get("preflight") if isinstance(payload, Mapping) else None
+    if not isinstance(binding, Mapping):
+        return "research_result_preflight_binding_missing"
+    required = {
+        "field_contract_version",
+        "market_reference_date",
+        "validated_field_ids",
+        "chart_field_ids",
+        "trend_field_ids",
+    }
+    if set(binding) != required or binding.get("field_contract_version") != "macro-v1":
+        return "research_result_preflight_binding_invalid"
+    payload_text = json.dumps(payload, ensure_ascii=False).casefold()
+    if any(
+        term in payload_text
+        for term in (
+            "dxy",
+            "brent",
+            "xau",
+            "forward 12m p/e",
+            "forward twelve-month p/e",
+            "vxn",
+            '"oil"',
+            '"gold"',
+        )
+    ):
+        return "research_result_deferred_field_present"
+    expected_ids = set(fields)
+    bound_ids = binding.get("validated_field_ids")
+    if (
+        not isinstance(bound_ids, list)
+        or len(bound_ids) != len(set(bound_ids))
+        or set(bound_ids) != expected_ids
+    ):
+        return "research_result_preflight_field_set_mismatch"
+    market_dates = {
+        str(rows_by_id[field_id]["market_reference_date"])
+        for field_id in available_ids
+        if fields[field_id]["timing"] == "completed_market"
+    }
+    if len(market_dates) != 1 or binding.get("market_reference_date") != next(iter(market_dates)):
+        return "research_result_preflight_market_date_mismatch"
+    for key, series_key in (("chart_field_ids", "chart_series"), ("trend_field_ids", "trend_series")):
+        labels = binding.get(key)
+        series = payload.get(series_key) if isinstance(payload, Mapping) else None
+        if not isinstance(labels, Mapping) or not isinstance(series, list):
+            return "research_result_preflight_series_binding_invalid"
+        by_label = {
+            item.get("label"): item
+            for item in series
+            if isinstance(item, Mapping) and isinstance(item.get("label"), str)
+        }
+        if set(labels) != set(by_label):
+            return "research_result_preflight_series_label_mismatch"
+        for label, field_id in labels.items():
+            value = resolved_values.get(field_id)
+            if not isinstance(field_id, str) or not isinstance(value, (int, float)):
+                return "research_result_preflight_series_field_invalid"
+            item = by_label[label]
+            actual = item.get("value") if series_key == "chart_series" else (
+                item.get("points")[-1].get("value")
+                if isinstance(item.get("points"), list) and item["points"]
+                and isinstance(item["points"][-1], Mapping)
+                else None
+            )
+            if not isinstance(actual, (int, float)) or not math.isclose(
+                float(actual), float(value), rel_tol=0.0, abs_tol=1e-9
+            ):
+                return "research_result_preflight_series_value_mismatch"
+    return None
+
+
+def _parse_timestamp(value: str, context: str) -> datetime:
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise ValueError(f"{context}_invalid") from error
+    if parsed.tzinfo is None:
+        raise ValueError(f"{context}_timezone_missing")
+    return parsed.astimezone(timezone.utc)
+
+
+def _parse_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as error:
+        raise ValueError("date_invalid") from error
+
+
+def _is_path(value: object) -> bool:
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(item, str) and item for item in value)
+    )
 
 
 def _blocker(
