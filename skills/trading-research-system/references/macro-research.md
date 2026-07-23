@@ -1,5 +1,27 @@
 # Macro Research
 
+## Mars 1.0 Field-First Gate
+
+When producing a Mars 1.0 Macro Board, run the canonical
+`macro_preflight.py` seam before rendering. The retained 1.0 core is rates,
+HYG/LQD credit, VIX/VIX3M, SPX/NDX/RUT relative strength, the separate reserve
+balances/TGA/ON RRP series, and approved event or U.S. executive-policy risk.
+
+Every retained core field must have an exact, fresh, semantically verified
+source and the completed-market fields must share one market-reference date. A
+missing, stale, unsupported, conflicted, or source-error core field returns one
+batched `Data Acquisition Blocker`; it does not produce a partial Board,
+placeholder, or proxy-backed result.
+
+DXY, ICE Brent settlement/contract/roll state, XAU/USD, and S&P 500 Forward
+12M P/E history are deferred from the 1.0 contract. Do not restore them with
+UUP, oil ETFs, GLD, generic P/E, or another approximation. Reintroducing any
+of them requires a direct public source map and a synthetic golden case in a
+new field-contract revision.
+
+The frozen 0.2 workflow below is historical context only. It cannot override
+the Mars 1.0 field contract.
+
 Separate actual data, forecasts, media context, and plan assumptions. Evaluate
 the transmission chain rather than listing headlines:
 
@@ -58,7 +80,7 @@ sentence, and no restatement across `trigger`, `confirmation`, `transmission`,
 and `response`. Prefer compact clauses over narrative paragraphs. Preserve
 necessary evidence and uncertainty; remove only repetition and filler.
 
-## Frozen Macro Data Workflow
+## Legacy Frozen Macro Data Workflow
 
 The user accepted and froze the following workflow on 2026-07-19 for the 0.2.0
 release:
