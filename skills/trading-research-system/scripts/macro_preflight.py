@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from artifact_packet_core import ArtifactPacketError
+from mars_macro_builder import build_mars_macro_research_result
+from mars_observation_adapter import ObservationAdapterError, normalize_mars_observation_run
 from research_result import DeliveryPacket, ResearchResultError, build_delivery_packet
 
 
@@ -46,7 +48,8 @@ FIELD_RECORD_KEYS = frozenset(
         "source_symbol",
         "history",
         "source_url",
-        "source_columns",
+    "source_columns",
+    "source_timing",
     }
 )
 COMPLETED_MARKET_MAX_AGE = timedelta(days=7)
@@ -148,12 +151,42 @@ def load_field_registry(path: Path | None = None) -> dict[str, Any]:
 
 def run_macro_board(
     config: Mapping[str, Any],
-    observations: Iterable[Mapping[str, Any]],
-    research_result: Mapping[str, Any],
+    source_payloads: Mapping[str, Any],
+    as_of: str,
     *,
     registry: Mapping[str, Any] | None = None,
 ) -> MacroRunOutcome:
-    """Return exactly one setup prompt, blocker, or existing Board packet."""
+    """Return one setup prompt, direct-source blocker, or canonical Board packet."""
+
+    broker = _configured_broker(config)
+    if broker is None:
+        return MacroRunOutcome(
+            kind="setup_required",
+            message=(
+                "需要先选择一个默认只读券商（Longbridge 或 IBKR）；"
+                "本次未读取持仓，也未生成 Macro Board。"
+            ),
+        )
+    try:
+        normalized_run = normalize_mars_observation_run(source_payloads, as_of)
+    except ObservationAdapterError as error:
+        return _observation_adapter_blocker(str(error), registry, broker)
+    return _run_normalized_macro_board(
+        config,
+        normalized_run.observations,
+        as_of,
+        registry=registry,
+    )
+
+
+def _run_normalized_macro_board(
+    config: Mapping[str, Any],
+    observations: Iterable[Mapping[str, Any]],
+    as_of: str,
+    *,
+    registry: Mapping[str, Any] | None = None,
+) -> MacroRunOutcome:
+    """Private seam: validate adapter-normalized fields then create the only Board."""
 
     broker = _configured_broker(config)
     if broker is None:
@@ -169,7 +202,7 @@ def run_macro_board(
         field_registry = copy.deepcopy(dict(registry or load_field_registry()))
         fields = _registry_fields(field_registry)
         source_maps = _load_closed_source_maps()
-        cutoff = _decision_cutoff(research_result)
+        cutoff = _parse_timestamp(as_of, "decision_cutoff")
         ordered_field_ids = sorted(
             fields,
             key=lambda item: (_derivation_depth(item, fields), item),
@@ -235,6 +268,12 @@ def run_macro_board(
         blockers.extend(derivation_blockers)
 
     if not blockers:
+        research_result = build_mars_macro_research_result(
+            rows_by_id,
+            resolved_values,
+            as_of=as_of,
+            field_ids=sorted(fields),
+        )
         binding_error = _validate_board_binding(
             research_result,
             fields,
@@ -312,6 +351,37 @@ def _configured_broker(config: Mapping[str, Any]) -> str | None:
     return str(broker)
 
 
+def _observation_adapter_blocker(
+    error: str,
+    registry: Mapping[str, Any] | None,
+    broker: str,
+) -> MacroRunOutcome:
+    """Expose source-normalization failures as the public blocker, never a Board."""
+
+    try:
+        fields = _registry_fields(copy.deepcopy(dict(registry or load_field_registry())))
+    except (OSError, ValueError, TypeError):
+        fields = {}
+    field_id = error.split(":", 1)[0]
+    field = fields.get(field_id)
+    if field is None:
+        blocker = FieldBlocker(
+            field_id="preflight.acquisition",
+            decision_purpose="验证直接来源、共同完成收盘和最新官方观测。",
+            attempted_routes=("mars_direct_observation_adapter",),
+            status="source_error",
+            reason=error,
+        )
+    else:
+        blocker = _blocker(field, "source_error", error)
+    return MacroRunOutcome(
+        kind="blocker",
+        message=_render_blocker((blocker,)),
+        blockers=(blocker,),
+        attempted_brokers=(broker,),
+    )
+
+
 def _registry_fields(registry: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     rows = registry.get("fields")
     freshness = registry.get("freshness_policies")
@@ -368,7 +438,11 @@ def _load_closed_source_maps(path: Path | None = None) -> dict[str, dict[str, An
             not isinstance(field_id, str)
             or not isinstance(item.get("source_id"), str)
             or not isinstance(item.get("source_url"), str)
-            or item.get("source_timing") not in {"completed_market", "official_release"}
+            or item.get("source_timing") not in {
+                "completed_market",
+                "official_release",
+                "policy",
+            }
             or not _is_path(path_value)
         ):
             raise ValueError("source_contract_map_invalid")
@@ -469,6 +543,8 @@ def _validate_observation(
         return ("source_error", value_error, "")
     if row.get("unit") != field["unit"]:
         return ("conflicted", "field_unit_mismatch", "")
+    if row.get("source_timing") != field["timing"]:
+        return ("conflicted", "field_timing_mismatch", "")
     for key in ("data_as_of", "source_id", "retrieval_method"):
         if not isinstance(row.get(key), str) or not str(row[key]).strip():
             return ("source_error", f"{key}_missing", "")
@@ -786,6 +862,22 @@ def _validate_board_binding(
                 float(actual), float(value), rel_tol=0.0, abs_tol=1e-9
             ):
                 return "research_result_preflight_series_value_mismatch"
+    policy = rows_by_id.get("policy.us_executive_actions")
+    expected_policy_watch = (
+        [
+            {
+                "id": str(record["id"]),
+                "title": str(record["title"]),
+                "published_at": str(record["published_at"]),
+                "source": "White House Presidential Actions",
+            }
+            for record in policy.get("value", [])
+        ]
+        if isinstance(policy, Mapping)
+        else None
+    )
+    if payload.get("policy_watch") != expected_policy_watch:
+        return "research_result_preflight_policy_binding_mismatch"
     return None
 
 

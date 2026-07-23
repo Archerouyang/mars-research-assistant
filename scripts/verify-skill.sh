@@ -49,6 +49,8 @@ uv_run python scripts/verify_portable_distribution_contract.py
 uv_run python "$SKILL_ROOT/scripts/verify_product_knowledge_selftest.py"
 uv_run python "$SKILL_ROOT/scripts/verify_private_runtime_selftest.py"
 uv_run python "$SKILL_ROOT/scripts/verify_research_result_selftest.py"
+uv_run python "$SKILL_ROOT/scripts/verify_mars_observation_adapter_selftest.py"
+uv_run python "$SKILL_ROOT/scripts/verify_macro_preflight_selftest.py"
 uv_run python "$SKILL_ROOT/scripts/verify_standalone_board_selftest.py"
 node "$SKILL_ROOT/scripts/verify_board_png_contract.mjs"
 uv_run python "$SKILL_ROOT/scripts/verify_artifact_packet_selftest.py"

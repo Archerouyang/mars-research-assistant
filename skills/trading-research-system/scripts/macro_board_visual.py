@@ -95,8 +95,36 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
             f'<div class="event-branches"><span><b>偏紧：</b>{escape(str(row["if_hot"]))}</span><span><b>偏松：</b>{escape(str(row["if_cool"]))}</span></div></article>'
         )
 
-    event_rows = "".join(event_html(row) for row in payload.get("event_watch", [])) or (
+    event_watch = payload.get("event_watch")
+    event_rows = "".join(event_html(row) for row in event_watch or []) or (
         '<p class="text-muted">下周事件数据缺失，不能建立事件联动。</p>'
+    )
+    event_control = (
+        '<button type="button" class="btn" data-view="events" aria-pressed="false">下周事件</button>'
+        if event_watch is not None
+        else ""
+    )
+    event_panel = (
+        f'<section class="macro-panel" data-panel="events"><div class="event-list">{event_rows}</div></section>'
+        if event_watch is not None
+        else ""
+    )
+    policy_watch = payload.get("policy_watch")
+    policy_rows = "".join(
+        f'<article class="policy-row"><div class="policy-head"><strong>{escape(str(row["title"]))}</strong>'
+        f'<span>{escape(_format_event_time(row["published_at"]))}</span></div>'
+        f'<span class="policy-source">{escape(str(row["source"]))}</span></article>'
+        for row in policy_watch or []
+    ) or '<p class="text-muted">本轮白宫直接来源未返回行政政策记录；不作政策推断。</p>'
+    policy_control = (
+        '<button type="button" class="btn" data-view="policy" aria-pressed="false">白宫政策</button>'
+        if policy_watch is not None
+        else ""
+    )
+    policy_panel = (
+        f'<section class="macro-panel" data-panel="policy"><div class="policy-list">{policy_rows}</div></section>'
+        if policy_watch is not None
+        else ""
     )
     scenario_rows = "".join(
         f'<article class="scenario-row"><div class="scenario-name"><span class="scenario-rank">{index:02d}</span><strong>{escape(str(row["name"]))}</strong></div>'
@@ -120,7 +148,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     #{root} .trend-dot{{fill:var(--viz-series-1)}}
     #{root} .trend-axis{{fill:var(--muted-foreground);font-size:11px}}
     #{root} .trend-caption{{padding:9px 0;border-top:1px solid var(--border)}}
-    #{root} .state-list,#{root} .event-list{{display:grid;gap:0;border-top:1px solid var(--border)}}
+    #{root} .state-list,#{root} .event-list,#{root} .policy-list{{display:grid;gap:0;border-top:1px solid var(--border)}}
     #{root} .state-row{{display:grid;grid-template-columns:145px minmax(0,1fr) minmax(0,1fr);gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}}
     #{root} .state-row p,#{root} .event-row p,#{root} .scenario-row p{{margin:0}}
     #{root} .state-badge{{display:block;margin-top:4px;color:var(--muted-foreground);font-size:12px}}
@@ -143,6 +171,9 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     #{root} .event-head .event-priority{{color:var(--destructive);font-weight:650}}
     #{root} .event-branches{{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
     #{root} .event-branches span{{padding:8px;background:var(--muted)}}
+    #{root} .policy-row{{display:grid;gap:7px;padding:12px 0;border-bottom:1px solid var(--border)}}
+    #{root} .policy-head{{display:flex;justify-content:space-between;gap:12px}}
+    #{root} .policy-head span,#{root} .policy-source{{color:var(--muted-foreground);font-size:12px}}
     #{root} .macro-summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-block:1px solid var(--border)}}
     #{root} .macro-summary-group{{display:grid;align-content:start;gap:7px;padding:12px 14px}}
     #{root} .macro-summary-group+ .macro-summary-group{{border-left:1px solid var(--border)}}
@@ -169,12 +200,14 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
   <div class="viz-controls" aria-label="宏观视图">
     <button type="button" class="btn btn-primary" data-view="trend" aria-pressed="true">趋势</button>
     <button type="button" class="btn" data-view="current" aria-pressed="false">当前状态</button>
-    <button type="button" class="btn" data-view="events" aria-pressed="false">下周事件</button>
+    {event_control}
+    {policy_control}
     <button type="button" class="btn" data-view="scenarios" aria-pressed="false">情景</button>
   </div>
   <section class="macro-panel is-active" data-panel="trend"><div class="series-controls" aria-label="趋势序列">{trend_buttons}</div><svg class="trend-chart" viewBox="0 0 720 300" role="img" aria-label="关键宏观指标趋势"><g class="trend-stage"></g></svg><div class="trend-caption text-small" aria-live="polite"></div></section>
   <section class="macro-panel" data-panel="current">{state_intro}{state_status}<div class="state-list">{state_head}{state_rows}</div></section>
-  <section class="macro-panel" data-panel="events"><div class="event-list">{event_rows}</div></section>
+  {event_panel}
+  {policy_panel}
   <section class="macro-panel" data-panel="scenarios"><div class="scenario-grid"><div class="scenario-head"><span>情景（按冲击排序）</span><div class="scenario-head-flow"><span>触发</span><span>确认</span><span>传导</span><span>应对</span></div></div>{scenario_rows}</div></section>
   <script>(()=>{{const root=document.getElementById('{root}');const data={data};const svg=root.querySelector('.trend-chart');const stage=root.querySelector('.trend-stage');const caption=root.querySelector('.trend-caption');const ns='http://www.w3.org/2000/svg';const W=720,H=300,left=48,right=20,top=16,bottom=34;function add(tag,attrs,text){{const el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));if(text!==undefined)el.textContent=text;stage.appendChild(el);return el;}}function fmt(value,unit){{const n=Number(value).toLocaleString('zh-CN',{{maximumFractionDigits:2}});return unit==='percent'?n+'%':n;}}function renderTrend(label){{const series=data.trend_series.find(item=>item.label===label)||data.trend_series[0];stage.replaceChildren();if(!series||series.points.length<2){{caption.textContent='趋势数据不足，不能判断方向。';return;}}const values=series.points.map(p=>+p.value);let lo=Math.min(...values),hi=Math.max(...values);const pad=Math.max((hi-lo)*.15,Math.abs(hi)*.005,.01);lo-=pad;hi+=pad;const x=i=>left+i*(W-left-right)/Math.max(1,values.length-1);const y=v=>top+(hi-v)*(H-top-bottom)/(hi-lo);for(let i=0;i<4;i++){{const value=lo+(hi-lo)*i/3;add('line',{{x1:left,y1:y(value),x2:W-right,y2:y(value),class:'trend-grid'}});add('text',{{x:4,y:y(value)+4,class:'trend-axis'}},fmt(value,series.unit));}}const line=series.points.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(+p.value).toFixed(1)).join(' ');const area=line+' L'+x(values.length-1).toFixed(1)+','+(H-bottom)+' L'+left+','+(H-bottom)+' Z';add('path',{{d:area,class:'trend-area'}});add('path',{{d:line,class:'trend-line'}});series.points.forEach((p,i)=>add('circle',{{cx:x(i),cy:y(+p.value),r:i===series.points.length-1?5:2.5,class:'trend-dot'}}));add('text',{{x:left,y:H-10,class:'trend-axis'}},series.points[0].time.slice(5,10));add('text',{{x:W-right-34,y:H-10,class:'trend-axis'}},series.points[series.points.length-1].time.slice(5,10));const first=values[0],last=values[values.length-1],delta=last-first,pct=first===0?null:delta/Math.abs(first)*100;const arrow=delta>0?'↑':delta<0?'↓':'→';caption.textContent=series.label+' 当前 '+fmt(last,series.unit)+' · 区间 '+arrow+' '+fmt(Math.abs(delta),series.unit)+(pct===null?'':' ('+Math.abs(pct).toFixed(1)+'%)')+'。'+series.implication;root.querySelectorAll('[data-series]').forEach(btn=>{{const on=btn.dataset.series===series.label;btn.setAttribute('aria-pressed',String(on));btn.classList.toggle('btn-primary',on);}});}}function show(view){{root.querySelectorAll('[data-panel]').forEach(panel=>panel.classList.toggle('is-active',panel.dataset.panel===view));root.querySelectorAll('[data-view]').forEach(btn=>{{const on=btn.dataset.view===view;btn.setAttribute('aria-pressed',String(on));btn.classList.toggle('btn-primary',on);}});}}root.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>show(btn.dataset.view)));root.querySelectorAll('[data-series]').forEach(btn=>btn.addEventListener('click',()=>renderTrend(btn.dataset.series)));if(data.trend_series.length)renderTrend(data.trend_series[0].label);show('trend');}})();</script>
 </div>

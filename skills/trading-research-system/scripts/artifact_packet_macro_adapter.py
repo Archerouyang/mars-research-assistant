@@ -65,7 +65,7 @@ MACRO_PAYLOAD_FIELDS = frozenset(
         "board", "chart_series", "decision", "evidence", "exposure_lens",
         "holdings_context", "modules", "payload_version", "posture", "question",
         "scenarios", "views", "trend_series", "event_watch",
-        "asset_preferences", "liquidity_background", "preflight",
+        "policy_watch", "asset_preferences", "liquidity_background", "preflight",
     }
 )
 
@@ -222,6 +222,7 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("chart_series_invalid")
     _validate_trend_series(payload.get("trend_series"), cutoff)
     _validate_event_watch(payload.get("event_watch"), cutoff)
+    _validate_policy_watch(payload.get("policy_watch"), cutoff)
     _validate_asset_preferences(
         payload.get("asset_preferences"), payload.get("liquidity_background")
     )
@@ -345,6 +346,28 @@ def _validate_event_watch(value: Any, cutoff: datetime) -> None:
         if scheduled <= cutoff or (previous is not None and scheduled <= previous):
             raise ArtifactPacketError("event_watch_invalid")
         previous = scheduled
+
+
+def _validate_policy_watch(value: Any, cutoff: datetime) -> None:
+    """Allow only bounded, already-normalized official policy records."""
+
+    if value is None:
+        return
+    if not isinstance(value, list):
+        raise ArtifactPacketError("policy_watch_invalid")
+    previous: datetime | None = None
+    required = {"id", "title", "published_at", "source"}
+    for item in value:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != required
+            or not all(_is_nonempty_string(item.get(key)) for key in required)
+        ):
+            raise ArtifactPacketError("policy_watch_invalid")
+        published = _parse_timestamp(item["published_at"], "policy_watch_invalid")
+        if published > cutoff or (previous is not None and published < previous):
+            raise ArtifactPacketError("policy_watch_invalid")
+        previous = published
 
 
 def _validate_asset_preferences(value: Any, background: Any) -> None:

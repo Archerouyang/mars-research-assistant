@@ -3,96 +3,51 @@
 ## Mars 1.0 Field-First Gate
 
 When producing a Mars 1.0 Macro Board, run the canonical
-`macro_preflight.py` seam before rendering. The retained 1.0 core is rates,
-HYG/LQD credit, VIX/VIX3M, SPX/NDX/RUT relative strength, the separate reserve
-balances/TGA/ON RRP series, and approved event or U.S. executive-policy risk.
+`macro_preflight.py` seam before rendering. The retained core is deliberately
+small and entirely field-contract driven:
 
-Every retained core field must have an exact, fresh, semantically verified
-source and the completed-market fields must share one market-reference date. A
-missing, stale, unsupported, conflicted, or source-error core field returns one
-batched `Data Acquisition Blocker`; it does not produce a partial Board,
+- 2Y, 10Y, and 30Y U.S. Treasury yields;
+- VIX/VIX3M from direct Cboe histories;
+- NDX/RUT, its 1/5/20-session changes, and 20-session normalization from direct
+  FRED/Cboe histories;
+- reserve balances, TGA, and ON RRP as separate official liquidity fields;
+- White House Presidential Actions as a bounded U.S. executive-policy record.
+
+The exact source URL, column/path, timing, and unit for every retained field
+live in `mars-1-0-observation-source-contracts.json`. `mars_observation_adapter.py`
+accepts only those raw source payloads in memory, normalizes them, and refuses
+to persist the raw payload. `macro_preflight.py` derives ratios and changes
+inside the boundary; callers cannot supply derived values or a prewritten
+`ResearchResult`.
+
+Every retained field is required. Completed-market fields must equal the latest
+common completed close; official releases must identify the latest published
+observation and preserve the reference period; policy evidence must be fetched
+within 24 hours. Any missing, stale, unsupported, conflicted, or source-error
+field returns one `Data Acquisition Blocker`. It never produces a partial Board,
 placeholder, or proxy-backed result.
 
-DXY, ICE Brent settlement/contract/roll state, XAU/USD, and S&P 500 Forward
-12M P/E history are deferred from the 1.0 contract. Do not restore them with
-UUP, oil ETFs, GLD, generic P/E, or another approximation. Reintroducing any
-of them requires a direct public source map and a synthetic golden case in a
-new field-contract revision.
+Macro Board fields never come from Longbridge, IBKR, an ETF proxy, a search
+snippet, media, or a calendar summary. The configured broker remains relevant
+only to separately authorized account and portfolio workflows. A direct public
+source discovered with Web search may be added only with an exact source map,
+synthetic fixture, and regression test; otherwise the field stays absent.
 
-The configured broker is the only broker source for broker-dependent fields;
-the workflow never switches to the other broker. Generic `qualified_*` source
-labels are prohibited. RUT and VIX3M use their separately verified Cboe maps:
-the normalized record must match the map's exact endpoint, expected columns,
-and raw value path.
+The following are currently excluded: HYG/LQD, SPX, seven-day event calendars,
+DXY, Brent, gold, and S&P 500 forward P/E. Do not restore any with a proxy or
+approximation. A later field-contract revision must establish a direct source
+and test it first.
 
-Acquire raw fields only. Preflight derives HYG/LQD, VIX/VIX3M, NDX/RUT, its
-completed-session changes, and its 20-day normalization from validated values
-and aligned NDX/RUT history. It rejects any caller-supplied derived record.
-Completed-market rows must precede the timezone-aware decision cutoff and equal
-the latest common completed close available from the configured source maps; a
-Board is not an intraday view. Official-release rows must identify the latest
-published observation and preserve its reference period. Age caps alone never
-prove either condition.
+The standalone Board displays only fields that passed this gate. Its default
+surfaces are `趋势`, `当前状态`, and `情景`; `下周事件` and `白宫政策` appear
+only when their corresponding direct field is admitted. The policy surface
+shows only title, publication time, and a White House source label: no raw page
+text and no outbound network link enter the standalone artifact.
 
-The frozen 0.2 workflow below is historical context only. It cannot override
-the Mars 1.0 field contract.
-
-Separate actual data, forecasts, media context, and plan assumptions. Evaluate
-the transmission chain rather than listing headlines:
-
-`event or policy -> rates/liquidity/credit/volatility/breadth -> industries and holdings -> plan consequence`
-
-Use official sources for releases and policy facts, authorized macro/market
-sources for current values, and media only as leads. A forecast never replaces
-an actual release.
-
-When the Longbridge CLI exposes `macrodata`, use it for supported indicator
-history, actuals, forecasts, and release metadata. Do not assume it supplies
-every market series: use U.S. Treasury data for the daily yield curve and the
-field-specific Cboe maps for exact RUT and VIX3M. A field with neither the
-configured-broker route nor an approved direct map remains a blocker.
-
-For visuals, put decision-sensitive numbers and charts in the first viewport.
-Show at least the metrics that drive the stated posture, their `as_of`, and
-scenario confirmation. A missing retained core value returns a blocker rather
-than a partial Board.
-
-The stable macro Board uses four compact views: `趋势`, `当前状态`,
-`下周事件`, and `情景`. Its minimum observation set is:
-
-- short and long rates: 2Y plus 10Y and/or 30Y;
-- cross-asset breadth and volatility: NDX/RUT and VIX/VIX3M;
-- credit and liquidity readings that actually drive the stated posture.
-
-Machine states remain stable internally, but visible status labels and scenario
-descriptions use the response locale. Do not use a cross-unit bar chart as the
-primary Macro visual. NDX/RUT, VIX/VIX3M, and decision-sensitive rates must be
-shown as time series with visible direction and change over the selected
-window. Unless the user requests another horizon, use one month of aligned
-market sessions. The trend explanation must state the period change, important
-inflection, cross-asset confirmation, and implication for market breadth,
-volatility, liquidity, or duration risk.
-
-Every next-week event row states why the event matters, the exact observation
-to monitor, and which scenario becomes more likely under hotter/tighter versus
-cooler/easier evidence. Scenarios must connect current evidence, the upcoming
-event trigger, cross-asset confirmation, and the plan consequence; a label
-without that causal chain is incomplete.
-
-Color emphasis is reserved for events explicitly classified as high impact by
-the research result. Do not infer importance in the renderer and do not force a
-highlight when the evidence is mixed.
-
-The current-state view explains the liquidity background through relative
-asset preference and impact. For a US equity view, consider value, mega-cap
-platforms, broad technology, semiconductors, momentum, and small caps when they
-are decision-relevant. Do not repeat plan constraints in place of asset-impact
-analysis.
-
-Keep visible copy decision-dense: one function per field, one conclusion per
-sentence, and no restatement across `trigger`, `confirmation`, `transmission`,
-and `response`. Prefer compact clauses over narrative paragraphs. Preserve
-necessary evidence and uncertainty; remove only repetition and filler.
+For visuals, show decision-sensitive metrics and their `as_of` in the first
+viewport. NDX/RUT, VIX/VIX3M, and rates are time series with direction over the
+aligned history window. Keep the text decision-dense, distinguish facts from
+inferences, and do not create a trade instruction from the Macro Board.
 
 ## Legacy Frozen Macro Data Workflow
 
@@ -145,17 +100,15 @@ The retained read-only implementation surface is
 and `scripts/prepare_macro_panel.py` for an explicitly requested local macro
 panel. Neither helper reads broker positions or performs order actions.
 
-## Frozen Standalone Format
+## Mars Standalone Format
 
-The Macro structure accepted on 2026-07-19 and migrated unchanged to standalone
-delivery on 2026-07-22 is frozen: summary strip, `趋势`, `当前状态`, `下周事件`,
-and `情景`, in that order. The trend view uses selectable time series; current state uses the
-liquidity note and asset-preference matrix; events use importance only when the
-research result explicitly supplies it; scenarios use comparison rows with
-`触发`, `确认`, `传导`, and `应对`.
+Mars 1.0 keeps one self-contained `standalone_board` artifact. `趋势`, `当前状态`,
+and `情景` are always present. `下周事件` is present only if a complete direct
+event contract is admitted; `白宫政策` is present only when the verified White
+House policy field is available. This conditional visibility prevents a missing
+field from becoming a misleading empty panel.
 
-Without renewed visual acceptance, changes are limited to source-backed data,
-provenance, timestamps, concise copy, accessibility, and defect fixes that do
-not alter the information architecture or interaction model. Layout, tab order,
-primary interactions, and scenario presentation require renewed visual
-acceptance.
+The trend view uses selectable time series; scenarios use `触发`, `确认`, `传导`,
+and `应对`. The Board must open without host CSS or network access, and its
+snapshot, HTML, and manifest remain paired. Layout and new interaction surfaces
+still require explicit visual acceptance before public cutover.

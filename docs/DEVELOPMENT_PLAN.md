@@ -556,7 +556,7 @@ Date: 2026-07-20
 - Next: review the PR, then decide whether the next visualization slice should be richer price charts, confirmed runtime save integration, or content-output polishing.
 - Completed: hardened fresh-chat Daily Ops startup health after the `交易研究2` forward test. `runtime_health.py` now emits `current_mode` and per-source `broker_source_health`; Daily Ops startup output must include `运行状态检查`, `券商来源健康`, `当前模式`, formal `runtime_dir`, and the repo-fixture boundary before analysis.
 - Verification: runtime health selftest, runtime health contract, and Daily Ops Orchestrator contract pass locally.
-- Completed: added the Macro Data Source Contract. Daily, weekly, and macro-equity workflows now have to report `宏观数据来源状态` and `实际宏观指标读数`; Longbridge macrodata is the preferred S1 macro-values source, IBKR market data is limited to price/OHLCV transmission, and official source fallback covers S0 facts and fallback values.
+- Superseded: the former broker-preferred Macro Data Source Contract is replaced by the Mars 1.0 direct-source contract. Macro Boards now require exact, verified public-source field contracts, latest common completed closes, latest official releases, and a fail-closed blocker for any unavailable field; broker macrodata and proxies are not Board inputs.
 - Verification: `verify_macro_data_source_contract.py` added to the core suite.
 - Completed: defined the Longbridge Skill Adapter contract. Runtime health now reports `source_capability_health` so Daily Ops can distinguish Longbridge broker skill, Longbridge macrodata, IBKR connector, and manual snapshot readiness before analysis.
 - Verification: `verify_longbridge_skill_adapter_contract.py` added to the core suite.

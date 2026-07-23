@@ -85,7 +85,7 @@ def is_allowed_portable_path(relative: Path) -> bool:
 
     parts = relative.parts
     if len(parts) == 2 and parts[0] == "references":
-        return relative.suffix == ".md"
+        return relative.suffix in {".md", ".json"}
     if len(parts) == 2 and parts[0] == "scripts":
         return relative.suffix in {".py", ".mjs"}
     if parts[:2] == ("assets", "templates"):

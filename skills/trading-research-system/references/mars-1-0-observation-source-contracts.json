@@ -77,6 +77,14 @@
       "discovery": "public_web_search_then_direct_open",
       "opened_at": "2026-07-23",
       "supports": "The New York Fed reports reverse-repo operation results and links its Markets Data APIs."
+    },
+    {
+      "id": "white-house-presidential-actions",
+      "authority": "The White House",
+      "url": "https://www.whitehouse.gov/presidential-actions/",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The official Presidential Actions index publishes dated executive actions, memoranda, proclamations, and related actions. The adapter retains only normalized title, publication time, and direct URL in memory; the standalone Board renders a source label instead of an outbound URL."
     }
   ],
   "excluded_fields": [
@@ -91,6 +99,10 @@
     {
       "field_id": "equity.spx_close",
       "reason": "No direct stable source contract was opened for the exact completed close."
+    },
+    {
+      "field_id": "events.seven_day_allowlist",
+      "reason": "No direct stable public source contract has been verified for the complete seven-day event set; it must not be inferred from search summaries or a broker calendar."
     }
   ],
   "market_session": {
@@ -112,6 +124,7 @@
     {"field_id":"equity.rut_close","source_id":"cboe_rut_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv","source_timing":"completed_market","unit":"index_points","collection_key":"records","date_key":"DATE","value_key":"RUT","raw_field_path":["records","$last","RUT"]},
     {"field_id":"liquidity.reserve_balances","source_id":"federal_reserve_h41","source_url":"https://www.federalreserve.gov/releases/h41/","source_timing":"official_release","unit":"usd_billions","collection_key":"releases","date_key":"reference_period","value_key":"reserve_balances_billions","raw_field_path":["releases","$last","reserve_balances_billions"]},
     {"field_id":"liquidity.tga_balance","source_id":"us_treasury_dts","source_url":"https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance","source_timing":"official_release","unit":"usd_billions","collection_key":"records","date_key":"record_date","value_key":"close_today_bal_millions","scale":0.001,"filter":{"key":"account_type","equals":"Treasury General Account (TGA) Closing Balance"},"raw_field_path":["records","account_type=Treasury General Account (TGA) Closing Balance","$last","close_today_bal_millions"]},
-    {"field_id":"liquidity.on_rrp_usage","source_id":"new_york_fed_on_rrp","source_url":"https://www.newyorkfed.org/markets/desk-operations/reverse-repo","source_timing":"official_release","unit":"usd_billions","collection_key":"results","date_key":"operation_date","value_key":"accepted_amount_billions","filter":{"key":"operation_type","equals":"Overnight Reverse Repo"},"raw_field_path":["results","operation_type=Overnight Reverse Repo","$last","accepted_amount_billions"]}
+    {"field_id":"liquidity.on_rrp_usage","source_id":"new_york_fed_on_rrp","source_url":"https://www.newyorkfed.org/markets/desk-operations/reverse-repo","source_timing":"official_release","unit":"usd_billions","collection_key":"results","date_key":"operation_date","value_key":"accepted_amount_billions","filter":{"key":"operation_type","equals":"Overnight Reverse Repo"},"raw_field_path":["results","operation_type=Overnight Reverse Repo","$last","accepted_amount_billions"]},
+    {"field_id":"policy.us_executive_actions","source_id":"white_house_presidential_actions","source_url":"https://www.whitehouse.gov/presidential-actions/","source_timing":"policy","unit":"policy_evidence_set","collection_key":"records","date_key":"published_at","value_key":"title","raw_field_path":["records"]}
   ]
 }

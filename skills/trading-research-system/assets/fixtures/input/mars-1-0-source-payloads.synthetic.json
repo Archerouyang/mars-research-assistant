@@ -81,5 +81,17 @@
     "latest_official_observation": "2026-07-23",
     "publication_status": "published",
     "results": [{"operation_date":"2026-07-23","operation_type":"Overnight Reverse Repo","accepted_amount_billions":"95.2"}]
+  },
+  "white_house_presidential_actions": {
+    "source_url": "https://www.whitehouse.gov/presidential-actions/",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [
+      {
+        "id": "synthetic-direct-policy-action",
+        "title": "Synthetic direct executive action",
+        "published_at": "2026-07-23T20:00:00Z",
+        "source_url": "https://www.whitehouse.gov/presidential-actions/"
+      }
+    ]
   }
 }

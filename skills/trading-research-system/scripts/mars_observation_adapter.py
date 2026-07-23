@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import json
 import math
 from pathlib import Path
@@ -23,6 +23,7 @@ RETAINED_RAW_FIELD_IDS = frozenset(
         "liquidity.reserve_balances",
         "liquidity.tga_balance",
         "liquidity.on_rrp_usage",
+        "policy.us_executive_actions",
     }
 )
 EXCLUDED_UNVERIFIED_FIELD_IDS = frozenset(
@@ -30,6 +31,7 @@ EXCLUDED_UNVERIFIED_FIELD_IDS = frozenset(
         "credit.hyg_close",
         "credit.lqd_close",
         "equity.spx_close",
+        "events.seven_day_allowlist",
     }
 )
 
@@ -230,8 +232,13 @@ def _normalize_field(
     if retrieved_timestamp > as_of:
         raise ObservationAdapterError(f"{field_id}:retrieved_at_after_as_of")
     collection = payload.get(field["collection_key"])
-    if not isinstance(collection, list) or not collection:
+    if not isinstance(collection, list) or (
+        not collection and field["unit"] != "policy_evidence_set"
+    ):
         raise ObservationAdapterError(f"{field_id}:source_collection_missing")
+
+    if field["unit"] == "policy_evidence_set":
+        return _normalize_policy_evidence(field, collection, retrieved_at, as_of)
 
     filter_spec = field.get("filter")
     records = [
@@ -274,6 +281,58 @@ def _normalize_field(
     if timing == "official_release":
         row["reference_period"] = latest["date"]
     return row
+
+
+def _normalize_policy_evidence(
+    field: Mapping[str, Any],
+    records: list[Any],
+    retrieved_at: Any,
+    as_of: datetime,
+) -> dict[str, Any]:
+    """Admit only a bounded White House action summary, never raw page content."""
+
+    retrieved = _parse_timestamp(retrieved_at, "policy:retrieved_at")
+    if as_of - retrieved > timedelta(hours=24):
+        raise ObservationAdapterError("policy.us_executive_actions:source_stale")
+    normalized: list[dict[str, str]] = []
+    for record in records:
+        if not isinstance(record, Mapping) or set(record) != {
+            "id", "title", "published_at", "source_url"
+        }:
+            raise ObservationAdapterError("policy.us_executive_actions:record_shape_invalid")
+        if not all(isinstance(record[key], str) and record[key].strip() for key in record):
+            raise ObservationAdapterError("policy.us_executive_actions:record_shape_invalid")
+        published = _parse_timestamp(
+            record["published_at"], "policy.us_executive_actions:published_at"
+        )
+        if published > as_of:
+            raise ObservationAdapterError(
+                "policy.us_executive_actions:published_at_after_as_of"
+            )
+        if record["source_url"] != field["source_url"]:
+            raise ObservationAdapterError("policy.us_executive_actions:record_source_url_mismatch")
+        normalized.append(
+            {
+                "id": str(record["id"]),
+                "title": str(record["title"]),
+                "published_at": str(record["published_at"]),
+                "source_url": str(record["source_url"]),
+            }
+        )
+    normalized.sort(key=lambda item: (item["published_at"], item["id"]))
+    return {
+        "field_id": str(field["field_id"]),
+        "value": normalized,
+        "unit": "policy_evidence_set",
+        "status": "available",
+        "data_as_of": str(retrieved_at),
+        "source_id": str(field["source_id"]),
+        "source_url": str(field["source_url"]),
+        "source_timing": "policy",
+        "retrieval_method": "source_payload",
+        "raw_field_path": list(field["raw_field_path"]),
+        "reference_period": retrieved.date().isoformat(),
+    }
 
 
 def _align_completed_market_histories(

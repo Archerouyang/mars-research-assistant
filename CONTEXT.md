@@ -117,12 +117,12 @@ _Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts �
 _Avoid_: 把 CLI adapter 当下单层, 把本机安装等同于 macrodata 可用, 把用户真实持仓 fixture 化进 public repo
 
 **Macro Data Source Contract**:
-宏观和金融条件分析的来源选择契约。若 Longbridge macrodata 可用，它是宏观数值和金融条件的优先 S1 来源；IBKR 行情数据用于价格、OHLCV、盘中 tape 和市场传导确认；官方来源 fallback 用于 S0 政策事实、经济数据发布时间、官方讲话、法规状态，以及 Longbridge macrodata 不可用时的官方宏观数值回退。Daily Ops / weekly / macro-equity 输出不能只说“宏观重要”，必须列出 `宏观数据来源状态` 和 `实际宏观指标读数`，否则要标记为降级分析。
-_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用 IBKR 行情替代 broad macrodata, 用新闻替代官方宏观数据
+Mars 1.0 宏观 Board 只使用逐字段验证的直接公开来源。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段没有稳定、精确、可复核的公开来源合同，或本轮没有取得该字段，必须拒绝生成 Board；不得用 Longbridge、IBKR、ETF、新闻摘要或其它代理替代。券商只读数据继续限于独立的账户/持仓风险研究。
+_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用券商行情或新闻替代直接公开宏观字段, 用缺失字段生成 partial Board
 
 **Source Routing Boundary**:
-按 source purpose 和 claim type 选择信源的硬边界。Longbridge broker source 可用于只读账户/持仓/成交事实，Longbridge macrodata 可用于宏观数值和金融条件，但 news source、政策事实、行业新闻和研报观点必须按 S0/S1/S2/S3 分层选择。选择 Longbridge 做股票数据或券商数据 does not make Longbridge the default source for news，也不能让宏观/政策/行业/新闻分析只使用 Longbridge。
-_Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, macrodata 替代官方政策事实
+按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 仅可用于明确授权的只读账户、持仓、成交和价格事实；Mars 宏观字段不从券商或新闻源取得。宏观 Board 的公开来源、字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 锁定。选择 Longbridge 做股票数据或券商数据不使其成为政策、宏观、行业或新闻的默认来源。
+_Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, 用聚合宏观数据替代字段级公开来源合同
 
 **Broker-Live Data View**:
 券商只读数据在一次分析运行中的标准视图，包括当前持仓、账户风险、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成可视化或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。

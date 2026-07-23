@@ -53,6 +53,7 @@ def main() -> int:
         "liquidity.reserve_balances",
         "liquidity.tga_balance",
         "liquidity.on_rrp_usage",
+        "policy.us_executive_actions",
     }
     require(set(by_id) == expected_ids, "adapter must emit only retained raw base fields")
     require(
@@ -112,6 +113,24 @@ def main() -> int:
     require(reserves["reference_period"] == "2026-07-15", "official reference period must remain separate")
     require("market_reference_date" not in reserves, "official releases cannot pretend to be market closes")
 
+    policy = by_id["policy.us_executive_actions"]
+    require(policy["source_timing"] == "policy", "policy timing must be retained")
+    require(
+        policy["value"] == [
+            {
+                "id": "synthetic-direct-policy-action",
+                "title": "Synthetic direct executive action",
+                "published_at": "2026-07-23T20:00:00Z",
+                "source_url": "https://www.whitehouse.gov/presidential-actions/",
+            }
+        ],
+        "policy evidence must remain a bounded official summary",
+    )
+    require(
+        "history" not in policy,
+        "policy evidence must not pretend to be market history",
+    )
+
     missing = copy.deepcopy(payloads)
     missing.pop("cboe_vix_history")
     require_error(missing, "volatility.vix_close:source_payload_missing")
@@ -127,6 +146,14 @@ def main() -> int:
     stale_official = copy.deepcopy(payloads)
     stale_official["federal_reserve_h41"]["latest_official_observation"] = "2026-07-14"
     require_error(stale_official, "liquidity.reserve_balances:latest_official_observation_mismatch")
+
+    stale_policy = copy.deepcopy(payloads)
+    stale_policy["white_house_presidential_actions"]["retrieved_at"] = "2026-07-22T20:00:00Z"
+    require_error(stale_policy, "policy.us_executive_actions:source_stale")
+
+    raw_policy = copy.deepcopy(payloads)
+    raw_policy["white_house_presidential_actions"]["records"][0]["body"] = "must not be retained"
+    require_error(raw_policy, "policy.us_executive_actions:record_shape_invalid")
 
     broker = copy.deepcopy(payloads)
     broker["configured_broker"] = {"source_url": "synthetic://broker"}
