@@ -54,6 +54,39 @@ OFFICIAL_RELEASE_MAX_AGE = timedelta(days=45)
 EVENT_MAX_AGE = timedelta(days=1)
 POLICY_MAX_AGE = timedelta(hours=24)
 
+# Mars 1.0 deliberately keeps its macro core small. These terms name deferred
+# fields or prohibited proxies, so none may appear anywhere in a delivered
+# ResearchResult until an exact, stable source contract is admitted.
+DEFERRED_SURFACE_TERMS = frozenset(
+    {
+        "dxy",
+        "美元指数",
+        "uup",
+        "brent",
+        "布伦特",
+        "xau",
+        "xau/usd",
+        "xauusd",
+        "黄金价格",
+        "现货黄金",
+        "gld",
+        "iau",
+        "uso",
+        "bno",
+        "油价etf",
+        "oil etf",
+        "forward 12m p/e",
+        "forward twelve-month p/e",
+        "forward p/e",
+        "forward pe",
+        "spx forward",
+        "标普500市盈率",
+        "标普 500 市盈率",
+        "远期市盈率",
+        "vxn",
+    }
+)
+
 
 @dataclass(frozen=True)
 class FieldBlocker:
@@ -611,6 +644,26 @@ def _derive_values(
                 (ndx_date, ndx_value / rut_value)
                 for (ndx_date, ndx_value), (_, rut_value) in zip(ndx_history, rut_history)
             ]
+            for window in field.get("change_windows") or ():
+                if not isinstance(window, int) or window <= 0:
+                    blockers.append(
+                        _blocker(field, "source_error", "derived_change_window_invalid")
+                    )
+                    continue
+                if len(ratio_history) <= window:
+                    blockers.append(
+                        _blocker(field, "source_error", "derived_history_insufficient")
+                    )
+                    continue
+                baseline = ratio_history[-(window + 1)][1]
+                if baseline == 0:
+                    blockers.append(
+                        _blocker(field, "source_error", "derived_history_denominator_zero")
+                    )
+                    continue
+                values[f"{field_id}.change_{window}d"] = (
+                    (ratio_history[-1][1] / baseline - 1.0) * 100.0
+                )
     return values, tuple(blockers)
 
 
@@ -636,20 +689,8 @@ def _validate_board_binding(
     }
     if set(binding) != required or binding.get("field_contract_version") != "macro-v1":
         return "research_result_preflight_binding_invalid"
-    payload_text = json.dumps(payload, ensure_ascii=False).casefold()
-    if any(
-        term in payload_text
-        for term in (
-            "dxy",
-            "brent",
-            "xau",
-            "forward 12m p/e",
-            "forward twelve-month p/e",
-            "vxn",
-            '"oil"',
-            '"gold"',
-        )
-    ):
+    result_text = json.dumps(research_result, ensure_ascii=False).casefold()
+    if any(term in result_text for term in DEFERRED_SURFACE_TERMS):
         return "research_result_deferred_field_present"
     expected_ids = set(fields)
     bound_ids = binding.get("validated_field_ids")

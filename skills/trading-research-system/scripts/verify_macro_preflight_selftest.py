@@ -486,6 +486,21 @@ def main() -> int:
         "deferred signal leakage must be visible at the Board seam",
     )
 
+    top_level_proxy_result = copy.deepcopy(result)
+    top_level_proxy_result["decision"] = "UUP must not appear in Mars 1.0 delivery."
+    top_level_proxy = run_macro_board(config, observations, top_level_proxy_result)
+    require(
+        top_level_proxy.kind == "blocker",
+        "deferred proxies must not leak through top-level ResearchResult text",
+    )
+    require(
+        any(
+            item.reason == "research_result_deferred_field_present"
+            for item in top_level_proxy.blockers
+        ),
+        "top-level proxy leakage must be visible at the Board seam",
+    )
+
     mixed_broker_rows = copy.deepcopy(observations)
     hyg = next(row for row in mixed_broker_rows if row["field_id"] == "credit.hyg_close")
     hyg["source_id"] = "ibkr"
@@ -555,9 +570,24 @@ def main() -> int:
                 "volatility.vix_vix3m_ratio",
                 "equity.ndx_rut_ratio",
                 "equity.ndx_rut_normalized_20d",
+                "equity.ndx_rut_ratio.change_1d",
+                "equity.ndx_rut_ratio.change_5d",
+                "equity.ndx_rut_ratio.change_20d",
             }
         ),
         "all retained derived core fields must be calculated before Board delivery",
+    )
+    ratio_history = [
+        float(ndx["value"]) / float(rut["value"])
+        for ndx, rut in zip(
+            next(row["history"] for row in observations if row["field_id"] == "equity.ndx_close"),
+            next(row["history"] for row in observations if row["field_id"] == "equity.rut_close"),
+        )
+    ]
+    require(
+        round(allowed.resolved_values["equity.ndx_rut_ratio.change_5d"], 9)
+        == round((ratio_history[-1] / ratio_history[-6] - 1.0) * 100.0, 9),
+        "NDX/RUT changes must be derived from aligned completed-session history",
     )
 
     ibkr_config = dict(config)
