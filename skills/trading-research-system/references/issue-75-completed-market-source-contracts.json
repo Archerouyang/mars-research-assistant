@@ -16,13 +16,15 @@
   "contract_result": "complete",
   "contract_result_reason": "All seven required fields have exact, public-safe source contracts and synthetic golden coverage; observed broker gaps remain explicit.",
   "safety": {
-    "repository_content": "Provider metadata and synthetic fixtures only.",
-    "runtime_payload": "Do not persist raw provider responses by default.",
-    "authorization": "Every runtime read requires the user's applicable entitlement and allowed internal-use rights.",
-    "redistribution": "Do not redistribute provider values, raw HTML/tables, or raw payloads from this public repository.",
-    "attribution": "Retain source attribution in normalized private decision-support lineage.",
-    "broker_routing": "A public or official field source is not a broker switch. Never substitute a different broker for the configured broker.",
-    "search": "Search may discover a source, but a search result or snippet is never field evidence."
+    "repository_content": "provider_metadata_and_synthetic_fixtures_only",
+    "persist_raw_provider_responses_by_default": false,
+    "entitlement_required": true,
+    "internal_use_rights_required": true,
+    "public_redistribution_allowed": false,
+    "source_attribution_required": true,
+    "automatic_broker_switch_allowed": false,
+    "search_snippet_field_evidence_allowed": false,
+    "opened_exact_source_required": true
   },
   "forbidden_substitutes": {
     "equity.rut_close": [

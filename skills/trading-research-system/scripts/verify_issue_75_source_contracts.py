@@ -36,6 +36,17 @@ REQUIRED_MAP_KEYS = {
     "fixture_cases",
     "evidence",
 }
+EXPECTED_SAFETY = {
+    "repository_content": "provider_metadata_and_synthetic_fixtures_only",
+    "persist_raw_provider_responses_by_default": False,
+    "entitlement_required": True,
+    "internal_use_rights_required": True,
+    "public_redistribution_allowed": False,
+    "source_attribution_required": True,
+    "automatic_broker_switch_allowed": False,
+    "search_snippet_field_evidence_allowed": False,
+    "opened_exact_source_required": True,
+}
 DXY_PROVIDER_ID = "marketwatch_dxy_historical_quotes"
 DXY_ENDPOINT = (
     "https://www.marketwatch.com/investing/index/dxy/download-data"
@@ -209,11 +220,7 @@ def verify_map_shape(
     assert_equal(contract.get("issue"), 75, "map issue")
     assert_equal(contract.get("parent_issue"), 74, "map parent issue")
     safety = contract.get("safety")
-    if not isinstance(safety, dict):
-        raise VerificationError("map safety must be an object")
-    for key in ("runtime_payload", "broker_routing", "search", "redistribution"):
-        if not safety.get(key):
-            raise VerificationError(f"map safety missing {key}")
+    assert_equal(safety, EXPECTED_SAFETY, "map safety")
 
     field_maps = contract.get("field_maps")
     if not isinstance(field_maps, list):
