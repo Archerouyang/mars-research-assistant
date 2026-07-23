@@ -271,6 +271,10 @@ def verify_map_shape(
                         f"{field_id}: blocker missing {key}"
                     )
             blockers.append({"field_id": field_id, **blocker})
+            if "prohibited" not in field_map["allowed_use"].lower():
+                raise VerificationError(
+                    f"{field_id}: blocked map must prohibit production use"
+                )
         else:
             raise VerificationError(
                 f"{field_id}: invalid contract_status {status!r}"

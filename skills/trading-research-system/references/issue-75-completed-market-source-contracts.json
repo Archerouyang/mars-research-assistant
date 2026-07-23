@@ -333,7 +333,7 @@
       "unit": "index_points",
       "completed_market_semantics": "The selected Daily Historical Quotes Close is historical/current end-of-day data attributed to FactSet in local exchange time. MarketWatch page identity and ICE DXY methodology jointly prove that the row is the ICE U.S. Dollar Index, not a futures price, ETF, or synthetic basket.",
       "freshness": "Require the exact common completed date in the Date column and retrieve only after that local exchange date has ended; a missing or duplicate date is fail-closed.",
-      "allowed_use": "Private informational decision support with MarketWatch/FactSet attribution. Do not persist or redistribute raw HTML, table rows, or public raw data; retain only normalized value/date/source lineage.",
+      "allowed_use": "Candidate-route investigation only. Production or automated decision-support retrieval is prohibited until an entitled exact DXY closing-level route passes two completed-session golden reads and its internal-use boundary is recorded. Do not persist or redistribute raw HTML, table rows, or public raw data.",
       "identity_guards": [
         {
           "kind": "visible_text_contains",
@@ -508,7 +508,7 @@
       "unit": "usd_per_barrel",
       "completed_market_semantics": "ICE Settlement Price, explicitly distinct from ordinary Close Price and available only after the trading day has ended.",
       "freshness": "The Settlement Price Date must equal the selected common completed settlement date; absence is missing/source_error, never a close fallback.",
-      "allowed_use": "Requires an ICE Futures data license/entitlement for internal research. Store only normalized fields and lineage, never the raw MFT file.",
+      "allowed_use": "Production use is prohibited until an ICE Futures data license/entitlement yields two completed Settlement Snapshot golden reads. After authorization, retain only normalized fields and lineage, never the raw MFT file.",
       "identity_guards": [
         {
           "path": [
@@ -583,7 +583,7 @@
       "unit": "contract_identifier",
       "completed_market_semantics": "Identity belongs to the same front-month row as the accepted settlement; it cannot be inferred from a continuous-series label.",
       "freshness": "Must be present on the accepted settlement date and match the official front-month expiry selection.",
-      "allowed_use": "Same ICE internal-use entitlement and no-raw-payload boundary as the settlement.",
+      "allowed_use": "Production use is prohibited until the corresponding authorized ICE settlement route closes. After authorization, apply the same internal-use entitlement and no-raw-payload boundary as the settlement.",
       "identity_guards": [],
       "fixture_cases": [
         "ice-brent-front-month-settlement-stable",
@@ -639,7 +639,7 @@
       "unit": "roll_state",
       "completed_market_semantics": "A lineage state over two completed settlement dates, never inferred from price movement or a continuous-contract adjustment.",
       "freshness": "Both current and immediately previous completed settlement identities must be available; otherwise roll state is missing.",
-      "allowed_use": "Derived internally from authorized normalized ICE fields; do not retain raw files.",
+      "allowed_use": "Production use is prohibited until adjacent authorized ICE settlement identities are available. After authorization, derive internally from normalized fields and do not retain raw files.",
       "identity_guards": [],
       "fixture_cases": [
         "ice-brent-front-month-settlement-stable",
