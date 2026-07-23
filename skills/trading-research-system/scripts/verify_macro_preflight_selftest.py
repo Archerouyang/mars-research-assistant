@@ -62,6 +62,7 @@ def main() -> int:
     require(allowed.delivery_packet is not None, "successful run must return a delivery packet")
     require(allowed.delivery_packet.standalone_board is not None, "only a standalone Board may be delivered")
     html = allowed.delivery_packet.standalone_board.html.decode("utf-8").casefold()
+    canonical_result = allowed.delivery_packet.canonical_result.decode("utf-8")
     require(
         not any(term in html for term in BANNED_SURFACE_TERMS),
         "no removed field or proxy may leak into any generated Board surface",
@@ -87,6 +88,11 @@ def main() -> int:
     require(
         "下周事件" not in html,
         "a field without a direct event contract must be omitted rather than rendered empty",
+    )
+    require(
+        "https://www.whitehouse.gov/presidential-actions/" not in canonical_result
+        and "must not be retained" not in canonical_result,
+        "delivery artifacts must not persist raw policy URLs or page content",
     )
 
     current_day = run_macro_board(config, current_day_completed_payloads(), AS_OF)
