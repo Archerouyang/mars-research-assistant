@@ -202,7 +202,9 @@ def _normalize_completed_market_session(
         raise ObservationAdapterError("completed_market_session:not_completed")
     latest_key = str(market_session["latest_session_key"])
     latest_date = _parse_date(payload.get(latest_key), "completed_market_session:latest_date")
-    if latest_date >= as_of.date():
+    # A source-declared completed session may share the UTC decision date after
+    # the U.S. market closes. Only a future session is impossible here.
+    if latest_date > as_of.date():
         raise ObservationAdapterError("completed_market_session:not_completed")
     return {
         "source_id": source_id,
@@ -347,7 +349,7 @@ def _align_completed_market_histories(
     if latest_dates != {expected_session_date}:
         raise ObservationAdapterError("completed_market_session_not_latest")
     selected_date = _parse_date(expected_session_date, "completed_market_date")
-    if selected_date >= as_of_date:
+    if selected_date > as_of_date:
         raise ObservationAdapterError("completed_market_date_not_completed")
     common_dates = set.intersection(
         *({point["date"] for point in row["history"]} for row in market_rows)

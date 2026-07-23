@@ -28,6 +28,22 @@ def payloads() -> dict[str, object]:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 
+def current_day_completed_payloads() -> dict[str, object]:
+    """Move every direct market series to a source-declared completed session."""
+
+    current = payloads()
+    current["us_equities_session"]["latest_completed_market_session"] = "2026-07-23"
+    current["us_treasury_daily_rates"]["records"][-1]["date"] = "2026-07-23"
+    for source_id in (
+        "cboe_vix_history",
+        "cboe_vix3m_history",
+        "cboe_rut_history",
+        "fred_nasdaq100_history",
+    ):
+        current[source_id]["records"][-1]["DATE"] = "2026-07-23"
+    return current
+
+
 def main() -> int:
     config = {
         "default_broker": "longbridge",
@@ -71,6 +87,12 @@ def main() -> int:
     require(
         "下周事件" not in html,
         "a field without a direct event contract must be omitted rather than rendered empty",
+    )
+
+    current_day = run_macro_board(config, current_day_completed_payloads(), AS_OF)
+    require(
+        current_day.kind == "board",
+        "a source-declared completed close on the decision date must be accepted",
     )
 
     missing_vix = payloads()

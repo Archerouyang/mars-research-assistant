@@ -660,7 +660,9 @@ def _validate_freshness(
             market_date = _parse_date(str(row["market_reference_date"]))
         except ValueError:
             return ("source_error", "market_reference_date_invalid", "")
-        if market_date >= cutoff.date():
+        # The adapter already proves the session is complete. A close later on
+        # the same UTC date is valid once that source fact is present.
+        if market_date > cutoff.date():
             return ("unsupported", "completed_close_not_proven", "")
         if cutoff.date() - market_date > COMPLETED_MARKET_MAX_AGE:
             return ("stale", "market_reference_date_stale", "")
