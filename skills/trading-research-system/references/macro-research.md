@@ -28,8 +28,11 @@ and raw value path.
 Acquire raw fields only. Preflight derives HYG/LQD, VIX/VIX3M, NDX/RUT, its
 completed-session changes, and its 20-day normalization from validated values
 and aligned NDX/RUT history. It rejects any caller-supplied derived record.
-Completed-market rows must precede the timezone-aware decision cutoff and be no
-more than seven calendar days old; a Board is not an intraday view.
+Completed-market rows must precede the timezone-aware decision cutoff and equal
+the latest common completed close available from the configured source maps; a
+Board is not an intraday view. Official-release rows must identify the latest
+published observation and preserve its reference period. Age caps alone never
+prove either condition.
 
 The frozen 0.2 workflow below is historical context only. It cannot override
 the Mars 1.0 field contract.
@@ -58,7 +61,6 @@ The stable macro Board uses four compact views: `趋势`, `当前状态`,
 `下周事件`, and `情景`. Its minimum observation set is:
 
 - short and long rates: 2Y plus 10Y and/or 30Y;
-- inflation actuals: headline/core CPI and headline/core PPI when available;
 - cross-asset breadth and volatility: NDX/RUT and VIX/VIX3M;
 - credit and liquidity readings that actually drive the stated posture.
 
