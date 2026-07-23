@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "contract_version": "issue-75-v2",
+  "contract_version": "issue-75-v3",
   "issue": 75,
   "parent_issue": 74,
   "researched_at": "2026-07-23",
@@ -13,8 +13,8 @@
     "commodities.brent_contract_code",
     "commodities.brent_roll_state"
   ],
-  "contract_result": "complete",
-  "contract_result_reason": "All seven required fields have exact, public-safe source contracts and synthetic golden coverage; observed broker gaps remain explicit.",
+  "contract_result": "blocked",
+  "contract_result_reason": "RUT, VIX3M, and XAU/USD have candidate source maps with synthetic schema coverage. DXY lacks an entitled exact-value retrieval, and all three ICE Brent fields lack an authorized Settlement Snapshot golden retrieval. No Macro Board may rely on the blocked fields.",
   "safety": {
     "repository_content": "provider_metadata_and_synthetic_fixtures_only",
     "persist_raw_provider_responses_by_default": false,
@@ -286,7 +286,12 @@
     },
     {
       "field_id": "fx.dxy_close",
-      "contract_status": "closed",
+      "contract_status": "blocked",
+      "blocker": {
+        "code": "exact_identity_resolved_but_value_entitlement_and_golden_retrieval_missing",
+        "reason": "MarketWatch/FactSet visible data does not establish permitted automated retrieval. The exact IBKR NYBOT DX candidate has no market-data entitlement in the observed environment, and ICE direct access is not authorized.",
+        "required_to_close": "With the user-selected default provider, obtain an authorized exact DXY closing-level response on two completed sessions, prove the response matches the ICE closing definition, and record the provider's permitted internal-use boundary."
+      },
       "provider_id": "marketwatch_dxy_historical_quotes",
       "retrieval": {
         "method": "Open the HTML page, select Result Frequency Daily, and parse the visible Historical Quotes table",
@@ -451,7 +456,12 @@
     },
     {
       "field_id": "commodities.brent_front_settlement",
-      "contract_status": "closed",
+      "contract_status": "blocked",
+      "blocker": {
+        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
+        "reason": "ICE MFT Settlement Snapshot is the only verified source with official settlement semantics, but no ICE API/MFT entitlement is available. Generic futures close and continuous-series alternatives are insufficient.",
+        "required_to_close": "Obtain ICE Futures Europe Commodities EOD/MFT access and capture two completed Settlement Snapshots with BRN settlement, market identity, strip, and official expiry rows."
+      },
       "provider_id": "ice_mft_settlement_snapshot",
       "retrieval": {
         "method": "Authorized ICE MFT Settlement Snapshot plus official expiry table",
@@ -533,7 +543,12 @@
     },
     {
       "field_id": "commodities.brent_contract_code",
-      "contract_status": "closed",
+      "contract_status": "blocked",
+      "blocker": {
+        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
+        "reason": "The contract code must come from the same authorized official settlement row as the front-month settlement. A continuous-series label cannot supply that identity.",
+        "required_to_close": "Obtain the authorized ICE Settlement Snapshot evidence required by commodities.brent_front_settlement and verify Market ID plus Strip against the official expiry table."
+      },
       "provider_id": "ice_mft_settlement_snapshot",
       "retrieval": {
         "method": "Same selected authorized ICE settlement and expiry rows",
@@ -582,7 +597,12 @@
     },
     {
       "field_id": "commodities.brent_roll_state",
-      "contract_status": "closed",
+      "contract_status": "blocked",
+      "blocker": {
+        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
+        "reason": "Roll state requires two adjacent completed official settlement identities. No authorized ICE settlement data is available to establish them.",
+        "required_to_close": "Obtain the authorized ICE Settlement Snapshot evidence required by commodities.brent_front_settlement for adjacent completed dates and derive roll state from Market ID and Strip changes."
+      },
       "provider_id": "ice_mft_settlement_snapshot",
       "retrieval": {
         "method": "Derived from adjacent completed ICE front-month settlement identities",

@@ -47,8 +47,8 @@ EXPECTED_SAFETY = {
     "search_snippet_field_evidence_allowed": False,
     "opened_exact_source_required": True,
 }
-DXY_PROVIDER_ID = "marketwatch_dxy_historical_quotes"
-DXY_ENDPOINT = (
+DXY_CANDIDATE_PROVIDER_ID = "marketwatch_dxy_historical_quotes"
+DXY_CANDIDATE_ENDPOINT = (
     "https://www.marketwatch.com/investing/index/dxy/download-data"
     "?mod=mw_quote_tab"
 )
@@ -277,16 +277,6 @@ def verify_map_shape(
             )
 
     assert_equal(set(maps_by_id), REQUIRED_FIELDS, "required field map set")
-    dxy_map = maps_by_id["fx.dxy_close"]
-    if dxy_map["contract_status"] != "closed":
-        raise VerificationError(
-            "fx.dxy_close: qualified public exact-source fallback is required"
-        )
-    assert_equal(
-        dxy_map["provider_id"],
-        DXY_PROVIDER_ID,
-        "fx.dxy_close provider",
-    )
     evidence_ids = {
         item.get("id")
         for item in contract.get("source_evidence", [])
@@ -332,14 +322,22 @@ def verify_dxy_html_table(
     case: dict[str, Any], field_map: dict[str, Any]
 ) -> None:
     assert_equal(case["field_id"], "fx.dxy_close", f"{case['id']} field")
-    assert_equal(case["provider_id"], DXY_PROVIDER_ID, f"{case['id']} provider")
+    assert_equal(
+        case["provider_id"],
+        DXY_CANDIDATE_PROVIDER_ID,
+        f"{case['id']} provider",
+    )
     assert_equal(
         case["provider_id"],
         field_map["provider_id"],
         f"{case['id']} map provider",
     )
     retrieval = field_map["retrieval"]
-    assert_equal(retrieval["endpoint"], DXY_ENDPOINT, f"{case['id']} endpoint")
+    assert_equal(
+        retrieval["endpoint"],
+        DXY_CANDIDATE_ENDPOINT,
+        f"{case['id']} endpoint",
+    )
     assert_equal(
         retrieval["non_sensitive_parameters"],
         {
