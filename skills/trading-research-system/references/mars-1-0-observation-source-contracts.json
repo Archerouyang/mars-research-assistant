@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0",
+  "contract_version": "mars-observation-adapter-v1",
+  "scope": "Mars 1.0 direct-source raw observations only",
+  "safety": {
+    "adapter_may_call_network": false,
+    "persist_raw_source_payloads": false,
+    "allowed_fixture_content": "deterministic_synthetic_source_payloads_only",
+    "caller_derived_values_allowed": false,
+    "broker_runtime_assumptions_allowed": false,
+    "partial_board_allowed": false,
+    "actual_latest_completed_market_session_required": true,
+    "actual_latest_official_observation_required": true
+  },
+  "source_evidence": [
+    {
+      "id": "treasury-daily-yield-xml-feed",
+      "authority": "U.S. Department of the Treasury",
+      "url": "https://home.treasury.gov/treasury-daily-interest-rate-xml-feed",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The official feed documents daily Treasury par-yield-curve data and a stable XML endpoint shape."
+    },
+    {
+      "id": "cboe-vix-historical-data",
+      "authority": "Cboe",
+      "url": "https://www.cboe.com/tradable_products/vix/vix_historical_data",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "Cboe publishes updated-daily VIX closing-value history from 1990 to present."
+    },
+    {
+      "id": "cboe-rut-vix3m-exact-history",
+      "authority": "Cboe",
+      "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The existing exact-source audit directly opened the Cboe VIX3M and RUT daily-history maps; this adapter reuses their exact URLs and columns."
+    },
+    {
+      "id": "fred-nasdaq100-daily-close",
+      "authority": "Federal Reserve Bank of St. Louis / Nasdaq, Inc.",
+      "url": "https://fred.stlouisfed.org/series/NASDAQ100",
+      "discovery": "user-verified_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "FRED identifies NASDAQ100 as Nasdaq Daily Index Data, Daily, Close, and displays the exact latest daily observation.",
+      "use_constraint": "The page marks the series Copyrighted: Pre-Approval Required. This repository keeps only synthetic fixtures; any future live/private use must independently satisfy FRED and Nasdaq terms and preserve attribution."
+    },
+    {
+      "id": "nyse-hours-calendars",
+      "authority": "NYSE",
+      "url": "https://www.nyse.com/markets/hours-calendars",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "NYSE publishes the U.S. equities trading-hours and holiday calendar used to establish the latest completed market session."
+    },
+    {
+      "id": "federal-reserve-h41",
+      "authority": "Federal Reserve Board",
+      "url": "https://www.federalreserve.gov/releases/h41/",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "H.4.1 is the Board release for factors affecting reserve balances."
+    },
+    {
+      "id": "treasury-daily-statement-operating-cash",
+      "authority": "U.S. Treasury Bureau of the Fiscal Service",
+      "url": "https://fiscaldata.treasury.gov/datasets/daily-treasury-statement/operating-cash-balance",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The Daily Treasury Statement reports the Treasury General Account operating-cash balance."
+    },
+    {
+      "id": "new-york-fed-reverse-repo-results",
+      "authority": "Federal Reserve Bank of New York",
+      "url": "https://www.newyorkfed.org/markets/desk-operations/reverse-repo",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The New York Fed reports reverse-repo operation results and links its Markets Data APIs."
+    }
+  ],
+  "excluded_fields": [
+    {
+      "field_id": "credit.hyg_close",
+      "reason": "No direct stable source contract was opened for the exact completed close; configured-broker routing is not a Mars 1.0 assumption."
+    },
+    {
+      "field_id": "credit.lqd_close",
+      "reason": "No direct stable source contract was opened for the exact completed close; configured-broker routing is not a Mars 1.0 assumption."
+    },
+    {
+      "field_id": "equity.spx_close",
+      "reason": "No direct stable source contract was opened for the exact completed close."
+    }
+  ],
+  "market_session": {
+    "source_id": "us_equities_session",
+    "source_url": "https://www.nyse.com/markets/hours-calendars",
+    "source_timing": "completed_market",
+    "latest_session_key": "latest_completed_market_session",
+    "status_key": "session_state",
+    "required_status": "completed",
+    "raw_field_path": ["latest_completed_market_session"]
+  },
+  "fields": [
+    {"field_id":"rates.us_2y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"2 Yr","raw_field_path":["records","$last","2 Yr"]},
+    {"field_id":"rates.us_10y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"10 Yr","raw_field_path":["records","$last","10 Yr"]},
+    {"field_id":"rates.us_30y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"30 Yr","raw_field_path":["records","$last","30 Yr"]},
+    {"field_id":"volatility.vix_close","source_id":"cboe_vix_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv","source_timing":"completed_market","unit":"volatility_index_points","collection_key":"records","date_key":"DATE","value_key":"CLOSE","raw_field_path":["records","$last","CLOSE"]},
+    {"field_id":"volatility.vix3m_close","source_id":"cboe_vix3m_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv","source_timing":"completed_market","unit":"volatility_index_points","collection_key":"records","date_key":"DATE","value_key":"CLOSE","raw_field_path":["records","$last","CLOSE"]},
+    {"field_id":"equity.ndx_close","source_id":"fred_nasdaq100_history","source_url":"https://fred.stlouisfed.org/series/NASDAQ100","source_timing":"completed_market","unit":"index_points","collection_key":"records","date_key":"DATE","value_key":"NASDAQ100","raw_field_path":["records","$last","NASDAQ100"]},
+    {"field_id":"equity.rut_close","source_id":"cboe_rut_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv","source_timing":"completed_market","unit":"index_points","collection_key":"records","date_key":"DATE","value_key":"RUT","raw_field_path":["records","$last","RUT"]},
+    {"field_id":"liquidity.reserve_balances","source_id":"federal_reserve_h41","source_url":"https://www.federalreserve.gov/releases/h41/","source_timing":"official_release","unit":"usd_billions","collection_key":"releases","date_key":"reference_period","value_key":"reserve_balances_billions","raw_field_path":["releases","$last","reserve_balances_billions"]},
+    {"field_id":"liquidity.tga_balance","source_id":"us_treasury_dts","source_url":"https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance","source_timing":"official_release","unit":"usd_billions","collection_key":"records","date_key":"record_date","value_key":"close_today_bal_millions","scale":0.001,"filter":{"key":"account_type","equals":"Treasury General Account (TGA) Closing Balance"},"raw_field_path":["records","account_type=Treasury General Account (TGA) Closing Balance","$last","close_today_bal_millions"]},
+    {"field_id":"liquidity.on_rrp_usage","source_id":"new_york_fed_on_rrp","source_url":"https://www.newyorkfed.org/markets/desk-operations/reverse-repo","source_timing":"official_release","unit":"usd_billions","collection_key":"results","date_key":"operation_date","value_key":"accepted_amount_billions","filter":{"key":"operation_type","equals":"Overnight Reverse Repo"},"raw_field_path":["results","operation_type=Overnight Reverse Repo","$last","accepted_amount_billions"]}
+  ]
+}
