@@ -34,9 +34,6 @@ def refresh_snapshot_hash(snapshot: dict[str, object]) -> None:
 
 def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
     values = {str(row["field_id"]): row["value"] for row in observations}
-    values["credit.hyg_lqd_ratio"] = (
-        float(values["credit.hyg_close"]) / float(values["credit.lqd_close"])
-    )
     values["volatility.vix_vix3m_ratio"] = (
         float(values["volatility.vix_close"])
         / float(values["volatility.vix3m_close"])
@@ -64,6 +61,10 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
     values["equity.ndx_rut_normalized_20d"] = (
         (window[-1] - mean) / variance**0.5
     )
+    for change_window in (1, 5, 20):
+        values[f"equity.ndx_rut_ratio.change_{change_window}d"] = (
+            (ratio_history[-1] / ratio_history[-(change_window + 1)] - 1.0) * 100.0
+        )
     snapshot = load("macro-regime-complete.json")
     payload = snapshot["payload"]
     snapshot["decision_cutoff"] = AS_OF
@@ -77,7 +78,7 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
             module["data"]["applicable_session"] = "2026-07-23T00:00:00Z"
         elif module["id"] == "rates_liquidity":
             module["data"] = {
-                "rule": "Core rates, credit, and volatility only.",
+                "rule": "Direct rates, volatility, relative strength, and liquidity only.",
                 "scope": "Synthetic core-only fields.",
             }
         elif module["id"] == "cross_asset":
@@ -85,21 +86,48 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
                 "rule": "Core relative-strength and volatility confirmation.",
                 "scope": "Synthetic core-only fields.",
             }
-    for evidence in payload["evidence"]:
-        evidence["as_of"] = AS_OF
-        if evidence["category"] == "media":
-            evidence["reading"] = "NDX/RUT and VIX/VIX3M are synthetic core-only values."
-            evidence["transmission"] = "Relative strength and volatility are evaluated together."
-        if evidence["category"] == "thesis":
-            evidence["reading"] = "Rates, credit, VIX/VIX3M, and NDX/RUT require confirmation."
-            evidence["transmission"] = "Verified core fields update the evidence gate."
+    payload["evidence"] = [
+        {
+            "id": "rate-actual", "label": "Direct rates", "family": "rates_liquidity", "category": "actual",
+            "reading": "Synthetic 2Y, 10Y, and 30Y observations.",
+            "transmission": "The curve is interpreted only with direct volatility and relative-strength fields.",
+            "plan_effect": "Does not create a trade instruction.", "status": "verified",
+            "as_of": AS_OF, "source_ref": "market-values", "exposure_id": "growth-theme",
+        },
+        {
+            "id": "event-forecast", "label": "Direct event calendar", "family": "inflation_growth", "category": "forecast",
+            "reading": "Synthetic direct event metadata only.",
+            "transmission": "Events require a post-release direct-data update.",
+            "plan_effect": "Does not create a trade instruction.", "status": "needs_check",
+            "as_of": AS_OF, "source_ref": "forecast-consensus", "exposure_id": "growth-theme",
+        },
+        {
+            "id": "relative-media", "label": "Relative strength", "family": "cross_asset", "category": "media",
+            "reading": "NDX/RUT and VIX/VIX3M are synthetic core-only values.",
+            "transmission": "Relative strength and volatility are evaluated together.",
+            "plan_effect": "Does not create a trade instruction.", "status": "lead",
+            "as_of": AS_OF, "source_ref": "media-context", "exposure_id": "defensive-hedge",
+        },
+        {
+            "id": "plan-thesis", "label": "Field contract", "family": "event_scenarios", "category": "thesis",
+            "reading": "Only verified direct-source fields can reach the Board.",
+            "transmission": "Missing fields stop the Board instead of using an equivalent proxy.",
+            "plan_effect": "Preserves the fail-closed boundary.", "status": "plan_rule",
+            "as_of": AS_OF, "source_ref": "plan-fixture", "exposure_id": "defensive-hedge",
+        },
+    ]
+    payload["posture"] = {
+        "label": "Synthetic direct-source posture",
+        "consequence": "Keep the evidence gate in place until the next direct-source refresh.",
+        "derived_from": ["rate-actual", "relative-media", "plan-thesis"],
+    }
     payload["liquidity_background"] = "Synthetic core-only financial-conditions coverage."
     payload["asset_preferences"] = [
         {
             "segment": "科技股",
             "bias": "neutral",
             "impact": "Synthetic core-only fixture.",
-            "watch": "Rates, credit, and volatility confirmation.",
+            "watch": "Rates, volatility, and relative-strength confirmation.",
         }
     ]
     payload["event_watch"] = [
@@ -117,7 +145,7 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
         {
             "name": "Core field confirmation",
             "trigger": "Retained events update the verified fields.",
-            "confirms": "Rates, credit, VIX/VIX3M, and NDX/RUT agree.",
+            "confirms": "Rates, VIX/VIX3M, and NDX/RUT agree.",
             "cross_asset": "Synthetic core-only transmission.",
             "posture": "Reassess the evidence gate.",
             "impact_rank": 1,
@@ -128,9 +156,13 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
         "2Y": "rates.us_2y_yield",
         "10Y": "rates.us_10y_yield",
         "30Y": "rates.us_30y_yield",
-        "HYG/LQD": "credit.hyg_lqd_ratio",
         "VIX/VIX3M": "volatility.vix_vix3m_ratio",
         "NDX/RUT": "equity.ndx_rut_ratio",
+        "NDX/RUT 5D": "equity.ndx_rut_ratio.change_5d",
+        "NDX/RUT 20D": "equity.ndx_rut_ratio.change_20d",
+        "准备金": "liquidity.reserve_balances",
+        "TGA": "liquidity.tga_balance",
+        "ON RRP": "liquidity.on_rrp_usage",
     }
     payload["chart_series"] = [
         {"label": label, "value": values[field_id]}
@@ -203,6 +235,15 @@ def research_result(observations: list[dict[str, object]]) -> dict[str, object]:
 
 def complete_observations() -> list[dict[str, object]]:
     registry = load_field_registry()
+    source_contract = json.loads(
+        (ROOT / "references" / "mars-1-0-observation-source-contracts.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    direct_fields = {
+        field["field_id"]: field
+        for field in source_contract["fields"]
+    }
     require(
         set(registry["freshness_policies"])
         == {"completed_market", "official_release", "event", "policy"},
@@ -211,6 +252,10 @@ def complete_observations() -> list[dict[str, object]]:
     field_ids = {field["field_id"] for field in registry["fields"]}
     require(
         not {
+            "credit.hyg_close",
+            "credit.lqd_close",
+            "credit.hyg_lqd_ratio",
+            "equity.spx_close",
             "fx.dxy_close",
             "commodities.brent_front_settlement",
             "commodities.brent_contract_code",
@@ -228,9 +273,8 @@ def complete_observations() -> list[dict[str, object]]:
         if field.get("derivation_inputs"):
             continue
         source_route = field["source_routes"][0]
-        source_id = source_route["source_id"]
-        if source_id == "configured_broker":
-            source_id = "longbridge"
+        direct = direct_fields.get(field["field_id"])
+        source_id = direct["source_id"] if direct is not None else source_route["source_id"]
         row: dict[str, object] = {
             "field_id": field["field_id"],
             "value": float(index),
@@ -238,9 +282,11 @@ def complete_observations() -> list[dict[str, object]]:
             "status": "available",
             "data_as_of": AS_OF,
             "source_id": source_id,
-            "retrieval_method": source_route["method"],
-            "raw_field_path": ["fixture", field["field_id"]],
+            "retrieval_method": "source_payload" if direct is not None else source_route["method"],
+            "raw_field_path": list(direct["raw_field_path"]) if direct is not None else ["fixture", field["field_id"]],
         }
+        if direct is not None:
+            row["source_url"] = direct["source_url"]
         if field["unit"] == "event_set":
             row["value"] = [
                 {
@@ -279,24 +325,6 @@ def complete_observations() -> list[dict[str, object]]:
             ]
             row["history"] = history
             row["value"] = history[-1]["value"]
-        if field["field_id"] == "equity.rut_close":
-            row["source_id"] = "cboe_daily_index_history"
-            row["retrieval_method"] = "official_csv"
-            row["source_url"] = (
-                "https://cdn.cboe.com/api/global/us_indices/daily_prices/"
-                "RUT_History.csv"
-            )
-            row["source_columns"] = ["DATE", "RUT"]
-            row["raw_field_path"] = ["records", "$last", "RUT"]
-        if field["field_id"] == "volatility.vix3m_close":
-            row["source_id"] = "cboe_daily_index_history"
-            row["retrieval_method"] = "official_csv"
-            row["source_url"] = (
-                "https://cdn.cboe.com/api/global/us_indices/daily_prices/"
-                "VIX3M_History.csv"
-            )
-            row["source_columns"] = ["DATE", "OPEN", "HIGH", "LOW", "CLOSE"]
-            row["raw_field_path"] = ["records", "$last", "CLOSE"]
         rows.append(row)
     return rows
 
@@ -541,14 +569,14 @@ def main() -> int:
         "top-level proxy leakage must be visible at the Board seam",
     )
 
-    mixed_broker_rows = copy.deepcopy(observations)
-    hyg = next(row for row in mixed_broker_rows if row["field_id"] == "credit.hyg_close")
-    hyg["source_id"] = "ibkr"
-    mixed = run_macro_board(config, mixed_broker_rows, result)
-    require(mixed.kind == "blocker", "the unconfigured broker must not satisfy a field")
+    source_mismatch_rows = copy.deepcopy(observations)
+    vix = next(row for row in source_mismatch_rows if row["field_id"] == "volatility.vix_close")
+    vix["source_id"] = "ibkr"
+    mismatched_source = run_macro_board(config, source_mismatch_rows, result)
+    require(mismatched_source.kind == "blocker", "an uncontracted source must not satisfy a field")
     require(
-        any(item.field_id == "credit.hyg_close" and item.reason == "source_route_not_allowed" for item in mixed.blockers),
-        "automatic broker switching must be rejected at the field seam",
+        any(item.field_id == "volatility.vix_close" and item.reason == "source_route_not_allowed" for item in mismatched_source.blockers),
+        "direct-source field routes must reject broker or proxy substitution",
     )
 
     valueless_rows = copy.deepcopy(observations)
@@ -625,7 +653,6 @@ def main() -> int:
     require(
         set(allowed.resolved_values).issuperset(
             {
-                "credit.hyg_lqd_ratio",
                 "volatility.vix_vix3m_ratio",
                 "equity.ndx_rut_ratio",
                 "equity.ndx_rut_normalized_20d",
@@ -656,12 +683,8 @@ def main() -> int:
 
     ibkr_config = dict(config)
     ibkr_config["default_broker"] = "ibkr"
-    ibkr_observations = copy.deepcopy(observations)
-    for row in ibkr_observations:
-        if row["source_id"] == "longbridge":
-            row["source_id"] = "ibkr"
-    ibkr_allowed = run_macro_board(ibkr_config, ibkr_observations, result)
-    require(ibkr_allowed.kind == "board", "IBKR setup must use the same Preflight seam")
+    ibkr_allowed = run_macro_board(ibkr_config, observations, result)
+    require(ibkr_allowed.kind == "board", "broker setup cannot change direct public macro sources")
     require(
         ibkr_allowed.attempted_brokers == ("ibkr",),
         "Preflight must never auto-switch to the other broker",

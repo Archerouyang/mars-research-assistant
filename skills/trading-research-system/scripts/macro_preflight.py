@@ -60,6 +60,11 @@ POLICY_MAX_AGE = timedelta(hours=24)
 DEFERRED_SURFACE_TERMS = frozenset(
     {
         "dxy",
+        "hyg",
+        "lqd",
+        "spx",
+        "cpi",
+        "ppi",
         "美元指数",
         "uup",
         "brent",
@@ -342,12 +347,15 @@ def _load_closed_source_maps(path: Path | None = None) -> dict[str, dict[str, An
     contract_path = path or (
         Path(__file__).resolve().parents[1]
         / "references"
-        / "issue-75-completed-market-source-contracts.json"
+        / "mars-1-0-observation-source-contracts.json"
     )
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
-    if not isinstance(contract, Mapping) or contract.get("contract_result") != "complete":
+    if (
+        not isinstance(contract, Mapping)
+        or contract.get("contract_version") != "mars-observation-adapter-v1"
+    ):
         raise ValueError("source_contract_not_complete")
-    rows = contract.get("field_maps")
+    rows = contract.get("fields")
     if not isinstance(rows, list):
         raise ValueError("source_contract_maps_invalid")
     maps: dict[str, dict[str, Any]] = {}
@@ -355,14 +363,13 @@ def _load_closed_source_maps(path: Path | None = None) -> dict[str, dict[str, An
         if not isinstance(item, Mapping):
             raise ValueError("source_contract_map_invalid")
         field_id = item.get("field_id")
-        paths = item.get("raw_field_paths")
+        path_value = item.get("raw_field_path")
         if (
             not isinstance(field_id, str)
-            or item.get("contract_status") != "closed"
-            or item.get("runtime_availability") != "requires_fresh_authorized_read"
-            or not isinstance(item.get("provider_id"), str)
-            or not isinstance(paths, Mapping)
-            or not _is_path(paths.get("value"))
+            or not isinstance(item.get("source_id"), str)
+            or not isinstance(item.get("source_url"), str)
+            or item.get("source_timing") not in {"completed_market", "official_release"}
+            or not _is_path(path_value)
         ):
             raise ValueError("source_contract_map_invalid")
         maps[field_id] = copy.deepcopy(dict(item))
@@ -556,17 +563,11 @@ def _validate_value_shape(value: object, field: Mapping[str, Any]) -> str | None
 def _matches_source_map(
     row: Mapping[str, Any], source_map: Mapping[str, Any]
 ) -> bool:
-    paths = source_map.get("raw_field_paths")
-    retrieval = source_map.get("retrieval")
-    normalization = source_map.get("normalization")
     return (
-        row.get("source_id") == source_map.get("provider_id")
-        and isinstance(paths, Mapping)
-        and row.get("raw_field_path") == paths.get("value")
-        and isinstance(retrieval, Mapping)
-        and row.get("source_url") == retrieval.get("endpoint")
-        and isinstance(normalization, Mapping)
-        and row.get("source_columns") == normalization.get("required_columns")
+        row.get("source_id") == source_map.get("source_id")
+        and row.get("retrieval_method") == "source_payload"
+        and row.get("raw_field_path") == source_map.get("raw_field_path")
+        and row.get("source_url") == source_map.get("source_url")
     )
 
 
@@ -656,7 +657,6 @@ def _derive_values(
             blockers.append(_blocker(field, "source_error", "derived_input_unavailable"))
             continue
         if field.get("formula") not in {
-            "credit.hyg_close / credit.lqd_close",
             "volatility.vix_close / volatility.vix3m_close",
             "equity.ndx_close / equity.rut_close",
             "(ratio - mean_20d) / stddev_20d",

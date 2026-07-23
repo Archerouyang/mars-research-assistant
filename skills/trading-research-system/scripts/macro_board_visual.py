@@ -143,7 +143,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     #{root} .event-head .event-priority{{color:var(--destructive);font-weight:650}}
     #{root} .event-branches{{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
     #{root} .event-branches span{{padding:8px;background:var(--muted)}}
-    #{root} .macro-summary{{display:grid;grid-template-columns:1.2fr 1fr 1fr;border-block:1px solid var(--border)}}
+    #{root} .macro-summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-block:1px solid var(--border)}}
     #{root} .macro-summary-group{{display:grid;align-content:start;gap:7px;padding:12px 14px}}
     #{root} .macro-summary-group+ .macro-summary-group{{border-left:1px solid var(--border)}}
     #{root} .macro-summary-label{{color:var(--muted-foreground);font-weight:500}}
@@ -191,8 +191,9 @@ def _macro_summary_groups(series: list[Mapping[str, Any]]) -> str:
 
     groups = (
         ("收益率曲线", (("2Y", value("2Y", "%")), ("10Y", value("10Y", "%")), ("30Y", value("30Y", "%")))),
-        ("通胀", (("CPI", value("CPI", "%")), ("Core", value("Core CPI", "%")), ("PPI", value("PPI", "%")))),
-        ("风险广度", (("NDX/RUT", value("NDX/RUT")), ("VXN", value("VXN")))),
+        ("波动期限结构", (("VIX/VIX3M", value("VIX/VIX3M")),)),
+        ("成长/小盘", (("NDX/RUT", value("NDX/RUT")), ("5D", value("NDX/RUT 5D", "%")), ("20D", value("NDX/RUT 20D", "%")))),
+        ("流动性", (("准备金", value("准备金", "B")), ("TGA", value("TGA", "B")), ("ON RRP", value("ON RRP", "B")))),
     )
 
     def readings_html(readings: tuple[tuple[str, str], ...]) -> str:

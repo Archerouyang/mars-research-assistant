@@ -45,6 +45,13 @@ MACRO_PLAN_UNAVAILABLE_POSTURE = "Plan context unavailable"
 MACRO_PLAN_UNAVAILABLE_DECISION = (
     "No plan-linked Macro decision is available until plan context is complete."
 )
+MACRO_DERIVED_BINDING_IDS = frozenset(
+    {
+        "equity.ndx_rut_ratio.change_1d",
+        "equity.ndx_rut_ratio.change_5d",
+        "equity.ndx_rut_ratio.change_20d",
+    }
+)
 ECHARTS_VERSION = "6.1.0"
 ECHARTS_ASSET = (
     Path(__file__).resolve().parents[1]
@@ -261,7 +268,7 @@ def _validate_preflight_binding_metadata(value: Any) -> None:
             or not all(
                 _is_nonempty_string(label)
                 and _is_nonempty_string(field_id)
-                and field_id in field_ids
+                and (field_id in field_ids or field_id in MACRO_DERIVED_BINDING_IDS)
                 for label, field_id in labels.items()
             )
         ):
