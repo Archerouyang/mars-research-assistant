@@ -105,12 +105,12 @@ Longbridge 作为可选 broker source，第一阶段提供 positions、execution
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
 **Longbridge Macrodata Source**:
-Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
-_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
+Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source，可用于非 Board 的辅助研究和交叉核验；它不是 Mars 1.0 Macro Board 的字段来源，不能替代逐字段直接公开来源合同。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实或 Mars 字段合同
 
 **Longbridge Skill Adapter**:
-把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
-_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在
+把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于非 Board 宏观和金融条件数值研究。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
+_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在, 用 macrodata 绕过 Mars 直接来源合同
 
 **Longbridge Terminal CLI Adapter**:
 消费用户已授权的 `longbridge portfolio --format json` 等只读 CLI 输出，并通过 `longbridge_cli_adapter.py` 转换成标准 `portfolio_snapshot.csv` 的本地适配层。该 adapter 只处理已保存 JSON，不主动运行 CLI、不读取 live broker、不调用行情、不创建/修改/取消/提交订单。
