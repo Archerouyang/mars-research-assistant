@@ -1,20 +1,25 @@
 {
-  "schema_version": "1.0",
-  "contract_version": "issue-75-v3",
+  "schema_version": "2.0",
+  "contract_version": "issue-75-v4",
   "issue": 75,
   "parent_issue": 74,
   "researched_at": "2026-07-23",
   "scope": [
     "equity.rut_close",
-    "volatility.vix3m_close",
-    "fx.dxy_close",
-    "commodities.xauusd_close",
-    "commodities.brent_front_settlement",
-    "commodities.brent_contract_code",
-    "commodities.brent_roll_state"
+    "volatility.vix3m_close"
   ],
-  "contract_result": "blocked",
-  "contract_result_reason": "RUT, VIX3M, and XAU/USD have candidate source maps with synthetic schema coverage. DXY lacks an entitled exact-value retrieval, and all three ICE Brent fields lack an authorized Settlement Snapshot golden retrieval. No Macro Board may rely on the blocked fields.",
+  "contract_result": "complete",
+  "contract_result_reason": "The retained RUT and VIX3M fields have exact public source maps and synthetic completed-close coverage. This closes source-map definition only and does not claim runtime production availability.",
+  "production_availability": {
+    "status": "not_claimed_by_source_contract",
+    "reason": "Public discovery and direct opening prove source identity and response shape, not future reachability, freshness, entitlement, or production authorization.",
+    "runtime_requirements": [
+      "fresh HTTPS retrieval from the exact mapped URL",
+      "exact expected columns and one selected completed-date row",
+      "applicable Cboe entitlement and internal-use rights",
+      "source attribution and no raw-payload persistence or redistribution"
+    ]
+  },
   "safety": {
     "repository_content": "provider_metadata_and_synthetic_fixtures_only",
     "persist_raw_provider_responses_by_default": false,
@@ -35,140 +40,64 @@
       "VIXY",
       "UVXY",
       "SVXY"
-    ],
-    "fx.dxy_close": [
-      "UUP",
-      "USDU"
-    ],
-    "commodities.xauusd_close": [
-      "GLD",
-      "IAU"
-    ],
-    "commodities.brent_front_settlement": [
-      "BNO",
-      "USO"
     ]
   },
   "source_evidence": [
     {
-      "id": "cboe-vix-history",
-      "authority": "Cboe",
-      "url": "https://www.cboe.com/tradable_products/vix/vix_historical_data",
-      "supports": "Cboe describes its downloadable volatility-index history as daily closing values updated daily."
+      "id": "lseg-russell-2000-definition",
+      "authority": "FTSE Russell / LSEG",
+      "url": "https://www.lseg.com/en/ftse-russell/indices/russell-2000-index",
+      "discovery": "public_web_search",
+      "opened_at": "2026-07-23",
+      "supports": "The Russell 2000 Index measures the performance of the small-cap segment of the U.S. equity universe and contains approximately 2,000 small-cap U.S. equities."
     },
     {
-      "id": "cboe-vix3m-csv",
+      "id": "cboe-rut-product-identity",
       "authority": "Cboe",
-      "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
-      "supports": "The official daily file exposes DATE, OPEN, HIGH, LOW, and CLOSE columns."
+      "url": "https://www.cboe.com/tradable-products/product-list",
+      "discovery": "public_web_search",
+      "opened_at": "2026-07-23",
+      "supports": "Cboe identifies RUT as its ticker for Russell 2000 Index options, distinguishing the exact index from IWM."
     },
     {
-      "id": "cboe-vix3m-identity",
-      "authority": "Cboe",
-      "url": "https://www.cboe.com/tradable-products/vix/term-structure",
-      "supports": "Cboe identifies VIX3M as its constant three-month implied-volatility index for S&P 500 options."
-    },
-    {
-      "id": "cboe-rut-csv",
+      "id": "cboe-rut-daily-csv",
       "authority": "Cboe",
       "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv",
-      "supports": "The official daily-prices file exposes DATE and RUT columns."
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The directly opened official CSV exposes exact DATE and RUT columns. No observed market values are retained in this public contract."
     },
     {
-      "id": "cboe-eod-definition",
-      "authority": "Cboe Data Services",
-      "url": "https://cdn.cboe.com/resources/us/indices/MDXCustomerAgreementMDI.pdf",
-      "supports": "Cboe defines End-of-Day index data as daily values determined at the provider-defined daily market close; it becomes historical at the next NYSE opening."
+      "id": "cboe-vix3m-definition",
+      "authority": "Cboe",
+      "url": "https://www.cboe.com/tradable-products/vix/term-structure",
+      "discovery": "public_web_search",
+      "opened_at": "2026-07-23",
+      "supports": "Cboe identifies VIX3M as its three-month volatility index derived from S&P 500 option prices."
+    },
+    {
+      "id": "cboe-vix3m-methodology",
+      "authority": "Cboe",
+      "url": "https://cdn.cboe.com/api/global/us_indices/governance/Volatility_Index_Methodology_Selected_SPX_Target_Expected_Volatility_Term_Indices.pdf",
+      "discovery": "public_web_search",
+      "opened_at": "2026-07-23",
+      "supports": "The official methodology identifies the Cboe 3-Month Volatility Index ticker as VIX3M and defines the SPX expected-volatility term-index family."
+    },
+    {
+      "id": "cboe-vix3m-daily-csv",
+      "authority": "Cboe",
+      "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-23",
+      "supports": "The directly opened official CSV exposes exact DATE, OPEN, HIGH, LOW, and CLOSE columns. No observed market values are retained in this public contract."
     },
     {
       "id": "cboe-index-licensing",
       "authority": "Cboe",
       "url": "https://www.cboe.com/data/global-indices-feed/",
-      "supports": "Cboe publishes index delivery and licensing routes, including end-of-day files and historical data."
-    },
-    {
-      "id": "twelve-data-time-series",
-      "authority": "Twelve Data",
-      "url": "https://twelvedata.com/docs/discovery",
-      "supports": "The time_series contract exposes meta.symbol, meta.interval, meta.currency, meta.exchange_timezone, values[].datetime, and values[].close; close is the price at the end of the bar."
-    },
-    {
-      "id": "twelve-data-xauusd",
-      "authority": "Twelve Data",
-      "url": "https://twelvedata.com/markets/300755/commodity/xau-usd",
-      "supports": "The provider identifies XAU/USD as Gold Spot / US Dollar, a Commodity quoted in USD, with a provider-defined daily main-market session."
-    },
-    {
-      "id": "twelve-data-terms",
-      "authority": "Twelve Data",
-      "url": "https://twelvedata.com/terms",
-      "supports": "The standard license is limited to internal use; redistribution and external display require applicable subscription rights or a separate agreement."
-    },
-    {
-      "id": "ice-mft-settlement",
-      "authority": "Intercontinental Exchange",
-      "url": "https://www.ice.com/publicdocs/futures/ICE_Futures_Data_MFT_User_Guide.pdf",
-      "supports": "The Settlement Snapshot defines Settlement Price Date, Market ID, Product Name, Commodity Code, Strip, Contract Type, and Settlement Price. Settlement Price is explicitly the price at which a contract settles after the trading day ends."
-    },
-    {
-      "id": "ice-brent-spec",
-      "authority": "ICE Futures Europe",
-      "url": "https://www.ice.com/products/219",
-      "supports": "The Brent contract uses symbol BRN, settles from the 19:28-19:30 London weighted-average window, and stops trading on the specified last business day."
-    },
-    {
-      "id": "ice-brent-expiry",
-      "authority": "ICE Futures Europe",
-      "url": "https://www.ice.com/products/219/brent-crude-futures/expiry",
-      "supports": "The official expiry table exposes Contract Symbol and Last Trade Date for listed Brent contract months."
-    },
-    {
-      "id": "ice-instrument-naming",
-      "authority": "Intercontinental Exchange",
-      "url": "https://www.ice.com/publicdocs/technology/Instrument_Naming_Convention.pdf",
-      "supports": "ICE defines contract code and contract-month identity and gives BRN as its Brent example."
-    },
-    {
-      "id": "ice-futures-data-catalog",
-      "authority": "Intercontinental Exchange",
-      "url": "https://developer.ice.com/fixed-income-data-services/catalog/ice-futures-europe",
-      "supports": "ICE states that licensed Futures Europe data includes settlement values and is delivered through APIs and bulk file services."
-    },
-    {
-      "id": "ice-dxy-catalog",
-      "authority": "ICE Data Indices",
-      "url": "https://developer.ice.com/fixed-income-data-services/catalog/ice-data-indices-currency-indices",
-      "supports": "ICE identifies DXY as the ICE U.S. Dollar Index and advertises daily end-of-day and historical delivery."
-    },
-    {
-      "id": "ice-dxy-methodology",
-      "authority": "ICE Data Indices",
-      "url": "https://www.ice.com/publicdocs/data/ICE_FX_Indexes_Methodology.pdf",
-      "supports": "ICE identifies DXY (NYICDX) as the ICE U.S. Dollar Index, documents its publication hours, and establishes the official semantic identity matched by the fallback page."
-    },
-    {
-      "id": "marketwatch-dxy-historical-page",
-      "authority": "MarketWatch",
-      "url": "https://www.marketwatch.com/investing/index/dxy/download-data?mod=mw_quote_tab",
-      "supports": "Opened and parsed on 2026-07-23. The page identifies DXY U.S.: ICE Futures U.S. and U.S. Dollar Index (DXY), and exposes a Daily Historical Quotes table with Date, Open, High, Low, and Close."
-    },
-    {
-      "id": "marketwatch-factset-eod-terms",
-      "authority": "MarketWatch / FactSet",
-      "url": "https://www.marketwatch.com/site/investing-terms-of-use",
-      "supports": "MarketWatch states that index data is sourced from FactSet for informational use; the DXY page footer attributes historical and current end-of-day data to FactSet and states that quotes use local exchange time."
-    },
-    {
-      "id": "longbridge-candlestick",
-      "authority": "Longbridge",
-      "url": "https://open.longbridge.com/docs/quote/pull/candlestick",
-      "supports": "Longbridge documents security candlesticks with close and timestamp fields, but the observed configured source had no exact RUT, VIX3M, DXY, XAU/USD, or ICE Brent mapping."
-    },
-    {
-      "id": "ibkr-historical-bars",
-      "authority": "Interactive Brokers",
-      "url": "https://ibkrcampus.com/campus/ibkr-api-page/twsapi-doc/",
-      "supports": "IBKR documents daily historical-bar fields and notes that a futures close can be settlement if supplied by the exchange, which is insufficient to treat every close as settlement."
+      "discovery": "public_web_search",
+      "opened_at": "2026-07-23",
+      "supports": "Cboe documents end-of-day and historical delivery and provides an index-data licensing route; public reachability alone is not production authorization."
     }
   ],
   "observed_provider_gaps": [
@@ -177,34 +106,25 @@
       "status": "unsupported",
       "fields": [
         "equity.rut_close",
-        "volatility.vix3m_close",
-        "fx.dxy_close",
-        "commodities.xauusd_close",
-        "commodities.brent_front_settlement",
-        "commodities.brent_contract_code",
-        "commodities.brent_roll_state"
+        "volatility.vix3m_close"
       ],
-      "boundary": "Keep these gaps explicit. Public or official field sources do not change the configured broker."
+      "boundary": "The observed configured Longbridge source did not expose exact RUT or VIX3M mappings. Keep the gaps explicit and use no proxy."
     },
     {
       "provider": "IBKR",
-      "status": "partial",
-      "fields_available_when_configured_and_entitled": [
+      "status": "not_selected_for_this_public_fallback",
+      "fields": [
         "equity.rut_close",
         "volatility.vix3m_close"
       ],
-      "fields_not_closed_by_provider": [
-        "fx.dxy_close",
-        "commodities.xauusd_close",
-        "commodities.brent_front_settlement"
-      ],
-      "boundary": "Observed DXY lacked market-data permission, XAU/USD history was absent, and futures bar.close does not prove official settlement. Exact public field fallbacks do not change the configured broker; never switch to IBKR unless the user configures it."
+      "boundary": "IBKR availability remains configuration- and entitlement-dependent. This public source map never switches the configured broker or treats prior observations as current runtime evidence."
     }
   ],
   "field_maps": [
     {
       "field_id": "equity.rut_close",
       "contract_status": "closed",
+      "runtime_availability": "requires_fresh_authorized_read",
       "provider_id": "cboe_daily_index_history",
       "retrieval": {
         "method": "HTTPS GET CSV",
@@ -225,26 +145,48 @@
         ]
       },
       "normalization": {
+        "required_columns": [
+          "DATE",
+          "RUT"
+        ],
         "value": "decimal string to number",
         "data_as_of": "MM/DD/YYYY to YYYY-MM-DD"
       },
       "unit": "index_points",
-      "completed_market_semantics": "Cboe daily-prices RUT value, admitted only after the dated U.S. index session is complete.",
-      "freshness": "The row date must equal the selected common completed U.S. market date; otherwise stale.",
-      "allowed_use": "Read only under applicable Cboe terms for authorized internal research; do not persist or redistribute the raw file.",
-      "identity_guards": [],
+      "completed_market_semantics": "The RUT value from the official daily-history row is admitted only when its DATE equals the selected completed U.S. index session and retrieval occurs after that date.",
+      "freshness": "The selected row date must equal the common completed U.S. market date. A missing, duplicate, future, or different-date row is fail-closed.",
+      "allowed_use": "Authorized internal decision support only under applicable Cboe terms. Retain normalized value/date/source lineage; do not persist or redistribute the raw CSV.",
+      "identity_guards": [
+        {
+          "path": [
+            "source_url"
+          ],
+          "equals": "https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv"
+        },
+        {
+          "path": [
+            "columns"
+          ],
+          "equals": [
+            "DATE",
+            "RUT"
+          ]
+        }
+      ],
       "fixture_cases": [
         "cboe-rut-completed-close"
       ],
       "evidence": [
-        "cboe-rut-csv",
-        "cboe-eod-definition",
+        "lseg-russell-2000-definition",
+        "cboe-rut-product-identity",
+        "cboe-rut-daily-csv",
         "cboe-index-licensing"
       ]
     },
     {
       "field_id": "volatility.vix3m_close",
       "contract_status": "closed",
+      "runtime_availability": "requires_fresh_authorized_read",
       "provider_id": "cboe_daily_index_history",
       "retrieval": {
         "method": "HTTPS GET CSV",
@@ -265,390 +207,48 @@
         ]
       },
       "normalization": {
-        "value": "decimal string to number",
+        "required_columns": [
+          "DATE",
+          "OPEN",
+          "HIGH",
+          "LOW",
+          "CLOSE"
+        ],
+        "value": "CLOSE decimal string to number",
         "data_as_of": "MM/DD/YYYY to YYYY-MM-DD"
       },
       "unit": "volatility_index_points",
-      "completed_market_semantics": "The official VIX3M daily-history CLOSE, admitted only after the dated Cboe index session is complete.",
-      "freshness": "The row date must equal the selected common completed U.S. market date; otherwise stale.",
-      "allowed_use": "Read only under applicable Cboe terms for authorized internal research; do not persist or redistribute the raw file.",
-      "identity_guards": [],
+      "completed_market_semantics": "The CLOSE from the official VIX3M daily-history row is the completed close for Cboe's three-month SPX expected-volatility index, not a futures or ETF price.",
+      "freshness": "The selected row date must equal the common completed U.S. market date. A missing, duplicate, future, or different-date row is fail-closed.",
+      "allowed_use": "Authorized internal decision support only under applicable Cboe terms. Retain normalized value/date/source lineage; do not persist or redistribute the raw CSV.",
+      "identity_guards": [
+        {
+          "path": [
+            "source_url"
+          ],
+          "equals": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv"
+        },
+        {
+          "path": [
+            "columns"
+          ],
+          "equals": [
+            "DATE",
+            "OPEN",
+            "HIGH",
+            "LOW",
+            "CLOSE"
+          ]
+        }
+      ],
       "fixture_cases": [
         "cboe-vix3m-completed-close"
       ],
       "evidence": [
-        "cboe-vix-history",
-        "cboe-vix3m-csv",
-        "cboe-vix3m-identity",
-        "cboe-eod-definition",
+        "cboe-vix3m-definition",
+        "cboe-vix3m-methodology",
+        "cboe-vix3m-daily-csv",
         "cboe-index-licensing"
-      ]
-    },
-    {
-      "field_id": "fx.dxy_close",
-      "contract_status": "blocked",
-      "blocker": {
-        "code": "exact_identity_resolved_but_value_entitlement_and_golden_retrieval_missing",
-        "reason": "MarketWatch/FactSet visible data does not establish permitted automated retrieval. The exact IBKR NYBOT DX candidate has no market-data entitlement in the observed environment, and ICE direct access is not authorized.",
-        "required_to_close": "With the user-selected default provider, obtain an authorized exact DXY closing-level response on two completed sessions, prove the response matches the ICE closing definition, and record the provider's permitted internal-use boundary."
-      },
-      "provider_id": "marketwatch_dxy_historical_quotes",
-      "retrieval": {
-        "method": "Open the HTML page, select Result Frequency Daily, and parse the visible Historical Quotes table",
-        "endpoint": "https://www.marketwatch.com/investing/index/dxy/download-data?mod=mw_quote_tab",
-        "non_sensitive_parameters": {
-          "result_frequency": "Daily",
-          "row_date": "$common_completed_date"
-        },
-        "response_format": "visible HTML table"
-      },
-      "raw_field_paths": {
-        "value": [
-          "visible_document",
-          "Historical Quotes",
-          "Daily",
-          "row[Date=$common_completed_date]",
-          "Close"
-        ],
-        "data_as_of": [
-          "visible_document",
-          "Historical Quotes",
-          "Daily",
-          "row[Date=$common_completed_date]",
-          "Date"
-        ]
-      },
-      "normalization": {
-        "required_columns": [
-          "Date",
-          "Open",
-          "High",
-          "Low",
-          "Close"
-        ],
-        "value": "Close decimal text to number",
-        "data_as_of": "MM/DD/YYYY to YYYY-MM-DD",
-        "table_selection": "Parse only the visible Historical Quotes table after confirming Result Frequency Daily; require exactly one row whose Date equals the common completed date."
-      },
-      "unit": "index_points",
-      "completed_market_semantics": "The selected Daily Historical Quotes Close is historical/current end-of-day data attributed to FactSet in local exchange time. MarketWatch page identity and ICE DXY methodology jointly prove that the row is the ICE U.S. Dollar Index, not a futures price, ETF, or synthetic basket.",
-      "freshness": "Require the exact common completed date in the Date column and retrieve only after that local exchange date has ended; a missing or duplicate date is fail-closed.",
-      "allowed_use": "Candidate-route investigation only. Production or automated decision-support retrieval is prohibited until an entitled exact DXY closing-level route passes two completed-session golden reads and its internal-use boundary is recorded. Do not persist or redistribute raw HTML, table rows, or public raw data.",
-      "identity_guards": [
-        {
-          "kind": "visible_text_contains",
-          "value": "DXY U.S.: ICE Futures U.S."
-        },
-        {
-          "kind": "visible_text_contains",
-          "value": "U.S. Dollar Index (DXY)"
-        },
-        {
-          "kind": "visible_text_contains",
-          "value": "Historical Quotes"
-        },
-        {
-          "kind": "visible_text_contains",
-          "value": "Result Frequency Daily"
-        },
-        {
-          "kind": "visible_text_contains",
-          "value": "Historical and current end-of-day data provided by FACTSET"
-        },
-        {
-          "kind": "visible_text_contains",
-          "value": "All quotes are in local exchange time"
-        }
-      ],
-      "fixture_cases": [
-        "marketwatch-dxy-completed-daily-close"
-      ],
-      "evidence": [
-        "ice-dxy-catalog",
-        "ice-dxy-methodology",
-        "marketwatch-dxy-historical-page",
-        "marketwatch-factset-eod-terms"
-      ]
-    },
-    {
-      "field_id": "commodities.xauusd_close",
-      "contract_status": "closed",
-      "provider_id": "twelve_data_time_series",
-      "retrieval": {
-        "method": "HTTPS GET JSON",
-        "endpoint": "https://api.twelvedata.com/time_series",
-        "non_sensitive_parameters": {
-          "symbol": "XAU/USD",
-          "interval": "1day",
-          "order": "asc",
-          "outputsize": 2
-        },
-        "secret_parameters_excluded": [
-          "apikey"
-        ],
-        "response_format": "json"
-      },
-      "raw_field_paths": {
-        "value": [
-          "values",
-          "$last",
-          "close"
-        ],
-        "data_as_of": [
-          "values",
-          "$last",
-          "datetime"
-        ]
-      },
-      "normalization": {
-        "value": "decimal string to number",
-        "data_as_of": "provider exchange-local YYYY-MM-DD",
-        "availability_gate": "retrieval date in meta.exchange_timezone must be later than data_as_of"
-      },
-      "unit": "usd_per_troy_ounce",
-      "completed_market_semantics": "Provider-defined XAU/USD Commodity 1day close at the end of the provider main-market bar; the current partial date is never admitted.",
-      "freshness": "The latest completed provider day must be no more than one provider session behind the selected common market date; otherwise stale.",
-      "allowed_use": "Requires a Twelve Data entitlement that permits the user's internal research. Do not persist raw responses or externally display/redistribute values without applicable rights.",
-      "identity_guards": [
-        {
-          "path": [
-            "meta",
-            "symbol"
-          ],
-          "equals": "XAU/USD"
-        },
-        {
-          "path": [
-            "meta",
-            "interval"
-          ],
-          "equals": "1day"
-        },
-        {
-          "path": [
-            "meta",
-            "currency"
-          ],
-          "equals": "USD"
-        },
-        {
-          "path": [
-            "meta",
-            "type"
-          ],
-          "equals": "Commodity"
-        },
-        {
-          "path": [
-            "status"
-          ],
-          "equals": "ok"
-        }
-      ],
-      "fixture_cases": [
-        "twelve-data-xauusd-completed-daily-close"
-      ],
-      "evidence": [
-        "twelve-data-time-series",
-        "twelve-data-xauusd",
-        "twelve-data-terms"
-      ]
-    },
-    {
-      "field_id": "commodities.brent_front_settlement",
-      "contract_status": "blocked",
-      "blocker": {
-        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
-        "reason": "ICE MFT Settlement Snapshot is the only verified source with official settlement semantics, but no ICE API/MFT entitlement is available. Generic futures close and continuous-series alternatives are insufficient.",
-        "required_to_close": "Obtain ICE Futures Europe Commodities EOD/MFT access and capture two completed Settlement Snapshots with BRN settlement, market identity, strip, and official expiry rows."
-      },
-      "provider_id": "ice_mft_settlement_snapshot",
-      "retrieval": {
-        "method": "Authorized ICE MFT Settlement Snapshot plus official expiry table",
-        "endpoint": "licensed MFT delivery and https://www.ice.com/products/219/brent-crude-futures/expiry",
-        "non_sensitive_parameters": {
-          "product_name": "Brent Crude Futures",
-          "commodity_code": "BRN",
-          "contract_type": "F"
-        },
-        "response_format": "settlement snapshot rows plus expiry rows"
-      },
-      "raw_field_paths": {
-        "value": [
-          "settlement_rows",
-          "$selected_front",
-          "Settlement Price"
-        ],
-        "data_as_of": [
-          "settlement_rows",
-          "$selected_front",
-          "Settlement Price Date"
-        ],
-        "contract_market_id": [
-          "settlement_rows",
-          "$selected_front",
-          "Market ID"
-        ],
-        "expiry": [
-          "expiry_rows",
-          "$matching_strip",
-          "LTD"
-        ],
-        "expiry_contract_symbol": [
-          "expiry_rows",
-          "$matching_strip",
-          "Contract Symbol"
-        ]
-      },
-      "normalization": {
-        "front_month": "For a settlement date, select the row whose Strip has the earliest official LTD greater than or equal to that date.",
-        "value": "Settlement Price decimal to number; Close Price is never an alternative.",
-        "data_as_of": "Settlement Price Date to YYYY-MM-DD"
-      },
-      "unit": "usd_per_barrel",
-      "completed_market_semantics": "ICE Settlement Price, explicitly distinct from ordinary Close Price and available only after the trading day has ended.",
-      "freshness": "The Settlement Price Date must equal the selected common completed settlement date; absence is missing/source_error, never a close fallback.",
-      "allowed_use": "Production use is prohibited until an ICE Futures data license/entitlement yields two completed Settlement Snapshot golden reads. After authorization, retain only normalized fields and lineage, never the raw MFT file.",
-      "identity_guards": [
-        {
-          "path": [
-            "Product Name"
-          ],
-          "equals": "Brent Crude Futures"
-        },
-        {
-          "path": [
-            "Commodity Code"
-          ],
-          "equals": "BRN"
-        },
-        {
-          "path": [
-            "Contract Type"
-          ],
-          "equals": "F"
-        }
-      ],
-      "fixture_cases": [
-        "ice-brent-front-month-settlement-stable",
-        "ice-brent-front-month-roll-transition",
-        "ordinary-close-cannot-satisfy-brent-settlement"
-      ],
-      "evidence": [
-        "ice-mft-settlement",
-        "ice-brent-spec",
-        "ice-brent-expiry",
-        "ice-futures-data-catalog"
-      ]
-    },
-    {
-      "field_id": "commodities.brent_contract_code",
-      "contract_status": "blocked",
-      "blocker": {
-        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
-        "reason": "The contract code must come from the same authorized official settlement row as the front-month settlement. A continuous-series label cannot supply that identity.",
-        "required_to_close": "Obtain the authorized ICE Settlement Snapshot evidence required by commodities.brent_front_settlement and verify Market ID plus Strip against the official expiry table."
-      },
-      "provider_id": "ice_mft_settlement_snapshot",
-      "retrieval": {
-        "method": "Same selected authorized ICE settlement and expiry rows",
-        "endpoint": "licensed MFT delivery and https://www.ice.com/products/219/brent-crude-futures/expiry",
-        "non_sensitive_parameters": {
-          "commodity_code": "BRN",
-          "contract_type": "F"
-        },
-        "response_format": "settlement snapshot rows plus expiry rows"
-      },
-      "raw_field_paths": {
-        "commodity_code": [
-          "settlement_rows",
-          "$selected_front",
-          "Commodity Code"
-        ],
-        "strip": [
-          "settlement_rows",
-          "$selected_front",
-          "Strip"
-        ],
-        "market_id": [
-          "settlement_rows",
-          "$selected_front",
-          "Market ID"
-        ]
-      },
-      "normalization": {
-        "contract_code": "Commodity Code + ':' + Strip",
-        "contract_identity": "Retain Market ID as the exact provider contract identifier."
-      },
-      "unit": "contract_identifier",
-      "completed_market_semantics": "Identity belongs to the same front-month row as the accepted settlement; it cannot be inferred from a continuous-series label.",
-      "freshness": "Must be present on the accepted settlement date and match the official front-month expiry selection.",
-      "allowed_use": "Production use is prohibited until the corresponding authorized ICE settlement route closes. After authorization, apply the same internal-use entitlement and no-raw-payload boundary as the settlement.",
-      "identity_guards": [],
-      "fixture_cases": [
-        "ice-brent-front-month-settlement-stable",
-        "ice-brent-front-month-roll-transition"
-      ],
-      "evidence": [
-        "ice-mft-settlement",
-        "ice-brent-expiry",
-        "ice-instrument-naming"
-      ]
-    },
-    {
-      "field_id": "commodities.brent_roll_state",
-      "contract_status": "blocked",
-      "blocker": {
-        "code": "ice_settlement_snapshot_entitlement_and_golden_retrieval_missing",
-        "reason": "Roll state requires two adjacent completed official settlement identities. No authorized ICE settlement data is available to establish them.",
-        "required_to_close": "Obtain the authorized ICE Settlement Snapshot evidence required by commodities.brent_front_settlement for adjacent completed dates and derive roll state from Market ID and Strip changes."
-      },
-      "provider_id": "ice_mft_settlement_snapshot",
-      "retrieval": {
-        "method": "Derived from adjacent completed ICE front-month settlement identities",
-        "endpoint": "same authorized ICE settlement and expiry inputs",
-        "non_sensitive_parameters": {},
-        "response_format": "derived lineage"
-      },
-      "raw_field_paths": {
-        "current_market_id": [
-          "settlement_rows",
-          "$current_front",
-          "Market ID"
-        ],
-        "previous_market_id": [
-          "settlement_rows",
-          "$previous_front",
-          "Market ID"
-        ],
-        "current_strip": [
-          "settlement_rows",
-          "$current_front",
-          "Strip"
-        ],
-        "previous_strip": [
-          "settlement_rows",
-          "$previous_front",
-          "Strip"
-        ]
-      },
-      "normalization": {
-        "same_front_contract": "current Market ID and Strip equal the previous completed settlement's selected front contract",
-        "front_contract_changed": "current Market ID or Strip differs from the previous completed settlement's selected front contract"
-      },
-      "unit": "roll_state",
-      "completed_market_semantics": "A lineage state over two completed settlement dates, never inferred from price movement or a continuous-contract adjustment.",
-      "freshness": "Both current and immediately previous completed settlement identities must be available; otherwise roll state is missing.",
-      "allowed_use": "Production use is prohibited until adjacent authorized ICE settlement identities are available. After authorization, derive internally from normalized fields and do not retain raw files.",
-      "identity_guards": [],
-      "fixture_cases": [
-        "ice-brent-front-month-settlement-stable",
-        "ice-brent-front-month-roll-transition"
-      ],
-      "evidence": [
-        "ice-mft-settlement",
-        "ice-brent-expiry",
-        "ice-instrument-naming"
       ]
     }
   ]

@@ -1,40 +1,28 @@
 #!/usr/bin/env python3
-"""Verify Issue #75 source maps against public-safe synthetic golden cases."""
+"""Verify the Issue #75 RUT and VIX3M completed-close source maps."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import date, datetime
-from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
 
-REQUIRED_FIELDS = {
+REQUIRED_FIELDS = (
     "equity.rut_close",
     "volatility.vix3m_close",
-    "fx.dxy_close",
-    "commodities.xauusd_close",
-    "commodities.brent_front_settlement",
-    "commodities.brent_contract_code",
-    "commodities.brent_roll_state",
-}
-REQUIRED_MAP_KEYS = {
-    "field_id",
-    "contract_status",
-    "provider_id",
-    "retrieval",
-    "raw_field_paths",
-    "normalization",
-    "unit",
-    "completed_market_semantics",
-    "freshness",
-    "allowed_use",
-    "identity_guards",
-    "fixture_cases",
-    "evidence",
+)
+EXPECTED_CASE_IDS = {
+    "cboe-rut-completed-close",
+    "cboe-vix3m-completed-close",
+    "same-day-row-is-not-completed",
+    "proxies-cannot-satisfy-required-fields",
+    "search-snippet-is-discovery-only",
+    "configured-broker-is-not-auto-switched",
 }
 EXPECTED_SAFETY = {
     "repository_content": "provider_metadata_and_synthetic_fixtures_only",
@@ -47,114 +35,132 @@ EXPECTED_SAFETY = {
     "search_snippet_field_evidence_allowed": False,
     "opened_exact_source_required": True,
 }
-DXY_CANDIDATE_PROVIDER_ID = "marketwatch_dxy_historical_quotes"
-DXY_CANDIDATE_ENDPOINT = (
-    "https://www.marketwatch.com/investing/index/dxy/download-data"
-    "?mod=mw_quote_tab"
-)
-DXY_REQUIRED_COLUMNS = ["Date", "Open", "High", "Low", "Close"]
-DXY_REQUIRED_IDENTITY_TEXT = [
-    "DXY U.S.: ICE Futures U.S.",
-    "U.S. Dollar Index (DXY)",
-    "Historical Quotes",
-    "Result Frequency Daily",
-    "Historical and current end-of-day data provided by FACTSET",
-    "All quotes are in local exchange time",
-]
+EXPECTED_PRODUCTION_AVAILABILITY = {
+    "status": "not_claimed_by_source_contract",
+    "reason": (
+        "Public discovery and direct opening prove source identity and response "
+        "shape, not future reachability, freshness, entitlement, or production "
+        "authorization."
+    ),
+    "runtime_requirements": [
+        "fresh HTTPS retrieval from the exact mapped URL",
+        "exact expected columns and one selected completed-date row",
+        "applicable Cboe entitlement and internal-use rights",
+        "source attribution and no raw-payload persistence or redistribution",
+    ],
+}
+EXPECTED_FORBIDDEN_SUBSTITUTES = {
+    "equity.rut_close": ["IWM"],
+    "volatility.vix3m_close": ["VIXM", "VIXY", "UVXY", "SVXY"],
+}
+FIELD_CONTRACTS = {
+    "equity.rut_close": {
+        "endpoint": (
+            "https://cdn.cboe.com/api/global/us_indices/daily_prices/"
+            "RUT_History.csv"
+        ),
+        "columns": ["DATE", "RUT"],
+        "value_path": ["records", "$last", "RUT"],
+        "date_path": ["records", "$last", "DATE"],
+        "unit": "index_points",
+        "fixture_case": "cboe-rut-completed-close",
+        "evidence": {
+            "lseg-russell-2000-definition",
+            "cboe-rut-product-identity",
+            "cboe-rut-daily-csv",
+            "cboe-index-licensing",
+        },
+    },
+    "volatility.vix3m_close": {
+        "endpoint": (
+            "https://cdn.cboe.com/api/global/us_indices/daily_prices/"
+            "VIX3M_History.csv"
+        ),
+        "columns": ["DATE", "OPEN", "HIGH", "LOW", "CLOSE"],
+        "value_path": ["records", "$last", "CLOSE"],
+        "date_path": ["records", "$last", "DATE"],
+        "unit": "volatility_index_points",
+        "fixture_case": "cboe-vix3m-completed-close",
+        "evidence": {
+            "cboe-vix3m-definition",
+            "cboe-vix3m-methodology",
+            "cboe-vix3m-daily-csv",
+            "cboe-index-licensing",
+        },
+    },
+}
+EXPECTED_EVIDENCE_URLS = {
+    "lseg-russell-2000-definition": (
+        "https://www.lseg.com/en/ftse-russell/indices/russell-2000-index"
+    ),
+    "cboe-rut-product-identity": (
+        "https://www.cboe.com/tradable-products/product-list"
+    ),
+    "cboe-rut-daily-csv": FIELD_CONTRACTS["equity.rut_close"]["endpoint"],
+    "cboe-vix3m-definition": (
+        "https://www.cboe.com/tradable-products/vix/term-structure"
+    ),
+    "cboe-vix3m-methodology": (
+        "https://cdn.cboe.com/api/global/us_indices/governance/"
+        "Volatility_Index_Methodology_Selected_SPX_Target_Expected_"
+        "Volatility_Term_Indices.pdf"
+    ),
+    "cboe-vix3m-daily-csv": FIELD_CONTRACTS["volatility.vix3m_close"][
+        "endpoint"
+    ],
+    "cboe-index-licensing": "https://www.cboe.com/data/global-indices-feed/",
+}
+REQUIRED_MAP_KEYS = {
+    "field_id",
+    "contract_status",
+    "runtime_availability",
+    "provider_id",
+    "retrieval",
+    "raw_field_paths",
+    "normalization",
+    "unit",
+    "completed_market_semantics",
+    "freshness",
+    "allowed_use",
+    "identity_guards",
+    "fixture_cases",
+    "evidence",
+}
 
 
 class VerificationError(ValueError):
     pass
 
 
-class VisibleHTMLTableParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.visible_text: list[str] = []
-        self.tables: list[list[list[tuple[str, str]]]] = []
-        self._ignored_depth = 0
-        self._table: list[list[tuple[str, str]]] | None = None
-        self._row: list[tuple[str, str]] | None = None
-        self._cell_tag: str | None = None
-        self._cell_parts: list[str] = []
-
-    def handle_starttag(
-        self, tag: str, attrs: list[tuple[str, str | None]]
-    ) -> None:
-        del attrs
-        if tag in {"script", "style"}:
-            self._ignored_depth += 1
-        elif self._ignored_depth:
-            return
-        elif tag == "table":
-            if self._table is not None:
-                raise VerificationError("nested HTML tables are unsupported")
-            self._table = []
-        elif tag == "tr" and self._table is not None:
-            self._row = []
-        elif tag in {"th", "td"} and self._row is not None:
-            self._cell_tag = tag
-            self._cell_parts = []
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style"} and self._ignored_depth:
-            self._ignored_depth -= 1
-            return
-        if self._ignored_depth:
-            return
-        if tag in {"th", "td"} and self._cell_tag == tag:
-            text = " ".join(" ".join(self._cell_parts).split())
-            if self._row is None:
-                raise VerificationError("HTML cell closed outside a row")
-            self._row.append((tag, text))
-            self._cell_tag = None
-            self._cell_parts = []
-        elif tag == "tr" and self._row is not None:
-            if self._table is None:
-                raise VerificationError("HTML row closed outside a table")
-            if self._row:
-                self._table.append(self._row)
-            self._row = None
-        elif tag == "table" and self._table is not None:
-            self.tables.append(self._table)
-            self._table = None
-
-    def handle_data(self, data: str) -> None:
-        if self._ignored_depth:
-            return
-        text = " ".join(data.split())
-        if not text:
-            return
-        self.visible_text.append(text)
-        if self._cell_tag is not None:
-            self._cell_parts.append(text)
-
-
 def parse_args() -> argparse.Namespace:
     skill_root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(
-        description="Verify the Issue #75 exact completed-market source contract."
+        description="Verify Issue #75 exact RUT and VIX3M source maps."
     )
     parser.add_argument(
         "--map",
         type=Path,
-        default=skill_root
-        / "references"
-        / "issue-75-completed-market-source-contracts.json",
+        default=(
+            skill_root
+            / "references"
+            / "issue-75-completed-market-source-contracts.json"
+        ),
     )
     parser.add_argument(
         "--fixture",
         type=Path,
-        default=skill_root
-        / "assets"
-        / "fixtures"
-        / "input"
-        / "issue-75-source-contract-golden.json",
+        default=(
+            skill_root
+            / "assets"
+            / "fixtures"
+            / "input"
+            / "issue-75-source-contract-golden.json"
+        ),
     )
     parser.add_argument(
         "--expected-result",
         choices=("complete", "blocked"),
-        help="Return success only when the observed source-closure result matches.",
+        help="Return success only when the observed source-map result matches.",
     )
     return parser.parse_args()
 
@@ -169,6 +175,13 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def assert_equal(actual: Any, expected: Any, context: str) -> None:
+    if actual != expected:
+        raise VerificationError(
+            f"{context}: expected {expected!r}, received {actual!r}"
+        )
+
+
 def get_path(payload: Any, path: list[str]) -> Any:
     value = payload
     for segment in path:
@@ -178,7 +191,9 @@ def get_path(payload: Any, path: list[str]) -> Any:
             value = value[-1]
         else:
             if not isinstance(value, dict) or segment not in value:
-                raise VerificationError(f"path {path!r} missing segment {segment!r}")
+                raise VerificationError(
+                    f"path {path!r} missing segment {segment!r}"
+                )
             value = value[segment]
     return value
 
@@ -201,567 +216,271 @@ def parse_timestamp(value: str, context: str) -> datetime:
             f"{context}: invalid timestamp {value!r}"
         ) from exc
     if parsed.tzinfo is None:
-        raise VerificationError(
-            f"{context}: timestamp must include a UTC offset"
-        )
+        raise VerificationError(f"{context}: timestamp must include a UTC offset")
     return parsed
 
 
-def assert_equal(actual: Any, expected: Any, context: str) -> None:
-    if actual != expected:
+def verify_source_evidence(contract: dict[str, Any]) -> set[str]:
+    evidence = contract.get("source_evidence")
+    if not isinstance(evidence, list):
+        raise VerificationError("source_evidence must be a list")
+    by_id = {
+        item.get("id"): item
+        for item in evidence
+        if isinstance(item, dict) and item.get("id")
+    }
+    assert_equal(set(by_id), set(EXPECTED_EVIDENCE_URLS), "source evidence ids")
+    for evidence_id, expected_url in EXPECTED_EVIDENCE_URLS.items():
+        item = by_id[evidence_id]
+        assert_equal(item.get("url"), expected_url, f"{evidence_id} url")
+        if item.get("discovery") not in {
+            "public_web_search",
+            "public_web_search_then_direct_open",
+        }:
+            raise VerificationError(f"{evidence_id}: source was not web-discovered")
+        assert_equal(item.get("opened_at"), "2026-07-23", f"{evidence_id} opened")
+        if not item.get("authority") or not item.get("supports"):
+            raise VerificationError(f"{evidence_id}: incomplete source evidence")
+        if "snippet" in str(item.get("discovery")).lower():
+            raise VerificationError(f"{evidence_id}: search snippet used as evidence")
+    return set(by_id)
+
+
+def verify_provider_gaps(contract: dict[str, Any]) -> None:
+    gaps = contract.get("observed_provider_gaps")
+    if not isinstance(gaps, list):
+        raise VerificationError("observed_provider_gaps must be a list")
+    by_provider = {
+        item.get("provider"): item
+        for item in gaps
+        if isinstance(item, dict) and item.get("provider")
+    }
+    assert_equal(set(by_provider), {"Longbridge", "IBKR"}, "provider gap set")
+    assert_equal(
+        by_provider["Longbridge"].get("status"),
+        "unsupported",
+        "Longbridge gap status",
+    )
+    assert_equal(
+        by_provider["IBKR"].get("status"),
+        "not_selected_for_this_public_fallback",
+        "IBKR gap status",
+    )
+    for provider, gap in by_provider.items():
+        assert_equal(gap.get("fields"), list(REQUIRED_FIELDS), f"{provider} fields")
+        boundary = str(gap.get("boundary", "")).lower()
+        if provider == "IBKR" and "never switches" not in boundary:
+            raise VerificationError("IBKR gap must prohibit broker switching")
+
+
+def verify_field_map(
+    field_map: dict[str, Any],
+    cases_by_id: dict[str, dict[str, Any]],
+    evidence_ids: set[str],
+) -> dict[str, Any] | None:
+    field_id = field_map.get("field_id")
+    if field_id not in FIELD_CONTRACTS:
+        raise VerificationError(f"unexpected field map: {field_id!r}")
+    missing = REQUIRED_MAP_KEYS - field_map.keys()
+    if missing:
         raise VerificationError(
-            f"{context}: expected {expected!r}, received {actual!r}"
+            f"{field_id}: missing map keys {', '.join(sorted(missing))}"
         )
+
+    expected = FIELD_CONTRACTS[field_id]
+    status = field_map.get("contract_status")
+    if status == "blocked":
+        blocker = field_map.get("blocker")
+        if not isinstance(blocker, dict):
+            raise VerificationError(f"{field_id}: blocked map missing blocker")
+        for key in ("code", "reason", "required_to_close"):
+            if not blocker.get(key):
+                raise VerificationError(f"{field_id}: blocker missing {key}")
+        assert_equal(
+            field_map.get("runtime_availability"),
+            "disabled",
+            f"{field_id} blocked runtime",
+        )
+        return {"field_id": field_id, **blocker}
+    assert_equal(status, "closed", f"{field_id} contract status")
+    assert_equal(
+        field_map.get("runtime_availability"),
+        "requires_fresh_authorized_read",
+        f"{field_id} runtime availability",
+    )
+    assert_equal(
+        field_map.get("provider_id"),
+        "cboe_daily_index_history",
+        f"{field_id} provider",
+    )
+
+    retrieval = field_map.get("retrieval", {})
+    assert_equal(retrieval.get("method"), "HTTPS GET CSV", f"{field_id} method")
+    assert_equal(
+        retrieval.get("endpoint"),
+        expected["endpoint"],
+        f"{field_id} endpoint",
+    )
+    assert_equal(
+        retrieval.get("non_sensitive_parameters"), {}, f"{field_id} parameters"
+    )
+    assert_equal(retrieval.get("response_format"), "csv", f"{field_id} format")
+
+    paths = field_map.get("raw_field_paths", {})
+    assert_equal(paths.get("value"), expected["value_path"], f"{field_id} value path")
+    assert_equal(
+        paths.get("data_as_of"), expected["date_path"], f"{field_id} date path"
+    )
+    normalization = field_map.get("normalization", {})
+    assert_equal(
+        normalization.get("required_columns"),
+        expected["columns"],
+        f"{field_id} columns",
+    )
+    assert_equal(field_map.get("unit"), expected["unit"], f"{field_id} unit")
+    assert_equal(
+        field_map.get("fixture_cases"),
+        [expected["fixture_case"]],
+        f"{field_id} fixture cases",
+    )
+    if expected["fixture_case"] not in cases_by_id:
+        raise VerificationError(f"{field_id}: declared fixture is missing")
+    assert_equal(
+        set(field_map.get("evidence", [])),
+        expected["evidence"],
+        f"{field_id} evidence",
+    )
+    if not set(field_map.get("evidence", [])) <= evidence_ids:
+        raise VerificationError(f"{field_id}: unknown evidence reference")
+    for key in ("completed_market_semantics", "freshness", "allowed_use"):
+        if not field_map.get(key):
+            raise VerificationError(f"{field_id}: missing {key}")
+
+    expected_guards = [
+        {"path": ["source_url"], "equals": expected["endpoint"]},
+        {"path": ["columns"], "equals": expected["columns"]},
+    ]
+    assert_equal(
+        field_map.get("identity_guards"),
+        expected_guards,
+        f"{field_id} identity guards",
+    )
+    return None
 
 
 def verify_map_shape(
     contract: dict[str, Any], cases_by_id: dict[str, dict[str, Any]]
 ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    assert_equal(contract.get("schema_version"), "2.0", "map schema")
+    assert_equal(contract.get("contract_version"), "issue-75-v4", "map version")
     assert_equal(contract.get("issue"), 75, "map issue")
     assert_equal(contract.get("parent_issue"), 74, "map parent issue")
-    safety = contract.get("safety")
-    assert_equal(safety, EXPECTED_SAFETY, "map safety")
+    assert_equal(contract.get("scope"), list(REQUIRED_FIELDS), "map scope")
+    assert_equal(contract.get("safety"), EXPECTED_SAFETY, "map safety")
+    assert_equal(
+        contract.get("production_availability"),
+        EXPECTED_PRODUCTION_AVAILABILITY,
+        "production availability boundary",
+    )
+    assert_equal(
+        contract.get("forbidden_substitutes"),
+        EXPECTED_FORBIDDEN_SUBSTITUTES,
+        "forbidden substitutes",
+    )
+    evidence_ids = verify_source_evidence(contract)
+    verify_provider_gaps(contract)
 
     field_maps = contract.get("field_maps")
     if not isinstance(field_maps, list):
-        raise VerificationError("map field_maps must be a list")
+        raise VerificationError("field_maps must be a list")
     maps_by_id: dict[str, dict[str, Any]] = {}
     blockers: list[dict[str, Any]] = []
     for field_map in field_maps:
         if not isinstance(field_map, dict):
             raise VerificationError("each field map must be an object")
-        missing_keys = REQUIRED_MAP_KEYS - field_map.keys()
-        if missing_keys:
-            raise VerificationError(
-                f"{field_map.get('field_id', '<unknown>')}: missing keys "
-                + ", ".join(sorted(missing_keys))
-            )
-        field_id = field_map["field_id"]
+        field_id = field_map.get("field_id")
         if field_id in maps_by_id:
             raise VerificationError(f"duplicate field map: {field_id}")
         maps_by_id[field_id] = field_map
-
-        status = field_map["contract_status"]
-        if status == "closed":
-            for key in (
-                "provider_id",
-                "retrieval",
-                "raw_field_paths",
-                "normalization",
-                "completed_market_semantics",
-                "freshness",
-                "allowed_use",
-            ):
-                if not field_map.get(key):
-                    raise VerificationError(f"{field_id}: closed map missing {key}")
-            if not field_map["fixture_cases"]:
-                raise VerificationError(f"{field_id}: closed map has no golden case")
-            for case_id in field_map["fixture_cases"]:
-                if case_id not in cases_by_id:
-                    raise VerificationError(
-                        f"{field_id}: missing declared fixture case {case_id}"
-                    )
-        elif status == "blocked":
-            blocker = field_map.get("blocker")
-            if not isinstance(blocker, dict):
-                raise VerificationError(f"{field_id}: blocked map missing blocker")
-            for key in ("code", "reason", "required_to_close"):
-                if not blocker.get(key):
-                    raise VerificationError(
-                        f"{field_id}: blocker missing {key}"
-                    )
-            blockers.append({"field_id": field_id, **blocker})
-            if "prohibited" not in field_map["allowed_use"].lower():
-                raise VerificationError(
-                    f"{field_id}: blocked map must prohibit production use"
-                )
-        else:
-            raise VerificationError(
-                f"{field_id}: invalid contract_status {status!r}"
-            )
-
-    assert_equal(set(maps_by_id), REQUIRED_FIELDS, "required field map set")
-    evidence_ids = {
-        item.get("id")
-        for item in contract.get("source_evidence", [])
-        if isinstance(item, dict)
-    }
-    for field_id, field_map in maps_by_id.items():
-        missing_evidence = set(field_map["evidence"]) - evidence_ids
-        if missing_evidence:
-            raise VerificationError(
-                f"{field_id}: unknown evidence "
-                + ", ".join(sorted(missing_evidence))
-            )
+        blocker = verify_field_map(field_map, cases_by_id, evidence_ids)
+        if blocker:
+            blockers.append(blocker)
+    assert_equal(set(maps_by_id), set(REQUIRED_FIELDS), "required field map set")
     return maps_by_id, blockers
 
 
 def verify_mapped_field(
     case: dict[str, Any], field_map: dict[str, Any]
 ) -> None:
-    assert_equal(case["provider_id"], field_map["provider_id"], case["id"])
-    payload = case["payload"]
+    field_id = case.get("field_id")
+    expected_contract = FIELD_CONTRACTS[field_id]
+    assert_equal(case.get("provider_id"), field_map.get("provider_id"), case["id"])
+    payload = case.get("payload")
+    if not isinstance(payload, dict):
+        raise VerificationError(f"{case['id']}: payload must be an object")
     for guard in field_map["identity_guards"]:
-        actual = get_path(payload, guard["path"])
-        assert_equal(actual, guard["equals"], f"{case['id']} identity guard")
+        assert_equal(
+            get_path(payload, guard["path"]),
+            guard["equals"],
+            f"{case['id']} identity guard",
+        )
 
-    paths = field_map["raw_field_paths"]
-    value = float(get_path(payload, paths["value"]))
-    data_as_of = normalize_date(get_path(payload, paths["data_as_of"]))
-    expected = case["expected"]
-    assert_equal(expected["status"], "available", f"{case['id']} status")
-    assert_equal(value, expected["value"], f"{case['id']} value")
-    assert_equal(data_as_of, expected["data_as_of"], f"{case['id']} date")
-    assert_equal(field_map["unit"], expected["unit"], f"{case['id']} unit")
+    rows = payload.get("records")
+    if not isinstance(rows, list) or not rows:
+        raise VerificationError(f"{case['id']}: records must be non-empty")
+    value = float(get_path(payload, expected_contract["value_path"]))
+    if not math.isfinite(value):
+        raise VerificationError(f"{case['id']}: value must be finite")
+    data_as_of = normalize_date(get_path(payload, expected_contract["date_path"]))
+    matching_dates = [
+        normalize_date(row["DATE"])
+        for row in rows
+        if isinstance(row, dict) and "DATE" in row
+    ].count(data_as_of)
+    if matching_dates != 1:
+        raise VerificationError(
+            f"{case['id']}: completed date must occur exactly once"
+        )
 
+    expected = case.get("expected", {})
+    assert_equal(expected.get("status"), "available", f"{case['id']} status")
+    assert_equal(value, expected.get("value"), f"{case['id']} value")
+    assert_equal(data_as_of, expected.get("data_as_of"), f"{case['id']} date")
+    assert_equal(field_map.get("unit"), expected.get("unit"), f"{case['id']} unit")
     retrieved_at = parse_timestamp(case["retrieved_at"], case["id"])
     if retrieved_at.date() <= date.fromisoformat(data_as_of):
-        raise VerificationError(
-            f"{case['id']}: completed daily value was retrieved before its "
-            "provider day ended"
-        )
+        raise VerificationError(f"{case['id']}: completed close not proven")
 
 
-def verify_dxy_html_table(
-    case: dict[str, Any], field_map: dict[str, Any]
-) -> None:
-    assert_equal(case["field_id"], "fx.dxy_close", f"{case['id']} field")
-    assert_equal(
-        case["provider_id"],
-        DXY_CANDIDATE_PROVIDER_ID,
-        f"{case['id']} provider",
-    )
-    assert_equal(
-        case["provider_id"],
-        field_map["provider_id"],
-        f"{case['id']} map provider",
-    )
-    retrieval = field_map["retrieval"]
-    assert_equal(
-        retrieval["endpoint"],
-        DXY_CANDIDATE_ENDPOINT,
-        f"{case['id']} endpoint",
-    )
-    assert_equal(
-        retrieval["non_sensitive_parameters"],
-        {
-            "result_frequency": "Daily",
-            "row_date": "$common_completed_date",
-        },
-        f"{case['id']} retrieval parameters",
-    )
-    assert_equal(
-        retrieval["response_format"],
-        "visible HTML table",
-        f"{case['id']} response format",
-    )
-    payload = case["payload"]
-    assert_equal(
-        payload.get("source_kind"),
-        "synthetic_visible_html",
-        f"{case['id']} source kind",
-    )
-    html = payload.get("html")
-    if not isinstance(html, str) or not html.strip():
-        raise VerificationError(f"{case['id']}: synthetic HTML is missing")
-
-    parser = VisibleHTMLTableParser()
-    parser.feed(html)
-    parser.close()
-    page_text = " ".join(parser.visible_text)
-    guard_values = []
-    for guard in field_map["identity_guards"]:
-        if guard.get("kind") != "visible_text_contains":
-            raise VerificationError(
-                f"{case['id']}: unsupported DXY identity guard"
-            )
-        required_text = guard.get("value")
-        if not isinstance(required_text, str):
-            raise VerificationError(
-                f"{case['id']}: DXY identity guard value must be text"
-            )
-        guard_values.append(required_text)
-    assert_equal(
-        guard_values,
-        DXY_REQUIRED_IDENTITY_TEXT,
-        f"{case['id']} identity contract",
-    )
-    for required_text in DXY_REQUIRED_IDENTITY_TEXT:
-        if required_text not in page_text:
-            raise VerificationError(
-                f"{case['id']}: page identity missing {required_text!r}"
-            )
-
-    paths = field_map["raw_field_paths"]
-    value_path = paths["value"]
-    date_path = paths["data_as_of"]
-    assert_equal(
-        value_path,
-        [
-            "visible_document",
-            "Historical Quotes",
-            "Daily",
-            "row[Date=$common_completed_date]",
-            "Close",
-        ],
-        f"{case['id']} value path",
-    )
-    assert_equal(
-        date_path,
-        [
-            "visible_document",
-            "Historical Quotes",
-            "Daily",
-            "row[Date=$common_completed_date]",
-            "Date",
-        ],
-        f"{case['id']} date path",
-    )
-    value_column = value_path[-1]
-    date_column = date_path[-1]
-    required_columns = field_map["normalization"]["required_columns"]
-    assert_equal(
-        required_columns,
-        DXY_REQUIRED_COLUMNS,
-        f"{case['id']} required columns",
-    )
-
-    matching_tables: list[list[list[tuple[str, str]]]] = []
-    for table in parser.tables:
-        if not table:
-            continue
-        header = [text for tag, text in table[0] if tag == "th"]
-        if header == required_columns:
-            matching_tables.append(table)
-    if len(matching_tables) != 1:
-        raise VerificationError(
-            f"{case['id']}: expected one exact Daily Historical Quotes table, "
-            f"received {len(matching_tables)}"
-        )
-
-    header = [text for _, text in matching_tables[0][0]]
-    if value_column not in header or date_column not in header:
-        raise VerificationError(
-            f"{case['id']}: required Date/Close columns are absent"
-        )
-    expected = case["expected"]
-    target_date = expected["data_as_of"]
-    matching_rows: list[dict[str, str]] = []
-    for cells in matching_tables[0][1:]:
-        values = [text for _, text in cells]
-        if len(values) != len(header):
-            raise VerificationError(f"{case['id']}: malformed table row")
-        row = dict(zip(header, values))
-        if normalize_date(row[date_column]) == target_date:
-            matching_rows.append(row)
-    if len(matching_rows) != 1:
-        raise VerificationError(
-            f"{case['id']}: expected one row for completed date {target_date}, "
-            f"received {len(matching_rows)}"
-        )
-
-    value = float(matching_rows[0][value_column])
-    assert_equal(expected["status"], "available", f"{case['id']} status")
-    assert_equal(value, expected["value"], f"{case['id']} value")
-    assert_equal(field_map["unit"], expected["unit"], f"{case['id']} unit")
+def verify_timing_rejection(case: dict[str, Any]) -> None:
     retrieved_at = parse_timestamp(case["retrieved_at"], case["id"])
-    if retrieved_at.date() <= date.fromisoformat(target_date):
-        raise VerificationError(
-            f"{case['id']}: EOD table was retrieved before the completed date ended"
-        )
-
-
-def parse_iso_date(value: str, context: str) -> date:
-    try:
-        return date.fromisoformat(value)
-    except ValueError as exc:
-        raise VerificationError(f"{context}: invalid date {value!r}") from exc
-
-
-def select_front_row(
-    rows: list[dict[str, Any]],
-    expiry_rows: list[dict[str, Any]],
-    settlement_date: str,
-) -> dict[str, Any]:
-    as_of = parse_iso_date(settlement_date, "settlement date")
-    eligible = [
-        (parse_iso_date(item["LTD"], "LTD"), item["Contract Symbol"])
-        for item in expiry_rows
-        if parse_iso_date(item["LTD"], "LTD") >= as_of
-    ]
-    if not eligible:
-        raise VerificationError(f"no front contract for {settlement_date}")
-    _, front_strip = min(eligible)
-    matches = [
-        row
-        for row in rows
-        if row.get("Settlement Price Date") == settlement_date
-        and row.get("Strip") == front_strip
-        and row.get("Product Name") == "Brent Crude Futures"
-        and row.get("Commodity Code") == "BRN"
-        and row.get("Contract Type") == "F"
-    ]
-    if len(matches) != 1:
-        raise VerificationError(
-            f"expected one front Brent row for {settlement_date}/{front_strip}, "
-            f"received {len(matches)}"
-        )
-    return matches[0]
-
-
-def get_brent_path(
-    payload: dict[str, Any],
-    path: list[str],
-    current: dict[str, Any],
-    previous: dict[str, Any],
-) -> Any:
-    value: Any = payload
-    for segment in path:
-        if segment in {"$selected_front", "$current_front"}:
-            if not isinstance(value, list) or not any(
-                row is current for row in value
-            ):
-                raise VerificationError(
-                    f"path {path!r} did not select from settlement rows"
-                )
-            value = current
-        elif segment == "$previous_front":
-            if not isinstance(value, list) or not any(
-                row is previous for row in value
-            ):
-                raise VerificationError(
-                    f"path {path!r} did not select from settlement rows"
-                )
-            value = previous
-        elif segment == "$matching_strip":
-            if not isinstance(value, list):
-                raise VerificationError(
-                    f"path {path!r} expected expiry rows before {segment}"
-                )
-            matches = [
-                row
-                for row in value
-                if row.get("Contract Symbol") == current.get("Strip")
-            ]
-            if len(matches) != 1:
-                raise VerificationError(
-                    f"path {path!r} expected one matching expiry row"
-                )
-            value = matches[0]
-        else:
-            if not isinstance(value, dict) or segment not in value:
-                raise VerificationError(
-                    f"path {path!r} missing segment {segment!r}"
-                )
-            value = value[segment]
-    return value
-
-
-def verify_brent_bundle(
-    case: dict[str, Any], maps_by_id: dict[str, dict[str, Any]]
-) -> None:
-    for field_id in (
-        "commodities.brent_front_settlement",
-        "commodities.brent_contract_code",
-        "commodities.brent_roll_state",
-    ):
-        assert_equal(
-            case["provider_id"],
-            maps_by_id[field_id]["provider_id"],
-            f"{case['id']} provider",
-        )
-    payload = case["payload"]
-    rows = payload["settlement_rows"]
-    expiry_rows = payload["expiry_rows"]
-    settlement_dates = sorted({row["Settlement Price Date"] for row in rows})
-    if len(settlement_dates) < 2:
-        raise VerificationError(f"{case['id']}: roll state requires two dates")
-    previous_date, current_date = settlement_dates[-2:]
-    previous = select_front_row(rows, expiry_rows, previous_date)
-    current = select_front_row(rows, expiry_rows, current_date)
-    settlement_map = maps_by_id["commodities.brent_front_settlement"]
-    contract_map = maps_by_id["commodities.brent_contract_code"]
-    roll_map = maps_by_id["commodities.brent_roll_state"]
-
-    for guard in settlement_map["identity_guards"]:
-        for label, row in (("previous", previous), ("current", current)):
-            actual = get_path(row, guard["path"])
-            assert_equal(
-                actual,
-                guard["equals"],
-                f"{case['id']} {label} identity guard",
-            )
-
-    settlement_paths = settlement_map["raw_field_paths"]
-    settlement_value = float(
-        get_brent_path(
-            payload,
-            settlement_paths["value"],
-            current,
-            previous,
-        )
+    data_as_of = date.fromisoformat(case["candidate"]["data_as_of"])
+    reason = (
+        "completed_close_not_proven"
+        if retrieved_at.date() <= data_as_of
+        else "unexpectedly_completed"
     )
-    mapped_date = normalize_date(
-        get_brent_path(
-            payload,
-            settlement_paths["data_as_of"],
-            current,
-            previous,
-        )
-    )
-    settlement_market_id = get_brent_path(
-        payload,
-        settlement_paths["contract_market_id"],
-        current,
-        previous,
-    )
-    expiry_date = normalize_date(
-        get_brent_path(
-            payload,
-            settlement_paths["expiry"],
-            current,
-            previous,
-        )
-    )
-    expiry_symbol = get_brent_path(
-        payload,
-        settlement_paths["expiry_contract_symbol"],
-        current,
-        previous,
-    )
-    if parse_iso_date(expiry_date, "front expiry") < parse_iso_date(
-        mapped_date, "settlement date"
-    ):
-        raise VerificationError(f"{case['id']}: selected front was already expired")
-
-    contract_paths = contract_map["raw_field_paths"]
-    commodity_code = get_brent_path(
-        payload,
-        contract_paths["commodity_code"],
-        current,
-        previous,
-    )
-    strip = get_brent_path(
-        payload,
-        contract_paths["strip"],
-        current,
-        previous,
-    )
-    contract_market_id = get_brent_path(
-        payload,
-        contract_paths["market_id"],
-        current,
-        previous,
-    )
-    assert_equal(
-        contract_market_id,
-        settlement_market_id,
-        f"{case['id']} shared contract identity",
-    )
-    contract_code = f"{commodity_code}:{strip}"
-    assert_equal(
-        expiry_symbol,
-        strip,
-        f"{case['id']} expiry contract symbol",
-    )
-
-    roll_paths = roll_map["raw_field_paths"]
-    current_market_id = get_brent_path(
-        payload,
-        roll_paths["current_market_id"],
-        current,
-        previous,
-    )
-    previous_market_id = get_brent_path(
-        payload,
-        roll_paths["previous_market_id"],
-        current,
-        previous,
-    )
-    current_strip = get_brent_path(
-        payload,
-        roll_paths["current_strip"],
-        current,
-        previous,
-    )
-    previous_strip = get_brent_path(
-        payload,
-        roll_paths["previous_strip"],
-        current,
-        previous,
-    )
-    same_contract = (
-        current_market_id == previous_market_id
-        and current_strip == previous_strip
-    )
-    roll_state = (
-        "same_front_contract" if same_contract else "front_contract_changed"
-    )
-    expected = case["expected"]
-    assert_equal(expected["status"], "available", f"{case['id']} status")
-    assert_equal(
-        settlement_value,
-        expected["settlement"],
-        f"{case['id']} settlement",
-    )
-    assert_equal(contract_code, expected["contract_code"], f"{case['id']} code")
-    assert_equal(roll_state, expected["roll_state"], f"{case['id']} roll")
-    assert_equal(mapped_date, expected["data_as_of"], f"{case['id']} date")
-    assert_equal(
-        settlement_map["unit"],
-        expected["settlement_unit"],
-        f"{case['id']} settlement unit",
-    )
-    assert_equal(
-        contract_map["unit"],
-        expected["contract_code_unit"],
-        f"{case['id']} contract code unit",
-    )
-    assert_equal(
-        roll_map["unit"],
-        expected["roll_state_unit"],
-        f"{case['id']} roll state unit",
-    )
-
-    retrieved_at = parse_timestamp(case["retrieved_at"], case["id"])
-    if retrieved_at.date() <= date.fromisoformat(mapped_date):
-        raise VerificationError(
-            f"{case['id']}: settlement snapshot was retrieved before the "
-            "completed settlement day ended"
-        )
-
-
-def verify_rejection(case: dict[str, Any]) -> None:
-    candidate = case["candidate"]
-    expected = case["expected"]
-    if candidate["source_kind"] == "search_result_snippet":
-        actual_reason = "source_not_opened_and_verified"
-    elif (
-        case["field_id"] == "commodities.brent_front_settlement"
-        and candidate.get("semantic_type") != "official_settlement"
-    ):
-        actual_reason = "settlement_semantics_not_proven"
-    else:
-        raise VerificationError(f"{case['id']}: rejection reason not recognized")
-    assert_equal(actual_reason, expected["reason"], case["id"])
-    assert_equal(expected["status"], "unsupported", f"{case['id']} status")
+    assert_equal(reason, case["expected"]["reason"], case["id"])
+    assert_equal(case["expected"]["status"], "unsupported", f"{case['id']} status")
 
 
 def verify_substitutes(
     case: dict[str, Any], forbidden: dict[str, list[str]]
 ) -> None:
-    for candidate in case["candidates"]:
-        field_id = candidate["field_id"]
-        symbol = candidate["symbol"]
-        if symbol not in forbidden.get(field_id, []):
+    observed: dict[str, list[str]] = {field_id: [] for field_id in REQUIRED_FIELDS}
+    for candidate in case.get("candidates", []):
+        field_id = candidate.get("field_id")
+        symbol = candidate.get("symbol")
+        if field_id not in observed or symbol not in forbidden[field_id]:
             raise VerificationError(
-                f"{case['id']}: {symbol} was not rejected for {field_id}"
+                f"{case['id']}: unexpected substitute {field_id}:{symbol}"
             )
-    assert_equal(
-        case["expected"]["status"],
-        "unsupported",
-        f"{case['id']} status",
-    )
+        observed[field_id].append(symbol)
+    for symbols in observed.values():
+        symbols.sort()
+    expected = {field_id: sorted(symbols) for field_id, symbols in forbidden.items()}
+    assert_equal(observed, expected, f"{case['id']} substitute set")
+    assert_equal(case["expected"]["status"], "unsupported", f"{case['id']} status")
     assert_equal(
         case["expected"]["reason"],
         "substitute_instrument_forbidden",
@@ -769,14 +488,21 @@ def verify_substitutes(
     )
 
 
-def verify_broker_switch(case: dict[str, Any]) -> None:
-    if case["configured_broker"] == case["candidate_broker"]:
-        raise VerificationError(f"{case['id']}: fixture does not switch brokers")
-    assert_equal(
-        case["expected"]["status"],
-        "unsupported",
-        f"{case['id']} status",
+def verify_source_rejection(case: dict[str, Any]) -> None:
+    source_kind = case.get("candidate", {}).get("source_kind")
+    reason = (
+        "source_not_opened_and_verified"
+        if source_kind == "search_result_snippet"
+        else "unexpected_source_kind"
     )
+    assert_equal(reason, case["expected"]["reason"], case["id"])
+    assert_equal(case["expected"]["status"], "unsupported", f"{case['id']} status")
+
+
+def verify_broker_switch(case: dict[str, Any]) -> None:
+    if case.get("configured_broker") == case.get("candidate_broker"):
+        raise VerificationError(f"{case['id']}: fixture does not switch brokers")
+    assert_equal(case["expected"]["status"], "unsupported", f"{case['id']} status")
     assert_equal(
         case["expected"]["reason"],
         "automatic_broker_switch_forbidden",
@@ -789,32 +515,34 @@ def verify_cases(
     maps_by_id: dict[str, dict[str, Any]],
     forbidden: dict[str, list[str]],
 ) -> list[str]:
+    assert_equal(fixture.get("schema_version"), "2.0", "fixture schema")
     assert_equal(fixture.get("issue"), 75, "fixture issue")
     assert_equal(
         fixture.get("fixture_class"),
         "public_safe_synthetic_golden",
         "fixture class",
     )
-    if "synthetic" not in fixture.get("notice", "").lower():
-        raise VerificationError("fixture notice must explicitly say synthetic")
+    notice = str(fixture.get("notice", "")).lower()
+    if "synthetic" not in notice or "not licensed market data" not in notice:
+        raise VerificationError("fixture notice must disclose synthetic data")
 
     passed: list[str] = []
     for case in fixture["cases"]:
-        kind = case["kind"]
+        kind = case.get("kind")
         if kind == "mapped_field":
             verify_mapped_field(case, maps_by_id[case["field_id"]])
-        elif kind == "html_table_field":
-            verify_dxy_html_table(case, maps_by_id[case["field_id"]])
-        elif kind == "brent_bundle":
-            verify_brent_bundle(case, maps_by_id)
-        elif kind == "rejection":
-            verify_rejection(case)
+        elif kind == "timing_rejection":
+            verify_timing_rejection(case)
         elif kind == "substitute_rejections":
             verify_substitutes(case, forbidden)
+        elif kind == "source_rejection":
+            verify_source_rejection(case)
         elif kind == "broker_switch_rejection":
             verify_broker_switch(case)
         else:
-            raise VerificationError(f"{case['id']}: unknown case kind {kind!r}")
+            raise VerificationError(
+                f"{case.get('id', '<unknown>')}: unknown case kind {kind!r}"
+            )
         passed.append(case["id"])
     return passed
 
@@ -830,14 +558,17 @@ def main() -> int:
         cases_by_id = {
             case["id"]: case
             for case in cases
-            if isinstance(case, dict) and "id" in case
+            if isinstance(case, dict) and case.get("id")
         }
         if len(cases_by_id) != len(cases):
             raise VerificationError("fixture case ids must be present and unique")
+        assert_equal(set(cases_by_id), EXPECTED_CASE_IDS, "fixture case set")
 
         maps_by_id, blockers = verify_map_shape(contract, cases_by_id)
         passed = verify_cases(
-            fixture, maps_by_id, contract.get("forbidden_substitutes", {})
+            fixture,
+            maps_by_id,
+            contract.get("forbidden_substitutes", {}),
         )
     except (KeyError, TypeError, ValueError) as exc:
         print(f"VERIFIER FAIL: {exc}")
@@ -845,20 +576,21 @@ def main() -> int:
 
     for case_id in passed:
         print(f"CASE PASS: {case_id}")
+    observed = "blocked" if blockers else "complete"
     if blockers:
         for blocker in blockers:
             print(
                 "SOURCE BLOCKER: "
                 f"{blocker['field_id']} [{blocker['code']}] {blocker['reason']}"
             )
-        observed = "blocked"
         print(
-            f"SOURCE CONTRACT FAIL: {len(blockers)} required field mapping(s) "
-            "remain blocked"
+            f"SOURCE MAP FAIL: {len(blockers)} retained mapping(s) remain blocked"
         )
     else:
-        observed = "complete"
-        print("SOURCE CONTRACT PASS: all required mappings are closed")
+        print(
+            "SOURCE MAP PASS: exact RUT and VIX3M mappings are closed; "
+            "runtime production availability is not claimed"
+        )
 
     declared = contract.get("contract_result")
     if declared != observed:

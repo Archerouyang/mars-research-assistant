@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "issue": 75,
   "fixture_class": "public_safe_synthetic_golden",
   "notice": "All values, dates, identifiers, and responses in this file are synthetic. They are not licensed market data or saved provider payloads.",
@@ -11,6 +11,11 @@
       "provider_id": "cboe_daily_index_history",
       "retrieved_at": "2026-07-18T09:40:00-04:00",
       "payload": {
+        "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv",
+        "columns": [
+          "DATE",
+          "RUT"
+        ],
         "records": [
           {
             "DATE": "07/16/2026",
@@ -36,6 +41,14 @@
       "provider_id": "cboe_daily_index_history",
       "retrieved_at": "2026-07-18T09:40:00-04:00",
       "payload": {
+        "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+        "columns": [
+          "DATE",
+          "OPEN",
+          "HIGH",
+          "LOW",
+          "CLOSE"
+        ],
         "records": [
           {
             "DATE": "07/16/2026",
@@ -61,179 +74,16 @@
       }
     },
     {
-      "id": "twelve-data-xauusd-completed-daily-close",
-      "kind": "mapped_field",
-      "field_id": "commodities.xauusd_close",
-      "provider_id": "twelve_data_time_series",
-      "retrieved_at": "2026-07-18T00:10:00+10:00",
-      "payload": {
-        "meta": {
-          "symbol": "XAU/USD",
-          "interval": "1day",
-          "currency": "USD",
-          "exchange_timezone": "Australia/Sydney",
-          "exchange": "Main market",
-          "type": "Commodity"
-        },
-        "values": [
-          {
-            "datetime": "2026-07-17",
-            "open": "2398.10000",
-            "high": "2412.40000",
-            "low": "2391.60000",
-            "close": "2407.15000"
-          }
-        ],
-        "status": "ok"
-      },
-      "expected": {
-        "status": "available",
-        "value": 2407.15,
-        "unit": "usd_per_troy_ounce",
-        "data_as_of": "2026-07-17"
-      }
-    },
-    {
-      "id": "marketwatch-dxy-completed-daily-close",
-      "kind": "html_table_field",
-      "field_id": "fx.dxy_close",
-      "provider_id": "marketwatch_dxy_historical_quotes",
-      "retrieved_at": "2026-07-18T08:00:00-04:00",
-      "payload": {
-        "source_kind": "synthetic_visible_html",
-        "html": "<main><p>DXY U.S.: ICE Futures U.S.</p><h1>U.S. Dollar Index (DXY)</h1><section><h2>Historical Quotes</h2><p>Result Frequency Daily</p><table><thead><tr><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody><tr><td>07/16/2026</td><td>103.90</td><td>104.30</td><td>103.70</td><td>104.10</td></tr><tr><td>07/17/2026</td><td>104.05</td><td>104.50</td><td>103.85</td><td>104.25</td></tr></tbody></table></section><footer><p>Historical and current end-of-day data provided by FACTSET.</p><p>All quotes are in local exchange time.</p></footer></main>"
-      },
-      "expected": {
-        "status": "available",
-        "value": 104.25,
-        "unit": "index_points",
-        "data_as_of": "2026-07-17"
-      }
-    },
-    {
-      "id": "ice-brent-front-month-settlement-stable",
-      "kind": "brent_bundle",
-      "provider_id": "ice_mft_settlement_snapshot",
-      "retrieved_at": "2026-07-18T09:00:00+01:00",
-      "payload": {
-        "settlement_rows": [
-          {
-            "Settlement Price Date": "2026-07-16",
-            "Market ID": "SYNTH-MKT-SEP26",
-            "Hub": "ICE Futures Europe",
-            "Product Name": "Brent Crude Futures",
-            "Commodity Code": "BRN",
-            "Strip": "Sep26",
-            "Contract Type": "F",
-            "Settlement Price": "81.9400000"
-          },
-          {
-            "Settlement Price Date": "2026-07-17",
-            "Market ID": "SYNTH-MKT-SEP26",
-            "Hub": "ICE Futures Europe",
-            "Product Name": "Brent Crude Futures",
-            "Commodity Code": "BRN",
-            "Strip": "Sep26",
-            "Contract Type": "F",
-            "Settlement Price": "82.3100000"
-          },
-          {
-            "Settlement Price Date": "2026-07-17",
-            "Market ID": "SYNTH-MKT-OCT26",
-            "Hub": "ICE Futures Europe",
-            "Product Name": "Brent Crude Futures",
-            "Commodity Code": "BRN",
-            "Strip": "Oct26",
-            "Contract Type": "F",
-            "Settlement Price": "81.8800000"
-          }
-        ],
-        "expiry_rows": [
-          {
-            "Contract Symbol": "Sep26",
-            "LTD": "2026-07-31"
-          },
-          {
-            "Contract Symbol": "Oct26",
-            "LTD": "2026-08-28"
-          }
-        ]
-      },
-      "expected": {
-        "status": "available",
-        "settlement": 82.31,
-        "settlement_unit": "usd_per_barrel",
-        "contract_code": "BRN:Sep26",
-        "contract_code_unit": "contract_identifier",
-        "roll_state": "same_front_contract",
-        "roll_state_unit": "roll_state",
-        "data_as_of": "2026-07-17"
-      }
-    },
-    {
-      "id": "ice-brent-front-month-roll-transition",
-      "kind": "brent_bundle",
-      "provider_id": "ice_mft_settlement_snapshot",
-      "retrieved_at": "2026-02-03T09:00:00Z",
-      "payload": {
-        "settlement_rows": [
-          {
-            "Settlement Price Date": "2026-01-30",
-            "Market ID": "SYNTH-MKT-MAR26",
-            "Hub": "ICE Futures Europe",
-            "Product Name": "Brent Crude Futures",
-            "Commodity Code": "BRN",
-            "Strip": "Mar26",
-            "Contract Type": "F",
-            "Settlement Price": "78.2400000"
-          },
-          {
-            "Settlement Price Date": "2026-02-02",
-            "Market ID": "SYNTH-MKT-APR26",
-            "Hub": "ICE Futures Europe",
-            "Product Name": "Brent Crude Futures",
-            "Commodity Code": "BRN",
-            "Strip": "Apr26",
-            "Contract Type": "F",
-            "Settlement Price": "78.6100000"
-          }
-        ],
-        "expiry_rows": [
-          {
-            "Contract Symbol": "Mar26",
-            "LTD": "2026-01-30"
-          },
-          {
-            "Contract Symbol": "Apr26",
-            "LTD": "2026-02-27"
-          }
-        ]
-      },
-      "expected": {
-        "status": "available",
-        "settlement": 78.61,
-        "settlement_unit": "usd_per_barrel",
-        "contract_code": "BRN:Apr26",
-        "contract_code_unit": "contract_identifier",
-        "roll_state": "front_contract_changed",
-        "roll_state_unit": "roll_state",
-        "data_as_of": "2026-02-02"
-      }
-    },
-    {
-      "id": "ordinary-close-cannot-satisfy-brent-settlement",
-      "kind": "rejection",
-      "field_id": "commodities.brent_front_settlement",
+      "id": "same-day-row-is-not-completed",
+      "kind": "timing_rejection",
+      "field_id": "equity.rut_close",
+      "retrieved_at": "2026-07-17T16:00:00-04:00",
       "candidate": {
-        "source_kind": "provider_payload",
-        "symbol": "BRN:Sep26",
-        "raw_field_path": "records[-1].CLOSE_PRICE",
-        "semantic_type": "last_trade_close",
-        "value": "82.1100000"
+        "data_as_of": "2026-07-17"
       },
       "expected": {
         "status": "unsupported",
-        "reason": "settlement_semantics_not_proven"
+        "reason": "completed_close_not_proven"
       }
     },
     {
@@ -246,28 +96,23 @@
           "instrument_type": "etf"
         },
         {
-          "field_id": "fx.dxy_close",
-          "symbol": "UUP",
-          "instrument_type": "etf"
-        },
-        {
-          "field_id": "commodities.xauusd_close",
-          "symbol": "GLD",
-          "instrument_type": "etf"
-        },
-        {
-          "field_id": "commodities.brent_front_settlement",
-          "symbol": "BNO",
-          "instrument_type": "etf"
-        },
-        {
-          "field_id": "commodities.brent_front_settlement",
-          "symbol": "USO",
+          "field_id": "volatility.vix3m_close",
+          "symbol": "VIXM",
           "instrument_type": "etf"
         },
         {
           "field_id": "volatility.vix3m_close",
-          "symbol": "VIXM",
+          "symbol": "VIXY",
+          "instrument_type": "etf"
+        },
+        {
+          "field_id": "volatility.vix3m_close",
+          "symbol": "UVXY",
+          "instrument_type": "etf"
+        },
+        {
+          "field_id": "volatility.vix3m_close",
+          "symbol": "SVXY",
           "instrument_type": "etf"
         }
       ],
@@ -278,12 +123,12 @@
     },
     {
       "id": "search-snippet-is-discovery-only",
-      "kind": "rejection",
-      "field_id": "fx.dxy_close",
+      "kind": "source_rejection",
+      "field_id": "volatility.vix3m_close",
       "candidate": {
         "source_kind": "search_result_snippet",
         "title": "Synthetic search result",
-        "snippet": "DXY closed at a synthetic value."
+        "snippet": "VIX3M closed at a synthetic value."
       },
       "expected": {
         "status": "unsupported",
