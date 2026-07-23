@@ -68,8 +68,8 @@ def main() -> int:
     require(ndx["value"] == 29000.0, "NDX must normalize from the direct FRED daily-close field")
     require(ndx["source_id"] == "fred_nasdaq100_history", "NDX direct source id must be retained")
     require(
-        ndx["source_url"] == "https://fred.stlouisfed.org/series/NASDAQ100",
-        "NDX FRED series URL must be retained",
+        ndx["source_url"] == "https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQ100",
+        "NDX FRED direct CSV URL must be retained",
     )
 
     vix = by_id["volatility.vix_close"]
