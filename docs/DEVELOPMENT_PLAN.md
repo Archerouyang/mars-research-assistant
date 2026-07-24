@@ -558,6 +558,8 @@ Date: 2026-07-20
 - Verification: runtime health selftest, runtime health contract, and Daily Ops Orchestrator contract pass locally.
 - Superseded: the former broker-preferred Macro Data Source Contract is replaced by the Mars 1.0 direct-source contract. Macro Boards now require exact, verified public-source field contracts, latest common completed closes, latest official releases, and a fail-closed blocker for any unavailable field; broker macrodata and proxies are not Board inputs.
 - Verification: `verify_macro_data_source_contract.py` added to the core suite.
+- Completed: hardened the Mars public acquisition seam. `run_macro_board` now accepts only a transient `MarsWebCapture` created after Web search and direct opens of every contracted source; raw payload maps, broker configuration, snippets, proxies, missing fields, and non-direct receipts return a Blocker. The Mars Board now exposes only its direct-source views and exact source identities.
+- Verification: `verify_macro_preflight_selftest.py` covers the typed capture, raw-map rejection, missing VIX/policy blockers, stale common close, proxy receipt rejection, and standalone Board surface.
 - Completed: defined the Longbridge Skill Adapter contract. Runtime health now reports `source_capability_health` so Daily Ops can distinguish Longbridge broker skill, Longbridge macrodata, IBKR connector, and manual snapshot readiness before analysis.
 - Verification: `verify_longbridge_skill_adapter_contract.py` added to the core suite.
 

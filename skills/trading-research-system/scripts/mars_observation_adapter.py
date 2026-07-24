@@ -210,7 +210,7 @@ def _normalize_completed_market_session(
         "source_id": source_id,
         "source_url": str(market_session["source_url"]),
         "source_timing": "completed_market",
-        "retrieval_method": "source_payload",
+        "retrieval_method": "direct_web_capture",
         "data_as_of": str(retrieved_at),
         "market_reference_date": latest_date.isoformat(),
         "raw_field_path": list(market_session["raw_field_path"]),
@@ -276,7 +276,7 @@ def _normalize_field(
         "source_id": source_id,
         "source_url": str(field["source_url"]),
         "source_timing": timing,
-        "retrieval_method": "source_payload",
+        "retrieval_method": "direct_web_capture",
         "raw_field_path": list(field["raw_field_path"]),
         "history": history,
     }
@@ -331,7 +331,7 @@ def _normalize_policy_evidence(
         "source_id": str(field["source_id"]),
         "source_url": str(field["source_url"]),
         "source_timing": "policy",
-        "retrieval_method": "source_payload",
+        "retrieval_method": "direct_web_capture",
         "raw_field_path": list(field["raw_field_path"]),
         "reference_period": retrieved.date().isoformat(),
     }

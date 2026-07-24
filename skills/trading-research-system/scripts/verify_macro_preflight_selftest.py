@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 
 from macro_preflight import run_macro_board
+from mars_observation_adapter import load_mars_source_contract
+from mars_web_capture import MarsWebCaptureError, capture_mars_direct_web_observations
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +18,7 @@ FIXTURE = ROOT / "assets" / "fixtures" / "input" / "mars-1-0-source-payloads.syn
 AS_OF = "2026-07-23T22:00:00Z"
 BANNED_SURFACE_TERMS = (
     "hyg", "lqd", "spx", "dxy", "uup", "brent", "xau", "gld", "uso", "bno", "vxn", "cpi", "ppi",
+    "inflation & growth", "event scenarios", "event watch", "partial", "source_error",
 )
 
 
@@ -44,20 +47,48 @@ def current_day_completed_payloads() -> dict[str, object]:
     return current
 
 
-def main() -> int:
-    config = {
-        "default_broker": "longbridge",
-        "broker_read_only_enabled": True,
-        "skill_version": "1.0.0",
-        "field_contract_version": "macro-v1",
+def capture(source_payloads: dict[str, object]):
+    """Simulate only the host's direct-search then direct-open handoff."""
+
+    contract = load_mars_source_contract()
+    sources = {
+        str(field["source_id"]): str(field["source_url"])
+        for field in contract["fields"]
     }
-    parameters = tuple(inspect.signature(run_macro_board).parameters)
-    require(
-        parameters[:3] == ("config", "source_payloads", "as_of"),
-        "the public seam must accept raw direct source payloads, not a caller-built ResearchResult",
+    market_session = contract["market_session"]
+    sources[str(market_session["source_id"])] = str(market_session["source_url"])
+    receipts = {
+        source_id: {
+            "source_url": source_url,
+            "opened_at": (
+                source_payloads.get(source_id, {}).get("retrieved_at")
+                if isinstance(source_payloads.get(source_id), dict)
+                else "2026-07-22T22:00:00Z"
+            ),
+            "method": "web_search_then_direct_open",
+        }
+        for source_id, source_url in sources.items()
+    }
+    return capture_mars_direct_web_observations(
+        source_payloads, receipts, acquired_at=AS_OF
     )
 
-    allowed = run_macro_board(config, payloads(), AS_OF)
+
+def main() -> int:
+    parameters = tuple(inspect.signature(run_macro_board).parameters)
+    require(
+        parameters[:2] == ("web_capture", "as_of"),
+        "the public seam must accept a direct-web capture, never a raw source map or broker config",
+    )
+
+    raw_map = run_macro_board(payloads(), AS_OF)  # type: ignore[arg-type]
+    require(raw_map.kind == "blocker", "raw source maps must be rejected at the public seam")
+    require(
+        raw_map.blockers[0].reason == "direct_web_capture_required",
+        "the user-visible blocker must explain the missing direct-web capture",
+    )
+
+    allowed = run_macro_board(capture(payloads()), AS_OF)
     require(allowed.kind == "board", "complete direct observations must reach the canonical Board")
     require(allowed.delivery_packet is not None, "successful run must return a delivery packet")
     require(allowed.delivery_packet.standalone_board is not None, "only a standalone Board may be delivered")
@@ -95,7 +126,7 @@ def main() -> int:
         "delivery artifacts must not persist raw policy URLs or page content",
     )
 
-    current_day = run_macro_board(config, current_day_completed_payloads(), AS_OF)
+    current_day = run_macro_board(capture(current_day_completed_payloads()), AS_OF)
     require(
         current_day.kind == "board",
         "a source-declared completed close on the decision date must be accepted",
@@ -103,7 +134,7 @@ def main() -> int:
 
     missing_vix = payloads()
     missing_vix.pop("cboe_vix_history")
-    blocked_missing = run_macro_board(config, missing_vix, AS_OF)
+    blocked_missing = run_macro_board(capture(missing_vix), AS_OF)
     require(blocked_missing.kind == "blocker", "missing direct source payload must block")
     require(blocked_missing.delivery_packet is None, "blocked run must not create a Board")
     require(
@@ -113,7 +144,7 @@ def main() -> int:
 
     missing_policy = payloads()
     missing_policy.pop("white_house_presidential_actions")
-    blocked_policy = run_macro_board(config, missing_policy, AS_OF)
+    blocked_policy = run_macro_board(capture(missing_policy), AS_OF)
     require(blocked_policy.kind == "blocker", "missing policy source must block")
     require(
         blocked_policy.blockers[0].field_id == "policy.us_executive_actions",
@@ -122,27 +153,54 @@ def main() -> int:
 
     stale_session = payloads()
     stale_session["us_equities_session"]["latest_completed_market_session"] = "2026-07-21"
-    blocked_stale = run_macro_board(config, stale_session, AS_OF)
+    blocked_stale = run_macro_board(capture(stale_session), AS_OF)
     require(blocked_stale.kind == "blocker", "not-latest session must block")
     require(
         blocked_stale.blockers[0].reason == "completed_market_session_not_latest",
         "the blocker must explain the common-close failure",
     )
 
-    proxy_payload = payloads()
-    proxy_payload["configured_broker"] = {"source_url": "synthetic://broker"}
-    blocked_proxy = run_macro_board(config, proxy_payload, AS_OF)
-    require(blocked_proxy.kind == "blocker", "broker or proxy data must not enter direct macro core")
-    require(
-        blocked_proxy.blockers[0].reason == "source_payload_not_supported:configured_broker",
-        "unsupported provider payload must remain visible",
-    )
+    bad_receipt = payloads()
+    contract = load_mars_source_contract()
+    source_id = str(contract["fields"][0]["source_id"])
+    source_url = str(contract["fields"][0]["source_url"])
+    receipts = {
+        item_source_id: {
+            "source_url": item_source_url,
+            "opened_at": "2026-07-22T22:00:00Z",
+            "method": "web_search_then_direct_open",
+        }
+        for item_source_id, item_source_url in {
+            **{
+                str(field["source_id"]): str(field["source_url"])
+                for field in contract["fields"]
+            },
+            str(contract["market_session"]["source_id"]): str(contract["market_session"]["source_url"]),
+        }.items()
+    }
+    receipts[source_id]["method"] = "broker_proxy"
+    try:
+        capture_mars_direct_web_observations(bad_receipt, receipts, acquired_at=AS_OF)
+    except MarsWebCaptureError as error:
+        require(
+            str(error) == f"{source_id}:direct_web_method_invalid",
+            "a broker/proxy receipt must be rejected before preflight",
+        )
+    else:
+        raise AssertionError("a broker/proxy receipt must be rejected")
 
-    invalid_config = dict(config)
-    invalid_config["default_broker"] = ["longbridge", "ibkr"]
-    setup = run_macro_board(invalid_config, payloads(), AS_OF)
-    require(setup.kind == "setup_required", "exactly one installation-selected broker is required")
-    require(setup.delivery_packet is None, "setup required must not create a Board")
+    future_receipt = payloads()
+    receipts[source_id]["method"] = "web_search_then_direct_open"
+    receipts[source_id]["opened_at"] = "2026-07-23T22:00:01Z"
+    try:
+        capture_mars_direct_web_observations(future_receipt, receipts, acquired_at=AS_OF)
+    except MarsWebCaptureError as error:
+        require(
+            str(error) == f"{source_id}:direct_web_opened_after_capture",
+            "a receipt after the capture cutoff must be rejected",
+        )
+    else:
+        raise AssertionError("a receipt after the capture cutoff must be rejected")
 
     print("macro preflight selftest passed")
     return 0

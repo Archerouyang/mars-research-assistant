@@ -35,6 +35,16 @@ MACRO_VIEWS = [
     "Overview", "Rates & Liquidity", "Inflation & Growth",
     "Cross-Asset Impact", "Event Scenarios",
 ]
+MARS_DIRECT_PROFILE = "mars_direct_v1"
+MARS_DIRECT_MODULES = (
+    "plan_context", "rates_liquidity", "cross_asset", "policy_watch",
+)
+MARS_DIRECT_VIEWS = [
+    "Overview", "Rates & Liquidity", "Cross-Asset Impact", "Policy Watch",
+]
+MARS_DIRECT_EVIDENCE_FAMILIES = frozenset(
+    {"rates_liquidity", "cross_asset", "policy_watch"}
+)
 MACRO_PLAN_CONTEXT_FIELDS = frozenset(
     {
         "active_plan_id", "applicable_horizon", "applicable_session",
@@ -66,6 +76,7 @@ MACRO_PAYLOAD_FIELDS = frozenset(
         "holdings_context", "modules", "payload_version", "posture", "question",
         "scenarios", "views", "trend_series", "event_watch",
         "policy_watch", "asset_preferences", "liquidity_background", "preflight",
+        "macro_profile",
     }
 )
 
@@ -80,6 +91,11 @@ def validate_payload(snapshot: Mapping[str, Any]) -> None:
 
 def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
     payload = snapshot["payload"]
+    if payload.get("macro_profile") == MARS_DIRECT_PROFILE:
+        _validate_mars_direct_macro_payload(snapshot)
+        return
+    if "macro_profile" in payload:
+        raise ArtifactPacketError("macro_profile_invalid")
     if not all(_is_nonempty_string(payload.get(key)) for key in ("question", "decision")):
         raise ArtifactPacketError("payload_invalid")
     if payload.get("views") != MACRO_VIEWS:
@@ -231,6 +247,126 @@ def _validate_macro_payload(snapshot: Mapping[str, Any]) -> None:
         raise ArtifactPacketError("evidence_state_mismatch")
     if derived_state == "source_error" and "regime" in posture["label"].casefold():
         raise ArtifactPacketError("posture_derivation_invalid")
+
+
+def _validate_mars_direct_macro_payload(snapshot: Mapping[str, Any]) -> None:
+    """Validate the fail-closed, direct-web-only Mars Macro profile."""
+
+    payload = snapshot["payload"]
+    if not all(_is_nonempty_string(payload.get(key)) for key in ("question", "decision")):
+        raise ArtifactPacketError("payload_invalid")
+    if payload.get("views") != MARS_DIRECT_VIEWS:
+        raise ArtifactPacketError("views_invalid")
+    _validate_preflight_binding_metadata(payload.get("preflight"))
+    modules = payload.get("modules")
+    if not isinstance(modules, list):
+        raise ArtifactPacketError("modules_invalid")
+    by_id = {item.get("id"): item for item in modules if isinstance(item, Mapping)}
+    if len(modules) != len(MARS_DIRECT_MODULES) or set(by_id) != set(MARS_DIRECT_MODULES):
+        raise ArtifactPacketError("modules_invalid")
+    source_by_id = {source["id"]: source for source in snapshot["source_registry"]}
+    cutoff = _parse_timestamp(snapshot["decision_cutoff"], "decision_cutoff_invalid")
+    for module_id in MARS_DIRECT_MODULES:
+        module = by_id[module_id]
+        if (
+            module.get("requirement") != "required"
+            or module.get("evidence_state") != "complete"
+            or not _is_nonempty_string(module.get("summary"))
+            or module.get("gap_reason") != ""
+        ):
+            raise ArtifactPacketError("modules_invalid")
+        _validate_macro_module_data(module_id, module.get("data"), "complete", cutoff)
+        refs = module.get("source_refs")
+        if not isinstance(refs, list) or len(refs) != 1 or refs[0] not in source_by_id:
+            raise ArtifactPacketError("modules_invalid")
+        if source_by_id[refs[0]]["freshness_status"] != "fresh":
+            raise ArtifactPacketError("module_source_support_invalid")
+        as_of = _parse_timestamp(module.get("as_of"), "modules_invalid")
+        if as_of > cutoff or module.get("freshness_policy_id") not in FRESHNESS_POLICIES:
+            raise ArtifactPacketError("module_freshness_invalid")
+    if snapshot.get("coverage") != {"required_complete": 4, "required_total": 4}:
+        raise ArtifactPacketError("coverage_mismatch")
+    if snapshot.get("evidence_state") != "complete":
+        raise ArtifactPacketError("evidence_state_mismatch")
+
+    holdings = payload.get("holdings_context")
+    if (
+        not isinstance(holdings, Mapping)
+        or set(holdings) != {"conditional", "status", "summary"}
+        or holdings.get("conditional") is not True
+        or not all(_is_nonempty_string(holdings.get(key)) for key in ("status", "summary"))
+    ):
+        raise ArtifactPacketError("holdings_invalid")
+
+    exposures = payload.get("exposure_lens")
+    if not isinstance(exposures, list) or not exposures:
+        raise ArtifactPacketError("exposure_invalid")
+    exposure_ids: set[str] = set()
+    for item in exposures:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != {"id", "impact", "kind", "label", "plan_rule", "sensitivity"}
+            or not all(_is_nonempty_string(item.get(key)) for key in item)
+            or item["id"] in exposure_ids
+            or "conditional" not in item["impact"].casefold()
+        ):
+            raise ArtifactPacketError("exposure_invalid")
+        exposure_ids.add(item["id"])
+
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, list) or len(evidence) != 3:
+        raise ArtifactPacketError("evidence_invalid")
+    evidence_ids: set[str] = set()
+    allowed = {
+        "as_of", "category", "exposure_id", "family", "id", "label",
+        "plan_effect", "reading", "source_ref", "status", "transmission",
+    }
+    for item in evidence:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != allowed
+            or not all(_is_nonempty_string(item.get(key)) for key in allowed)
+            or item["id"] in evidence_ids
+            or item["family"] not in MARS_DIRECT_EVIDENCE_FAMILIES
+            or item["exposure_id"] not in exposure_ids
+            or item["category"] != "actual"
+            or item["status"] != "verified"
+            or item["source_ref"] not in source_by_id
+            or source_by_id[item["source_ref"]]["priority"] != "S0"
+            or _parse_timestamp(item["as_of"], "evidence_invalid") > cutoff
+        ):
+            raise ArtifactPacketError("evidence_invalid")
+        evidence_ids.add(item["id"])
+    if {item["family"] for item in evidence} != MARS_DIRECT_EVIDENCE_FAMILIES:
+        raise ArtifactPacketError("evidence_invalid")
+
+    posture = payload.get("posture")
+    if (
+        not isinstance(posture, Mapping)
+        or set(posture) != {"consequence", "derived_from", "label"}
+        or not all(_is_nonempty_string(posture.get(key)) for key in ("consequence", "label"))
+        or not isinstance(posture.get("derived_from"), list)
+        or set(posture["derived_from"]) != evidence_ids
+    ):
+        raise ArtifactPacketError("posture_derivation_invalid")
+
+    scenarios = payload.get("scenarios")
+    if scenarios != []:
+        raise ArtifactPacketError("scenarios_invalid")
+
+    chart_series = payload.get("chart_series")
+    if not isinstance(chart_series, list) or not chart_series or not all(
+        isinstance(item, Mapping)
+        and set(item) == {"label", "value"}
+        and _is_nonempty_string(item.get("label"))
+        and isinstance(item.get("value"), (int, float))
+        for item in chart_series
+    ):
+        raise ArtifactPacketError("chart_series_invalid")
+    _validate_trend_series(payload.get("trend_series"), cutoff)
+    _validate_policy_watch(payload.get("policy_watch"), cutoff)
+    if payload.get("event_watch") is not None or payload.get("asset_preferences") is not None or payload.get("liquidity_background") is not None:
+        raise ArtifactPacketError("mars_direct_unsupported_payload")
 
 
 def _validate_preflight_binding_metadata(value: Any) -> None:

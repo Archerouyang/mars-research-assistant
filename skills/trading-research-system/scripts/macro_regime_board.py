@@ -25,6 +25,7 @@ VIEW_IDS = {
     "Inflation & Growth": "inflation-growth",
     "Cross-Asset Impact": "cross-asset-impact",
     "Event Scenarios": "event-scenarios",
+    "Policy Watch": "policy-watch",
 }
 
 
@@ -53,6 +54,22 @@ def render_macro_regime_board(
             "Active Market Plan context is unavailable at this decision cutoff.",
         )
     )
+    if payload.get("macro_profile") == "mars_direct_v1":
+        view_renderers = {
+            "Overview": lambda: _overview(payload, modules, sources, default_id, plan_available),
+            "Rates & Liquidity": lambda: _rates(payload, modules, sources, default_id, plan_available),
+            "Cross-Asset Impact": lambda: _cross_asset(payload, modules, sources, default_id, plan_available),
+            "Policy Watch": lambda: _policy(payload, modules, sources, default_id, plan_available),
+        }
+        panels = "".join(view_renderers[view]() for view in payload["views"])
+        rail_description = "direct-web evidence, exact source identities, and conditional portfolio transmission."
+    else:
+        panels = f"""{_overview(payload, modules, sources, default_id, plan_available)}
+{_rates(payload, modules, sources, default_id, plan_available)}
+{_inflation(payload, modules, sources, default_id, plan_available)}
+{_cross_asset(payload, modules, sources, default_id, plan_available)}
+{_scenarios(payload, modules, default_id, plan_available)}"""
+        rail_description = "fresh plan, cross-asset transmission, and three decision-evidence families. Holdings remain conditional when unreconciled."
     html = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -69,12 +86,8 @@ def render_macro_regime_board(
 {render_summary((posture_summary, ('Coverage', f"{snapshot['coverage']['required_complete']} of {snapshot['coverage']['required_total']} required gates complete", None), ('Status', f"Evidence: {snapshot['evidence_state']} | Presentation: {presentation_state}", None)), 'Macro decision summary')}
 {render_decision_framing('Current plan decision', decision)}
 <div class="board-layout"><div class="view-stack">
-{_overview(payload, modules, sources, default_id, plan_available)}
-{_rates(payload, modules, sources, default_id, plan_available)}
-{_inflation(payload, modules, sources, default_id, plan_available)}
-{_cross_asset(payload, modules, sources, default_id, plan_available)}
-{_scenarios(payload, modules, default_id, plan_available)}
-</div>{render_evidence_rail(snapshot, payload['modules'], 'fresh plan, cross-asset transmission, and three decision-evidence families. Holdings remain conditional when unreconciled.')}</div>
+{panels}
+</div>{render_evidence_rail(snapshot, payload['modules'], rail_description)}</div>
 {render_safety_footer('Synthetic fixture. Decision support only. This file has no network, private-state, broker, or execution operation.')}
 </main>
 <script data-library="Apache ECharts" data-version="{ECHARTS_VERSION}">{echarts_source}</script>
@@ -135,7 +148,12 @@ def _display_reading(row: Mapping[str, Any]) -> str:
 
 
 def _rates(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], sources: Mapping[str, Mapping[str, Any]], default_id: str, plan_available: bool) -> str:
-    return _family_view(payload, modules, sources, default_id, plan_available, "Rates &amp; Liquidity", "10Y, 30Y, credit, USD, oil, liquidity; Gold is optional confirmation", "rates-liquidity", "rates_liquidity")
+    description = (
+        "Treasury curve and official liquidity fields only"
+        if payload.get("macro_profile") == "mars_direct_v1"
+        else "10Y, 30Y, credit, USD, oil, liquidity; Gold is optional confirmation"
+    )
+    return _family_view(payload, modules, sources, default_id, plan_available, "Rates &amp; Liquidity", description, "rates-liquidity", "rates_liquidity")
 
 
 def _inflation(payload: Mapping[str, Any], modules: Mapping[str, Mapping[str, Any]], sources: Mapping[str, Mapping[str, Any]], default_id: str, plan_available: bool) -> str:
@@ -172,6 +190,23 @@ def _scenarios(
     )
     return f"""<section class="view-panel" id="view-event-scenarios" data-view="event-scenarios" role="tabpanel" aria-labelledby="tab-event-scenarios"{_hidden('event-scenarios', default_id)}>
 <div class="section-head"><h2>Event Scenarios</h2><p>Trigger to Cross-Asset to Exposure to Posture; ordered by decision impact</p></div>{_module_row(modules['event_scenarios'])}<div class="scenario-list">{rows}</div></section>"""
+
+
+def _policy(
+    payload: Mapping[str, Any],
+    modules: Mapping[str, Mapping[str, Any]],
+    sources: Mapping[str, Mapping[str, Any]],
+    default_id: str,
+    plan_available: bool,
+) -> str:
+    records = payload.get("policy_watch", [])
+    rows = "".join(
+        f"<article class=\"policy-row\"><h3>{escape(item['title'])}</h3><p class=\"module-meta\">{escape(item['published_at'])} · {escape(item['source'])}</p></article>"
+        for item in records
+    ) or "<p class=\"module-meta\">No verified Presidential Actions records in this refresh.</p>"
+    return f"""<section class="view-panel" id="view-policy-watch" data-view="policy-watch" role="tabpanel" aria-labelledby="tab-policy-watch"{_hidden('policy-watch', default_id)}>
+<div class="section-head"><h2>Policy Watch</h2><p>Bounded White House Presidential Actions evidence only</p></div>{_module_row(modules['policy_watch'])}
+{_evidence_rows(payload['evidence'], 'policy_watch', sources, plan_available)}<div class="policy-list">{rows}</div></section>"""
 
 
 def _module_row(module: Mapping[str, Any]) -> str:

@@ -13,11 +13,10 @@ from typing import Any, Iterable, Mapping
 
 from artifact_packet_core import ArtifactPacketError
 from mars_macro_builder import build_mars_macro_research_result
-from mars_observation_adapter import ObservationAdapterError, normalize_mars_observation_run
+from mars_web_capture import MarsWebCapture, MarsWebCaptureError, normalize_captured_mars_observations
 from research_result import DeliveryPacket, ResearchResultError, build_delivery_packet
 
 
-ALLOWED_BROKERS = frozenset({"longbridge", "ibkr"})
 ALLOWED_STATUSES = frozenset(
     {
         "available",
@@ -129,7 +128,6 @@ class MacroRunOutcome:
     message: str
     blockers: tuple[FieldBlocker, ...] = ()
     delivery_packet: DeliveryPacket | None = None
-    attempted_brokers: tuple[str, ...] = ()
     resolved_values: Mapping[str, Any] = dataclass_field(default_factory=dict)
 
 
@@ -150,53 +148,31 @@ def load_field_registry(path: Path | None = None) -> dict[str, Any]:
 
 
 def run_macro_board(
-    config: Mapping[str, Any],
-    source_payloads: Mapping[str, Any],
+    web_capture: MarsWebCapture,
     as_of: str,
     *,
     registry: Mapping[str, Any] | None = None,
 ) -> MacroRunOutcome:
-    """Return one setup prompt, direct-source blocker, or canonical Board packet."""
+    """Return a direct-web blocker or canonical Board without broker state."""
 
-    broker = _configured_broker(config)
-    if broker is None:
-        return MacroRunOutcome(
-            kind="setup_required",
-            message=(
-                "需要先选择一个默认只读券商（Longbridge 或 IBKR）；"
-                "本次未读取持仓，也未生成 Macro Board。"
-            ),
-        )
     try:
-        normalized_run = normalize_mars_observation_run(source_payloads, as_of)
-    except ObservationAdapterError as error:
-        return _observation_adapter_blocker(str(error), registry, broker)
+        observations = normalize_captured_mars_observations(web_capture, as_of)
+    except MarsWebCaptureError as error:
+        return _observation_adapter_blocker(str(error), registry)
     return _run_normalized_macro_board(
-        config,
-        normalized_run.observations,
+        observations,
         as_of,
         registry=registry,
     )
 
 
 def _run_normalized_macro_board(
-    config: Mapping[str, Any],
     observations: Iterable[Mapping[str, Any]],
     as_of: str,
     *,
     registry: Mapping[str, Any] | None = None,
 ) -> MacroRunOutcome:
     """Private seam: validate adapter-normalized fields then create the only Board."""
-
-    broker = _configured_broker(config)
-    if broker is None:
-        return MacroRunOutcome(
-            kind="setup_required",
-            message=(
-                "需要先选择一个默认只读券商（Longbridge 或 IBKR）；"
-                "本次未读取持仓，也未生成 Macro Board。"
-            ),
-        )
 
     try:
         field_registry = copy.deepcopy(dict(registry or load_field_registry()))
@@ -219,7 +195,6 @@ def _run_normalized_macro_board(
             kind="blocker",
             message=_render_blocker((blocker,)),
             blockers=(blocker,),
-            attempted_brokers=(broker,),
         )
     rows_by_id, duplicate_ids = _index_observations(observations)
     blockers: list[FieldBlocker] = []
@@ -247,7 +222,6 @@ def _run_normalized_macro_board(
         reason = _validate_observation(
             row,
             field,
-            broker,
             cutoff,
             source_maps,
         )
@@ -298,7 +272,6 @@ def _run_normalized_macro_board(
             kind="blocker",
             message=_render_blocker(ordered),
             blockers=ordered,
-            attempted_brokers=(broker,),
         )
 
     try:
@@ -315,7 +288,6 @@ def _run_normalized_macro_board(
             kind="blocker",
             message=_render_blocker((blocker,)),
             blockers=(blocker,),
-            attempted_brokers=(broker,),
         )
     if packet.standalone_board is None:
         blocker = FieldBlocker(
@@ -329,32 +301,18 @@ def _run_normalized_macro_board(
             kind="blocker",
             message=_render_blocker((blocker,)),
             blockers=(blocker,),
-            attempted_brokers=(broker,),
         )
     return MacroRunOutcome(
         kind="board",
         message="Macro Preflight 已通过；使用最近共同完成收盘数据生成 standalone Board。",
         delivery_packet=packet,
-        attempted_brokers=(broker,),
         resolved_values=resolved_values,
     )
-
-
-def _configured_broker(config: Mapping[str, Any]) -> str | None:
-    if not isinstance(config, Mapping):
-        return None
-    broker = config.get("default_broker")
-    if not isinstance(broker, str) or broker not in ALLOWED_BROKERS:
-        return None
-    if config.get("broker_read_only_enabled") is not True:
-        return None
-    return str(broker)
 
 
 def _observation_adapter_blocker(
     error: str,
     registry: Mapping[str, Any] | None,
-    broker: str,
 ) -> MacroRunOutcome:
     """Expose source-normalization failures as the public blocker, never a Board."""
 
@@ -378,7 +336,6 @@ def _observation_adapter_blocker(
         kind="blocker",
         message=_render_blocker((blocker,)),
         blockers=(blocker,),
-        attempted_brokers=(broker,),
     )
 
 
@@ -523,7 +480,6 @@ def _common_market_date_blockers(
 def _validate_observation(
     row: Mapping[str, Any],
     field: Mapping[str, Any],
-    configured_broker: str,
     cutoff: datetime,
     source_maps: Mapping[str, Mapping[str, Any]],
 ) -> tuple[str, str, str] | None:
@@ -563,12 +519,7 @@ def _validate_observation(
         if isinstance(item, Mapping)
     }
     source_id = row.get("source_id")
-    source_allowed = source_id in route_ids
-    if "configured_broker" in route_ids and source_id == configured_broker:
-        source_allowed = True
-    if source_id in ALLOWED_BROKERS and source_id != configured_broker:
-        source_allowed = False
-    if not source_allowed:
+    if source_id not in route_ids:
         return ("unsupported", "source_route_not_allowed", "")
     allowed_methods = {
         item.get("method")
@@ -576,10 +527,6 @@ def _validate_observation(
         if isinstance(item, Mapping)
         and (
             item.get("source_id") == source_id
-            or (
-                item.get("source_id") == "configured_broker"
-                and source_id == configured_broker
-            )
         )
     }
     if row.get("retrieval_method") not in allowed_methods:
@@ -641,7 +588,7 @@ def _matches_source_map(
 ) -> bool:
     return (
         row.get("source_id") == source_map.get("source_id")
-        and row.get("retrieval_method") == "source_payload"
+        and row.get("retrieval_method") == "direct_web_capture"
         and row.get("raw_field_path") == source_map.get("raw_field_path")
         and row.get("source_url") == source_map.get("source_url")
     )

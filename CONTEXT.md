@@ -117,8 +117,8 @@ _Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts �
 _Avoid_: 把 CLI adapter 当下单层, 把本机安装等同于 macrodata 可用, 把用户真实持仓 fixture 化进 public repo
 
 **Macro Data Source Contract**:
-Mars 1.0 宏观 Board 只使用逐字段验证的直接公开来源。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段没有稳定、精确、可复核的公开来源合同，或本轮没有取得该字段，必须拒绝生成 Board；不得用 Longbridge、IBKR、ETF、新闻摘要或其它代理替代。券商只读数据继续限于独立的账户/持仓风险研究。
-_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用券商行情或新闻替代直接公开宏观字段, 用缺失字段生成 partial Board
+Mars 1.0 宏观 Board 只使用逐字段验证的直接公开来源。每次刷新必须先 `web search -> 直接打开合同 URL -> MarsWebCapture`，然后才允许归一化与生成 Board；普通数据字典、搜索摘要、券商配置和代理不能进入公开入口。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段没有稳定、精确、可复核的公开来源合同，或本轮没有取得该字段，必须拒绝生成 Board；不得用 Longbridge、IBKR、ETF、新闻摘要或其它代理替代。券商只读数据继续限于独立的账户/持仓风险研究。
+_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用券商行情或新闻替代直接公开宏观字段, 用缺失字段生成 partial Board, 接收未验证的原始 payload
 
 **Source Routing Boundary**:
 按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 仅可用于明确授权的只读账户、持仓、成交和价格事实；Mars 宏观字段不从券商或新闻源取得。宏观 Board 的公开来源、字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 锁定。选择 Longbridge 做股票数据或券商数据不使其成为政策、宏观、行业或新闻的默认来源。

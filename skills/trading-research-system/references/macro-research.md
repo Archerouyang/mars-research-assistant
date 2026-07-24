@@ -14,11 +14,19 @@ small and entirely field-contract driven:
 - White House Presidential Actions as a bounded U.S. executive-policy record.
 
 The exact source URL, column/path, timing, and unit for every retained field
-live in `mars-1-0-observation-source-contracts.json`. `mars_observation_adapter.py`
-accepts only those raw source payloads in memory, normalizes them, and refuses
-to persist the raw payload. `macro_preflight.py` derives ratios and changes
-inside the boundary; callers cannot supply derived values or a prewritten
-`ResearchResult`.
+live in `mars-1-0-observation-source-contracts.json`. The host must use this
+sequence for every refresh:
+
+```text
+web search -> direct open of the exact contract URL -> MarsWebCapture ->
+mars_observation_adapter.py -> macro_preflight.py
+```
+
+`MarsWebCapture` is transient and requires a direct-open receipt for every
+contract source. The public `run_macro_board` seam accepts that typed capture
+only: it does not accept a generic payload map, broker configuration, proxy,
+search-result snippet, caller-derived ratio, or prewritten `ResearchResult`.
+Raw page responses remain in memory and are never persisted by the Skill.
 
 Every retained field is required. Completed-market fields must equal the latest
 common completed close; official releases must identify the latest published
@@ -28,9 +36,9 @@ field returns one `Data Acquisition Blocker`. It never produces a partial Board,
 placeholder, or proxy-backed result.
 
 Macro Board fields never come from Longbridge, IBKR, an ETF proxy, a search
-snippet, media, or a calendar summary. The configured broker remains relevant
-only to separately authorized account and portfolio workflows. A direct public
-source discovered with Web search may be added only with an exact source map,
+snippet, media, or a calendar summary. Broker selection is relevant only to
+separately authorized account and portfolio workflows. A direct public source
+discovered with Web search may be added only with an exact source map,
 synthetic fixture, and regression test; otherwise the field stays absent.
 
 The following are currently excluded: HYG/LQD, SPX, seven-day event calendars,
@@ -38,21 +46,23 @@ DXY, Brent, gold, and S&P 500 forward P/E. Do not restore any with a proxy or
 approximation. A later field-contract revision must establish a direct source
 and test it first.
 
-The standalone Board displays only fields that passed this gate. Its default
-surfaces are `趋势`, `当前状态`, and `情景`; `下周事件` and `白宫政策` appear
-only when their corresponding direct field is admitted. The policy surface
-shows only title, publication time, and a White House source label: no raw page
-text and no outbound network link enter the standalone artifact.
+The standalone Board is emitted only after every retained field passes this
+gate. Its Mars 1.0 surfaces are `Overview`, `Rates & Liquidity`,
+`Cross-Asset Impact`, and `Policy Watch`; it has no inflation, generic event,
+or partial-data placeholder view. The policy surface shows only title,
+publication time, and a White House source label: no raw page text and no
+outbound network link enter the standalone artifact.
 
 For visuals, show decision-sensitive metrics and their `as_of` in the first
 viewport. NDX/RUT, VIX/VIX3M, and rates are time series with direction over the
 aligned history window. Keep the text decision-dense, distinguish facts from
 inferences, and do not create a trade instruction from the Macro Board.
 
-## Legacy Frozen Macro Data Workflow
+## Legacy Frozen Macro Data Workflow (Compatibility Only)
 
-The user accepted and froze the following workflow on 2026-07-19 for the 0.2.0
-release:
+The following 0.2.0 workflow remains as a compatibility reference for its
+existing CLI helpers. It is not a Mars 1.0 Board acquisition route and cannot
+override the direct-web gate above:
 
 1. Establish capability with `longbridge --version` and `longbridge check`.
    Current-chat tool visibility, CLI installation, authentication, and data
@@ -90,10 +100,9 @@ release:
    manifest for event follow-up. Do not emit an iframe, parallel inline
    fragment, or cross-unit bar chart.
 
-Without renewed user acceptance, do not replace this CLI-first sequence with a
-bespoke scraper, collapse purpose-specific sources into Longbridge, reinterpret
-missing data as authorization failure, relabel a proxy as DXY, change the
-one-month default, or add a second visual delivery path.
+Do not use this CLI-first sequence to populate a Mars Board, reinterpret
+missing data as authorization failure, relabel a proxy as an exact index, or
+add a second visual delivery path.
 
 The retained read-only implementation surface is
 `scripts/longbridge_macrodata_adapter.py` for normalized Longbridge responses
@@ -102,13 +111,10 @@ panel. Neither helper reads broker positions or performs order actions.
 
 ## Mars Standalone Format
 
-Mars 1.0 keeps one self-contained `standalone_board` artifact. `趋势`, `当前状态`,
-and `情景` are always present. `下周事件` is present only if a complete direct
-event contract is admitted; `白宫政策` is present only when the verified White
-House policy field is available. This conditional visibility prevents a missing
-field from becoming a misleading empty panel.
+Mars 1.0 keeps one self-contained `standalone_board` artifact. It renders only
+the four direct-field surfaces named above. A failed direct source is a Blocker,
+not an empty panel and not a partial artifact.
 
-The trend view uses selectable time series; scenarios use `触发`, `确认`, `传导`,
-and `应对`. The Board must open without host CSS or network access, and its
-snapshot, HTML, and manifest remain paired. Layout and new interaction surfaces
-still require explicit visual acceptance before public cutover.
+The Board must open without host CSS or network access, and its snapshot, HTML,
+and manifest remain paired. Layout and new interaction surfaces still require
+explicit visual acceptance before public cutover.
