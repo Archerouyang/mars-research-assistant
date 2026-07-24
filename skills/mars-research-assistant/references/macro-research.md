@@ -44,10 +44,24 @@ unsupported, conflicted, or source-error field returns one `Data Acquisition
 Blocker`. It never produces a partial Board, placeholder, or proxy-backed
 result.
 
-Before the first Mars Macro run, first ask whether the user wants to enable
-already-connected read-only broker data. Until they confirm, report
-`authorization_pending`, continue only with public sources, and do not call a
-broker probe. After confirmation, run
+Start every Mars Macro request with the direct-public acquisition sequence
+above. The absence of a saved `macro-panel.json`, a prior standalone Board, a
+private runtime, or a broker configuration is only a missing historical
+baseline; it must not block today's public field acquisition. A complete capture
+returns a Board. An incomplete capture returns the one `Data Acquisition
+Blocker`. Do not ask for broker authorization or private-runtime write approval
+before attempting that binary public preflight.
+
+The Board delivery is transient by default. After a valid Board has been
+delivered, ask separately before saving or overwriting a private Macro snapshot.
+If the user declines persistence, retain no saved runtime artifact and state
+only that historical comparison is unavailable. Never combine permission to
+read public sources with permission to persist private runtime state.
+
+Read-only broker setup is separate and only applies to a later
+account/portfolio-personalized workflow. Until the user confirms it, report
+`authorization_pending` for broker capability only and do not call a broker
+probe. After confirmation, run
 `scripts/broker_capability.py --confirm-read-only --format json`: Longbridge
 uses only `check --format json`; IBKR can be marked available only by a
 current-task Interactive Brokers MCP tool name passed as `--task-tool`. Do not
@@ -56,10 +70,9 @@ accounts, balances, tokens, or market payloads. Show the user the available
 choices, require exactly one default broker, and explicitly confirm read-only
 use before writing the minimal private `mars-runtime-config.json` with
 `configure_first_run`. Public and official field routes do not switch the
-configured broker. Later runs use
-`run_macro_board_from_runtime`: an absent config returns setup guidance, and a
-field-contract, Skill-version, or capability-probe change returns
-`capability_recheck_required` without a Board or broker read.
+configured broker. `run_macro_board_from_runtime` remains a compatibility name
+for the public blocker-or-Board seam; it does not inspect, require, or write
+private broker configuration.
 
 Macro Board fields never come from Longbridge, IBKR, an ETF proxy, a search
 snippet, media, or a calendar summary. Broker selection is relevant only to
@@ -124,9 +137,10 @@ override the direct-web gate above:
 6. Preserve actual, forecast, media, and thesis categories, source registry,
    `as_of`, and data-gap disclosure through `ResearchResult -> DeliveryPacket`.
    Public fixtures remain visibly synthetic and can never support a live claim.
-7. Render one self-contained standalone Board and retain its snapshot and
-   manifest for event follow-up. Do not emit an iframe, parallel inline
-   fragment, or cross-unit bar chart.
+7. Render one self-contained standalone Board as a transient delivery packet.
+   Retain a private snapshot only after the user separately approves that
+   write. Do not emit an iframe, parallel inline fragment, or cross-unit bar
+   chart.
 
 Do not use this CLI-first sequence to populate a Mars Board, reinterpret
 missing data as authorization failure, relabel a proxy as an exact index, or

@@ -63,11 +63,21 @@ def main() -> int:
     }
     with TemporaryDirectory() as temporary:
         runtime = Path(temporary) / "mars-runtime"
-        setup = run_macro_board_from_runtime(
-            runtime, direct_capture(), AS_OF, capability_probes=capabilities
+        public_first = run_macro_board_from_runtime(
+            runtime, direct_capture(), AS_OF, capability_probes=None
         )
-        require(setup.kind == "setup_required", "missing private setup must stop before Board creation")
-        require(setup.delivery_packet is None, "setup guidance must not emit a Board")
+        require(
+            public_first.kind == "board",
+            "complete direct-public Macro data must not require broker setup before Board creation",
+        )
+        require(
+            public_first.delivery_packet is not None,
+            "complete direct-public Macro data must emit a standalone Board packet",
+        )
+        require(
+            not (runtime / CONFIG_FILE_NAME).exists(),
+            "public Macro generation must not create private broker configuration",
+        )
 
         config = configure_first_run(
             runtime,
@@ -87,26 +97,11 @@ def main() -> int:
         require(config["default_broker"] == "longbridge", "one explicit broker must be retained")
         require(config["read_only_confirmed"] is True, "read-only confirmation must be persisted")
 
-        allowed = run_macro_board_from_runtime(
+        configured = run_macro_board_from_runtime(
             runtime, direct_capture(), AS_OF, capability_probes=capabilities
         )
-        require(allowed.kind == "board", "configured direct-source run must reach the existing Board seam")
-        require(allowed.delivery_packet is not None, "configured run must produce a standalone Board packet")
-
-        changed_contract = dict(load_field_registry())
-        changed_contract["contract_version"] = "macro-v2"
-        recheck = run_macro_board_from_runtime(
-            runtime,
-            direct_capture(),
-            AS_OF,
-            capability_probes=capabilities,
-            registry=changed_contract,
-        )
-        require(
-            recheck.kind == "capability_recheck_required",
-            "a field-contract change must require explicit capability recheck",
-        )
-        require(recheck.delivery_packet is None, "capability recheck must not emit a Board")
+        require(configured.kind == "board", "configured direct-source run must reach the existing Board seam")
+        require(configured.delivery_packet is not None, "configured run must produce a standalone Board packet")
 
         try:
             configure_first_run(

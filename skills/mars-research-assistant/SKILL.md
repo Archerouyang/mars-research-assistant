@@ -103,7 +103,15 @@ availability and source coverage, then provide useful public-source research
 before asking for the smallest missing authorization. A missing runtime enters
 blank first-run setup; never restore or infer private state from fixtures.
 
-When a first-run request could use broker data, ask first: `是否启用已连接的只读券商数据？`
+For a requested Macro Panel, do not treat a missing saved `macro-panel.json` or
+standalone Board as a reason to withhold today's Board. First run the complete
+direct-public Macro preflight: it returns exactly one standalone Board or one
+Data Acquisition Blocker. A missing saved artifact only removes historical
+comparison. Deliver the successful Board transiently, then ask separately
+whether the user wants to save or overwrite a private snapshot. Do not ask for
+broker authorization or runtime-write approval before the public acquisition.
+
+When a first-run request later needs broker data, ask first: `是否启用已连接的只读券商数据？`
 Before the user confirms, describe the run as `authorization_pending` and keep
 research public-only; never call a broker capability command or describe this
 state as `dry-run`. After confirmation, run only the capability check in

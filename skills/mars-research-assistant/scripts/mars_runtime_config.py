@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private, minimal first-run state for the Mars Skill-only Macro workflow."""
+"""Private, minimal first-run state for Mars broker-personalized workflows."""
 
 from __future__ import annotations
 
@@ -91,53 +91,19 @@ def run_macro_board_from_runtime(
     capability_probes: Mapping[str, Any] | None = None,
     registry: Mapping[str, Any] | None = None,
 ):
-    """Gate the existing direct-web Macro seam on verified private setup."""
+    """Compatibility entry for a direct-public Macro Board.
 
-    from macro_preflight import MacroRunOutcome, run_macro_board
+    A Mars Macro Board is determined only by its direct-public field contract.
+    The private runtime broker choice belongs to separate authorized
+    account/portfolio workflows, so neither its absence nor a capability change
+    can stop a complete public capture from reaching the blocker-or-Board seam.
+    This function never writes the runtime; persistence remains a separate,
+    explicit action after a Board has been delivered.
+    """
 
-    config_path = _config_path(runtime_dir)
-    if not config_path.exists():
-        if capability_probes is None:
-            return MacroRunOutcome(
-                kind="authorization_required",
-                message=(
-                    "是否启用已连接的只读券商数据？确认后只做能力探测，"
-                    "不读取持仓、账户、资产或行情，也不会生成 Macro Board。"
-                ),
-            )
-        available = _available_brokers(capability_probes)
-        choices = "、".join(_display_broker(item) for item in available) or "无"
-        return MacroRunOutcome(
-            kind="setup_required",
-            message=(
-                f"需要先选择一个可用的默认只读券商（本次能力探测：{choices}）；"
-                "设置不读取持仓、账户或行情，也不会生成 Macro Board。"
-            ),
-        )
+    del runtime_dir, capability_probes
+    from macro_preflight import run_macro_board
 
-    if capability_probes is None:
-        return MacroRunOutcome(
-            kind="capability_recheck_required",
-            message=(
-                "默认只读券商配置需要能力重检；本次未读取任何券商数据，"
-                "也未生成 Macro Board。"
-            ),
-        )
-
-    try:
-        _validate_private_config(
-            config_path,
-            capability_probes=capability_probes,
-            field_contract_version=_registry_contract_version(registry),
-        )
-    except CapabilityRecheckRequired as error:
-        return MacroRunOutcome(
-            kind="capability_recheck_required",
-            message=(
-                f"默认只读券商配置需要能力重检（{error}）；"
-                "本次未读取任何券商数据，也未生成 Macro Board。"
-            ),
-        )
     return run_macro_board(web_capture, as_of, registry=registry)
 
 

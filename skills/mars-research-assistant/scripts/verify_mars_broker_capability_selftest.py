@@ -154,11 +154,17 @@ def main() -> int:
     )
 
     with TemporaryDirectory() as temporary:
-        setup = run_macro_board_from_runtime(
+        public_first = run_macro_board_from_runtime(
             Path(temporary) / "mars-runtime", direct_capture(), AS_OF, capability_probes=None
         )
-    require(setup.kind == "authorization_required", "first-run Macro must ask before capability discovery")
-    require(setup.delivery_packet is None, "authorization prompt must not emit a Board")
+    require(
+        public_first.kind == "board",
+        "broker authorization state must not gate a complete direct-public Macro Board",
+    )
+    require(
+        public_first.delivery_packet is not None,
+        "a public-first Macro run must emit a standalone Board packet",
+    )
 
     require(load_field_registry()["contract_version"], "fixture seam remains reachable")
     print("mars broker capability selftest passed")

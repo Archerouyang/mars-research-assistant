@@ -9,6 +9,13 @@ updates, daily containers, macro panel, portfolio snapshot, and research state.
 Ask before creating or modifying it. Use bundled preparation scripts instead of
 hand-writing structured runtime files.
 
+A missing saved macro panel is a runtime-history condition, not a current
+public-data condition. For a requested Macro Board, acquire and validate the
+complete direct-public field set first. Deliver the Board transiently when the
+preflight passes, or the one Data Acquisition Blocker when it fails. Ask for a
+private-runtime write only after a valid Board exists and only when the user
+wants that snapshot saved or replaced.
+
 Broker access is read-only and source-specific. Reconcile before combining
 accounts. If coverage is incomplete, keep portfolio conclusions conditional.
 
