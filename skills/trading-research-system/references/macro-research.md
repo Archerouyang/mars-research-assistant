@@ -35,6 +35,16 @@ within 24 hours. Any missing, stale, unsupported, conflicted, or source-error
 field returns one `Data Acquisition Blocker`. It never produces a partial Board,
 placeholder, or proxy-backed result.
 
+Before the first Mars Macro run, obtain only a capability-only probe for
+Longbridge and IBKR. Do not read positions, accounts, balances, tokens, or
+market payloads. Ask the user to choose exactly one available default broker
+and explicitly confirm read-only use, then write the minimal private
+`mars-runtime-config.json` with `configure_first_run`. Public and official
+field routes do not switch the configured broker. Later runs use
+`run_macro_board_from_runtime`: an absent config returns setup guidance, and a
+field-contract, Skill-version, or capability-probe change returns
+`capability_recheck_required` without a Board or broker read.
+
 Macro Board fields never come from Longbridge, IBKR, an ETF proxy, a search
 snippet, media, or a calendar summary. Broker selection is relevant only to
 separately authorized account and portfolio workflows. A direct public source
