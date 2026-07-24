@@ -201,7 +201,7 @@ def build_broker_source_health(raw_sources: list[str]) -> dict[str, object]:
         for source in ("longbridge", "ibkr", "manual")
     ]
 
-    current_mode = infer_current_mode(source_statuses)
+    current_mode = infer_current_mode(source_statuses, raw_sources)
     checks = [
         RuntimeCheck(
             BROKER_SOURCE_CHECK_IDS[source],
@@ -289,6 +289,8 @@ def build_source_capability_health(
 
 def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
     if not raw_sources:
+        if status == "needs_review":
+            return "not probed in this run; ask the user before capability-only discovery"
         return "no source status provided"
     if status == "available":
         return "read-only source available for this run"
@@ -312,6 +314,8 @@ def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
 
 
 def source_capability_note(capability: str, status: str, raw_capabilities: list[str]) -> str:
+    if not raw_capabilities and status == "needs_review":
+        return "not probed in this run; ask the user before capability-only discovery"
     if status == "available":
         return "read-only capability available for this run"
     if status == "not_installed":
@@ -334,7 +338,9 @@ def source_capability_note(capability: str, status: str, raw_capabilities: list[
     return "no capability status provided"
 
 
-def infer_current_mode(source_statuses: dict[str, str]) -> str:
+def infer_current_mode(source_statuses: dict[str, str], raw_sources: list[str]) -> str:
+    if not raw_sources:
+        return "authorization_pending"
     if any(
         source_statuses[source]
         in {"available", "partial_data", "empty_positions_unverified"}

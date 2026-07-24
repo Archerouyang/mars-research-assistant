@@ -9,11 +9,12 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from broker_capability import CAPABILITY_PROBE_VERSION
+
 
 CONFIG_FILE_NAME = "mars-runtime-config.json"
 CONFIG_SCHEMA_VERSION = "mars-runtime-config-v1"
 SKILL_VERSION = "1.0.0"
-CAPABILITY_PROBE_VERSION = "broker-capability-v1"
 SUPPORTED_BROKERS = frozenset({"longbridge", "ibkr"})
 CONFIG_KEYS = frozenset(
     {
@@ -87,7 +88,7 @@ def run_macro_board_from_runtime(
     web_capture: Any,
     as_of: str,
     *,
-    capability_probes: Mapping[str, Any],
+    capability_probes: Mapping[str, Any] | None = None,
     registry: Mapping[str, Any] | None = None,
 ):
     """Gate the existing direct-web Macro seam on verified private setup."""
@@ -96,6 +97,14 @@ def run_macro_board_from_runtime(
 
     config_path = _config_path(runtime_dir)
     if not config_path.exists():
+        if capability_probes is None:
+            return MacroRunOutcome(
+                kind="authorization_required",
+                message=(
+                    "是否启用已连接的只读券商数据？确认后只做能力探测，"
+                    "不读取持仓、账户、资产或行情，也不会生成 Macro Board。"
+                ),
+            )
         available = _available_brokers(capability_probes)
         choices = "、".join(_display_broker(item) for item in available) or "无"
         return MacroRunOutcome(
@@ -103,6 +112,15 @@ def run_macro_board_from_runtime(
             message=(
                 f"需要先选择一个可用的默认只读券商（本次能力探测：{choices}）；"
                 "设置不读取持仓、账户或行情，也不会生成 Macro Board。"
+            ),
+        )
+
+    if capability_probes is None:
+        return MacroRunOutcome(
+            kind="capability_recheck_required",
+            message=(
+                "默认只读券商配置需要能力重检；本次未读取任何券商数据，"
+                "也未生成 Macro Board。"
             ),
         )
 

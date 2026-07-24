@@ -12,6 +12,7 @@ from mars_runtime_config import (
     configure_first_run,
     run_macro_board_from_runtime,
 )
+from broker_capability import CAPABILITY_PROBE_VERSION
 from mars_web_capture import capture_mars_direct_web_observations
 from macro_preflight import load_field_registry
 
@@ -57,8 +58,8 @@ def direct_capture():
 
 def main() -> int:
     capabilities = {
-        "longbridge": {"read_only": "available", "probe_version": "broker-capability-v1"},
-        "ibkr": {"read_only": "unavailable", "probe_version": "broker-capability-v1"},
+        "longbridge": {"read_only": "available", "probe_version": CAPABILITY_PROBE_VERSION},
+        "ibkr": {"read_only": "unavailable", "probe_version": CAPABILITY_PROBE_VERSION},
     }
     with TemporaryDirectory() as temporary:
         runtime = Path(temporary) / "mars-runtime"

@@ -44,12 +44,18 @@ unsupported, conflicted, or source-error field returns one `Data Acquisition
 Blocker`. It never produces a partial Board, placeholder, or proxy-backed
 result.
 
-Before the first Mars Macro run, obtain only a capability-only probe for
-Longbridge and IBKR. Do not read positions, accounts, balances, tokens, or
-market payloads. Ask the user to choose exactly one available default broker
-and explicitly confirm read-only use, then write the minimal private
-`mars-runtime-config.json` with `configure_first_run`. Public and official
-field routes do not switch the configured broker. Later runs use
+Before the first Mars Macro run, first ask whether the user wants to enable
+already-connected read-only broker data. Until they confirm, report
+`authorization_pending`, continue only with public sources, and do not call a
+broker probe. After confirmation, run
+`scripts/broker_capability.py --confirm-read-only --format json`: Longbridge
+uses only `check --format json`; IBKR can be marked available only by a
+capability-only result exposed in the current Codex task. Do not read positions,
+accounts, balances, tokens, or market payloads. Show the user the available
+choices, require exactly one default broker, and explicitly confirm read-only
+use before writing the minimal private `mars-runtime-config.json` with
+`configure_first_run`. Public and official field routes do not switch the
+configured broker. Later runs use
 `run_macro_board_from_runtime`: an absent config returns setup guidance, and a
 field-contract, Skill-version, or capability-probe change returns
 `capability_recheck_required` without a Board or broker read.

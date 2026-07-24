@@ -103,6 +103,16 @@ availability and source coverage, then provide useful public-source research
 before asking for the smallest missing authorization. A missing runtime enters
 blank first-run setup; never restore or infer private state from fixtures.
 
+When a first-run request could use broker data, ask first: `是否启用已连接的只读券商数据？`
+Before the user confirms, describe the run as `authorization_pending` and keep
+research public-only; never call a broker capability command or describe this
+state as `dry-run`. After confirmation, run only the capability check in
+`scripts/broker_capability.py`: it invokes Longbridge `check --format json` and
+accepts an IBKR capability-only result only when the current Codex task exposes
+one. It never reads credentials, positions, accounts, balances, or quotes.
+Show the available choices, require exactly one default broker, and persist
+only the minimal private setup via `mars_runtime_config.py`.
+
 Before concrete entry or exit levels, establish `ticker + trade_horizon +
 instrument`. A reduced-scope watch-only read may proceed without that grouping.
 
