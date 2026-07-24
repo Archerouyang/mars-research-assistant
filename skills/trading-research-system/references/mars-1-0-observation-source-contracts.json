@@ -85,6 +85,14 @@
       "discovery": "public_web_search_then_direct_open",
       "opened_at": "2026-07-23",
       "supports": "The official Presidential Actions index publishes dated executive actions, memoranda, proclamations, and related actions. The adapter retains only normalized title, publication time, and direct URL in memory; the standalone Board renders a source label instead of an outbound URL."
+    },
+    {
+      "id": "official-macro-event-calendars",
+      "authority": "Federal Reserve, BLS, BEA, S&P Global, U.S. Treasury, and ECB",
+      "url": "direct-source-list",
+      "discovery": "public_web_search_then_direct_open",
+      "opened_at": "2026-07-24",
+      "supports": "Each retained event family has a direct calendar source. The adapter admits only allowlisted categories and bounded metadata from a direct source opened in the current run."
     }
   ],
   "excluded_fields": [
@@ -99,10 +107,6 @@
     {
       "field_id": "equity.spx_close",
       "reason": "No direct stable source contract was opened for the exact completed close."
-    },
-    {
-      "field_id": "events.seven_day_allowlist",
-      "reason": "No direct stable public source contract has been verified for the complete seven-day event set; it must not be inferred from search summaries or a broker calendar."
     }
   ],
   "market_session": {
@@ -114,6 +118,24 @@
     "required_status": "completed",
     "raw_field_path": ["latest_completed_market_session"]
   },
+  "event_contract": {
+    "field_id": "events.seven_day_allowlist",
+    "source_id": "official_macro_event_allowlist",
+    "source_url": "multi_direct_sources",
+    "source_timing": "event",
+    "unit": "event_set",
+    "raw_field_path": ["event_sources", "records"],
+    "allowed_categories": ["fomc", "cpi", "employment", "gdp", "pmi", "long_duration_treasury_auction", "major_central_bank"],
+    "source_ids": ["federal_reserve_event_calendar", "bls_release_schedule", "bea_release_schedule", "sp_global_pmi_calendar", "us_treasury_auction_calendar", "ecb_meeting_calendar"]
+  },
+  "event_sources": [
+    {"source_id":"federal_reserve_event_calendar","source_url":"https://www.federalreserve.gov/newsevents/calendar.htm","allowed_categories":["fomc"]},
+    {"source_id":"bls_release_schedule","source_url":"https://www.bls.gov/schedule/","allowed_categories":["cpi","employment"]},
+    {"source_id":"bea_release_schedule","source_url":"https://www.bea.gov/news/schedule","allowed_categories":["gdp"]},
+    {"source_id":"sp_global_pmi_calendar","source_url":"https://www.pmi.spglobal.com/Public/Home/PressRelease","allowed_categories":["pmi"]},
+    {"source_id":"us_treasury_auction_calendar","source_url":"https://home.treasury.gov/resource-center/data-chart-center/quarterly-refunding/treasury-auction-schedules","allowed_categories":["long_duration_treasury_auction"]},
+    {"source_id":"ecb_meeting_calendar","source_url":"https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html","allowed_categories":["major_central_bank"]}
+  ],
   "fields": [
     {"field_id":"rates.us_2y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"2 Yr","raw_field_path":["records","$last","2 Yr"]},
     {"field_id":"rates.us_10y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"10 Yr","raw_field_path":["records","$last","10 Yr"]},

@@ -105,9 +105,30 @@ NUMERIC_UNITS = frozenset(
     }
 )
 SET_VALUE_SCHEMAS = {
-    "event_set": frozenset({"id", "title", "time", "source_url"}),
+    "event_set": frozenset(
+        {
+            "id",
+            "title",
+            "category",
+            "time",
+            "timezone",
+            "reference_period",
+            "consensus",
+            "previous",
+            "revised_previous",
+            "actual",
+            "source",
+        }
+    ),
     "policy_evidence_set": frozenset(
-        {"id", "title", "published_at", "source_url"}
+        {
+            "id",
+            "title",
+            "published_at",
+            "source_url",
+            "policy_status",
+            "posture_effect",
+        }
     ),
 }
 
@@ -404,6 +425,17 @@ def _load_closed_source_maps(path: Path | None = None) -> dict[str, dict[str, An
         ):
             raise ValueError("source_contract_map_invalid")
         maps[field_id] = copy.deepcopy(dict(item))
+    event_contract = contract.get("event_contract")
+    if (
+        not isinstance(event_contract, Mapping)
+        or event_contract.get("field_id") != "events.seven_day_allowlist"
+        or event_contract.get("source_timing") != "event"
+        or not isinstance(event_contract.get("source_id"), str)
+        or not isinstance(event_contract.get("source_url"), str)
+        or not _is_path(event_contract.get("raw_field_path"))
+    ):
+        raise ValueError("source_contract_map_invalid")
+    maps[str(event_contract["field_id"])] = copy.deepcopy(dict(event_contract))
     return maps
 
 
@@ -571,14 +603,38 @@ def _validate_value_shape(value: object, field: Mapping[str, Any]) -> str | None
     for item in value:
         if not isinstance(item, Mapping) or set(item) != allowed_item_keys:
             return "field_value_shape_invalid"
-        if not all(isinstance(item[key], str) and item[key].strip() for key in allowed_item_keys):
-            return "field_value_shape_invalid"
-        time_key = "time" if unit == "event_set" else "published_at"
+        if unit == "event_set":
+            if not all(
+                isinstance(item[key], str) and item[key].strip()
+                for key in (
+                    "id", "title", "category", "time", "timezone",
+                    "reference_period", "consensus", "previous", "source",
+                )
+            ):
+                return "field_value_shape_invalid"
+            if item["revised_previous"] is not None and not isinstance(item["revised_previous"], str):
+                return "field_value_shape_invalid"
+            if item["actual"] is not None and not isinstance(item["actual"], str):
+                return "field_value_shape_invalid"
+            time_key = "time"
+        else:
+            if not all(
+                isinstance(item[key], str) and item[key].strip()
+                for key in (
+                    "id", "title", "published_at", "source_url", "policy_status", "posture_effect"
+                )
+            ):
+                return "field_value_shape_invalid"
+            if item["policy_status"] not in {
+                "confirmed", "stated_not_enacted", "unverified_lead"
+            } or item["posture_effect"] not in {"supports", "neutral", "pressures"} \
+                or item["policy_status"] == "unverified_lead" and item["posture_effect"] != "neutral" \
+                or not item["source_url"].startswith("https://"):
+                return "field_value_shape_invalid"
+            time_key = "published_at"
         try:
             _parse_timestamp(item[time_key], f"{unit}_{time_key}")
         except ValueError:
-            return "field_value_shape_invalid"
-        if not item["source_url"].startswith("https://"):
             return "field_value_shape_invalid"
     return None
 
@@ -818,6 +874,8 @@ def _validate_board_binding(
                 "id": str(record["id"]),
                 "title": str(record["title"]),
                 "published_at": str(record["published_at"]),
+                "policy_status": str(record["policy_status"]),
+                "posture_effect": str(record["posture_effect"]),
                 "source": "White House Presidential Actions",
             }
             for record in policy.get("value", [])
@@ -827,6 +885,23 @@ def _validate_board_binding(
     )
     if payload.get("policy_watch") != expected_policy_watch:
         return "research_result_preflight_policy_binding_mismatch"
+    events = rows_by_id.get("events.seven_day_allowlist")
+    expected_event_watch = (
+        [
+            {
+                key: record[key]
+                for key in (
+                    "id", "title", "category", "time", "timezone", "reference_period",
+                    "consensus", "previous", "revised_previous", "actual", "source",
+                )
+            }
+            for record in events.get("value", [])
+        ]
+        if isinstance(events, Mapping)
+        else None
+    )
+    if payload.get("event_watch") != expected_event_watch:
+        return "research_result_preflight_event_binding_mismatch"
     return None
 
 

@@ -82,6 +82,36 @@
     "publication_status": "published",
     "results": [{"operation_date":"2026-07-23","operation_type":"Overnight Reverse Repo","accepted_amount_billions":"95.2"}]
   },
+  "federal_reserve_event_calendar": {
+    "source_url": "https://www.federalreserve.gov/newsevents/calendar.htm",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-fomc","title":"FOMC statement","category":"fomc","time":"2026-07-29T18:00:00Z","timezone":"America/New_York","reference_period":"July 2026","consensus":"No change","previous":"5.25%","revised_previous":null,"actual":null}]
+  },
+  "bls_release_schedule": {
+    "source_url": "https://www.bls.gov/schedule/",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-employment","title":"Employment Situation","category":"employment","time":"2026-07-30T12:30:00Z","timezone":"America/New_York","reference_period":"July 2026","consensus":"120k","previous":"147k","revised_previous":null,"actual":null}]
+  },
+  "bea_release_schedule": {
+    "source_url": "https://www.bea.gov/news/schedule",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-gdp","title":"Gross Domestic Product","category":"gdp","time":"2026-07-30T12:30:00Z","timezone":"America/New_York","reference_period":"2026 Q2","consensus":"2.4%","previous":"0.8%","revised_previous":null,"actual":null}]
+  },
+  "sp_global_pmi_calendar": {
+    "source_url": "https://www.pmi.spglobal.com/Public/Home/PressRelease",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-pmi","title":"US Flash PMI","category":"pmi","time":"2026-07-24T13:45:00Z","timezone":"America/New_York","reference_period":"July 2026","consensus":"52.0","previous":"52.9","revised_previous":null,"actual":null}]
+  },
+  "us_treasury_auction_calendar": {
+    "source_url": "https://home.treasury.gov/resource-center/data-chart-center/quarterly-refunding/treasury-auction-schedules",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-20y-auction","title":"20-Year Treasury auction","category":"long_duration_treasury_auction","time":"2026-07-29T17:00:00Z","timezone":"America/New_York","reference_period":"July 2026","consensus":"N/A","previous":"4.85%","revised_previous":null,"actual":null}]
+  },
+  "ecb_meeting_calendar": {
+    "source_url": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html",
+    "retrieved_at": "2026-07-23T21:00:00Z",
+    "records": [{"id":"synthetic-ecb","title":"ECB monetary policy decision","category":"major_central_bank","time":"2026-07-30T12:15:00Z","timezone":"Europe/Brussels","reference_period":"July 2026","consensus":"No change","previous":"2.00%","revised_previous":null,"actual":null}]
+  },
   "white_house_presidential_actions": {
     "source_url": "https://www.whitehouse.gov/presidential-actions/",
     "retrieved_at": "2026-07-23T21:00:00Z",
@@ -90,7 +120,9 @@
         "id": "synthetic-direct-policy-action",
         "title": "Synthetic direct executive action",
         "published_at": "2026-07-23T20:00:00Z",
-        "source_url": "https://www.whitehouse.gov/presidential-actions/"
+        "source_url": "https://www.whitehouse.gov/presidential-actions/",
+        "policy_status": "confirmed",
+        "posture_effect": "neutral"
       }
     ]
   }

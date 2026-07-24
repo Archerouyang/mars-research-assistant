@@ -38,6 +38,12 @@ def direct_capture():
         for field in contract["fields"]
     }
     source_urls[contract["market_session"]["source_id"]] = contract["market_session"]["source_url"]
+    source_urls.update(
+        {
+            source["source_id"]: source["source_url"]
+            for source in contract["event_sources"]
+        }
+    )
     receipts = {
         source_id: {
             "source_url": source_url,

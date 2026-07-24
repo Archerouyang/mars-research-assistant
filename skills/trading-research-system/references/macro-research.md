@@ -11,6 +11,9 @@ small and entirely field-contract driven:
 - NDX/RUT, its 1/5/20-session changes, and 20-session normalization from direct
   FRED/Cboe histories;
 - reserve balances, TGA, and ON RRP as separate official liquidity fields;
+- a seven-day allowlist of FOMC, CPI, employment, GDP, PMI, long-duration
+  Treasury auctions, and major central-bank events from their direct official
+  calendars;
 - White House Presidential Actions as a bounded U.S. executive-policy record.
 
 The exact source URL, column/path, timing, and unit for every retained field
@@ -30,10 +33,16 @@ Raw page responses remain in memory and are never persisted by the Skill.
 
 Every retained field is required. Completed-market fields must equal the latest
 common completed close; official releases must identify the latest published
-observation and preserve the reference period; policy evidence must be fetched
-within 24 hours. Any missing, stale, unsupported, conflicted, or source-error
-field returns one `Data Acquisition Blocker`. It never produces a partial Board,
-placeholder, or proxy-backed result.
+observation and preserve the reference period; all seven event-calendar sources
+and White House policy evidence must be direct, current captures. Event rows
+retain only title, category, scheduled time, timezone, reference period,
+consensus, previous, optional revised previous, optional actual, and source
+identity. Policy rows retain only title, publication time, source identity,
+`confirmed`/`stated_not_enacted`/`unverified_lead`, and a qualitative posture
+effect. An `unverified_lead` must be `neutral`. Any missing, stale,
+unsupported, conflicted, or source-error field returns one `Data Acquisition
+Blocker`. It never produces a partial Board, placeholder, or proxy-backed
+result.
 
 Before the first Mars Macro run, obtain only a capability-only probe for
 Longbridge and IBKR. Do not read positions, accounts, balances, tokens, or
@@ -51,22 +60,24 @@ separately authorized account and portfolio workflows. A direct public source
 discovered with Web search may be added only with an exact source map,
 synthetic fixture, and regression test; otherwise the field stays absent.
 
-The following are currently excluded: HYG/LQD, SPX, seven-day event calendars,
-DXY, Brent, gold, and S&P 500 forward P/E. Do not restore any with a proxy or
-approximation. A later field-contract revision must establish a direct source
-and test it first.
+The following are currently excluded: HYG/LQD, SPX, DXY, Brent, gold, and S&P
+500 forward P/E. Do not restore any with a proxy or approximation. A later
+field-contract revision must establish a direct source and test it first.
 
 The standalone Board is emitted only after every retained field passes this
 gate. Its Mars 1.0 surfaces are `Overview`, `Rates & Liquidity`,
-`Cross-Asset Impact`, and `Policy Watch`; it has no inflation, generic event,
-or partial-data placeholder view. The policy surface shows only title,
-publication time, and a White House source label: no raw page text and no
-outbound network link enter the standalone artifact.
+`Cross-Asset Impact`, and `Policy Watch`. `Policy Watch` contains the bounded
+future-event allowlist and bounded White House policy state; it has no
+inflation, generic scenario, or partial-data placeholder view. No raw page
+text or outbound network link enter the standalone artifact.
 
 For visuals, show decision-sensitive metrics and their `as_of` in the first
-viewport. NDX/RUT, VIX/VIX3M, and rates are time series with direction over the
-aligned history window. Keep the text decision-dense, distinguish facts from
-inferences, and do not create a trade instruction from the Macro Board.
+viewport. The current-state view must disclose the common completed market date,
+that intraday data is excluded, the news/policy cutoff, and the four qualitative
+evidence groups behind the exact posture label. NDX/RUT, VIX/VIX3M, and rates
+are time series with direction over the aligned history window. Keep the text
+decision-dense, distinguish facts from inferences, and do not create a trade
+instruction from the Macro Board.
 
 ## Legacy Frozen Macro Data Workflow (Compatibility Only)
 

@@ -77,7 +77,7 @@ def render_macro_regime_board(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Macro Regime Research brief</title>
 <meta name="generator" content="DailyTrades Macro Regime renderer {escape(snapshot['renderer_version'])}">
-<style>{_styles()}</style>
+<style>{_styles(payload.get('macro_profile') == 'mars_direct_v1')}</style>
 </head>
 <body>
 {render_main_open('macro-board')}
@@ -96,10 +96,25 @@ def render_macro_regime_board(
     return html.encode("utf-8")
 
 
-def _styles() -> str:
-    return shared_shell_styles() + """
-:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.45;--ink:#17212b;--muted:#586672;--line:#d5dde4;--paper:#fff;--wash:#f4f7f8;--green:#08724a;--amber:#9a5b00;--red:#ad342d;--blue:#1769aa}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--paper)}button,select{font:inherit}main{max-width:1120px;margin:0 auto;padding:20px}h1,h2,h3,p,dl,dd{margin-top:0}h1{margin-bottom:6px;font-size:26px;letter-spacing:0}h2{font-size:18px}h3{font-size:15px}.masthead{display:flex;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:3px solid var(--ink)}.eyebrow{margin-bottom:4px;color:var(--green);font-size:12px;font-weight:700;text-transform:uppercase}.lede{max-width:680px;margin-bottom:0;color:var(--muted)}.provenance{min-width:250px;margin-bottom:0;font-size:12px}.provenance div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;padding:3px 0}.provenance dt,.module-meta{color:var(--muted)}.provenance dd,.evidence-reading{overflow-wrap:anywhere}.view-tabs{display:none;flex-wrap:wrap;gap:6px;padding:12px 0}.enhanced .view-tabs{display:flex}.view-tabs button{min-height:32px;padding:4px 10px;border:1px solid var(--line);border-radius:5px;color:var(--ink);background:var(--paper);cursor:pointer}.view-tabs button[aria-selected="true"]{border-color:var(--ink);color:var(--paper);background:var(--ink)}button:focus-visible,select:focus-visible{outline:3px solid #7db9e8;outline-offset:2px}.summary{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}.summary article{min-width:0;padding:11px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.summary span,.field-label{display:block;margin-bottom:4px;color:var(--muted);font-size:11px;text-transform:uppercase}.summary p{margin:5px 0 0;font-size:12px}.decision-framing{margin:12px 0;padding:9px 11px;border-left:3px solid var(--amber);background:#fff8e7;font-size:13px}.board-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}.view-panel{padding-top:4px}.enhanced .view-panel[hidden]{display:none}.section-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin:12px 0 8px}.section-head p{margin:0;color:var(--muted);font-size:12px}.module-list,.cascade,.evidence-list,.scenario-list,.exposure-list{border-top:1px solid var(--line)}.module-row,.cascade-row,.evidence-row,.scenario,.exposure{padding:11px 0;border-bottom:1px solid var(--line)}.module-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px}.module-row h3,.cascade-row h3,.scenario h3,.exposure h3{margin-bottom:5px}.module-row p,.cascade-row p,.scenario p,.exposure p{margin-bottom:5px}.badge{display:inline-block;padding:2px 6px;border-radius:3px;background:var(--wash);font-size:11px;font-weight:600}.badge.complete{color:#075c36;background:#dcf4e7}.badge.partial,.badge.stale{color:#805000;background:#fff0c2}.badge.source_error{color:#8d2822;background:#ffe4e1}.fact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:7px}.fact-grid article{min-width:0;padding:8px;background:var(--wash)}.market-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0}.market-strip article{padding:10px 11px;border-top:3px solid var(--blue);background:var(--wash)}.market-strip strong{display:block;font-size:22px;line-height:1.2}.market-strip span{color:var(--muted);font-size:11px;text-transform:uppercase}.chart-shell{min-height:250px;margin:8px 0 12px;border:1px solid var(--line);background:var(--paper)}.macro-chart{width:100%;height:250px}.chart-fallback{padding:12px}.enhanced.chart-ready .chart-fallback{display:none}.cascade-row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px}.cascade-row strong{display:block}.evidence-row{display:grid;grid-template-columns:95px minmax(0,1fr) 115px;gap:10px}.source-category{font-size:11px;text-transform:uppercase;color:var(--muted)}.exposure-control{display:flex;gap:8px;align-items:center;margin:8px 0 12px}.exposure-control select{min-width:190px;max-width:100%;padding:5px;border:1px solid var(--line);border-radius:4px;background:var(--paper)}.exposure[hidden]{display:none}.evidence-rail{position:sticky;top:8px;padding-left:14px;border-left:3px solid var(--blue)}.evidence-rail ul{margin:0;padding-left:18px}.evidence-rail li{margin-bottom:10px;font-size:12px}.source-time{display:block;color:var(--muted)}footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}footer h2{margin-bottom:4px;font-size:14px;color:var(--ink)}@media(max-width:736px){main{padding:14px}.masthead{display:block}.provenance{min-width:0;margin-top:12px}.summary,.board-layout{grid-template-columns:1fr}.evidence-rail{position:static;border-left:0;border-top:3px solid var(--blue);padding:12px 0 0}.module-row,.cascade-row,.evidence-row{grid-template-columns:1fr}.fact-grid{grid-template-columns:1fr}.market-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:420px){main{padding:10px}.view-tabs button{flex:1 1 46%;white-space:normal}.provenance div{grid-template-columns:1fr}.summary article{padding:9px 0}.exposure-control{display:block}.exposure-control select{width:100%;margin-top:4px}}
+MARS_DIRECT_CSS = (
+    ".evidence-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0}"
+    ".evidence-group{padding:9px;background:var(--wash);border-top:3px solid var(--blue)}"
+    ".evidence-group h3{margin-bottom:4px}.evidence-group p{margin:4px 0;font-size:12px}"
+    ".status-supports{border-top-color:var(--green)}.status-pressures{border-top-color:var(--red)}"
+    ".status-neutral{border-top-color:var(--amber)}.event-list,.policy-list{border-top:1px solid var(--line)}"
+    ".event-row,.policy-row{padding:10px 0;border-bottom:1px solid var(--line)}"
+    ".event-row h3,.policy-row h3{margin-bottom:4px}"
+)
+MARS_DIRECT_MOBILE_CSS = ".evidence-groups{grid-template-columns:1fr}"
+
+
+def _styles(mars_direct: bool) -> str:
+    styles = shared_shell_styles() + """
+:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.45;--ink:#17212b;--muted:#586672;--line:#d5dde4;--paper:#fff;--wash:#f4f7f8;--green:#08724a;--amber:#9a5b00;--red:#ad342d;--blue:#1769aa}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--paper)}button,select{font:inherit}main{max-width:1120px;margin:0 auto;padding:20px}h1,h2,h3,p,dl,dd{margin-top:0}h1{margin-bottom:6px;font-size:26px;letter-spacing:0}h2{font-size:18px}h3{font-size:15px}.masthead{display:flex;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:3px solid var(--ink)}.eyebrow{margin-bottom:4px;color:var(--green);font-size:12px;font-weight:700;text-transform:uppercase}.lede{max-width:680px;margin-bottom:0;color:var(--muted)}.provenance{min-width:250px;margin-bottom:0;font-size:12px}.provenance div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;padding:3px 0}.provenance dt,.module-meta{color:var(--muted)}.provenance dd,.evidence-reading{overflow-wrap:anywhere}.view-tabs{display:none;flex-wrap:wrap;gap:6px;padding:12px 0}.enhanced .view-tabs{display:flex}.view-tabs button{min-height:32px;padding:4px 10px;border:1px solid var(--line);border-radius:5px;color:var(--ink);background:var(--paper);cursor:pointer}.view-tabs button[aria-selected="true"]{border-color:var(--ink);color:var(--paper);background:var(--ink)}button:focus-visible,select:focus-visible{outline:3px solid #7db9e8;outline-offset:2px}.summary{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}.summary article{min-width:0;padding:11px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.summary span,.field-label{display:block;margin-bottom:4px;color:var(--muted);font-size:11px;text-transform:uppercase}.summary p{margin:5px 0 0;font-size:12px}.decision-framing{margin:12px 0;padding:9px 11px;border-left:3px solid var(--amber);background:#fff8e7;font-size:13px}.board-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}.view-panel{padding-top:4px}.enhanced .view-panel[hidden]{display:none}.section-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin:12px 0 8px}.section-head p{margin:0;color:var(--muted);font-size:12px}.module-list,.cascade,.evidence-list,.scenario-list,.exposure-list{border-top:1px solid var(--line)}.module-row,.cascade-row,.evidence-row,.scenario,.exposure{padding:11px 0;border-bottom:1px solid var(--line)}.module-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px}.module-row h3,.cascade-row h3,.scenario h3,.exposure h3{margin-bottom:5px}.module-row p,.cascade-row p,.scenario p,.exposure p{margin-bottom:5px}.badge{display:inline-block;padding:2px 6px;border-radius:3px;background:var(--wash);font-size:11px;font-weight:600}.badge.complete{color:#075c36;background:#dcf4e7}.badge.partial,.badge.stale{color:#805000;background:#fff0c2}.badge.source_error{color:#8d2822;background:#ffe4e1}.fact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:7px}.fact-grid article{min-width:0;padding:8px;background:var(--wash)}.market-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0}.market-strip article{padding:10px 11px;border-top:3px solid var(--blue);background:var(--wash)}.market-strip strong{display:block;font-size:22px;line-height:1.2}.market-strip span{color:var(--muted);font-size:11px;text-transform:uppercase}.chart-shell{min-height:250px;margin:8px 0 12px;border:1px solid var(--line);background:var(--paper)}.macro-chart{width:100%;height:250px}.chart-fallback{padding:12px}.enhanced.chart-ready .chart-fallback{display:none}.cascade-row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px}.cascade-row strong{display:block}.evidence-row{display:grid;grid-template-columns:95px minmax(0,1fr) 115px;gap:10px}.source-category{font-size:11px;text-transform:uppercase;color:var(--muted)}.evidence-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0}.evidence-group{padding:9px;background:var(--wash);border-top:3px solid var(--blue)}.evidence-group h3{margin-bottom:4px}.evidence-group p{margin:4px 0;font-size:12px}.status-supports{border-top-color:var(--green)}.status-pressures{border-top-color:var(--red)}.status-neutral{border-top-color:var(--amber)}.event-list,.policy-list{border-top:1px solid var(--line)}.event-row,.policy-row{padding:10px 0;border-bottom:1px solid var(--line)}.event-row h3,.policy-row h3{margin-bottom:4px}.exposure-control{display:flex;gap:8px;align-items:center;margin:8px 0 12px}.exposure-control select{min-width:190px;max-width:100%;padding:5px;border:1px solid var(--line);border-radius:4px;background:var(--paper)}.exposure[hidden]{display:none}.evidence-rail{position:sticky;top:8px;padding-left:14px;border-left:3px solid var(--blue)}.evidence-rail ul{margin:0;padding-left:18px}.evidence-rail li{margin-bottom:10px;font-size:12px}.source-time{display:block;color:var(--muted)}footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}footer h2{margin-bottom:4px;font-size:14px;color:var(--ink)}@media(max-width:736px){main{padding:14px}.masthead{display:block}.provenance{min-width:0;margin-top:12px}.summary,.board-layout{grid-template-columns:1fr}.evidence-rail{position:static;border-left:0;border-top:3px solid var(--blue);padding:12px 0 0}.module-row,.cascade-row,.evidence-row{grid-template-columns:1fr}.fact-grid{grid-template-columns:1fr}.market-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.evidence-groups{grid-template-columns:1fr}}@media(max-width:420px){main{padding:10px}.view-tabs button{flex:1 1 46%;white-space:normal}.provenance div{grid-template-columns:1fr}.summary article{padding:9px 0}.exposure-control{display:block}.exposure-control select{width:100%;margin-top:4px}}
 """.strip()
+    if mars_direct:
+        return styles
+    return styles.replace(MARS_DIRECT_CSS, "").replace(MARS_DIRECT_MOBILE_CSS, "")
 
 
 def _overview(
@@ -121,10 +136,26 @@ def _overview(
         f"<li>{escape(row['label'])}: {escape(str(row['value']))}</li>"
         for row in payload["chart_series"]
     )
+    mars_overview = ""
+    if payload.get("macro_profile") == "mars_direct_v1":
+        timing = payload["market_timing"]
+        timing_summary = (
+            f"市场参考日：{timing['market_reference_date']} · "
+            f"盘中排除：{'是' if timing['intraday_excluded'] else '否'} · "
+            f"新闻/政策截止：{timing['news_policy_cutoff']}"
+        )
+        groups = "".join(
+            f"<article class=\"evidence-group status-{escape(str(item['status']))}\"><h3>{escape(str(item['label']))}</h3><p><strong>{escape(str(item['status']))}</strong></p><p>{escape(str(item['reason']))}</p></article>"
+            for item in payload["evidence_groups"]
+        )
+        mars_overview = (
+            f"\n<p class=\"module-meta\">{escape(timing_summary)}<br>"
+            f"{escape(str(timing['lag_reason']))}</p><div class=\"evidence-groups\">{groups}</div>"
+        )
     return f"""<section class="view-panel" id="view-overview" data-view="overview" role="tabpanel" aria-labelledby="tab-overview"{_hidden('overview', default_id)}>
 <div class="section-head"><h2>Current market readings</h2><p>Numbers first; evidence and transmission follow</p></div>
 {_market_strip(payload['chart_series'])}
-<div class="chart-shell"><div id="macro-cross-asset-chart" class="macro-chart" role="img" aria-label="Current synthetic macro readings"></div><div class="chart-fallback"><strong>Current readings</strong><ul>{fallback}</ul></div></div>
+<div class="chart-shell"><div id="macro-cross-asset-chart" class="macro-chart" role="img" aria-label="Current synthetic macro readings"></div><div class="chart-fallback"><strong>Current readings</strong><ul>{fallback}</ul></div></div>{mars_overview}
 <div class="fact-grid"><article><span class="field-label">Active plan</span>{plan_detail}</article><article><span class="field-label">Holdings lens</span><strong>{escape(holdings['summary'])}</strong><p>{'Conditional portfolio impact' if holdings['conditional'] else 'Confirmed portfolio impact'}</p></article></div>
 {_cascade(payload['evidence'], payload['exposure_lens'], sources, plan_available)}<div class="section-head"><h2>Holding-first Exposure Lens</h2><p>Drill-down; it does not create the Macro conclusion</p></div>{lens}</section>"""
 
@@ -199,14 +230,28 @@ def _policy(
     default_id: str,
     plan_available: bool,
 ) -> str:
-    records = payload.get("policy_watch", [])
-    rows = "".join(
-        f"<article class=\"policy-row\"><h3>{escape(item['title'])}</h3><p class=\"module-meta\">{escape(item['published_at'])} · {escape(item['source'])}</p></article>"
-        for item in records
-    ) or "<p class=\"module-meta\">No verified Presidential Actions records in this refresh.</p>"
-    return f"""<section class="view-panel" id="view-policy-watch" data-view="policy-watch" role="tabpanel" aria-labelledby="tab-policy-watch"{_hidden('policy-watch', default_id)}>
+    if payload.get("macro_profile") != "mars_direct_v1":
+        records = payload.get("policy_watch", [])
+        rows = "".join(
+            f"<article class=\"policy-row\"><h3>{escape(item['title'])}</h3><p class=\"module-meta\">{escape(item['published_at'])} · {escape(item['source'])}</p></article>"
+            for item in records
+        ) or "<p class=\"module-meta\">No verified Presidential Actions records in this refresh.</p>"
+        return f"""<section class="view-panel" id="view-policy-watch" data-view="policy-watch" role="tabpanel" aria-labelledby="tab-policy-watch"{_hidden('policy-watch', default_id)}>
 <div class="section-head"><h2>Policy Watch</h2><p>Bounded White House Presidential Actions evidence only</p></div>{_module_row(modules['policy_watch'])}
 {_evidence_rows(payload['evidence'], 'policy_watch', sources, plan_available)}<div class="policy-list">{rows}</div></section>"""
+    records = payload.get("policy_watch", [])
+    rows = "".join(
+        f"<article class=\"policy-row\"><h3>{escape(item['title'])}</h3><p class=\"module-meta\">{escape(item['published_at'])} · {escape(item['source'])} · {escape(item['policy_status'])} · {escape(item['posture_effect'])}</p></article>"
+        for item in records
+    ) or "<p class=\"module-meta\">No verified Presidential Actions records in this refresh.</p>"
+    events = payload.get("event_watch", [])
+    event_rows = "".join(
+        f"<article class=\"event-row\"><h3>{escape(item['title'])}</h3><p class=\"module-meta\">{escape(item['time'])} · {escape(item['timezone'])} · {escape(item['category'])}</p><p>参考期：{escape(item['reference_period'])} · 共识：{escape(item['consensus'])} · 前值：{escape(item['previous'])}</p></article>"
+        for item in events
+    ) or "<p class=\"module-meta\">No approved high-impact events in the next seven days.</p>"
+    return f"""<section class="view-panel" id="view-policy-watch" data-view="policy-watch" role="tabpanel" aria-labelledby="tab-policy-watch"{_hidden('policy-watch', default_id)}>
+<div class="section-head"><h2>Policy &amp; Events</h2><p>Direct-source seven-day events and bounded White House policy evidence</p></div>{_module_row(modules['policy_watch'])}
+{_evidence_rows(payload['evidence'], 'policy_watch', sources, plan_available)}<div class="section-head"><h2>Next seven days</h2><p>Future releases retain time, timezone, period, consensus, and previous value</p></div><div class="event-list">{event_rows}</div><div class="section-head"><h2>Policy Watch</h2><p>Only confirmed or directly attributable status may change posture</p></div><div class="policy-list">{rows}</div></section>"""
 
 
 def _module_row(module: Mapping[str, Any]) -> str:

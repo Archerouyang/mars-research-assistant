@@ -53,6 +53,7 @@ def main() -> int:
         "liquidity.reserve_balances",
         "liquidity.tga_balance",
         "liquidity.on_rrp_usage",
+        "events.seven_day_allowlist",
         "policy.us_executive_actions",
     }
     require(set(by_id) == expected_ids, "adapter must emit only retained raw base fields")
@@ -122,6 +123,8 @@ def main() -> int:
                 "title": "Synthetic direct executive action",
                 "published_at": "2026-07-23T20:00:00Z",
                 "source_url": "https://www.whitehouse.gov/presidential-actions/",
+                "policy_status": "confirmed",
+                "posture_effect": "neutral",
             }
         ],
         "policy evidence must remain a bounded official summary",
@@ -129,6 +132,19 @@ def main() -> int:
     require(
         "history" not in policy,
         "policy evidence must not pretend to be market history",
+    )
+
+    events = by_id["events.seven_day_allowlist"]
+    require(events["source_timing"] == "event", "event timing must be retained")
+    require(events["reference_period"] == "next_7_days", "event horizon must be explicit")
+    require(
+        {item["category"] for item in events["value"]}
+        == {"fomc", "employment", "gdp", "pmi", "long_duration_treasury_auction", "major_central_bank"},
+        "only approved direct event categories may enter the normalized event set",
+    )
+    require(
+        all(item["actual"] is None and item["consensus"] for item in events["value"]),
+        "pre-release events may omit actual but must preserve consensus",
     )
 
     missing = copy.deepcopy(payloads)
@@ -154,6 +170,34 @@ def main() -> int:
     raw_policy = copy.deepcopy(payloads)
     raw_policy["white_house_presidential_actions"]["records"][0]["body"] = "must not be retained"
     require_error(raw_policy, "policy.us_executive_actions:record_shape_invalid")
+
+    unverified_policy = copy.deepcopy(payloads)
+    unverified_policy["white_house_presidential_actions"]["records"][0]["policy_status"] = "unverified_lead"
+    unverified_policy["white_house_presidential_actions"]["records"][0]["posture_effect"] = "pressures"
+    require_error(
+        unverified_policy,
+        "policy.us_executive_actions:unverified_lead_must_be_neutral",
+    )
+
+    incomplete_event = copy.deepcopy(payloads)
+    incomplete_event["bea_release_schedule"]["records"][0].pop("consensus")
+    require_error(incomplete_event, "events.seven_day_allowlist:record_shape_invalid")
+
+    stale_event = copy.deepcopy(payloads)
+    stale_event["ecb_meeting_calendar"]["retrieved_at"] = "2026-07-22T20:00:00Z"
+    require_error(stale_event, "events.seven_day_allowlist:source_stale")
+
+    empty_events = copy.deepcopy(payloads)
+    for source_id in (
+        "federal_reserve_event_calendar",
+        "bls_release_schedule",
+        "bea_release_schedule",
+        "sp_global_pmi_calendar",
+        "us_treasury_auction_calendar",
+        "ecb_meeting_calendar",
+    ):
+        empty_events[source_id]["records"] = []
+    require_error(empty_events, "events.seven_day_allowlist:no_allowed_events_in_horizon")
 
     broker = copy.deepcopy(payloads)
     broker["configured_broker"] = {"source_url": "synthetic://broker"}

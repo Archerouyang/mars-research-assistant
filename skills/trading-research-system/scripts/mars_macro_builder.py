@@ -43,10 +43,24 @@ def build_mars_macro_research_result(
             "id": str(record["id"]),
             "title": str(record["title"]),
             "published_at": str(record["published_at"]),
+            "policy_status": str(record["policy_status"]),
+            "posture_effect": str(record["posture_effect"]),
             "source": "White House Presidential Actions",
         }
         for record in observations["policy.us_executive_actions"]["value"]
     ]
+    event_watch = [
+        {
+            key: record[key]
+            for key in (
+                "id", "title", "category", "time", "timezone", "reference_period",
+                "consensus", "previous", "revised_previous", "actual", "source",
+            )
+        }
+        for record in observations["events.seven_day_allowlist"]["value"]
+    ]
+    evidence_groups = _evidence_groups(observations, resolved_values)
+    posture = _posture(evidence_groups)
     trend_series = [
         *rate_series,
         _trend_from_points(
@@ -94,14 +108,22 @@ def build_mars_macro_research_result(
             "board": "macro_regime",
             "macro_profile": "mars_direct_v1",
             "payload_version": "1.0",
-            "question": "直接来源的金融条件快照是否支持改变风险判断？",
-            "decision": "本面板仅使用最近共同完成收盘与最新官方流动性数据；未建立直接来源合同的字段不会以代理补入。",
+            "question": "当前金融条件是否支持增加高 Beta 风险，以及未来一周哪些事件可能改变这个判断？",
+            "decision": _decision(posture),
             "chart_series": [
                 {"label": label, "value": float(resolved_values[field_id])}
                 for label, field_id in chart_fields.items()
             ],
             "trend_series": trend_series,
             "policy_watch": policy_watch,
+            "event_watch": event_watch,
+            "evidence_groups": evidence_groups,
+            "market_timing": {
+                "market_reference_date": market_date,
+                "intraday_excluded": True,
+                "news_policy_cutoff": as_of,
+                "lag_reason": "所有市场字段对齐至最近共同完成收盘；流动性保留各自最新官方发布期。",
+            },
             "views": [
                 "Overview",
                 "Rates & Liquidity",
@@ -127,9 +149,9 @@ def build_mars_macro_research_result(
                     "scope": "波动期限结构与成长/小盘相对强弱。",
                 }, "波动与相对强弱字段均来自直接来源。"),
                 _module("policy_watch", "complete", as_of, "white_house_presidential_actions", {
-                    "rule": "特朗普及美国行政政策只显示白宫 Presidential Actions 的直接、限字段摘要。",
-                    "scope": "标题、发布时间和官方页面链接；不写入原始页面正文。",
-                }, "白宫行政政策字段已按直接来源合同验证。"),
+                    "rule": "未来七日事件与特朗普政策均使用直接来源的限字段摘要。",
+                    "scope": "事件保留时间、时区、参考期、共识和前值；政策不写入原始正文。",
+                }, "事件和行政政策字段已按直接来源合同验证。"),
             ],
             "holdings_context": {
                 "conditional": True,
@@ -161,15 +183,14 @@ def build_mars_macro_research_result(
                 _evidence("relative-actual", "波动与相对强弱", "cross_asset", "actual", "cboe_vix_history", "relative-strength", as_of,
                           "VIX/VIX3M 与 NDX/RUT 由同一完成收盘日的历史计算。",
                           "比值的变化率与标准化读数用于描述结构，不构成交易指令。"),
-                _evidence("policy-actual", "白宫行政政策", "policy_watch", "actual", "white_house_presidential_actions", "rates-sensitive", as_of,
-                          "特朗普及美国行政政策只来自白宫 Presidential Actions 的直接、限字段摘要。",
-                          "缺失、过期或无法直开的白宫来源会阻断 Board。"),
+                _evidence("event-actual", "未来七日高影响事件", "policy_watch", "actual", "official_macro_event_allowlist", "rates-sensitive", as_of,
+                          "未来七日事件来自直接、限字段摘要。",
+                          "缺失、过期或无法直开的日历来源会阻断 Board。"),
+                _evidence("policy-actual", "美国行政政策", "policy_watch", "actual", "white_house_presidential_actions", "rates-sensitive", as_of,
+                          "特朗普及美国行政政策来自白宫 Presidential Actions 的直接、限字段摘要。",
+                          "仅已确认或直接归属的状态可影响 posture。"),
             ],
-            "posture": {
-                "label": "直接来源快照",
-                "consequence": "先以已验证字段确认结构；不对缺失字段作代理推断。",
-                "derived_from": ["rate-actual", "relative-actual", "policy-actual"],
-            },
+            "posture": posture,
             "scenarios": [],
             "preflight": {
                 "field_contract_version": "macro-v1",
@@ -185,7 +206,10 @@ def build_mars_macro_research_result(
         "schema_version": "1.0",
         "snapshot_id": f"mars-macro-{market_date}",
         "source_registry": _source_registry(observations),
-        "state_reasons": ["未建立直接来源合同的字段不进入本面板。"],
+        "state_reasons": [
+            "未建立直接来源合同的字段不进入本面板。",
+            "不支持盘中 Macro Board；市场字段只使用最近共同完成收盘。",
+        ],
         "timezone": "UTC",
     }
     _refresh_snapshot_hash(snapshot)
@@ -225,7 +249,9 @@ def build_mars_macro_research_result(
             {"name": row["name"], "condition": row["trigger"], "implication": row["posture"]}
             for row in snapshot["payload"]["scenarios"]
         ],
-        "next_checks": ["下一次直接来源刷新时重新验证共同完成收盘和最新官方观测。"],
+        "next_checks": [
+            "下一次直接来源刷新时重新验证共同完成收盘、事件时间和最新官方观测。"
+        ],
         "data_gaps": [],
         "sources": sources,
         "privacy": "private",
@@ -303,6 +329,121 @@ def _evidence(
     }
 
 
+def _evidence_groups(
+    observations: Mapping[str, Mapping[str, Any]],
+    resolved_values: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    """Return qualitative, auditable groups without a numeric risk score."""
+
+    ten_year_history = observations["rates.us_10y_yield"]["history"]
+    rate_status = _direction_status(
+        float(ten_year_history[-1]["value"]),
+        float(ten_year_history[-2]["value"]),
+        rising="pressures",
+        falling="supports",
+    )
+    volatility_status = _direction_status(
+        float(resolved_values["volatility.vix_vix3m_ratio"]),
+        1.0,
+        rising="pressures",
+        falling="supports",
+    )
+    style_status = _direction_status(
+        float(resolved_values["equity.ndx_rut_ratio.change_20d"]),
+        0.0,
+        rising="pressures",
+        falling="supports",
+    )
+    policy_records = observations["policy.us_executive_actions"]["value"]
+    active_effects = [
+        record["posture_effect"]
+        for record in policy_records
+        if record["policy_status"] in {"confirmed", "stated_not_enacted"}
+    ]
+    policy_status = (
+        "pressures" if "pressures" in active_effects
+        else "supports" if "supports" in active_effects
+        else "neutral"
+    )
+    return [
+        {
+            "id": "rates",
+            "label": "利率",
+            "status": rate_status,
+            "field_ids": ["rates.us_2y_yield", "rates.us_10y_yield", "rates.us_30y_yield"],
+            "reason": "10Y 相对前一完成收盘的方向用于描述折现率压力。",
+        },
+        {
+            "id": "credit_volatility",
+            "label": "信用与波动率",
+            "status": volatility_status,
+            "field_ids": ["volatility.vix_close", "volatility.vix3m_close", "volatility.vix_vix3m_ratio"],
+            "reason": "1 以下为期限结构正常化，1 以上为短端波动压力。",
+        },
+        {
+            "id": "large_small_relative_strength",
+            "label": "大盘成长/小盘相对强弱",
+            "status": style_status,
+            "field_ids": ["equity.ndx_rut_ratio", "equity.ndx_rut_ratio.change_20d"],
+            "reason": "NDX/RUT 上升代表大盘成长相对拥挤，小盘参与度较弱。",
+        },
+        {
+            "id": "liquidity_policy_events",
+            "label": "流动性、政策与事件",
+            "status": policy_status,
+            "field_ids": [
+                "liquidity.reserve_balances",
+                "liquidity.tga_balance",
+                "liquidity.on_rrp_usage",
+                "events.seven_day_allowlist",
+                "policy.us_executive_actions",
+            ],
+            "reason": "流动性字段保持分列，不发明净流动性；仅已确认或直接归属政策可改变该组状态。",
+        },
+    ]
+
+
+def _direction_status(
+    current: float, baseline: float, *, rising: str, falling: str
+) -> str:
+    if current > baseline:
+        return rising
+    if current < baseline:
+        return falling
+    return "neutral"
+
+
+def _posture(evidence_groups: list[Mapping[str, Any]]) -> dict[str, Any]:
+    by_id = {str(group["id"]): str(group["status"]) for group in evidence_groups}
+    rates = by_id["rates"]
+    volatility = by_id["credit_volatility"]
+    style = by_id["large_small_relative_strength"]
+    liquidity_policy = by_id["liquidity_policy_events"]
+    if rates == "pressures" and (
+        volatility == "pressures" or style == "pressures" or liquidity_policy == "pressures"
+    ):
+        label = "risk_reduction_required"
+        consequence = "利率压力与至少一个交叉证据组同步承压；优先降低高 Beta 风险。"
+    elif all(status == "supports" for status in (rates, volatility, style, liquidity_policy)):
+        label = "risk_expansion_allowed"
+        consequence = "四个证据组均支持；仍需在独立标的研究中确认。"
+    else:
+        label = "hold_current_risk"
+        consequence = "证据未形成一致的扩张或收缩条件，维持现有风险预算。"
+    return {
+        "label": label,
+        "consequence": consequence,
+        "derived_from": ["rate-actual", "relative-actual", "event-actual", "policy-actual"],
+    }
+
+
+def _decision(posture: Mapping[str, str]) -> str:
+    return (
+        f"当前 posture：{posture['label']}。{posture['consequence']} "
+        "本面板仅使用最近共同完成收盘与最新官方发布；不包含盘中数据或代理字段。"
+    )
+
+
 SOURCE_ALIASES = {
     "us_treasury_daily_rates": "U.S. Treasury daily yield curve",
     "cboe_vix_history": "Cboe VIX daily history",
@@ -312,6 +453,7 @@ SOURCE_ALIASES = {
     "federal_reserve_h41": "Federal Reserve H.4.1",
     "us_treasury_dts": "U.S. Treasury Daily Treasury Statement",
     "new_york_fed_on_rrp": "New York Fed ON RRP results",
+    "official_macro_event_allowlist": "Official seven-day macro event sources",
     "white_house_presidential_actions": "White House Presidential Actions",
     "mars_direct_contract": "Mars direct field contract",
 }

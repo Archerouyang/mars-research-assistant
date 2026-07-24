@@ -30,6 +30,7 @@
     {"field_id":"liquidity.reserve_balances","decision_purpose":"单独观察银行准备金。","unit":"usd_billions","timing":"official_release","source_routes":[{"source_id":"federal_reserve_h41","method":"direct_web_capture"}]},
     {"field_id":"liquidity.tga_balance","decision_purpose":"单独观察财政部一般账户。","unit":"usd_billions","timing":"official_release","source_routes":[{"source_id":"us_treasury_dts","method":"direct_web_capture"}]},
     {"field_id":"liquidity.on_rrp_usage","decision_purpose":"单独观察隔夜逆回购使用量。","unit":"usd_billions","timing":"official_release","source_routes":[{"source_id":"new_york_fed_on_rrp","method":"direct_web_capture"}]},
+    {"field_id":"events.seven_day_allowlist","decision_purpose":"列出未来七日可能改变风险判断的高影响宏观事件。","unit":"event_set","timing":"event","source_routes":[{"source_id":"official_macro_event_allowlist","method":"direct_web_capture"}]},
     {"field_id":"policy.us_executive_actions","decision_purpose":"识别特朗普及美国行政政策的可验证冲击。","unit":"policy_evidence_set","timing":"policy","source_routes":[{"source_id":"white_house_presidential_actions","method":"direct_web_capture"}]}
   ]
 }

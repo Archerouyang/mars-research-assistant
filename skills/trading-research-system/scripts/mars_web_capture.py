@@ -55,6 +55,10 @@ def capture_mars_direct_web_observations(
         for field in fields
     }
     expected_urls[str(market_session["source_id"])] = str(market_session["source_url"])
+    for source in contract.get("event_sources", []):
+        if not isinstance(source, Mapping):
+            raise MarsWebCaptureError("direct_web_capture_contract_invalid")
+        expected_urls[str(source["source_id"])] = str(source["source_url"])
     if set(direct_open_receipts) != set(expected_urls):
         raise MarsWebCaptureError("direct_web_capture_receipts_incomplete")
     if set(source_payloads) - set(expected_urls) - {"fixture_kind"}:

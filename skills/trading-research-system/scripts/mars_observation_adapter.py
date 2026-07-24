@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import json
 import math
 from pathlib import Path
@@ -23,6 +23,7 @@ RETAINED_RAW_FIELD_IDS = frozenset(
         "liquidity.reserve_balances",
         "liquidity.tga_balance",
         "liquidity.on_rrp_usage",
+        "events.seven_day_allowlist",
         "policy.us_executive_actions",
     }
 )
@@ -31,7 +32,6 @@ EXCLUDED_UNVERIFIED_FIELD_IDS = frozenset(
         "credit.hyg_close",
         "credit.lqd_close",
         "equity.spx_close",
-        "events.seven_day_allowlist",
     }
 )
 
@@ -95,13 +95,17 @@ def load_mars_source_contract(path: Path | None = None) -> dict[str, Any]:
     ):
         raise ObservationAdapterError("source_contract_invalid")
     fields = contract["fields"]
+    event_contract = contract.get("event_contract")
+    event_sources = contract.get("event_sources")
+    expected_standard_fields = RETAINED_RAW_FIELD_IDS - {"events.seven_day_allowlist"}
     if (
         not fields
         or any(not isinstance(field, dict) or not required.issubset(field) for field in fields)
         or len({field["field_id"] for field in fields}) != len(fields)
-        or {field["field_id"] for field in fields} != RETAINED_RAW_FIELD_IDS
+        or {field["field_id"] for field in fields} != expected_standard_fields
     ):
         raise ObservationAdapterError("source_contract_invalid")
+    _validate_event_contract(event_contract, event_sources)
     excluded = contract.get("excluded_fields")
     if (
         not isinstance(excluded, list)
@@ -128,6 +132,52 @@ def load_mars_source_contract(path: Path | None = None) -> dict[str, Any]:
     return contract
 
 
+def _validate_event_contract(event_contract: Any, event_sources: Any) -> None:
+    required_contract = {
+        "field_id",
+        "source_id",
+        "source_url",
+        "source_timing",
+        "unit",
+        "raw_field_path",
+        "allowed_categories",
+        "source_ids",
+    }
+    required_source = {"source_id", "source_url", "allowed_categories"}
+    if (
+        not isinstance(event_contract, Mapping)
+        or set(event_contract) != required_contract
+        or event_contract.get("field_id") != "events.seven_day_allowlist"
+        or event_contract.get("source_id") != "official_macro_event_allowlist"
+        or event_contract.get("source_url") != "multi_direct_sources"
+        or event_contract.get("source_timing") != "event"
+        or event_contract.get("unit") != "event_set"
+        or not isinstance(event_contract.get("raw_field_path"), list)
+        or not isinstance(event_contract.get("allowed_categories"), list)
+        or not isinstance(event_contract.get("source_ids"), list)
+        or not isinstance(event_sources, list)
+        or any(not isinstance(item, Mapping) or set(item) != required_source for item in event_sources)
+    ):
+        raise ObservationAdapterError("source_contract_invalid")
+    source_ids = [item["source_id"] for item in event_sources]
+    if (
+        len(source_ids) != len(set(source_ids))
+        or source_ids != event_contract["source_ids"]
+        or not all(isinstance(source_id, str) and source_id for source_id in source_ids)
+        or not all(isinstance(item["source_url"], str) and item["source_url"].startswith("https://") for item in event_sources)
+        or not all(
+            isinstance(category, str) and category
+            for category in event_contract["allowed_categories"]
+        )
+        or not all(
+            isinstance(category, str) and category in event_contract["allowed_categories"]
+            for item in event_sources
+            for category in item["allowed_categories"]
+        )
+    ):
+        raise ObservationAdapterError("source_contract_invalid")
+
+
 def normalize_mars_observations(
     source_payloads: Mapping[str, Any],
     as_of: str,
@@ -150,11 +200,16 @@ def normalize_mars_observation_run(
     fields = contract.get("fields")
     if not isinstance(fields, list):
         raise ObservationAdapterError("source_contract_invalid")
+    event_contract = contract.get("event_contract")
+    event_sources = contract.get("event_sources")
+    if not isinstance(event_contract, Mapping) or not isinstance(event_sources, list):
+        raise ObservationAdapterError("source_contract_invalid")
     market_session = contract.get("market_session")
     if not isinstance(market_session, Mapping):
         raise ObservationAdapterError("source_contract_invalid")
     source_ids = {str(field["source_id"]) for field in fields if isinstance(field, Mapping)}
     source_ids.add(str(market_session["source_id"]))
+    source_ids.update(str(item["source_id"]) for item in event_sources)
     extras = sorted(set(source_payloads) - source_ids - {"fixture_kind"})
     if extras:
         raise ObservationAdapterError(f"source_payload_not_supported:{extras[0]}")
@@ -165,6 +220,7 @@ def normalize_mars_observation_run(
         as_of_timestamp,
     )
     rows = [_normalize_field(dict(field), source_payloads, as_of_timestamp) for field in fields]
+    rows.append(_normalize_event_set(event_contract, event_sources, source_payloads, as_of_timestamp))
     _align_completed_market_histories(
         rows,
         as_of_timestamp.date(),
@@ -299,11 +355,24 @@ def _normalize_policy_evidence(
     normalized: list[dict[str, str]] = []
     for record in records:
         if not isinstance(record, Mapping) or set(record) != {
-            "id", "title", "published_at", "source_url"
+            "id", "title", "published_at", "source_url", "policy_status", "posture_effect"
         }:
             raise ObservationAdapterError("policy.us_executive_actions:record_shape_invalid")
-        if not all(isinstance(record[key], str) and record[key].strip() for key in record):
+        if not all(
+            isinstance(record[key], str) and record[key].strip()
+            for key in (
+                "id", "title", "published_at", "source_url", "policy_status", "posture_effect"
+            )
+        ):
             raise ObservationAdapterError("policy.us_executive_actions:record_shape_invalid")
+        if record["policy_status"] not in {
+            "confirmed", "stated_not_enacted", "unverified_lead"
+        }:
+            raise ObservationAdapterError("policy.us_executive_actions:policy_status_invalid")
+        if record["posture_effect"] not in {"supports", "neutral", "pressures"}:
+            raise ObservationAdapterError("policy.us_executive_actions:posture_effect_invalid")
+        if record["policy_status"] == "unverified_lead" and record["posture_effect"] != "neutral":
+            raise ObservationAdapterError("policy.us_executive_actions:unverified_lead_must_be_neutral")
         published = _parse_timestamp(
             record["published_at"], "policy.us_executive_actions:published_at"
         )
@@ -319,6 +388,8 @@ def _normalize_policy_evidence(
                 "title": str(record["title"]),
                 "published_at": str(record["published_at"]),
                 "source_url": str(record["source_url"]),
+                "policy_status": str(record["policy_status"]),
+                "posture_effect": str(record["posture_effect"]),
             }
         )
     normalized.sort(key=lambda item: (item["published_at"], item["id"]))
@@ -334,6 +405,106 @@ def _normalize_policy_evidence(
         "retrieval_method": "direct_web_capture",
         "raw_field_path": list(field["raw_field_path"]),
         "reference_period": retrieved.date().isoformat(),
+    }
+
+
+def _normalize_event_set(
+    event_contract: Mapping[str, Any],
+    event_sources: list[Mapping[str, Any]],
+    source_payloads: Mapping[str, Any],
+    as_of: datetime,
+) -> dict[str, Any]:
+    """Normalize bounded future events from every direct allowlist source."""
+
+    normalized: list[dict[str, Any]] = []
+    latest_retrieved: datetime | None = None
+    for source in event_sources:
+        source_id = str(source["source_id"])
+        payload = source_payloads.get(source_id)
+        if not isinstance(payload, Mapping):
+            raise ObservationAdapterError("events.seven_day_allowlist:source_payload_missing")
+        if payload.get("source_url") != source["source_url"]:
+            raise ObservationAdapterError("events.seven_day_allowlist:source_url_mismatch")
+        retrieved_at = payload.get("retrieved_at")
+        retrieved = _parse_timestamp(retrieved_at, "events.seven_day_allowlist:retrieved_at")
+        if retrieved > as_of:
+            raise ObservationAdapterError("events.seven_day_allowlist:retrieved_at_after_as_of")
+        if as_of - retrieved > timedelta(days=1):
+            raise ObservationAdapterError("events.seven_day_allowlist:source_stale")
+        records = payload.get("records")
+        if not isinstance(records, list):
+            raise ObservationAdapterError("events.seven_day_allowlist:source_collection_missing")
+        allowed_categories = set(source["allowed_categories"])
+        for record in records:
+            if not isinstance(record, Mapping) or set(record) != {
+                "id",
+                "title",
+                "category",
+                "time",
+                "timezone",
+                "reference_period",
+                "consensus",
+                "previous",
+                "revised_previous",
+                "actual",
+            }:
+                raise ObservationAdapterError("events.seven_day_allowlist:record_shape_invalid")
+            if not all(
+                isinstance(record[key], str) and record[key].strip()
+                for key in (
+                    "id",
+                    "title",
+                    "category",
+                    "time",
+                    "timezone",
+                    "reference_period",
+                    "consensus",
+                    "previous",
+                )
+            ) or record["category"] not in allowed_categories:
+                raise ObservationAdapterError("events.seven_day_allowlist:record_shape_invalid")
+            if record["revised_previous"] is not None and not isinstance(record["revised_previous"], str):
+                raise ObservationAdapterError("events.seven_day_allowlist:record_shape_invalid")
+            if record["actual"] is not None and not isinstance(record["actual"], str):
+                raise ObservationAdapterError("events.seven_day_allowlist:record_shape_invalid")
+            event_time = _parse_timestamp(record["time"], "events.seven_day_allowlist:time")
+            if event_time < as_of or event_time > as_of + timedelta(days=7):
+                raise ObservationAdapterError("events.seven_day_allowlist:event_outside_horizon")
+            normalized.append(
+                {
+                    "id": str(record["id"]),
+                    "title": str(record["title"]),
+                    "category": str(record["category"]),
+                    "time": str(record["time"]),
+                    "timezone": str(record["timezone"]),
+                    "reference_period": str(record["reference_period"]),
+                    "consensus": str(record["consensus"]),
+                    "previous": str(record["previous"]),
+                    "revised_previous": record["revised_previous"],
+                    "actual": record["actual"],
+                    "source": source_id,
+                }
+            )
+        latest_retrieved = max(latest_retrieved or retrieved, retrieved)
+    if latest_retrieved is None:
+        raise ObservationAdapterError("events.seven_day_allowlist:source_collection_missing")
+    if not normalized:
+        raise ObservationAdapterError("events.seven_day_allowlist:no_allowed_events_in_horizon")
+    if len({item["id"] for item in normalized}) != len(normalized):
+        raise ObservationAdapterError("events.seven_day_allowlist:duplicate_event_id")
+    normalized.sort(key=lambda item: (item["time"], item["id"]))
+    return {
+        "field_id": str(event_contract["field_id"]),
+        "value": normalized,
+        "unit": "event_set",
+        "status": "available",
+        "data_as_of": _format_timestamp(latest_retrieved),
+        "source_id": str(event_contract["source_id"]),
+        "source_url": str(event_contract["source_url"]),
+        "source_timing": "event",
+        "retrieval_method": "direct_web_capture",
+        "raw_field_path": list(event_contract["raw_field_path"]),
+        "reference_period": "next_7_days",
     }
 
 
@@ -416,6 +587,10 @@ def _parse_timestamp(value: Any, context: str) -> datetime:
     if parsed.tzinfo is None:
         raise ObservationAdapterError(f"{context}_invalid")
     return parsed
+
+
+def _format_timestamp(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _parse_date(value: Any, context: str) -> date:

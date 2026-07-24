@@ -76,7 +76,7 @@ MACRO_PAYLOAD_FIELDS = frozenset(
         "holdings_context", "modules", "payload_version", "posture", "question",
         "scenarios", "views", "trend_series", "event_watch",
         "policy_watch", "asset_preferences", "liquidity_background", "preflight",
-        "macro_profile",
+        "macro_profile", "evidence_groups", "market_timing",
     }
 )
 
@@ -314,7 +314,7 @@ def _validate_mars_direct_macro_payload(snapshot: Mapping[str, Any]) -> None:
         exposure_ids.add(item["id"])
 
     evidence = payload.get("evidence")
-    if not isinstance(evidence, list) or len(evidence) != 3:
+    if not isinstance(evidence, list) or len(evidence) != 4:
         raise ArtifactPacketError("evidence_invalid")
     evidence_ids: set[str] = set()
     allowed = {
@@ -347,6 +347,9 @@ def _validate_mars_direct_macro_payload(snapshot: Mapping[str, Any]) -> None:
         or not all(_is_nonempty_string(posture.get(key)) for key in ("consequence", "label"))
         or not isinstance(posture.get("derived_from"), list)
         or set(posture["derived_from"]) != evidence_ids
+        or posture["label"] not in {
+            "risk_expansion_allowed", "hold_current_risk", "risk_reduction_required"
+        }
     ):
         raise ArtifactPacketError("posture_derivation_invalid")
 
@@ -364,8 +367,11 @@ def _validate_mars_direct_macro_payload(snapshot: Mapping[str, Any]) -> None:
     ):
         raise ArtifactPacketError("chart_series_invalid")
     _validate_trend_series(payload.get("trend_series"), cutoff)
-    _validate_policy_watch(payload.get("policy_watch"), cutoff)
-    if payload.get("event_watch") is not None or payload.get("asset_preferences") is not None or payload.get("liquidity_background") is not None:
+    _validate_mars_event_watch(payload.get("event_watch"), cutoff)
+    _validate_mars_policy_watch(payload.get("policy_watch"), cutoff)
+    _validate_mars_evidence_groups(payload.get("evidence_groups"))
+    _validate_mars_market_timing(payload.get("market_timing"), cutoff)
+    if payload.get("asset_preferences") is not None or payload.get("liquidity_background") is not None:
         raise ArtifactPacketError("mars_direct_unsupported_payload")
 
 
@@ -484,6 +490,74 @@ def _validate_event_watch(value: Any, cutoff: datetime) -> None:
         previous = scheduled
 
 
+MARS_EVENT_CATEGORIES = frozenset(
+    {
+        "fomc",
+        "cpi",
+        "employment",
+        "gdp",
+        "pmi",
+        "long_duration_treasury_auction",
+        "major_central_bank",
+    }
+)
+MARS_EVIDENCE_GROUP_IDS = frozenset(
+    {
+        "rates",
+        "credit_volatility",
+        "large_small_relative_strength",
+        "liquidity_policy_events",
+    }
+)
+
+
+def _validate_mars_event_watch(value: Any, cutoff: datetime) -> None:
+    """Validate the exact future-event summary retained by the Mars profile."""
+
+    required = {
+        "id",
+        "title",
+        "category",
+        "time",
+        "timezone",
+        "reference_period",
+        "consensus",
+        "previous",
+        "revised_previous",
+        "actual",
+        "source",
+    }
+    if not isinstance(value, list) or not value:
+        raise ArtifactPacketError("mars_event_watch_invalid")
+    seen_ids: set[str] = set()
+    previous_time: datetime | None = None
+    horizon = cutoff + timedelta(days=7)
+    for item in value:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != required
+            or not all(
+                _is_nonempty_string(item.get(key))
+                for key in required - {"revised_previous", "actual"}
+            )
+            or item["category"] not in MARS_EVENT_CATEGORIES
+            or item["id"] in seen_ids
+            or (
+                item["revised_previous"] is not None
+                and not _is_nonempty_string(item["revised_previous"])
+            )
+            or item["actual"] is not None and not _is_nonempty_string(item["actual"])
+        ):
+            raise ArtifactPacketError("mars_event_watch_invalid")
+        scheduled = _parse_timestamp(item["time"], "mars_event_watch_invalid")
+        if scheduled < cutoff or scheduled > horizon or (
+            previous_time is not None and scheduled < previous_time
+        ):
+            raise ArtifactPacketError("mars_event_watch_invalid")
+        seen_ids.add(item["id"])
+        previous_time = scheduled
+
+
 def _validate_policy_watch(value: Any, cutoff: datetime) -> None:
     """Allow only bounded, already-normalized official policy records."""
 
@@ -504,6 +578,90 @@ def _validate_policy_watch(value: Any, cutoff: datetime) -> None:
         if published > cutoff or (previous is not None and published < previous):
             raise ArtifactPacketError("policy_watch_invalid")
         previous = published
+
+
+def _validate_mars_policy_watch(value: Any, cutoff: datetime) -> None:
+    """Validate policy state before it may influence the Mars posture."""
+
+    required = {
+        "id",
+        "title",
+        "published_at",
+        "policy_status",
+        "posture_effect",
+        "source",
+    }
+    if not isinstance(value, list):
+        raise ArtifactPacketError("mars_policy_watch_invalid")
+    previous: datetime | None = None
+    for item in value:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != required
+            or not all(_is_nonempty_string(item.get(key)) for key in required)
+            or item["policy_status"]
+            not in {"confirmed", "stated_not_enacted", "unverified_lead"}
+            or item["posture_effect"] not in {"supports", "neutral", "pressures"}
+            or (
+                item["policy_status"] == "unverified_lead"
+                and item["posture_effect"] != "neutral"
+            )
+        ):
+            raise ArtifactPacketError("mars_policy_watch_invalid")
+        published = _parse_timestamp(item["published_at"], "mars_policy_watch_invalid")
+        if published > cutoff or (previous is not None and published < previous):
+            raise ArtifactPacketError("mars_policy_watch_invalid")
+        previous = published
+
+
+def _validate_mars_evidence_groups(value: Any) -> None:
+    """Ensure posture has four inspectable qualitative evidence groups."""
+
+    required = {"id", "label", "status", "field_ids", "reason"}
+    if not isinstance(value, list) or len(value) != len(MARS_EVIDENCE_GROUP_IDS):
+        raise ArtifactPacketError("mars_evidence_groups_invalid")
+    seen_ids: set[str] = set()
+    for item in value:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != required
+            or not all(_is_nonempty_string(item.get(key)) for key in {"id", "label", "status", "reason"})
+            or item["id"] in seen_ids
+            or item["id"] not in MARS_EVIDENCE_GROUP_IDS
+            or item["status"] not in {"supports", "neutral", "pressures"}
+            or not isinstance(item["field_ids"], list)
+            or not item["field_ids"]
+            or not all(_is_nonempty_string(field_id) for field_id in item["field_ids"])
+        ):
+            raise ArtifactPacketError("mars_evidence_groups_invalid")
+        seen_ids.add(item["id"])
+    if seen_ids != MARS_EVIDENCE_GROUP_IDS:
+        raise ArtifactPacketError("mars_evidence_groups_invalid")
+
+
+def _validate_mars_market_timing(value: Any, cutoff: datetime) -> None:
+    """Reject a Mars Board unless its no-intraday timing statement is explicit."""
+
+    required = {
+        "market_reference_date",
+        "intraday_excluded",
+        "news_policy_cutoff",
+        "lag_reason",
+    }
+    if (
+        not isinstance(value, Mapping)
+        or set(value) != required
+        or not isinstance(value["market_reference_date"], str)
+        or value["intraday_excluded"] is not True
+        or not _is_nonempty_string(value["lag_reason"])
+    ):
+        raise ArtifactPacketError("mars_market_timing_invalid")
+    try:
+        datetime.fromisoformat(value["market_reference_date"])
+    except ValueError as error:
+        raise ArtifactPacketError("mars_market_timing_invalid") from error
+    if _parse_timestamp(value["news_policy_cutoff"], "mars_market_timing_invalid") != cutoff:
+        raise ArtifactPacketError("mars_market_timing_invalid")
 
 
 def _validate_asset_preferences(value: Any, background: Any) -> None:

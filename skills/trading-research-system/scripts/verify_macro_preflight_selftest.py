@@ -57,6 +57,12 @@ def capture(source_payloads: dict[str, object]):
     }
     market_session = contract["market_session"]
     sources[str(market_session["source_id"])] = str(market_session["source_url"])
+    sources.update(
+        {
+            str(source["source_id"]): str(source["source_url"])
+            for source in contract["event_sources"]
+        }
+    )
     receipts = {
         source_id: {
             "source_url": source_url,
@@ -117,13 +123,23 @@ def main() -> int:
         "validated White House policy evidence must appear as a bounded Board summary",
     )
     require(
-        "下周事件" not in html,
-        "a field without a direct event contract must be omitted rather than rendered empty",
+        "fomc statement" in html
+        and "employment situation" in html
+        and "future seven-day" not in html
+        and "未来七日事件" in html,
+        "validated future-event fields must render from the direct allowlist rather than an old scenario shape",
+    )
+    require(
+        "最近共同完成收盘" in html
+        and "盘中数据：排除" in html
+        and "hold_current_risk" in html,
+        "the Board must disclose its close-only timing and qualitative posture",
     )
     require(
         "https://www.whitehouse.gov/presidential-actions/" not in canonical_result
+        and "https://www.federalreserve.gov/newsevents/calendar.htm" not in canonical_result
         and "must not be retained" not in canonical_result,
-        "delivery artifacts must not persist raw policy URLs or page content",
+        "delivery artifacts must not persist raw policy or event URLs or page content",
     )
 
     current_day = run_macro_board(capture(current_day_completed_payloads()), AS_OF)
@@ -151,6 +167,15 @@ def main() -> int:
         "the blocker must identify missing White House policy coverage",
     )
 
+    missing_events = payloads()
+    missing_events.pop("ecb_meeting_calendar")
+    blocked_events = run_macro_board(capture(missing_events), AS_OF)
+    require(blocked_events.kind == "blocker", "missing direct event source must block")
+    require(
+        blocked_events.blockers[0].field_id == "events.seven_day_allowlist",
+        "the blocker must identify missing seven-day event coverage",
+    )
+
     stale_session = payloads()
     stale_session["us_equities_session"]["latest_completed_market_session"] = "2026-07-21"
     blocked_stale = run_macro_board(capture(stale_session), AS_OF)
@@ -176,6 +201,10 @@ def main() -> int:
                 for field in contract["fields"]
             },
             str(contract["market_session"]["source_id"]): str(contract["market_session"]["source_url"]),
+            **{
+                str(source["source_id"]): str(source["source_url"])
+                for source in contract["event_sources"]
+            },
         }.items()
     }
     receipts[source_id]["method"] = "broker_proxy"

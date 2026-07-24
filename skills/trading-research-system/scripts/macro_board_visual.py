@@ -47,6 +47,7 @@ def render(visual: Mapping[str, Any], privacy: str) -> bytes:
 
 def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     payload = snapshot["payload"]
+    is_mars_direct = payload.get("macro_profile") == "mars_direct_v1"
     root = _root_id("macro", snapshot)
     fixture_badge = _public_fixture_badge(snapshot.get("privacy"))
     series = payload.get("chart_series") or []
@@ -85,6 +86,23 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
         )
 
     def event_html(row: Mapping[str, Any]) -> str:
+        if is_mars_direct:
+            optional = []
+            if row["revised_previous"] is not None:
+                optional.append(f'修正前值：{escape(str(row["revised_previous"]))}')
+            if row["actual"] is not None:
+                optional.append(f'实际：{escape(str(row["actual"]))}')
+            detail = " · ".join(optional)
+            return (
+                '<article class="event-row"><div class="event-head"><div><strong>'
+                f'{escape(str(row["title"]))}</strong></div>'
+                f'<span>{escape(_format_event_time(row["time"]))}</span></div>'
+                f'<p class="event-meta">{escape(str(row["category"]))} · '
+                f'{escape(str(row["timezone"]))} · 参考期：{escape(str(row["reference_period"]))}</p>'
+                f'<p><b>共识：</b>{escape(str(row["consensus"]))} · '
+                f'<b>前值：</b>{escape(str(row["previous"]))}'
+                f'{" · " + detail if detail else ""}</p></article>'
+            )
         important = row.get("importance") == "high"
         marker = '<span class="event-priority">重点</span>' if important else ""
         css_class = " event-high" if important else ""
@@ -96,11 +114,17 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
         )
 
     event_watch = payload.get("event_watch")
+    event_label = "未来七日事件" if is_mars_direct else "下周事件"
+    event_empty = (
+        "未来七日事件数据缺失，不能建立事件联动。"
+        if is_mars_direct
+        else "下周事件数据缺失，不能建立事件联动。"
+    )
     event_rows = "".join(event_html(row) for row in event_watch or []) or (
-        '<p class="text-muted">下周事件数据缺失，不能建立事件联动。</p>'
+        f'<p class="text-muted">{event_empty}</p>'
     )
     event_control = (
-        '<button type="button" class="btn" data-view="events" aria-pressed="false">下周事件</button>'
+        f'<button type="button" class="btn" data-view="events" aria-pressed="false">{event_label}</button>'
         if event_watch is not None
         else ""
     )
@@ -113,7 +137,9 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     policy_rows = "".join(
         f'<article class="policy-row"><div class="policy-head"><strong>{escape(str(row["title"]))}</strong>'
         f'<span>{escape(_format_event_time(row["published_at"]))}</span></div>'
-        f'<span class="policy-source">{escape(str(row["source"]))}</span></article>'
+        f'<span class="policy-source">{escape(str(row["source"]))}'
+        f'{" · " + escape(str(row["policy_status"])) + " · " + escape(str(row["posture_effect"])) if is_mars_direct else ""}'
+        '</span></article>'
         for row in policy_watch or []
     ) or '<p class="text-muted">本轮白宫直接来源未返回行政政策记录；不作政策推断。</p>'
     policy_control = (
@@ -134,6 +160,38 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
         f'<div><span class="scenario-cell-label">应对</span><p>{escape(str(row["posture"]))}</p></div></div></article>'
         for index, row in enumerate(payload.get("scenarios", []), start=1)
     )
+    timing = payload.get("market_timing") or {}
+    evidence_groups = payload.get("evidence_groups") or []
+    mars_current_context = ""
+    mars_css = ""
+    if is_mars_direct:
+        group_rows = "".join(
+            f'<article class="group-row group-{escape(str(row["status"]))}"><div><strong>{escape(str(row["label"]))}</strong>'
+            f'<span>{escape(str(row["status"]))}</span></div><p>{escape(str(row["reason"]))}</p></article>'
+            for row in evidence_groups
+        )
+        mars_current_context = (
+            '<div class="market-timing text-small"><strong>市场数据口径</strong>'
+            f'<span>最近共同完成收盘：{escape(str(timing.get("market_reference_date", "Unavailable")))}</span>'
+            f'<span>盘中数据：{"排除" if timing.get("intraday_excluded") else "未声明"}</span>'
+            f'<span>新闻/政策截止：{escape(str(timing.get("news_policy_cutoff", "Unavailable")))}</span>'
+            f'<p>{escape(str(timing.get("lag_reason", "")))}</p></div>'
+            f'<div class="group-list">{group_rows}</div>'
+        )
+        mars_css = "\n    ".join(
+            (
+                f"#{root} .event-meta{{color:var(--muted-foreground);font-size:12px}}",
+                f"#{root} .market-timing{{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 12px;border-left:3px solid var(--viz-series-1);background:var(--muted)}}",
+                f"#{root} .market-timing p{{flex-basis:100%;margin:0}}",
+                f"#{root} .group-list{{display:grid;border-top:1px solid var(--border)}}",
+                f"#{root} .group-row{{display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}}",
+                f"#{root} .group-row div{{display:grid;align-content:start;gap:4px}}",
+                f"#{root} .group-row span{{font-size:12px;color:var(--muted-foreground)}}",
+                f"#{root} .group-row p{{margin:0}}",
+                f"#{root} .group-supports strong{{color:var(--viz-series-1)}}",
+                f"#{root} .group-pressures strong{{color:var(--destructive)}}",
+            )
+        )
     data = _script_json({"trend_series": trends})
     html = f"""<div id="{root}" class="dt-board"{_public_fixture_attr(snapshot.get('privacy'))}>
   <style>{_base_css(root)}
@@ -174,6 +232,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     #{root} .policy-row{{display:grid;gap:7px;padding:12px 0;border-bottom:1px solid var(--border)}}
     #{root} .policy-head{{display:flex;justify-content:space-between;gap:12px}}
     #{root} .policy-head span,#{root} .policy-source{{color:var(--muted-foreground);font-size:12px}}
+    {mars_css}
     #{root} .macro-summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-block:1px solid var(--border)}}
     #{root} .macro-summary-group{{display:grid;align-content:start;gap:7px;padding:12px 14px}}
     #{root} .macro-summary-group+ .macro-summary-group{{border-left:1px solid var(--border)}}
@@ -205,7 +264,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     <button type="button" class="btn" data-view="scenarios" aria-pressed="false">情景</button>
   </div>
   <section class="macro-panel is-active" data-panel="trend"><div class="series-controls" aria-label="趋势序列">{trend_buttons}</div><svg class="trend-chart" viewBox="0 0 720 300" role="img" aria-label="关键宏观指标趋势"><g class="trend-stage"></g></svg><div class="trend-caption text-small" aria-live="polite"></div></section>
-  <section class="macro-panel" data-panel="current">{state_intro}{state_status}<div class="state-list">{state_head}{state_rows}</div></section>
+  <section class="macro-panel" data-panel="current">{mars_current_context}{state_intro}{state_status}<div class="state-list">{state_head}{state_rows}</div></section>
   {event_panel}
   {policy_panel}
   <section class="macro-panel" data-panel="scenarios"><div class="scenario-grid"><div class="scenario-head"><span>情景（按冲击排序）</span><div class="scenario-head-flow"><span>触发</span><span>确认</span><span>传导</span><span>应对</span></div></div>{scenario_rows}</div></section>
