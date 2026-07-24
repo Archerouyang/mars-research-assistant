@@ -4,24 +4,24 @@ Status: implemented
 
 ## Objective
 
-Distribute Trading Research System through one portable Agent Skill and present
+Distribute Mars Research Assistant through one portable Agent Skill and present
 it with a concise bilingual README. Installation must never copy or imply
 synchronization of private trading state.
 
 ## Product Boundary
 
-- **DailyTrades** is the project and repository brand.
-- **Trading Research System** is the user-facing product.
-- **`trading-research-system`** is the single distributed Agent Skill.
-- `skills/trading-research-system/` is the only package and behavior source.
-- Native plugin wrappers and marketplace manifests are not planned or shipped.
+- **Mars Research Assistant** is the project and repository brand.
+- **Mars Research Assistant** is the user-facing product.
+- **`mars-research-assistant`** is the single distributed Agent Skill.
+- `skills/mars-research-assistant/` is the only package and behavior source.
+- Native wrappers and marketplace manifests are not planned or shipped.
 
 ## Installation
 
 The first-screen installation command is:
 
 ```bash
-npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -g
+npx skills@latest add Archerouyang/mars-research-assistant --skill mars-research-assistant -g
 ```
 
 The installer owns coding-agent detection and target-directory adaptation. The
@@ -60,7 +60,7 @@ The minimum release evidence is:
 
 ## Out Of Scope
 
-- Native Codex or Claude plugin wrappers and marketplace manifests;
+- Native Codex or Claude wrappers and marketplace manifests;
 - synchronization of private runtime or user preferences;
 - persistent frontend or hosted dashboard;
 - live broker or account reads for README examples;

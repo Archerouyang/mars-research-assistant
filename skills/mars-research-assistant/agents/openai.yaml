@@ -1,0 +1,4 @@
+interface:
+  display_name: "火星投研助手"
+  short_description: "AI-native trading research and risk decision support"
+  default_prompt: "Use $mars-research-assistant to begin the current trading research session."

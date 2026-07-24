@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-await import("../skills/trading-research-system/scripts/export_board_png.mjs");
+await import("../skills/mars-research-assistant/scripts/export_board_png.mjs");

@@ -1,20 +1,20 @@
-# Trading Research System
+# Mars Research Assistant
 
 这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、broker-live 持仓日报、复盘上下文和交易系统可视化。
 
 ## Language
 
-**DailyTrades**:
-The public project, repository, and distribution brand for Trading Research System.
-_Avoid_: plugin name, private runtime
+**火星投研助手 (Mars Research Assistant)**:
+The public project, repository, and distribution brand for Mars Research Assistant.
+_Avoid_: package identifier, private runtime
 
-**Trading Research System**:
+**Mars Research Assistant**:
 The user-facing trading research product delivered as one portable Agent Skill.
-_Avoid_: Codex plugin, Claude plugin
+_Avoid_: native wrapper, per-agent package variant
 
 **Agent Skill package**:
-The single self-contained `trading-research-system` package installed across compatible coding agents; it includes every public workflow resource required to run without partial focused-skill selection.
-_Avoid_: partial skill set, native plugin
+The single self-contained `mars-research-assistant` package installed across compatible coding agents; it includes every public workflow resource required to run without partial focused-skill selection.
+_Avoid_: partial Skill set, native wrapper
 
 **Command-first distribution**:
 The installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill.
@@ -29,11 +29,11 @@ _Avoid_: 自动交易系统, 荐股系统
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
-Trading Research System 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘。
-_Avoid_: 多个可被部分安装的公开 skills, 多个互不相干的 plugin
+Mars Research Assistant 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘。
+_Avoid_: 多个可被部分安装的公开 Skills, 多个互不相干的分发包
 
 **Daily Ops Orchestrator**:
-Trading Research System 的主动日程引导层。它位于单一 `trading-research-system` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
+Mars Research Assistant 的主动日程引导层。它位于单一 `mars-research-assistant` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
 _Avoid_: 新的荐股模块, 让用户手动 call out 每个步骤
 
 **Daily Ops State**:
@@ -89,27 +89,27 @@ _Avoid_: 研报=交易信号, thesis 直接升级 setup
 _Avoid_: 全自动数据湖, 不可核验来源
 
 **Broker Source**:
-提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill/plugin 或手动 CSV。Broker Source 是可插拔 adapter，不是 Trading Research System 的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
+提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge Skill、Terminal CLI 或手动 CSV。Broker Source 是可插拔 adapter，不是 Mars Research Assistant 的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
 _Avoid_: 单一券商绑定, 券商即系统
 
 **券商只读来源设置**:
 Daily Ops 首次启动或 runtime health 显示 broker source 为 `missing` / `unauthorized` 时触发的只读券商来源访谈。它应询问用户是否启用 Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。本步骤只配置读取意图和偏好，不读取账户、不安装软件、不写入 public repo，也不允许任何 broker write action。
-_Avoid_: 安装 plugin 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
+_Avoid_: 安装 Skill 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
 
 **Read-only Broker Adapter**:
 把 broker 原始数据转换成标准运行时视图的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。适配层可以为一次分析返回内存数据、临时文件或派生快照，但不应要求长期保存券商逐笔事实。
 _Avoid_: 自动下单插件, 账户控制层
 
 **Longbridge Broker Source**:
-Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
+Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge Skill 或 Terminal CLI，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
 **Longbridge Macrodata Source**:
-Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source，可用于非 Board 的辅助研究和交叉核验；它不是 Mars 1.0 Macro Board 的字段来源，不能替代逐字段直接公开来源合同。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+Longbridge Skill 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source，可用于非 Board 的辅助研究和交叉核验；它不是 Mars 1.0 Macro Board 的字段来源，不能替代逐字段直接公开来源合同。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
 _Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实或 Mars 字段合同
 
 **Longbridge Skill Adapter**:
-把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于非 Board 宏观和金融条件数值研究。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
+把 Longbridge Skill 或 Terminal CLI 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native Skill 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于非 Board 宏观和金融条件数值研究。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 Skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
 _Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在, 用 macrodata 绕过 Mars 直接来源合同
 
 **Longbridge Terminal CLI Adapter**:
@@ -149,7 +149,7 @@ _Avoid_: 摘要, 复制粘贴
 _Avoid_: 信号, 荐股
 
 **Trading Profile**:
-使用者私有的交易档案，记录交易目标、允许工具、时间框架、策略姿态阈值、主动交易池、ETF 组合、防御/宏观配置规则、拥挤度模型和人工覆盖规则。public plugin 只提供模板和读取规则，不把某个使用者的具体主题、品种、权重或时间框架硬编码为默认行为。
+使用者私有的交易档案，记录交易目标、允许工具、时间框架、策略姿态阈值、主动交易池、ETF 组合、防御/宏观配置规则、拥挤度模型和人工覆盖规则。public Skill 只提供模板和读取规则，不把某个使用者的具体主题、品种、权重或时间框架硬编码为默认行为。
 _Avoid_: 插件默认策略, 公开仓位配置
 
 **核心 ETF 底仓**:
@@ -209,7 +209,7 @@ _Avoid_: 模型自动升级核心池, 一次强势就变 Core
 _Avoid_: 一个 ticker 只能属于一个池, ticker 固定工具表达
 
 **池级工具表达规则**:
-Trading Profile 中按主动交易池配置的工具偏好。一个使用者 profile 可以配置主题核心池默认正股，只有使用者主动声明时才评估 LEAP；大盘流动性龙头池可以主动提示 LEAP 机会，但必须要求高质量位置、合理 IV、足够期限和事件风险确认。工具表达规则不应写死在 public plugin 中。
+Trading Profile 中按主动交易池配置的工具偏好。一个使用者 profile 可以配置主题核心池默认正股，只有使用者主动声明时才评估 LEAP；大盘流动性龙头池可以主动提示 LEAP 机会，但必须要求高质量位置、合理 IV、足够期限和事件风险确认。工具表达规则不应写死在 public Skill 中。
 _Avoid_: 所有池共用工具, 插件主动建议用户未启用的工具
 
 **策略姿态分流**:
@@ -261,7 +261,7 @@ _Avoid_: 估算暴露当实时事实
 _Avoid_: 指数涨=市场全面健康
 
 **拥挤度主题列表**:
-Crowding Score 优先覆盖 Trading Profile 中配置的活跃主题群。主题列表用于决定哪些主题先进入拥挤度、flow、指数权重贡献和行业净暴露分析，不代表其它行业永远不分析。半导体、AI 硬件、存储、AI 应用/软件和 MAG7 可以作为一个使用者 profile 的示例配置，而不是 public plugin 的固定默认。
+Crowding Score 优先覆盖 Trading Profile 中配置的活跃主题群。主题列表用于决定哪些主题先进入拥挤度、flow、指数权重贡献和行业净暴露分析，不代表其它行业永远不分析。半导体、AI 硬件、存储、AI 应用/软件和 MAG7 可以作为一个使用者 profile 的示例配置，而不是 public Skill 的固定默认。
 _Avoid_: 全行业平均覆盖, 永久固定主题
 
 **主线交易池**:
@@ -409,7 +409,7 @@ _Avoid_: 标的一概而论
 _Avoid_: 所有产品共用一个时间框架
 
 **默认工具时间框架表**:
-Trading Profile 中配置的工具时间框架规则。public plugin 只提供可编辑模板和示例，不把某个使用者的时间框架设为所有人的默认。一个中期主动交易 profile 示例可以是：长期 ETF 核心仓使用 1W/1D 分析、4H/1D 触发；宏观配置 setup 使用 1W/1D 分析、1D/4H 触发；主动个股中期交易使用 1W/1D/4H 分析、4H/1H 触发；LEAP call 使用 1W/1D 分析、1D/4H 触发；2x ETF 使用 1D/4H 分析、4H/1H 触发；0DTE QQQ 使用 1D/4H/1H 背景、15m/5m 触发。
+Trading Profile 中配置的工具时间框架规则。public Skill 只提供可编辑模板和示例，不把某个使用者的时间框架设为所有人的默认。一个中期主动交易 profile 示例可以是：长期 ETF 核心仓使用 1W/1D 分析、4H/1D 触发；宏观配置 setup 使用 1W/1D 分析、1D/4H 触发；主动个股中期交易使用 1W/1D/4H 分析、4H/1H 触发；LEAP call 使用 1W/1D 分析、1D/4H 触发；2x ETF 使用 1D/4H 分析、4H/1H 触发；0DTE QQQ 使用 1D/4H/1H 背景、15m/5m 触发。
 _Avoid_: 日内信号触发长期配置, 低周期决定宏观配置
 
 **实际交易记录**:
@@ -421,7 +421,7 @@ _Avoid_: 事后解释, 记忆中的交易
 _Avoid_: 自动复盘结论, 经纪商即完整日志
 
 **持仓日报**:
-交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 plugin 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
+交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 Skill 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
 _Avoid_: 自动调仓, 账户日报流水账, 手工交易表
 
 **持仓日报快照**:
@@ -445,7 +445,7 @@ _Avoid_: 把盈亏当成唯一质量判断
 _Avoid_: 随机追问
 
 **本地日分区记录**:
-按交易日期在本地保存观察清单、预备交易计划、复盘摘要、持仓日报快照和图表产物。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/dailytrades-runtime`。本地日分区记录不应成为 broker 逐笔交易事实的长期 source of truth。
+按交易日期在本地保存观察清单、预备交易计划、复盘摘要、持仓日报快照和图表产物。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/mars-research-assistant-runtime`。本地日分区记录不应成为 broker 逐笔交易事实的长期 source of truth。
 _Avoid_: 临时聊天记录, 未归档输出
 
 **盘中分析**:
@@ -516,10 +516,10 @@ _Avoid_: 一个单元格放多个价格
 从原始复盘文本中拆出的 setup、入场、出场、错误标签和经验字段。它保留复盘可读性，同时支持统计错误频率和系统优化。
 _Avoid_: 只有长文本复盘
 
-**Plugin-first 系统**:
-优先把交易投研系统实现为 Codex 可直接调用的插件和技能，而不是先建设独立前端应用。这样 agent 可以直接使用工作流、脚本、模板和外部工具，不需要用户自己配置模型层。
+**Skill-first 系统**:
+优先把交易投研系统实现为 Codex 可直接调用的 Agent Skill，而不是先建设独立前端应用。这样 agent 可以直接使用工作流、脚本、模板和外部工具，不需要用户自己配置模型层。
 _Avoid_: 前端优先系统, 独立 SaaS
 
 **图表产物**:
-由插件或 Codex 按需生成的临时图表页面、图片或报告片段，用于 K 线 setup、多时间框架和均线结构分析。图表产物不是长期维护的前端应用。
+由 Skill 或 Codex 按需生成的临时图表页面、图片或报告片段，用于 K 线 setup、多时间框架和均线结构分析。图表产物不是长期维护的前端应用。
 _Avoid_: Dashboard, 常驻前端

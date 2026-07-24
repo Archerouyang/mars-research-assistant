@@ -1,17 +1,17 @@
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-# DailyTrades：交易投研系统
+# 火星投研助手：交易投研系统
 
 一个 AI-native、基于贝叶斯理念的决策支持 Skill，把市场、宏观、政策、公司、Price Action 和组合证据压缩成可持续更新的决策流程。它不试图预测下一步行情，而是用新证据更新先验、比较条件情景，并明确什么后续观察会改变当前判断。
 
-版本：`0.4.0`
+版本：`1.0.0`
 
 ## 30 秒安装
 
 安装完整的 portable Agent Skill。安装器会检测支持的 coding agent 并适配目标目录。
 
 ```bash
-npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -g
+npx skills@latest add Archerouyang/mars-research-assistant --skill mars-research-assistant -g
 ```
 
 ## 首次使用
@@ -62,7 +62,7 @@ Price Action 面板把观察与行动分开，同时展示周期与数据来源�
 
 | Public Skill | Private Runtime |
 | --- | --- |
-| 一个可安装的 `trading-research-system` 包，包含研究规范、references、scripts、空白模板和合成 fixtures | 用户自己的交易偏好、观察清单、持仓、Active Market Plan、setup、复盘、凭据和 connector 授权 |
+| 一个可安装的 `mars-research-assistant` 包，包含研究规范、references、scripts、空白模板和合成 fixtures | 用户自己的交易偏好、观察清单、持仓、Active Market Plan、setup、复盘、凭据和 connector 授权 |
 | 可以公开发布和升级 | 始终位于公开仓库和分发包之外 |
 | 不内置个人默认值 | 只有用户明确授权本地写入后才创建 |
 
@@ -72,15 +72,15 @@ Price Action 面板把观察与行动分开，同时展示周期与数据来源�
 
 | 现象 | 检查 |
 | --- | --- |
-| 找不到 Skill | 确认仓库可访问，并检查安装输出是否只列出 `trading-research-system`。 |
+| 找不到 Skill | 确认仓库可访问，并检查安装输出是否只列出 `mars-research-assistant`。 |
 | 新任务没有个人数据 | 这是预期行为；首次运行保持空白，直到用户明确初始化 private runtime。 |
 | 券商或宏观数据不可用 | 单独授权对应的可选只读来源；安装 Skill 不会授予 connector 权限。 |
 | 无法导出选中的 Board | 用户选择性 PNG 导出需要 Chrome/Chromium；standalone HTML 仍是主产物。 |
 
-详细文档：[Skill 契约](skills/trading-research-system/SKILL.md)、
+详细文档：[Skill 契约](skills/mars-research-assistant/SKILL.md)、
 [standalone 交付决策](docs/adr/0011-standalone-board-only-delivery.md)、
 [0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md)、
 [MVP Runbook](docs/MVP_RUNBOOK.md) 和
 [分发计划](docs/DISTRIBUTION_AND_README_PLAN.md)。
 
-DailyTrades 使用 MIT License；第三方组件保留各自许可证。
+火星投研助手 使用 MIT License；第三方组件保留各自许可证。

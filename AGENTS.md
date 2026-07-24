@@ -1,13 +1,13 @@
 # Project Agent Instructions
 
-This is the public DailyTrades / Trading Research System portable Skill
+This is the public 火星投研助手 (Mars Research Assistant) portable Skill
 repository. Keep it limited to reusable Skill assets and user-readable project
 docs.
 
 ## Repository Boundary
 
 - The only canonical portable Skill behavior source is
-  `skills/trading-research-system/`.
+  `skills/mars-research-assistant/`.
 - Project docs live under `docs/`, `CONTEXT.md`, and top-level Markdown files.
 - Never commit private trading records, watchlists, profiles, broker exports,
   runtime plans, credentials, account data, or private/user-specific charts.
@@ -154,7 +154,7 @@ not dispatch merely to move context elsewhere.
 
 - Use Matt Pocock engineering skills for development work: requirement
   shaping, planning, issue slicing, TDD, diagnosis, review, and architecture.
-- Use Trading Research System skills only to verify the product's trading
+- Use Mars Research Assistant skills only to verify the product's trading
   behavior, fixtures, and Daily Ops UX; they are not development-process
   authority.
 - State the active skill in progress updates when skill instructions affect the

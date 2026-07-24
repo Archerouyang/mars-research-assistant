@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for Trading Research System 0.2.0. The inline-delivery portion was
+Accepted for Mars Research Assistant 0.2.0. The inline-delivery portion was
 superseded by ADR 0011 in 0.4.0.
 
 ## Context
@@ -15,7 +15,7 @@ to remove because behavior ownership is unclear.
 
 ## Decision
 
-Trading Research System 0.2.0 has one chat-delivery seam:
+Mars Research Assistant 0.2.0 has one chat-delivery seam:
 
 `Validated ResearchResult -> DeliveryPacket`
 
@@ -46,4 +46,4 @@ obligation. Private runtime databases are never deleted automatically.
 - Tests concentrate at one external seam and active safety interfaces.
 - Visual acceptance is primarily manual using real inline artifacts.
 - 0.1.x prose output compatibility is intentionally not preserved.
-- The plugin version advances to 0.2.0.
+- The Skill version advances to 0.2.0.

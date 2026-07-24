@@ -1,4 +1,4 @@
-# Trading Research System 0.3.0 Architecture Deepening Spec
+# Mars Research Assistant 0.3.0 Architecture Deepening Spec
 
 Status: implemented and verified on 2026-07-20.
 
@@ -164,6 +164,6 @@ visual acceptance remains manual if any rendered output changes unexpectedly.
 
 - New trading strategies, forecasting logic, quant models, or order actions.
 - Redesign of frozen Macro, Price Action, or Portfolio panels.
-- Native Plugin wrappers, plugin caches, marketplaces, or optional plugins.
+- Native Skill wrappers, Skill-install caches, marketplaces, or optional Skills.
 - A universal source adapter spanning broker, macrodata, and news.
 - Automatic migration or deletion of private runtime state.

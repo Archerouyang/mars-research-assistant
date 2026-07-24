@@ -1,4 +1,4 @@
-# Trading Research System 0.4.0 Smoke
+# 火星投研助手 1.0.0 Smoke
 
 This runbook verifies the smallest useful product path. It is not a private
 runtime rehearsal and it never performs broker or order actions.

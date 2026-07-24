@@ -10,7 +10,7 @@ The system will treat IBKR, Longbridge, and other broker integrations as read-on
 
 **Decision**
 
-Use broker-live reads for objective broker facts. The plugin may save derived artifacts such as position daily reports, exposure charts, setup review notes, and statistics snapshots, but should avoid persisting unnecessary raw broker exports or full trade-record tables.
+Use broker-live reads for objective broker facts. The Skill may save derived artifacts such as position daily reports, exposure charts, setup review notes, and statistics snapshots, but should avoid persisting unnecessary raw broker exports or full trade-record tables.
 
 **Consequences**
 

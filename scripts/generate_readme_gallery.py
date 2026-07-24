@@ -12,7 +12,7 @@ import sys
 
 
 REPO = Path(__file__).resolve().parents[1]
-SKILL = REPO / "skills" / "trading-research-system"
+SKILL = REPO / "skills" / "mars-research-assistant"
 SCRIPTS = SKILL / "scripts"
 FIXTURES = SKILL / "assets" / "fixtures" / "input"
 DEFAULT_OUTPUT = REPO / "docs" / "assets" / "readme"

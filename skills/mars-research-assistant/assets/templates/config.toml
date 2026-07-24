@@ -1,0 +1,12 @@
+[trading_research]
+# Private runtime directory for market plans, daily records, broker snapshots,
+# reviews, and chart artifacts.
+#
+# The scripts also accept:
+# - TRADING_RESEARCH_RUNTIME_DIR
+# - --runtime-dir
+runtime_dir = "~/Documents/mars-research-assistant-runtime"
+
+[google_sheets]
+# Google Sheets is a compact one-way mirror, not the canonical source of truth.
+mode = "one_way_mirror"

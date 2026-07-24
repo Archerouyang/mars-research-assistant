@@ -1,6 +1,6 @@
 # Development Workflow
 
-This document defines the public development workflow for the DailyTrades portable Skill repository.
+This document defines the public development workflow for the Mars Research Assistant portable Skill repository.
 
 It is a project workflow document, not an internal agent prompt. Do not include private trade records, credentials, account details, unpublished research excerpts, or broker-specific secrets.
 
@@ -18,7 +18,7 @@ source as its optional first argument after changes are published:
 
 ```bash
 bash scripts/smoke-portable-skill-install.sh
-bash scripts/smoke-portable-skill-install.sh Archerouyang/dailytrades
+bash scripts/smoke-portable-skill-install.sh Archerouyang/mars-research-assistant
 ```
 
 The smoke sets temporary `HOME`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`, and
@@ -55,11 +55,11 @@ Default mode is Codex-managed Claude Code execution:
 4. Codex reviews the diff, runs checks, and decides whether to accept, revise, or reject.
 5. Codex owns final commits, pushes, and project trajectory updates.
 
-Claude Code must not push branches, define product boundaries, create broker orders, or call live external services as part of this plugin workflow.
+Claude Code must not push branches, define product boundaries, create broker orders, or call live external services as part of this Skill workflow.
 
-When a task uses a repo skill, plugin skill, connector, or Claude Code worker, Codex must label it in the user-facing progress update. Use concise labels such as:
+When a task uses a repo Skill, connector, or Claude Code worker, Codex must label it in the user-facing progress update. Use concise labels such as:
 
-- `使用 skills: trading-research-system:trading-research, google-drive:google-sheets`
+- `使用 skills: mars-research-assistant:trading-research, google-drive:google-sheets`
 - `使用 Claude Code: yes, isolated worktree, task=<short task>`
 - `使用 Claude Code: no, reason=<small edit/read-only/connector-only>`
 
@@ -206,7 +206,7 @@ automations, or obsolete KVN databases.
 For individual scripts, use:
 
 ```bash
-uv run python skills/trading-research-system/scripts/<script>.py
+uv run python skills/mars-research-assistant/scripts/<script>.py
 ```
 
 ## CI Policy
@@ -226,7 +226,7 @@ CI should not:
 
 - publish releases;
 - create release tags;
-- update plugin cachebusters;
+- update portable Skill release metadata;
 - call live broker services;
 - call live Google services;
 - require secrets;

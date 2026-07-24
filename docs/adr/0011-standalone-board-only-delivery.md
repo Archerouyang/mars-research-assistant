@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted on 2026-07-22 for Trading Research System 0.4.0.
+Accepted on 2026-07-22 for Mars Research Assistant 0.4.0.
 
 ## Context
 

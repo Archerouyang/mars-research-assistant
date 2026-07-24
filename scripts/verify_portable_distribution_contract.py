@@ -11,11 +11,11 @@ import sys
 
 
 REPO = Path(__file__).resolve().parents[1]
-SKILL_NAME = "trading-research-system"
+SKILL_NAME = "mars-research-assistant"
 PORTABLE = REPO / "skills" / SKILL_NAME
 INSTALL_COMMAND = (
-    "npx skills@latest add Archerouyang/dailytrades "
-    "--skill trading-research-system -g"
+    "npx skills@latest add Archerouyang/mars-research-assistant "
+    "--skill mars-research-assistant -g"
 )
 PRIVATE_FILE_NAMES = {
     "auth.json",
@@ -134,7 +134,7 @@ def validate_skill() -> None:
     )
 
     skill_text = (PORTABLE / "SKILL.md").read_text(encoding="utf-8")
-    require("name: trading-research-system" in skill_text, "portable skill name drift")
+    require("name: mars-research-assistant" in skill_text, "portable skill name drift")
     require("Start today's trading research." in skill_text, "English first-run prompt missing")
     require("开始今日交易研究" in skill_text, "Chinese first-run prompt missing")
     require("blank first-run setup" in skill_text, "blank first-run setup behavior missing")
@@ -187,7 +187,7 @@ def validate_isolated_smoke() -> None:
         'XDG_CONFIG_HOME="$SMOKE_ROOT/xdg"',
         "npx --yes skills@latest add",
         "--list",
-        "--skill trading-research-system",
+        "--skill mars-research-assistant",
         "--agent codex claude-code",
         "diff -qr",
     ):

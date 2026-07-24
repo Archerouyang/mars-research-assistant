@@ -1,6 +1,6 @@
 # Project Log
 
-This file records the public trajectory of the Trading Research System Skill. It complements Git commit history, ADRs, and `docs/ROADMAP.md`.
+This file records the public trajectory of the Mars Research Assistant Skill. It complements Git commit history, ADRs, and `docs/ROADMAP.md`.
 
 Keep this log focused on user-visible Skill progress. Do not include private trade records, credentials, internal agent coordination, or non-public research material.
 
@@ -48,12 +48,12 @@ Use this shape:
 
 - Commit: pending `Remove native plugin distribution`
 - Scope: distribution, cleanup, documentation, validation
-- What changed: made `skills/trading-research-system/` the only distributed
+- What changed: made `skills/mars-research-assistant/` the only distributed
   product source; removed generated native-wrapper copies, repository
   marketplace manifests, wrapper synchronization code, and wrapper-only
   validators; renamed the focused release checks from plugin gates to Skill
   gates.
-- Why it matters: DailyTrades now has one install and release surface. This
+- Why it matters: Mars Research Assistant now has one install and release surface. This
   removes duplicated package bytes, version drift, cache ambiguity, and a
   distribution path that is no longer part of the product plan.
 - Verification: the focused Skill gate, isolated portable-install smoke,
@@ -129,7 +129,7 @@ Use this shape:
 - Commit: `c50c315` `Distribute trading research as one portable skill`
 - Scope: distribution, skill, documentation, visualization, validation
 - What changed: established one self-contained portable
-  `trading-research-system` Skill as the behavior source, generated optional
+  `mars-research-assistant` Skill as the behavior source, generated optional
   Codex/Claude native wrappers from it, added complete English/Chinese newcomer
   READMEs, and added reproducible synthetic macro, price-action, and position
   risk visuals. Local distribution, plugin, MVP, visual, and isolated install
@@ -138,7 +138,7 @@ Use this shape:
   coupling public installation to private runtime, broker state, or account
   data.
 - Next step: after the branch is published, run the exact remote GitHub install
-  smoke against `Archerouyang/dailytrades`; this entry does not claim the change
+  smoke against `Archerouyang/mars-research-assistant`; this entry does not claim the change
   is published or remotely verified.
 
 ## 2026-07-11
@@ -254,7 +254,7 @@ Use this shape:
 
 - Commit: pending
 - Scope: plugin distribution, docs
-- What changed: added the repository-backed Dailytrades marketplace manifest
+- What changed: added the repository-backed Mars Research Assistant marketplace manifest
   and made the root README begin with a single copyable Codex installation
   command, installation check, update path, and first dry-run prompt.
 - Why it matters: a new user can install the plugin without cloning the
@@ -358,7 +358,7 @@ Use this shape:
 - Scope: validation
 - What changed: reran fresh-chat acceptance prompt #5 in thread
   `019f4613-1145-7783-bc34-73f9f7b276b4` after reinstalling
-  `trading-research-system@personal 0.1.0+codex.20260709083506`. The new chat
+  `mars-research-assistant@personal 0.1.0+codex.20260709083506`. The new chat
   used saved Longbridge standard OHLCV artifacts for QQQ.US, SOXX.US, and
   DRAM.US, read runtime prior context, generated rolling PA output with 1D/1H
   timeframe labels, support/resistance, proportional add/trim/pause zones, cost
@@ -460,7 +460,7 @@ Use this shape:
 - Why it matters: official fallback macro reads can classify strategy posture
   from rates, credit, USD, oil, and liquidity without inventing a Gold value or
   falsely marking the entire panel unusable.
-- Follow-up: refreshed and reinstalled `trading-research-system@personal`
+- Follow-up: refreshed and reinstalled `mars-research-assistant@personal`
   `0.1.0+codex.20260709062046`, regenerated today's private
   `macro-panel.json`, and reran fresh-chat #1/#3 behavior acceptance in thread
   `019f458c-7172-79c1-ae89-080674a39bd1`. Result: `PASS`; setup CSVs remain
@@ -617,13 +617,13 @@ Use this shape:
 - Commit: pending
 - Scope: planning, decision
 - What changed: clarified the KVN model deployment boundary. The KVN model can run as a local batch job, cloud scheduled job, GitHub Action, managed container, or read-only API. The plugin remains a score consumer: it imports or fetches versioned ticker-level snapshots, caches them into the private runtime, and uses validation summaries to qualify confidence.
-- Why it matters: KVN strategy research can move to cloud compute or a separate model repository without coupling the Dailytrades plugin to factor calculation, vendor data licensing, or backtest governance.
+- Why it matters: KVN strategy research can move to cloud compute or a separate model repository without coupling the Mars Research Assistant plugin to factor calculation, vendor data licensing, or backtest governance.
 - Next step: decide whether the first KVN integration should be cloud snapshot download or a read-only API after the model output and validation package stabilize.
 
 - Commit: pending
 - Scope: script, docs, test
-- What changed: added Runtime bootstrap for private Dailytrades runtime initialization. `bootstrap_runtime.py` creates blank `market-plan.md`, `trading-profile.md`, `ops-state.md`, config, runtime directories, update note, and an optional dated daily folder from bundled templates. It supports `--dry-run`, `--overwrite`, and `--no-daily`, and is covered by `verify_runtime_bootstrap_selftest.py` and `verify_runtime_bootstrap_contract.py`.
-- Why it matters: users can prepare `~/Documents/dailytrades-runtime` before live broker adapters or real Daily Ops automations exist, while keeping the public plugin repo free of private runtime data.
+- What changed: added Runtime bootstrap for private Mars Research Assistant runtime initialization. `bootstrap_runtime.py` creates blank `market-plan.md`, `trading-profile.md`, `ops-state.md`, config, runtime directories, update note, and an optional dated daily folder from bundled templates. It supports `--dry-run`, `--overwrite`, and `--no-daily`, and is covered by `verify_runtime_bootstrap_selftest.py` and `verify_runtime_bootstrap_contract.py`.
+- Why it matters: users can prepare `~/Documents/mars-research-assistant-runtime` before live broker adapters or real Daily Ops automations exist, while keeping the public plugin repo free of private runtime data.
 - Next step: forward-test the initialized private runtime in a fresh Daily Ops dry-run, then implement read-only broker adapters or broker snapshot ingestion.
 
 - Commit: pending
@@ -840,7 +840,7 @@ Use this shape:
 
 - Commit: pending
 - Scope: decision, script, skill, sync
-- What changed: split plugin development and trading operations into separate chat/workspace boundaries. Created a fixed `交易研究 Daily Ops` thread for weekly plans, daily tracking, and reviews. Added `runtime_dir` as the private working-memory root, defaulting to `~/Documents/dailytrades-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` and `--runtime-dir` overrides. Clarified that Google Sheets remains a compact one-way mirror while detailed records live locally.
+- What changed: split plugin development and trading operations into separate chat/workspace boundaries. Created a fixed `交易研究 Daily Ops` thread for weekly plans, daily tracking, and reviews. Added `runtime_dir` as the private working-memory root, defaulting to `~/Documents/mars-research-assistant-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` and `--runtime-dir` overrides. Clarified that Google Sheets remains a compact one-way mirror while detailed records live locally.
 - Why it matters: keeps public plugin development, git history, and reusable skills separate from private trading plans, broker-derived records, chart artifacts, and reviews.
 - Next step: wire future trading-operation automations to the Daily Ops thread and implement the planned one-way Google Sheets sync against runtime records.
 
@@ -876,7 +876,7 @@ Use this shape:
 
 - Commit: `4749ff0` `Split trading research plugin into focused skills`
 - Scope: skill
-- What changed: split the Trading Research System plugin from one oversized `trading-research` skill into a lightweight router plus focused skills for weekly planning, daily market tracking, intraday setup scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
+- What changed: split the Mars Research Assistant plugin from one oversized `trading-research` skill into a lightweight router plus focused skills for weekly planning, daily market tracking, intraday setup scanning, trade review, macro/equity research, portfolio risk, and trading statistics.
 - Why it matters: makes the plugin usable as an agent toolbox, with narrower triggers and less context bloat for each workflow.
 - Next step: forward-test the router and priority skills on realistic prompts, then build fixture data for weekly plans, daily tracking, IBKR-like trade facts, two-stage reviews, and scan outputs.
 
@@ -912,7 +912,7 @@ Use this shape:
 
 - Commit: `dc83ad2` `Document no separate dev repo requirement`
 - Scope: decision
-- What changed: confirmed that a separate `dailytrades-dev` repository is not required for the current stage. The local clone created for exploration was removed, and Codex/Claude collaboration rules will run as harness protocol until they become durable enough to need their own private storage.
+- What changed: confirmed that a separate `mars-research-assistant-dev` repository is not required for the current stage. The local clone created for exploration was removed, and Codex/Claude collaboration rules will run as harness protocol until they become durable enough to need their own private storage.
 - Why it matters: reduces process overhead while preserving the public/private boundary for the plugin repository.
 - Next step: use the harness protocol on the next implementation task, then decide whether any part of it needs a persistent private template.
 
@@ -939,7 +939,7 @@ Use this shape:
 - Commit: `a1a9d02` `Remove internal agent collaboration docs from plugin repo`
 - Scope: repo boundary
 - What changed: removed internal collaboration files from the public plugin repository.
-- Why it matters: `dailytrades` stays focused on distributable plugin artifacts and user-readable docs; internal planning and agent coordination settings stay outside the public plugin repository.
+- Why it matters: `mars-research-assistant` stays focused on distributable plugin artifacts and user-readable docs; internal planning and agent coordination settings stay outside the public plugin repository.
 - Next step: keep future public updates limited to plugin artifacts, roadmap, ADRs, project log, and user-facing docs.
 
 - Commit: `fb36618` `Add daily trade review workflow`

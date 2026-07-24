@@ -1,7 +1,7 @@
 [project]
-name = "dailytrades"
-version = "0.4.0"
-description = "Development tooling for the DailyTrades Trading Research System repository."
+name = "mars-research-assistant"
+version = "1.0.0"
+description = "Development tooling for 火星投研助手 (Mars Research Assistant)."
 license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = []

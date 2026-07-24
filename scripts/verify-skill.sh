@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SKILL_ROOT="${SKILL_ROOT:-$ROOT/skills/trading-research-system}"
+SKILL_ROOT="${SKILL_ROOT:-$ROOT/skills/mars-research-assistant}"
 
 if ! command -v uv >/dev/null 2>&1; then
   echo "error: uv is required. Install it with: brew install uv" >&2
@@ -28,7 +28,7 @@ export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
 cd "$ROOT"
 
 PUBLIC_ROOTS=(
-  "$ROOT/skills/trading-research-system"
+  "$ROOT/skills/mars-research-assistant"
 )
 GENERATED_STATE="$(find "${PUBLIC_ROOTS[@]}" \
   \( -type d -name __pycache__ \

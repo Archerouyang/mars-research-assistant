@@ -1,11 +1,11 @@
-# DailyTrades Roadmap
+# Mars Research Assistant Roadmap
 
 This roadmap describes the active product direction. Historical 0.1.x delivery
 details remain in `docs/PROJECT_LOG.md` and the 1.0 acceptance records.
 
 ## Product Direction
 
-DailyTrades is a high-freedom trading-research Skill with one stable
+Mars Research Assistant is a high-freedom trading-research Skill with one stable
 delivery boundary:
 
 `Validated ResearchResult -> DeliveryPacket`
@@ -16,7 +16,7 @@ standalone Board.
 Macro, Instrument, Portfolio, and Price Action keep purpose-specific visual
 adapters behind that shared boundary.
 
-The only distributed behavior source is `skills/trading-research-system/`.
+The only distributed behavior source is `skills/mars-research-assistant/`.
 
 ## 0.2.0 Release Contract
 

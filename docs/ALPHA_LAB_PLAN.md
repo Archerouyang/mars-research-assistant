@@ -13,17 +13,17 @@ public-data ingestion, point-in-time normalization, factor computation, model
 training, walk-forward validation, model registration, daily inference, and
 Alpha Leaderboard snapshots.
 
-The public `dailytrades` plugin will consume versioned snapshots and validation
+The public `mars-research-assistant` Skill will consume versioned snapshots and validation
 summaries. It owns natural-language routing, concise explanation, incremental
 analysis, Trade Plan Preparation, Price Action timing, and portfolio-risk
 context. It must not let an agent re-rank or rewrite deterministic model output.
 The existing optional external-snapshot router remains the current behavior
-until the plugin-integration slice and its executable contract are complete.
+until the Skill-integration slice and its executable contract are complete.
 
 The system is decision support. It performs no order actions and does not imply
 approval of a broker order. Personal positions, broker exports, raw market data,
 model binaries, API keys, and private run history remain outside the public
-plugin repository.
+Skill repository.
 
 The 1.0 model maturity is `Experimental`. A model result may prioritize
 research, but it must not be described as a verified trading win rate.
@@ -35,7 +35,7 @@ The default private code/runtime split is:
 ```text
 ~/Documents/dailytrades-quant/          # private Git repository: code/contracts
 ~/Documents/dailytrades-quant-runtime/  # ignored data, models, runs, reports
-~/Documents/dailytrades-runtime/        # plugin-consumable current state/cache
+~/Documents/mars-research-assistant-runtime/        # Skill-consumable current state/cache
 ```
 
 FMP is the primary 1.0 provider for the symbol master, daily adjusted OHLCV,
@@ -130,14 +130,14 @@ it; run the unchanged harness within the campaign budget; append the result to
 the Experiment Ledger; then retain it as a research candidate or discard it.
 Crashes, failed quality gates, and non-improving trials are recorded rather
 than silently retried or erased. A retained candidate remains experimental; it
-does not modify the champion, daily inference, Alpha Leaderboard, or plugin.
+does not modify the champion, daily inference, Alpha Leaderboard, or Skill.
 
 The private Experiment Ledger is append-only and records campaign and trial
 IDs, Git commit, Factor Candidate Spec hash, dataset/model/evaluator versions,
 budget consumption, all validation metrics, status (`kept`, `discarded`,
 `failed`, or `blocked`), and a concise rationale. It is backed by immutable
 run manifests and Parquet/SQLite indexes, with reports stored outside the
-public plugin repository.
+public Skill repository.
 
 Unlike a single-score training experiment, factor retention is a Pareto-style
 screen: a candidate must meet hard safety gates and demonstrate incremental
@@ -229,10 +229,10 @@ calibration, market microstructure, and risk principles. Licensed/user-provided
 Al Brooks material contributes high-level Price Action classification. Neither
 is presented as proprietary replication or unquestionable authority.
 
-## Plugin Integration
+## Skill Integration
 
 The quant lab publishes a versioned full-universe snapshot plus validation and
-run metadata. The plugin caches a read-only normalized view in the private
+run metadata. The Skill caches a read-only normalized view in the private
 runtime. New snapshots use Alpha names; legacy KVN CSV/SQLite imports remain a
 compatibility path during migration.
 
@@ -310,7 +310,7 @@ Alpha Lab 1.0 is accepted only when:
    Experimental model probability.
 6. The knowledge base can retrieve the previous matching run, compute a delta,
    preserve a full snapshot, and force recomputation on version changes.
-7. The plugin consumes the new snapshot without agent re-ranking and renders
+7. The Skill consumes the new snapshot without agent re-ranking and renders
    the fixed Decision Card with probability boundaries.
 8. Daily, weekly, and monthly schedules pass isolated dry-runs; only then are
    real automations and Gmail notifications enabled.

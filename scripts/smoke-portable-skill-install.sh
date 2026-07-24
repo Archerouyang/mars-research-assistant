@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE="${1:-$ROOT}"
-SMOKE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/dailytrades-skill-smoke.XXXXXX")"
+SMOKE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/mars-research-assistant-skill-smoke.XXXXXX")"
 trap 'rm -rf "$SMOKE_ROOT"' EXIT
 
 export HOME="$SMOKE_ROOT/home"
@@ -22,19 +22,19 @@ mkdir -p \
 
 npx --yes skills@latest add "$SOURCE" --list > "$SMOKE_ROOT/discovery.txt"
 grep -F "Found 1 skill" "$SMOKE_ROOT/discovery.txt" >/dev/null
-grep -F "trading-research-system" "$SMOKE_ROOT/discovery.txt" >/dev/null
+grep -F "mars-research-assistant" "$SMOKE_ROOT/discovery.txt" >/dev/null
 
 npx --yes skills@latest add "$SOURCE" \
-  --skill trading-research-system \
+  --skill mars-research-assistant \
   --agent codex claude-code \
   --global \
   --yes \
   --copy \
   > "$SMOKE_ROOT/install.txt"
 
-CANONICAL="$ROOT/skills/trading-research-system"
-CODEX_INSTALL="$HOME/.agents/skills/trading-research-system"
-CLAUDE_INSTALL="$CLAUDE_CONFIG_DIR/skills/trading-research-system"
+CANONICAL="$ROOT/skills/mars-research-assistant"
+CODEX_INSTALL="$HOME/.agents/skills/mars-research-assistant"
+CLAUDE_INSTALL="$CLAUDE_CONFIG_DIR/skills/mars-research-assistant"
 
 for installed in "$CODEX_INSTALL" "$CLAUDE_INSTALL"; do
   test -f "$installed/SKILL.md"

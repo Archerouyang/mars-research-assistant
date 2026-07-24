@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for Trading Research System 0.3.0.
+Accepted for Mars Research Assistant 0.3.0.
 
 ## Context
 
@@ -21,7 +21,7 @@ must remain stable.
 
 ## Decision
 
-Trading Research System 0.3.0 assigns four deep module owners:
+Mars Research Assistant 0.3.0 assigns four deep module owners:
 
 1. Broker-Live Data View product knowledge owns known product identity,
    underlying, direction, leverage, and theme facts. Source adapters only map

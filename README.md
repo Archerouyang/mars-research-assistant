@@ -1,6 +1,6 @@
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-# DailyTrades: Trading Research System
+# 火星投研助手 (Mars Research Assistant)
 
 An AI-native, Bayesian decision-support Skill that compresses market, macro,
 policy, company, price-action, and portfolio evidence into an updateable
@@ -8,7 +8,7 @@ decision process. It does not try to predict the next market move: it updates a
 prior with new evidence, compares conditional scenarios, and identifies the
 next observation that would change the decision.
 
-Version: `0.4.0`
+Version: `1.0.0`
 
 ## Install in 30 Seconds
 
@@ -16,7 +16,7 @@ Install the complete portable Agent Skill. The installer detects supported
 coding agents and adapts the target directory.
 
 ```bash
-npx skills@latest add Archerouyang/dailytrades --skill trading-research-system -g
+npx skills@latest add Archerouyang/mars-research-assistant --skill mars-research-assistant -g
 ```
 
 ## First Run
@@ -87,7 +87,7 @@ advice, or turn a data point into an automatic trade instruction.
 
 | Public Skill | Private Runtime |
 | --- | --- |
-| One installable `trading-research-system` package with research guidance, references, scripts, blank templates, and synthetic fixtures | User-owned profile, watchlist, positions, Active Market Plan, setups, reviews, credentials, and connector grants |
+| One installable `mars-research-assistant` package with research guidance, references, scripts, blank templates, and synthetic fixtures | User-owned profile, watchlist, positions, Active Market Plan, setups, reviews, credentials, and connector grants |
 | Safe to publish and upgrade | Stays outside the repository and every distribution package |
 | Starts with no personal defaults | Created only after explicit local write confirmation |
 
@@ -100,15 +100,15 @@ submits real orders.
 
 | Symptom | Check |
 | --- | --- |
-| Skill is not discovered | Confirm the repository is reachable and the install output names exactly `trading-research-system`. |
+| Skill is not discovered | Confirm the repository is reachable and the install output names exactly `mars-research-assistant`. |
 | A new task starts without personal data | Expected: first run is blank until the user explicitly initializes a private runtime. |
 | Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
 | A selected Board cannot be exported | User-selected PNG export requires Chrome/Chromium; the standalone HTML remains the primary artifact. |
 
-Detailed documents: [Skill contract](skills/trading-research-system/SKILL.md),
+Detailed documents: [Skill contract](skills/mars-research-assistant/SKILL.md),
 [standalone delivery decision](docs/adr/0011-standalone-board-only-delivery.md),
 [0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md),
 [MVP runbook](docs/MVP_RUNBOOK.md), and
 [distribution plan](docs/DISTRIBUTION_AND_README_PLAN.md).
 
-DailyTrades is MIT licensed. Third-party components retain their own licenses.
+火星投研助手 (Mars Research Assistant) is MIT licensed. Third-party components retain their own licenses.

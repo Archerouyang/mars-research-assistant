@@ -1,6 +1,6 @@
 # Development Plan
 
-This document is the public source of truth for Dailytrades feature,
+This document is the public source of truth for Mars Research Assistant feature,
 integration, and approved architecture-optimization planning, daily task
 selection, and progress. It is used by the weekday development brief and
 end-of-day progress review automations.
@@ -115,7 +115,7 @@ Use these statuses:
 | --- | --- | --- | --- | --- |
 | P0 | done | Converge visual delivery on `standalone_board` only | Parallel inline and standalone render paths produced different Portfolio views and host-dependent styling, and temporary artifacts were difficult to revisit after events. | Ship 0.4.0 with one snapshot/HTML/manifest packet, preserve the accepted four Board structures, and reject any reintroduction of `inline.html` or iframe wrappers. |
 | P0 | done | Deepen the four 0.3.0 architecture modules | Centralizes Broker-Live product knowledge, isolates purpose-specific Board visuals, gives Private Runtime one layout owner, and narrows the Artifact Packet facade without redesigning accepted outputs. | Focused module checks, the 0.3.0 Skill gate, and final Standards/Spec review pass. Remote `dev` integration remains user-approved only. |
-| P0 | done | Refactor Trading Research System around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific visual structures, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | The original inline transport was superseded by the 0.4.0 standalone-only contract in the row above. |
+| P0 | done | Refactor Mars Research Assistant around one stable delivery contract (#72) | Replaces prompt-heavy behavior ownership with `Validated ResearchResult -> DeliveryPacket`, preserves purpose-specific visual structures, and removes obsolete code, caches, database compatibility paths, fixtures, and redundant prose tests for version 0.2.0. | The original inline transport was superseded by the 0.4.0 standalone-only contract in the row above. |
 | P2 | done | Standalone Board PNG export | Opt-in only: exports the complete accepted standalone Board as an on-demand PNG by measuring rendered content height; fragments fail closed and no wrapper, automatic save, static frontend, or hosting is added. | Run only after explicit user selection. Keep private exports local; a separately requested README example may use reviewed public-market data but must contain no broker, private runtime, account, or private portfolio information. |
 | P1 | done | Re-scope retained read-only commands | Prevents supported runtime, broker, macro, PA, and Alpha adapters from becoming unreachable leftovers. | Progressive references now name the retained runtime, broker, macro, OHLCV, and Alpha helpers; future additions require an active caller or compatibility obligation. |
 | P1 | done | Redesign Portfolio Risk Board | The old generic bar shell hid the relationship between capital, look-through concentration, product leverage, source coverage, exclusions, scenario loss, and underlying fundamentals. | Structure accepted and frozen by the user on 2026-07-20. Preserve the summary, primary-risk line, ordered views, look-through fundamentals, dedicated stress meaning, and source/exclusion disclosures defined in `references/portfolio-research.md`; structural changes require renewed acceptance. |
@@ -144,10 +144,10 @@ Trigger and target invariant:
 - one repo-level deep test Module must own common scenario execution and
   observable assertions for the affected workflows;
 - the Module is development harness only, tests the canonical
-  `skills/trading-research-system/` behavior source, and is not distributed in
+  `skills/mars-research-assistant/` behavior source, and is not distributed in
   the public Agent Skill;
 - migrated behavior must be tested through existing CLI and document surfaces;
-  no public Trading Research System behavior changes are in scope.
+  no public Mars Research Assistant behavior changes are in scope.
 
 Approved slices:
 
@@ -208,7 +208,7 @@ error codes, canonical JSON/HTML/manifest bytes, and ADR 0008. Keep shared
 invariants in a deep core; use an explicit static internal registry for the two
 known Board adapters; keep payload schema, evidence/freshness policy, and
 renderer selection inside each adapter. Modify only canonical
-`skills/trading-research-system/` behavior, generate Native Plugin wrappers via
+`skills/mars-research-assistant/` behavior, generate Native Plugin wrappers via
 `scripts/sync_native_plugin.py`, and replace duplicated shared tests with one
 core conformance matrix plus Board-specific semantic tests.
 
@@ -258,7 +258,7 @@ bash scripts/verify-plugin.sh
 Focused browser acceptance uses the repository-locked Playwright dependency,
 a freshly generated synthetic HTML artifact, and a caller-supplied local Chrome
 or Chromium executable. The exact command is maintained in
-`skills/trading-research-system/references/artifact-packet-contract.md`.
+`skills/mars-research-assistant/references/artifact-packet-contract.md`.
 Repository-wide mandatory browser, privacy, and distribution gating remains a
 separate deliverable under Issue #58.
 
@@ -270,8 +270,8 @@ the accepted change reaches `master`.
 Scope for this tracer bullet:
 
 - make `.agents/plugins/marketplace.json` the only repository distribution
-  source for `trading-research-system`;
-- keep `plugins/trading-research-system/.codex-plugin/plugin.json` as the single
+  source for `mars-research-assistant`;
+- keep `plugins/mars-research-assistant/.codex-plugin/plugin.json` as the single
   source of truth for the published version;
 - reject marketplace source/name/display metadata drift, invalid manifest
   versions, nested marketplace copies, package paths outside the public
@@ -300,7 +300,7 @@ Local acceptance gate:
 - `python3 scripts/verify_plugin_distribution_selftest.py` passes;
 - `bash scripts/verify-plugin-compile.sh` compiles every plugin script while
   directing bytecode to `.scratch/plugin-compile-cache`; do not use bare
-  `python3 -m compileall -q plugins/trading-research-system/scripts` as a gate,
+  `python3 -m compileall -q plugins/mars-research-assistant/scripts` as a gate,
   because bare `compileall` writes `__pycache__` into the public package;
 - `bash scripts/verify-plugin.sh` and `bash scripts/verify-mvp.sh` pass;
 - `git diff --check` passes;
@@ -316,7 +316,7 @@ Reproducible local marketplace resolution and install smoke:
 
 ```bash
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-ISOLATED_ROOT="$(mktemp -d /tmp/dailytrades-marketplace-review.XXXXXX)"
+ISOLATED_ROOT="$(mktemp -d /tmp/mars-research-assistant-marketplace-review.XXXXXX)"
 mkdir -p "$ISOLATED_ROOT/home" "$ISOLATED_ROOT/codex" \
   "$ISOLATED_ROOT/config" "$ISOLATED_ROOT/cache"
 export HOME="$ISOLATED_ROOT/home"
@@ -326,13 +326,13 @@ export XDG_CACHE_HOME="$ISOLATED_ROOT/cache"
 export PYTHONDONTWRITEBYTECODE=1
 codex plugin marketplace add "$REPO_ROOT" --json
 codex plugin marketplace list --json
-codex plugin list --marketplace dailytrades --available --json
-codex plugin add trading-research-system@dailytrades --json
-codex plugin list --marketplace dailytrades --json
+codex plugin list --marketplace mars-research-assistant --available --json
+codex plugin add mars-research-assistant@mars-research-assistant --json
+codex plugin list --marketplace mars-research-assistant --json
 ```
 
-The 2026-07-14 review rerun resolved `dailytrades`, exposed
-`trading-research-system` version `0.1.1` from the repository source, and
+The 2026-07-14 review rerun resolved `mars-research-assistant`, exposed
+`mars-research-assistant` version `0.1.1` from the repository source, and
 installed it under the temporary `CODEX_HOME`; the real home, global
 marketplace, plugin cache, credentials, and private runtime were not used.
 This is local-equivalent evidence only. It does not prove GitHub `master`
@@ -342,8 +342,8 @@ the installed version.
 Coordinator follow-up after integration and publication:
 
 1. On a clean device or isolated Codex home, add
-   `Archerouyang/dailytrades@master` as a marketplace.
-2. Install `trading-research-system` from Codex `/plugins` or desktop Plugins.
+   `Archerouyang/mars-research-assistant@master` as a marketplace.
+2. Install `mars-research-assistant` from Codex `/plugins` or desktop Plugins.
 3. Open a new task and confirm the installed version and expected skills load.
 4. Confirm no account-login step is presented as plugin, connector, credential,
    or private-runtime synchronization.
@@ -379,7 +379,7 @@ Date: 2026-07-20
 - The focused module tests, portable Skill gate, generated-state scan,
   `git diff --check`, and final Standards/Spec review pass. Nothing was pushed.
 - User removed Native Plugin distribution from the current product plan. The
-  repository now ships only `skills/trading-research-system/`; wrapper copies,
+  repository now ships only `skills/mars-research-assistant/`; wrapper copies,
   repository marketplaces, sync code, and wrapper-only validation are deleted.
 - User accepted the 0.2.0 frozen Macro, Price Action, and Portfolio panel
   structures and authorized integration to remote `dev`.
@@ -480,7 +480,7 @@ Date: 2026-07-20
   signals.
 - Completed: refreshed the plugin cachebuster to
   `0.1.0+codex.20260709022827`, pushed `dev`, synced the personal plugin source,
-  and reinstalled `trading-research-system@personal`.
+  and reinstalled `mars-research-assistant@personal`.
 - Completed: added the IBKR connector adapter. `ibkr_connector_adapter.py` maps
   saved read-only IBKR positions/balances JSON into standard
   `portfolio_snapshot.csv`, with synthetic fixtures and contract checks.
@@ -519,7 +519,7 @@ Date: 2026-07-20
   refusing to parse free-form trade ideas.
 - Completed: refreshed the plugin cachebuster to
   `0.1.0+codex.20260709052038`, synced the personal plugin source, reinstalled
-  `trading-research-system@personal`, and verified the installed-cache
+  `mars-research-assistant@personal`, and verified the installed-cache
   `prepare_macro_panel` contract.
 - Verification: daily runtime package selftest/contract, IBKR connector adapter
   selftest/contract, `scripts/verify-plugin.sh`, `scripts/verify-mvp.sh`,
@@ -671,13 +671,13 @@ Date: 2026-07-20
 
 Automations should use this document as the development progress source of truth:
 
-- `dailytrades-weekday-development-brief`: weekday morning brief and daily task-planning interaction.
-- `dailytrades-end-of-day-progress-review`: weekday end-of-day progress review and update prompt.
+- `mars-research-assistant-weekday-development-brief`: weekday morning brief and daily task-planning interaction.
+- `mars-research-assistant-end-of-day-progress-review`: weekday end-of-day progress review and update prompt.
 
 The morning automation should recommend one main product-capability task for the day, ask for available time, chosen task, optional secondary task, definition of done, expected verification, whether Claude Code should be assigned work, and which docs should be updated after completion.
 
 Automation outputs should be concise Chinese Markdown notes. They should ask before editing files and should not touch broker write actions, private trade data, or live external services.
 
-Trading-operation reminders and assistant prompts are separate from development automations. They belong in the fixed `交易研究 Daily Ops` chat and should use `runtime_dir` as the private working-memory root. Default `runtime_dir` is `~/Documents/dailytrades-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` or script-level `--runtime-dir` overrides.
+Trading-operation reminders and assistant prompts are separate from development automations. They belong in the fixed `交易研究 Daily Ops` chat and should use `runtime_dir` as the private working-memory root. Default `runtime_dir` is `~/Documents/mars-research-assistant-runtime`, with `TRADING_RESEARCH_RUNTIME_DIR` or script-level `--runtime-dir` overrides.
 
 Trading prompts should read `{runtime_dir}/market-plan.md` as current state, `{runtime_dir}/trading-profile.md` as private trading style input when available, and `{runtime_dir}/updates/YYYY-MM-DD.md` as the append-only trail. They may prompt for deep updates, quick updates, intraday trigger checks, post-market reviews, position daily reports, and read-only broker reconciliation, but should ask before editing files and should never call broker write actions. They are not automated trading systems. Google Sheets is no longer a trade-record layer.

@@ -1,10 +1,10 @@
 # KVN Model Plan
 
 Status: planning contract. No model implementation is included in the current
-plugin slice.
+Skill slice.
 
 This document defines the future KVN model module. It exists to keep the
-quantitative model separate from the Trading Research System plugin while making
+quantitative model separate from the Mars Research Assistant Skill while making
 the expected data, scoring, validation, and output contracts explicit.
 
 ## Goal
@@ -12,7 +12,7 @@ the expected data, scoring, validation, and output contracts explicit.
 Build a daily ticker-level momentum leaderboard model that helps select research
 candidates for Trade Plan Preparation. The model should rank liquid stocks and
 approved ETFs by a reproducible KVN score, preserve historical Top10 memory, and
-write standardized snapshots that the Trading Research System plugin can read.
+write standardized snapshots that the Mars Research Assistant Skill can read.
 
 KVN is a research-priority model. It is not a buy list, not a setup detector,
 and not a trading-order system.
@@ -22,23 +22,23 @@ and not a trading-order system.
 | Component | Owns | Does not own |
 | --- | --- | --- |
 | KVN model module | universe, data ingestion, factor computation, ranking, model validation, daily snapshots | trade plan writing, price-action trigger calls, broker reads, order actions |
-| Trading Research System plugin | snapshot import/read/query/change summary, Trade Plan Preparation input, concise explanation | factor research, score calculation, model backtesting, vendor selection |
+| Mars Research Assistant Skill | snapshot import/read/query/change summary, Trade Plan Preparation input, concise explanation | factor research, score calculation, model backtesting, vendor selection |
 | Agent | explains KVN output and combines it with macro, industry, thesis, price structure, and risk | re-ranking, re-scoring, inventing KVN-like results |
 
 The KVN model module does not have to run on the same machine as Codex or the
-Trading Research System plugin. Treat it as an independent score producer. The
-plugin is a score consumer, explanation layer, and Trade Plan Preparation input
+Mars Research Assistant Skill. Treat it as an independent score producer. The
+Skill is a score consumer, explanation layer, and Trade Plan Preparation input
 adapter.
 
 Supported deployment shapes:
 
-| Deployment | Model location | Plugin integration | Use when |
+| Deployment | Model location | Skill integration | Use when |
 | --- | --- | --- | --- |
 | Local batch job | same workstation or private runtime host | write `snapshots/YYYY-MM-DD.csv` and import to local `kvn.sqlite` | early research, fast iteration, offline reproducibility |
 | Cloud batch job | cloud VM, scheduled container, GitHub Actions, or managed job | publish versioned CSV/Parquet/JSON snapshot for local import | model compute/data lives outside the trading workstation |
-| Read-only model API | cloud service or internal endpoint | plugin fetches `latest`, `history`, `query`, and `validation-summary` responses, then caches locally | model is stable enough to serve multiple clients or devices |
+| Read-only model API | cloud service or internal endpoint | Skill fetches `latest`, `history`, `query`, and `validation-summary` responses, then caches locally | model is stable enough to serve multiple clients or devices |
 
-The plugin must not depend on the model process being local. It should depend on
+The Skill must not depend on the model process being local. It should depend on
 a stable output contract, model version, completed trading date, source label,
 and validation summary.
 
@@ -61,12 +61,12 @@ Every daily snapshot should contain these fields:
 | `top10_count_20d` | derived | Top10 count over the latest 20 imported snapshots |
 | `last_top10_date` | derived | previous Top10 date before current snapshot, or `-` |
 
-The plugin may support legacy snapshot CSVs without metadata for manual import,
+The Skill may support legacy snapshot CSVs without metadata for manual import,
 but model-produced snapshots should include `model_version`, `source`, and
 `benchmark_universe`.
 
 For cloud-produced snapshots or API responses, the same logical fields are
-required even if the transport is not CSV. The plugin should normalize API
+required even if the transport is not CSV. The Skill should normalize API
 responses into the same local read model used by imported snapshots.
 
 Minimum API contract if the model is exposed as a service:
@@ -80,7 +80,7 @@ Minimum API contract if the model is exposed as a service:
 | `GET /validation-summary?model_version=...` | returns validation period, benchmark comparisons, drawdown, turnover, regime slices, and known failure modes |
 
 API responses should be read-only. Authentication, if used, should grant read
-access only. The plugin should cache fetched snapshots into the private runtime
+access only. The Skill should cache fetched snapshots into the private runtime
 before using them in Trade Plan Preparation so research notes remain
 reproducible.
 
@@ -153,8 +153,8 @@ package:
 
 Model changes must produce a new `model_version` and a short validation note.
 
-The validation package belongs to the KVN model project, not this plugin. The
-plugin consumes the validation summary and uses it to qualify confidence:
+The validation package belongs to the KVN model project, not this Skill. The
+Skill consumes the validation summary and uses it to qualify confidence:
 
 - strong validation and matching regime: KVN can raise research priority;
 - weak or stale validation: KVN can only be shown as an experimental signal;
@@ -173,12 +173,12 @@ or another user-approved model runtime:
   validation/
 ```
 
-The public plugin repo should keep only fixtures and contracts, not private
+The public Skill repo should keep only fixtures and contracts, not private
 market-data downloads or user-specific model runs.
 
 If the model runs in the cloud, the cloud runtime should keep raw data,
 intermediate factors, model run metadata, and backtest artifacts outside this
-plugin repo. The local Dailytrades runtime should keep only imported snapshots,
+Skill repo. The local Mars Research Assistant runtime should keep only imported snapshots,
 API cache artifacts, and short validation summaries needed for research
 reproducibility.
 
@@ -189,7 +189,7 @@ reproducibility.
 2. **Data audit prototype**: inspect available authorized OHLCV, corporate
    actions, universe membership, sector/theme mapping, and benchmark data.
 3. **Offline factor prototype**: compute candidate factor tables for a fixed
-   historical period without connecting to plugin workflows.
+   historical period without connecting to Skill workflows.
 4. **Backtest harness**: evaluate Top10/Top20 forward returns, turnover,
    drawdown, regime behavior, and concentration.
 5. **Daily job**: run after market close, write model metadata and daily
@@ -197,8 +197,8 @@ reproducibility.
 6. **Optional cloud deployment**: move the daily job to a cloud VM, scheduled
    container, GitHub Action, or managed job only after the output contract and
    validation package are stable.
-7. **Plugin read path**: keep using the existing KVN snapshot read/query/change
-   interface; do not move scoring logic into the plugin.
+7. **Skill read path**: keep using the existing KVN snapshot read/query/change
+   interface; do not move scoring logic into the Skill.
 8. **Forward-test governance**: freeze a model version, observe live results, and
    only then increase confidence in Trade Plan Preparation.
 

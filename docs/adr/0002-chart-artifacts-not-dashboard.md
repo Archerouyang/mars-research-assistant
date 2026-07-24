@@ -1,6 +1,6 @@
 # Chart artifacts, not a dashboard
 
-The Trading Research System will generate display-first chart artifacts on demand instead of maintaining a permanent charting frontend. For price action review, the plugin may generate transient chat images, local HTML pages, or Markdown report sections showing K lines, 20 EMA, 50 EMA, multi-timeframe structure, and setup annotations.
+The Mars Research Assistant will generate display-first chart artifacts on demand instead of maintaining a permanent charting frontend. For price action review, the Skill may generate transient chat images, local HTML pages, or Markdown report sections showing K lines, 20 EMA, 50 EMA, multi-timeframe structure, and setup annotations.
 
 The canonical price-action renderer is TradingView Lightweight Charts v5.2.0
 interactive HTML. A browser captures the transient static image from that same
@@ -21,7 +21,7 @@ Durable storage is an optional durable save, not the default. The agent should a
 
 **Consequences**
 
-- Charting stays aligned with the plugin-first architecture.
+- Charting stays aligned with the Skill-first architecture.
 - The system can still support Al Brooks-style setup analysis without taking on frontend product scope.
 - The agent can show concise annotated charts in the conversation while keeping full source notes in local records.
 - Macro/rates/regime snapshots can be displayed as small decision panels without becoming a dashboard.

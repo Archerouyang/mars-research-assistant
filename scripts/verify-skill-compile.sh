@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SKILL_SCRIPTS="${SKILL_SCRIPTS:-$ROOT/skills/trading-research-system/scripts}"
+SKILL_SCRIPTS="${SKILL_SCRIPTS:-$ROOT/skills/mars-research-assistant/scripts}"
 SKILL_COMPILE_CACHE_ROOT="${SKILL_COMPILE_CACHE_ROOT:-$ROOT/.scratch/skill-compile-cache}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
