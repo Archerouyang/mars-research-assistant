@@ -91,6 +91,13 @@ The formal private runtime defaults to `~/Documents/dailytrades-runtime` unless
 the user or `TRADING_RESEARCH_RUNTIME_DIR` selects another path. Repository
 fixtures are never current user state.
 
+The Mars cutover uses a copy-only private runtime migration. It first reports
+file count, total bytes, and a manifest digest without creating a destination;
+only explicit `--apply` copies into the new runtime after source and staging
+hashes match. It never deletes, renames, or exports the legacy runtime. Use
+`python3 scripts/mars_runtime_migration.py` to inspect and add `--apply` only
+after the user has approved the displayed source and destination paths.
+
 For `Start today's trading research.` or `开始今日交易研究`, inspect runtime
 availability and source coverage, then provide useful public-source research
 before asking for the smallest missing authorization. A missing runtime enters
