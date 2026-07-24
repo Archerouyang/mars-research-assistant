@@ -22,6 +22,31 @@ accounts. If coverage is incomplete, keep portfolio conclusions conditional.
 For a new session, provide useful reduced-scope public research first, then ask
 for the smallest authorization or setup detail that unlocks personalization.
 
+## Unscoped Daily Ops Baseline
+
+Use this sequence only for an unscoped `开始今天的交易研究` / `continue Daily
+Ops` request. A named instrument, report, or Price Action request takes its
+focused route instead.
+
+1. Run the complete direct-public Macro preflight and deliver exactly one Macro
+   standalone Board or one `Data Acquisition Blocker`. Do not replace either
+   with a prose-only market summary.
+2. If no broker read-only authorization exists, ask for it after the Macro
+   result. Do not choose a ticker, request a trade horizon, or begin company or
+   Price Action analysis.
+3. Once the user has selected and authorized one default broker, read only the
+   permitted holdings and capital context. With usable portfolio fields,
+   deliver the Portfolio Risk standalone Board; without them, report the
+   specific portfolio data gap and do not substitute individual analysis.
+4. After the Macro result and Portfolio result/gap, ask which ticker the user
+   wants to inspect. Only a user-named ticker may enter individual research or
+   Price Action, and Price Action still requires its full
+   `ticker + trade_horizon + instrument` context.
+
+`scripts/daily_ops_routing.py` encodes this boundary without reading data or
+mutating runtime state. It returns `macro_board_or_blocker` first for every
+unscoped start and never returns a Price Action action on that route.
+
 ## Default Weekly Cadence
 
 Use the weekday as a default research priority, not as a gate. The user's

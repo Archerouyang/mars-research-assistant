@@ -88,6 +88,17 @@ Keep this separate from runtime and broker health.
 Disclose fixture/debug inputs explicitly. If no authorized/current macro values
 exist, do not invent actual macro readings.
 
+## 无标的 Daily Ops 启动基线
+
+仅当用户未点名标的、研报或 PA 时使用。按以下顺序输出：
+
+1. 先交付完整直接公开字段的 Macro standalone Board；任一必填字段失败则交付唯一的 `Data Acquisition Blocker`，不能用文字晨报代替。
+2. 若未获 broker 只读授权，在 Macro 结果后询问授权；此时不提出 ticker、周期、公司研究或 PA。
+3. 授权并选定唯一默认 broker 后，只有在持仓和资本字段可用时交付 Portfolio Risk standalone Board；字段不足则明确持仓数据缺口，不以个股分析代替。
+4. Macro 与持仓风险结果完成后，才请用户指定希望研究的 ticker；个股研究和 PA 仅针对用户点名标的，PA 仍须完整的 `ticker + trade_horizon + instrument`。
+
+用户直接要求某个标的、研报或 PA 时，可以走相应的聚焦路径，不强制补做本基线。
+
 ## 缺失确认
 
 List only confirmations that block useful output. If none, write `无阻塞确认`.
@@ -139,8 +150,9 @@ or exit triggers.
    事件和主题影响。
 2. `降级范围`：明确未读取 broker、未验证组合暴露、未读取保存计划，且不生成
    具体 entry/exit trigger。
-3. `下一步确认`：再请求 broker read-only、
-   `ticker + trade_horizon + instrument` 和 runtime dry-run/初始化选择。
+3. `下一步确认`：在无标的启动基线完成后，再请求用户点名的
+   `ticker + trade_horizon + instrument`；如尚未授权，则只请求 broker
+   read-only 和 runtime dry-run/初始化选择。
 
 先摘要，后授权/初始化；本轮不会写 runtime。
 

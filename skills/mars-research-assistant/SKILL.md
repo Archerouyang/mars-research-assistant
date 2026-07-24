@@ -63,8 +63,9 @@ response when plain language is clearer; preserve the reasoning discipline.
    `standalone_board` HTML and present its durable path early for acceptance.
    Do not emit a second inline, iframe, or host-dependent visual.
 
-Do not follow a fixed workflow sequence when a shorter valid path reaches the
-user's outcome.
+For an explicit user request outside unscoped Daily Ops, do not follow a fixed
+workflow sequence when a shorter valid path reaches the user's outcome. The
+unscoped Daily Ops baseline below is a required exception.
 
 ## Intent Routing
 
@@ -102,6 +103,31 @@ For `Start today's trading research.` or `开始今日交易研究`, inspect run
 availability and source coverage, then provide useful public-source research
 before asking for the smallest missing authorization. A missing runtime enters
 blank first-run setup; never restore or infer private state from fixtures.
+
+## Unscoped Daily Ops Baseline
+
+This sequence applies only when the user starts or continues Daily Ops without
+requesting a named instrument, report, or Price Action analysis. It is the
+default baseline, not a substitute for an explicit user request:
+
+1. Acquire the complete direct-public Macro field set and deliver the Macro
+   standalone Board, or the single `Data Acquisition Blocker` when any required
+   field fails.
+2. If broker read-only access is not yet authorized, ask for that authorization
+   next. Do not propose a ticker, trade horizon, individual-company analysis,
+   or Price Action workflow yet.
+3. After the user authorizes a default broker and usable holdings plus capital
+   context are available, deliver the Portfolio Risk standalone Board. If the
+   portfolio data is incomplete, state the portfolio data gap instead of
+   replacing the Board with prose or instrument analysis.
+4. Only after the Macro and Portfolio baseline has been delivered, ask the user
+   which ticker they want to inspect. Generate individual research or Price
+   Action only for a ticker the user explicitly names and only after its
+   `ticker + trade_horizon + instrument` context is known.
+
+An explicit request such as `分析 TSM` or `做 NVDA 的 4H PA` takes the focused
+instrument route and does not invent this baseline as a prerequisite. Follow
+`scripts/daily_ops_routing.py` for the deterministic routing boundary.
 
 For a requested Macro Panel, do not treat a missing saved `macro-panel.json` or
 standalone Board as a reason to withhold today's Board. First run the complete
