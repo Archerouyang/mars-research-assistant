@@ -108,8 +108,10 @@ Before the user confirms, describe the run as `authorization_pending` and keep
 research public-only; never call a broker capability command or describe this
 state as `dry-run`. After confirmation, run only the capability check in
 `scripts/broker_capability.py`: it invokes Longbridge `check --format json` and
-accepts an IBKR capability-only result only when the current Codex task exposes
-one. It never reads credentials, positions, accounts, balances, or quotes.
+recognizes IBKR only when the current Codex task's tool registry includes an
+Interactive Brokers MCP tool. Pass only those host-visible tool names via
+`--task-tool`; never infer them from user text or call an IBKR endpoint. It
+never reads credentials, positions, accounts, balances, or quotes.
 Show the available choices, require exactly one default broker, and persist
 only the minimal private setup via `mars_runtime_config.py`.
 

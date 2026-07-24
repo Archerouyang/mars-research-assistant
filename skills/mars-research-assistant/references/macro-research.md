@@ -50,7 +50,8 @@ already-connected read-only broker data. Until they confirm, report
 broker probe. After confirmation, run
 `scripts/broker_capability.py --confirm-read-only --format json`: Longbridge
 uses only `check --format json`; IBKR can be marked available only by a
-capability-only result exposed in the current Codex task. Do not read positions,
+current-task Interactive Brokers MCP tool name passed as `--task-tool`. Do not
+infer tool names from user text or call an IBKR endpoint. Do not read positions,
 accounts, balances, tokens, or market payloads. Show the user the available
 choices, require exactly one default broker, and explicitly confirm read-only
 use before writing the minimal private `mars-runtime-config.json` with

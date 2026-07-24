@@ -72,7 +72,7 @@ def main() -> int:
     pending = probe_broker_capabilities(
         read_only_confirmed=False,
         longbridge_runner=longbridge_runner,
-        ibkr_probe=lambda: True,
+        task_tool_names=("mcp__codex_apps__interactive_brokers__ibkr__get_account_positions",),
     )
     require(pending["authorization_state"] == "authorization_pending", "consent must be requested first")
     require(pending["capability_probes"] is None, "pending state must not fabricate broker capability")
@@ -94,7 +94,9 @@ def main() -> int:
     active = probe_broker_capabilities(
         read_only_confirmed=True,
         longbridge_runner=longbridge_runner,
-        ibkr_probe=lambda: True,
+        task_tool_names=(
+            "mcp__codex_apps__interactive_brokers__ibkr__get_account_positions",
+        ),
     )
     require(active["authorization_state"] == "confirmed", "confirmed probe must retain consent state")
     probes = active["capability_probes"]
@@ -122,12 +124,16 @@ def main() -> int:
         "Longbridge discovery must call only its capability check",
     )
     rendered = json.dumps(active, sort_keys=True)
-    require("must-not-persist" not in rendered and "token" not in rendered, "probe output must not retain raw data")
+    require(
+        "must-not-persist" not in rendered
+        and "token" not in rendered
+        and "interactive_brokers" not in rendered,
+        "probe output must not retain raw data or task tool names",
+    )
 
     unavailable = probe_broker_capabilities(
         read_only_confirmed=True,
         longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
-        ibkr_probe=None,
     )
     require(
         unavailable["capability_probes"] == {
@@ -135,6 +141,16 @@ def main() -> int:
             "ibkr": {"read_only": "unavailable", "probe_version": CAPABILITY_PROBE_VERSION},
         },
         "failed or task-invisible capabilities must not be treated as authorized",
+    )
+
+    unrelated = probe_broker_capabilities(
+        read_only_confirmed=True,
+        longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
+        task_tool_names=("mcp__codex_apps__github_list_repositories",),
+    )
+    require(
+        unrelated["capability_probes"]["ibkr"]["read_only"] == "unavailable",
+        "an unrelated task tool must not make IBKR available",
     )
 
     with TemporaryDirectory() as temporary:
