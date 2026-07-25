@@ -31,6 +31,19 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `f94b802` `feat: validate macro primary event evidence`
+- Scope: skill, script
+- What changed: Macro events now require a permitted evidence classification and
+  an explicit one-primary-source confirmation before they enter the Brief or
+  Board. The Skill renders that provenance alongside each displayed event and
+  supplies a caller-owned temporary fixture Board generator for visual review.
+- Why it matters: a search hit or aggregated-news URL cannot silently become a
+  Macro fact, while an auditable complete result remains a direct self-contained
+  HTML document with per-field source and time.
+- Next step: perform the manual in-app-browser acceptance of the representative
+  temporary Board; do not treat this event-evidence boundary as complete before
+  that check.
+
 - Commit: `bc967be` `fix: validate macro completed sessions`
 - Scope: skill, script, decision
 - What changed: Macro delivery now receives one timezone-aware research reference
