@@ -31,6 +31,21 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `6eff67f` `style: refine macro board typography`
+- Scope: skill, script, validation
+- What changed: refined the self-contained Board's Chinese system-font stack,
+  heading and control weights, line-height, and tabular market numerals. The
+  layout, colors, source fields, frozen data contract, and browser-only
+  interaction model are unchanged.
+- Why it matters: Chinese copy now has a more stable reading rhythm and market
+  values align more cleanly without requiring a downloaded web font.
+- Verification: typography assertions, complete Skill verifier, isolated
+  portable-install smoke check, and generated Board script syntax check passed.
+  The rendered typography remains pending the user's manual local-file check.
+- Next step: confirm the revised Chinese typography in the generated Board;
+  keep the fixture disclosure and the live-data boundary separate from this
+  visual pass.
+
 - Commit: `4fcdb86` `feat: restore one-shot macro board interactions`
 - Scope: skill, script, validation
 - What changed: restored the previous Macro Board's browser-only interaction
