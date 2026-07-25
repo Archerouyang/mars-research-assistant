@@ -178,6 +178,9 @@ def assert_complete_macro_delivers_brief_then_self_contained_board() -> None:
     assert "宏观因子暴露" in result.board_html
     assert "不代表持仓" in result.board_html
     assert "条件框架，不是预测" in result.board_html
+    assert '"PingFang SC"' in result.board_html
+    assert "font-synthesis:none" in result.board_html
+    assert "font-variant-numeric:tabular-nums" in result.board_html
     assert provider.requests == [MACRO_FIELDS]
 
 

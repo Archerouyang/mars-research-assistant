@@ -4,7 +4,7 @@
 
 - Source visual truth: `/var/folders/b0/khtmft7d1cz0dw33dsc0dry80000gn/T/codex-clipboard-87a0a5e3-be41-42c6-8cfc-f57c3e16d6b7.png`
 - Source pixels: 1200 × 900; desktop, light theme; initial `趋势` state.
-- Implementation: `/private/tmp/mars-macro-interactive-verified.rwpRT8/research-brief.html`
+- Implementation: `/private/tmp/mars-macro-fonts.6bN1YW/research-brief.html`
 - Implementation screenshot: unavailable. The in-app browser policy rejected the
   local `file:` URL, so no browser-rendered pixels, CSS viewport or density
   normalization could be captured.
@@ -50,6 +50,11 @@
 
 - No P0/P1/P2 visual iteration has been completed because the first rendered
   implementation capture is unavailable.
+- Typography refinement pending visual capture: the Board now prefers PingFang
+  SC and other native CJK sans fallbacks, disables synthesized glyph weights,
+  tightens the title hierarchy, and uses tabular numerals for market data. The
+  new generated script passed syntax checking, but its rendered typography has
+  not been browser-captured.
 
 **Implementation Checklist**
 
