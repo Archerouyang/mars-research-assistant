@@ -31,6 +31,24 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `bc967be`, `c6a8244` `fix: validate macro completed sessions`; `fix: harden macro session diagnostics`
+- Scope: skill, script, decision, validation
+- What changed: Macro delivery now receives one timezone-aware research reference
+  time and an injected XNYS completed-session calendar. It derives HYG/LQD and
+  NDX/RUT locally from same-source raw 1D constituent pairs, requires the latest
+  30 increasing common sessions, and preserves an exact data-gap reason when a
+  whole pair cannot be recovered by the allowed lazy fallback.
+- Why it matters: a Board cannot portray a weekend, holiday, stale, duplicated,
+  unordered, incomplete, cross-source, or precomputed ratio as the current
+  macro regime. Longbridge remains preferred when complete; only the invalid
+  pair falls back to Portable rather than stitching individual legs.
+- Verification: fixture-only Macro and stateless source-seam selftests, compile
+  gate, and portable distribution contract passed through `bash
+  scripts/verify-skill.sh`; no live provider, account, position, order,
+  credential, or token data was accessed.
+- Next step: deliver the separately tracked event-evidence and manual visual
+  acceptance boundary before treating the remediation spec as fully complete.
+
 - Commit: `ab1fd8b` `feat: deliver stateless macro regime board`
 - Scope: skill, script, validation
 - What changed: added the stateless Macro Event Brief and directly embedded
