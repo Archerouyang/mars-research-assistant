@@ -243,6 +243,24 @@ def assert_mismatched_event_source_blocks_the_board() -> None:
     assert "data_gap: macro_events_original_source_unverified" in result.markdown
 
 
+def assert_unregistered_event_identity_blocks_the_board() -> None:
+    for mutation in (
+        {"time": "2026-07-30T12:30:00Z"},
+        {"evidence_kind": "government_or_regulatory_filing"},
+    ):
+        values = complete_raw_macro_values()
+        events = values["macro_events"].value
+        assert isinstance(events, list)
+        events[0].update(mutation)
+
+        result = run_macro(RecordingProvider(values))
+
+        assert result.status == "blocked"
+        assert result.board_html is None
+        assert result.markdown is not None
+        assert "data_gap: macro_events_original_source_unverified" in result.markdown
+
+
 def assert_missing_event_source_time_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     events = values["macro_events"].value
@@ -730,6 +748,7 @@ def main() -> None:
     assert_primary_event_evidence_is_visible_in_the_brief_and_board()
     assert_each_event_keeps_its_own_source_time()
     assert_mismatched_event_source_blocks_the_board()
+    assert_unregistered_event_identity_blocks_the_board()
     assert_missing_event_source_time_blocks_the_board()
     assert_invalid_event_source_time_blocks_the_board()
     assert_missing_event_evidence_kind_blocks_the_board()
