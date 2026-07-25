@@ -97,6 +97,7 @@ class ResearchRequest:
 
     required_fields: tuple[str, ...]
     source_choice: str | None = None
+    delivery: str | None = None
 
     def __post_init__(self) -> None:
         if not self.required_fields:
@@ -109,6 +110,8 @@ class ResearchRequest:
             raise ValueError("public_field_not_allowed")
         if self.source_choice not in {None, LONGBRIDGE, PORTABLE}:
             raise ValueError("source_choice_invalid")
+        if self.delivery not in {None, "macro_regime"}:
+            raise ValueError("delivery_invalid")
 
 
 @dataclass(frozen=True)
@@ -120,6 +123,8 @@ class ResearchRunResult:
     longbridge: dict[str, bool]
     fields: tuple[FieldValue, ...]
     missing_fields: tuple[str, ...]
+    markdown: str | None = None
+    board_html: str | None = None
 
 
 class BatchProvider(Protocol):
@@ -180,13 +185,16 @@ def run_stateless_research(
     resolved = _resolve_fields(request.required_fields, source_order, providers)
     missing = tuple(field for field in request.required_fields if field not in resolved)
     fields = tuple(resolved[field] for field in request.required_fields if field in resolved)
-    return ResearchRunResult(
+    result = ResearchRunResult(
         status=COMPLETE if not missing else BLOCKED,
         profile=profile,
         longbridge=availability.as_dict(),
         fields=fields,
         missing_fields=missing,
     )
+    if request.delivery == "macro_regime":
+        return _attach_macro_delivery(result)
+    return result
 
 
 def _source_order(
@@ -225,6 +233,22 @@ def _resolve_fields(
                 resolved[name] = value
         unresolved = tuple(name for name in unresolved if name not in resolved)
     return resolved
+
+
+def _attach_macro_delivery(result: ResearchRunResult) -> ResearchRunResult:
+    from macro_delivery import build_macro_delivery
+
+    delivery = build_macro_delivery({field.name: field for field in result.fields})
+    missing = tuple(dict.fromkeys((*result.missing_fields, *delivery.blockers)))
+    return ResearchRunResult(
+        status=COMPLETE if not missing else BLOCKED,
+        profile=result.profile,
+        longbridge=result.longbridge,
+        fields=result.fields,
+        missing_fields=missing,
+        markdown=delivery.markdown,
+        board_html=delivery.board_html,
+    )
 
 
 def _run_status_command(command: Sequence[str]) -> tuple[int, str]:

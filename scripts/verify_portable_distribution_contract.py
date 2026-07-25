@@ -17,7 +17,10 @@ REQUIRED = {
     Path("references/instrument-research.md"),
     Path("references/price-action.md"),
     Path("references/safety-and-sources.md"),
+    Path("scripts/macro_board_visual.py"),
+    Path("scripts/macro_delivery.py"),
     Path("scripts/stateless_research_run.py"),
+    Path("scripts/verify_macro_research_run_selftest.py"),
     Path("scripts/verify_stateless_research_run_selftest.py"),
 }
 PRIVATE_PATH = re.compile(r"/Users/[^/]+/(?:Documents|Library)/")
