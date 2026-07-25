@@ -54,8 +54,21 @@ def write_representative_macro_board(output_directory: Path) -> Path:
     )
     if result.board_html is None or result.status != "complete":
         raise RuntimeError("representative_macro_fixture_incomplete")
-    output.write_text(result.board_html, encoding="utf-8")
+    output.write_text(_with_fixture_disclosure(result.board_html), encoding="utf-8")
     return output
+
+
+def _with_fixture_disclosure(board_html: str) -> str:
+    """Make visual-review samples impossible to mistake for current market data."""
+
+    marker = '<main id="macro-board">'
+    disclosure = (
+        '<p class="fixture-notice"><strong>合成视觉 fixture · not market data</strong> '
+        '本页固定样例仅用于验收布局与交互；数值、来源标签和事件均不可用于市场判断。</p>'
+    )
+    if marker not in board_html:
+        raise RuntimeError("representative_macro_fixture_marker_missing")
+    return board_html.replace(marker, marker + disclosure, 1)
 
 
 def main() -> int:

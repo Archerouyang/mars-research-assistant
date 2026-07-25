@@ -169,6 +169,15 @@ def assert_complete_macro_delivers_brief_then_self_contained_board() -> None:
     assert '<header class="masthead">' in result.board_html
     assert 'class="market-strip"' in result.board_html
     assert 'class="evidence-rail"' in result.board_html
+    for view in ("trend", "current", "events", "scenarios"):
+        assert f'data-view="{view}"' in result.board_html
+        assert f'data-panel="{view}"' in result.board_html
+    assert 'data-series="HYG/LQD"' in result.board_html
+    assert 'data-series="NDX/RUT"' in result.board_html
+    assert 'data-exposure-select' in result.board_html
+    assert "宏观因子暴露" in result.board_html
+    assert "不代表持仓" in result.board_html
+    assert "条件框架，不是预测" in result.board_html
     assert provider.requests == [MACRO_FIELDS]
 
 
@@ -283,6 +292,8 @@ def assert_representative_fixture_board_is_written_to_the_caller_temp_directory(
         assert html.startswith("<!doctype html>")
         assert "Macro Regime" in html
         assert "evidence_kind: official_calendar" in html
+        assert "合成视觉 fixture" in html
+        assert "not market data" in html
 
 
 def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
