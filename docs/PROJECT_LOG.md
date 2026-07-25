@@ -31,6 +31,19 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `f82efcd` `fix: bind macro events to primary sources`
+- Scope: skill, script, decision
+- What changed: Macro delivery now accepts an injected primary-event-source
+  registry and requires it to approve each exact `evidence_kind` and original
+  URL pair. Missing, unavailable or unregistered entries fail closed with a
+  specific blocker; the representative fixture carries an explicit registry.
+- Why it matters: a URL cannot become a Macro fact merely by being labelled as
+  official, while the registry remains an auditable source-approval seam for
+  future Longbridge and Portable adapters.
+- Next step: perform the manual in-app-browser acceptance of the representative
+  temporary Board; do not treat this event-evidence boundary as complete before
+  that check.
+
 - Commit: `f94b802` `feat: validate macro primary event evidence`
 - Scope: skill, script
 - What changed: Macro events now require a permitted evidence classification and
