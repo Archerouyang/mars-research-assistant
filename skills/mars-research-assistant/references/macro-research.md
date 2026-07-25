@@ -4,7 +4,17 @@
 
 ## Event Brief
 
-覆盖未来七天的央行决议、CPI/PCE/PPI、就业、GDP、PMI、重大财政或关税政策、长期美债拍卖，和过去 24 小时内明确影响字段的重大事件。每项写明时间、状态（已发生/预期）、传导、`source`、`as_of`。Web Search 发现后必须打开原始来源确认。
+覆盖未来七天的央行决议、CPI/PCE/PPI、就业、GDP、PMI、重大财政或关税政策、长期美债拍卖，和过去 24 小时内明确影响字段的重大事件。每项写明时间、状态（已发生/预期）、传导、`evidence_kind`、`primary_source_confirmed`、`source`、`as_of`。
+
+只有 `official_calendar`、`government_or_regulatory_filing`、`official_announcement` 或 `company_ir` 是可展示的 `evidence_kind`，且 `primary_source_confirmed` 必须为 `true`。Web Search 与聚合新闻只可用于发现候选；它们不能单独成为事件事实。分类缺失、来源未确认、聚合证据或无效时间都会给出 blocker，并抑制整个 Board。
+
+人工视觉验收时，在调用者新建的临时目录写入一份纯合成代表性 Board：
+
+```bash
+uv run python scripts/macro_fixture_board.py --output-dir /absolute/temporary/directory
+```
+
+该命令只创建 `research-brief.html`，拒绝覆盖已有文件；它不读取实时提供方，也不会创建 runtime、缓存、Gallery 或持久化研究工件。
 
 ## 冻结字段
 

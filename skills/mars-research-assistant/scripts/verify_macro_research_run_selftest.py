@@ -3,26 +3,25 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from macro_fixture import (
+    DEFAULT_RESEARCH_AS_OF,
+    DEFAULT_XNYS_CALENDAR,
+    MACRO_FIELDS,
+    XNYS_SESSIONS,
+    XNYS_SESSIONS_WITH_PREVIOUS,
+    StaticXNYSCalendar,
+    complete_raw_macro_values,
+    field,
+)
+from macro_fixture_board import write_representative_macro_board
 from stateless_research_run import (
     FieldValue,
     LongbridgeAvailability,
     ResearchRequest,
     run_stateless_research,
-)
-
-
-MACRO_FIELDS = (
-    "macro_events",
-    "treasury_2y",
-    "treasury_10y",
-    "treasury_30y",
-    "vix",
-    "vix3m",
-    "dxy",
-    "wti",
-    "gold",
-    "hyg_lqd_history",
-    "ndx_rut_history",
 )
 
 
@@ -34,54 +33,6 @@ class RecordingProvider:
     def fetch_many(self, fields: tuple[str, ...]) -> dict[str, FieldValue]:
         self.requests.append(fields)
         return {name: self.values[name] for name in fields if name in self.values}
-
-
-XNYS_SESSIONS = (
-    "2026-06-12",
-    "2026-06-15",
-    "2026-06-16",
-    "2026-06-17",
-    "2026-06-18",
-    "2026-06-19",
-    "2026-06-22",
-    "2026-06-23",
-    "2026-06-24",
-    "2026-06-25",
-    "2026-06-26",
-    "2026-06-29",
-    "2026-06-30",
-    "2026-07-01",
-    "2026-07-02",
-    "2026-07-06",
-    "2026-07-07",
-    "2026-07-08",
-    "2026-07-09",
-    "2026-07-10",
-    "2026-07-13",
-    "2026-07-14",
-    "2026-07-15",
-    "2026-07-16",
-    "2026-07-17",
-    "2026-07-20",
-    "2026-07-21",
-    "2026-07-22",
-    "2026-07-23",
-    "2026-07-24",
-)
-XNYS_SESSIONS_WITH_PREVIOUS = ("2026-06-11", *XNYS_SESSIONS)
-
-
-class StaticXNYSCalendar:
-    def __init__(self, sessions: tuple[str, ...]) -> None:
-        self.sessions = sessions
-
-    def completed_sessions(self, research_as_of: str) -> tuple[str, ...]:
-        assert research_as_of == "2026-07-25T12:00:00Z"
-        return self.sessions
-
-
-DEFAULT_RESEARCH_AS_OF = "2026-07-25T12:00:00Z"
-DEFAULT_XNYS_CALENDAR = StaticXNYSCalendar(XNYS_SESSIONS)
 
 
 def run_macro(
@@ -99,123 +50,6 @@ def run_macro(
         providers={"portable": provider},
         session_calendar=session_calendar,
     )
-
-
-def field(name: str, value: object, source: str = "official", as_of: str = "2026-07-24") -> FieldValue:
-    return FieldValue(name=name, status="available", value=value, source=source, as_of=as_of)
-
-
-def aligned_points(start: float) -> list[dict[str, object]]:
-    return [
-        {"date": f"2026-06-{index:02d}", "value": start + index, "completed": True}
-        for index in range(1, 31)
-    ]
-
-
-def complete_macro_values() -> dict[str, FieldValue]:
-    return {
-        "macro_events": field(
-            "macro_events",
-            [
-                {
-                    "title": "US CPI",
-                    "category": "CPI",
-                    "time": "2026-07-29T12:30:00Z",
-                    "status": "upcoming",
-                    "transmission": "rates and risk assets",
-                    "original_source": "https://www.bls.gov/cpi/",
-                }
-            ],
-            "official_calendar",
-            "2026-07-24T20:00:00Z",
-        ),
-        "treasury_2y": field("treasury_2y", {"value": 4.2, "unit": "%"}, "treasury"),
-        "treasury_10y": field("treasury_10y", {"value": 4.4, "unit": "%"}, "treasury"),
-        "treasury_30y": field("treasury_30y", {"value": 4.7, "unit": "%"}, "treasury"),
-        "vix": field("vix", {"value": 16.2, "symbol": "^VIX", "completed": True}, "yfinance", "2026-06-30"),
-        "vix3m": field("vix3m", {"value": 19.4, "symbol": "^VIX3M", "completed": True}, "yfinance", "2026-06-30"),
-        "dxy": field("dxy", {"value": 101.1, "symbol": "DX-Y.NYB", "completed": True}, "yfinance", "2026-06-30"),
-        "wti": field("wti", {"value": 68.4, "symbol": "CL=F", "completed": True}, "yfinance", "2026-06-30"),
-        "gold": field("gold", {"value": 3342.0, "symbol": "GC=F", "completed": True}, "yfinance", "2026-06-30"),
-        "hyg_lqd_history": field(
-            "hyg_lqd_history",
-            {"points": aligned_points(0.81), "ratio": "HYG/LQD", "symbols": ["HYG", "LQD"]},
-            "yfinance",
-            "2026-06-30",
-        ),
-        "ndx_rut_history": field(
-            "ndx_rut_history",
-            {"points": aligned_points(5.1), "ratio": "NDX/RUT", "symbols": ["^NDX", "^RUT"]},
-            "yfinance",
-            "2026-06-30",
-        ),
-    }
-
-
-def raw_leg(
-    symbol: str,
-    start: float,
-    source: str,
-    sessions: tuple[str, ...] = XNYS_SESSIONS,
-) -> dict[str, object]:
-    return {
-        "symbol": symbol,
-        "source": source,
-        "as_of": "2026-07-24",
-        "observations": [
-            {
-                "date": date,
-                "close": start + index,
-                "completed": True,
-                "source": source,
-                "as_of": "2026-07-24",
-            }
-            for index, date in enumerate(sessions)
-        ],
-    }
-
-
-def raw_ratio_pair(
-    ratio: str,
-    left: str,
-    right: str,
-    left_start: float,
-    right_start: float,
-    source: str,
-    sessions: tuple[str, ...] = XNYS_SESSIONS,
-) -> dict[str, object]:
-    return {
-        "ratio": ratio,
-        "legs": {
-            left: raw_leg(left, left_start, source, sessions),
-            right: raw_leg(right, right_start, source, sessions),
-        },
-    }
-
-
-def complete_raw_macro_values(
-    market_source: str = "yfinance",
-    sessions: tuple[str, ...] = XNYS_SESSIONS,
-) -> dict[str, FieldValue]:
-    values = complete_macro_values()
-    values["hyg_lqd_history"] = field(
-        "hyg_lqd_history",
-        raw_ratio_pair(
-            "HYG/LQD", "HYG", "LQD", 100.0, 50.0, market_source, sessions
-        ),
-        market_source,
-    )
-    values["ndx_rut_history"] = field(
-        "ndx_rut_history",
-        raw_ratio_pair(
-            "NDX/RUT", "^NDX", "^RUT", 200.0, 100.0, market_source, sessions
-        ),
-        market_source,
-    )
-    for name in ("vix", "vix3m", "dxy", "wti", "gold"):
-        original = values[name]
-        values[name] = field(name, original.value, market_source, "2026-07-24")
-    return values
 
 
 def assert_macro_board_derives_ratio_pairs_at_latest_completed_session() -> None:
@@ -329,6 +163,86 @@ def assert_complete_macro_delivers_brief_then_self_contained_board() -> None:
     assert provider.requests == [MACRO_FIELDS]
 
 
+def assert_primary_event_evidence_is_visible_in_the_brief_and_board() -> None:
+    result = run_macro(RecordingProvider(complete_raw_macro_values()))
+
+    assert result.status == "complete"
+    assert result.markdown is not None
+    assert "evidence_kind: official_calendar" in result.markdown
+    assert "primary_source_confirmed: true" in result.markdown
+    assert result.board_html is not None
+    assert "evidence_kind: official_calendar" in result.board_html
+    assert "primary_source_confirmed: true" in result.board_html
+
+
+def assert_missing_event_evidence_kind_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    del events[0]["evidence_kind"]
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_evidence_kind_missing" in result.markdown
+
+
+def assert_unconfirmed_primary_event_source_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["primary_source_confirmed"] = False
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_primary_source_unconfirmed" in result.markdown
+
+
+def assert_aggregated_event_evidence_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["original_source"] = "https://news.example.com/cpi"
+    events[0]["evidence_kind"] = "aggregated_news"
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_evidence_kind_invalid" in result.markdown
+
+
+def assert_invalid_event_time_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["time"] = "not-a-time"
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_time_invalid" in result.markdown
+
+
+def assert_representative_fixture_board_is_written_to_the_caller_temp_directory() -> None:
+    with TemporaryDirectory() as temporary_directory:
+        output = write_representative_macro_board(Path(temporary_directory))
+
+        assert output == Path(temporary_directory) / "research-brief.html"
+        html = output.read_text(encoding="utf-8")
+        assert html.startswith("<!doctype html>")
+        assert "Macro Regime" in html
+        assert "evidence_kind: official_calendar" in html
+
+
 def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
     values = complete_raw_macro_values()
     events = values["macro_events"].value
@@ -342,6 +256,8 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "status": "occurred",
                 "transmission": "stale observation",
                 "original_source": "https://www.bls.gov/cpi/",
+                "evidence_kind": "official_calendar",
+                "primary_source_confirmed": True,
             },
             {
                 "title": "Late CPI",
@@ -350,6 +266,8 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "status": "upcoming",
                 "transmission": "outside planning horizon",
                 "original_source": "https://www.bls.gov/cpi/",
+                "evidence_kind": "official_calendar",
+                "primary_source_confirmed": True,
             },
             {
                 "title": "Single-name earnings",
@@ -358,6 +276,8 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "status": "upcoming",
                 "transmission": "not macro policy evidence",
                 "original_source": "https://example.com/events",
+                "evidence_kind": "official_announcement",
+                "primary_source_confirmed": True,
             },
         ]
     )
@@ -643,6 +563,12 @@ def main() -> None:
     assert_complete_longbridge_pairs_do_not_trigger_portable_fallback()
     assert_missing_xnys_calendar_blocks_the_board()
     assert_complete_macro_delivers_brief_then_self_contained_board()
+    assert_primary_event_evidence_is_visible_in_the_brief_and_board()
+    assert_missing_event_evidence_kind_blocks_the_board()
+    assert_unconfirmed_primary_event_source_blocks_the_board()
+    assert_aggregated_event_evidence_blocks_the_board()
+    assert_invalid_event_time_blocks_the_board()
+    assert_representative_fixture_board_is_written_to_the_caller_temp_directory()
     assert_event_brief_keeps_only_major_events_in_its_time_windows()
     assert_non_official_treasury_field_blocks_the_board()
     assert_unclassified_macro_event_blocks_the_board()

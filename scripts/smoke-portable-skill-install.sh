@@ -40,6 +40,8 @@ for installed in "$CODEX_INSTALL" "$CLAUDE_INSTALL"; do
   test -f "$installed/SKILL.md"
   test -f "$installed/references/macro-research.md"
   test -f "$installed/references/instrument-research.md"
+  test -f "$installed/scripts/macro_fixture.py"
+  test -f "$installed/scripts/macro_fixture_board.py"
   test -f "$installed/scripts/stateless_research_run.py"
   test -f "$installed/scripts/verify_stateless_research_run_selftest.py"
   diff -qr "$CANONICAL" "$installed" >/dev/null

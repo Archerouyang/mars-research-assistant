@@ -38,12 +38,17 @@ def render_macro_board(payload: Mapping[str, Any]) -> str:
     trends = json.dumps(payload["trend_series"], ensure_ascii=False).replace("<", "\\u003c")
     events_html = "".join(
         '<li><strong>{time} · {title}</strong><span>{category} · {status} · {transmission}</span>'
+        '<small>evidence_kind: {evidence_kind} · primary_source_confirmed: {primary_source_confirmed}</small>'
         '<small>source: {source} · as_of: {as_of}</small></li>'.format(
             time=escape(str(event["time"])),
             title=escape(str(event["title"])),
             category=escape(str(event["category"])),
             status=escape(str(event["status"])),
             transmission=escape(str(event["transmission"])),
+            evidence_kind=escape(str(event["evidence_kind"])),
+            primary_source_confirmed=escape(
+                str(event["primary_source_confirmed"]).lower()
+            ),
             source=escape(str(event["original_source"])),
             as_of=escape(str(event["as_of"])),
         )

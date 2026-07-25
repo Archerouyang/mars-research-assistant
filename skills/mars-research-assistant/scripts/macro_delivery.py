@@ -35,6 +35,14 @@ _EXPECTED_RATIO_SYMBOLS = {"HYG/LQD": ("HYG", "LQD"), "NDX/RUT": ("^NDX", "^RUT"
 _OFFICIAL_TREASURY_SOURCES = frozenset({"treasury", "official_treasury", "treasury.gov"})
 _MARKET_FIELDS = ("vix", "vix3m", "dxy", "wti", "gold", "hyg_lqd_history", "ndx_rut_history")
 _MARKET_SOURCES = frozenset({"longbridge", "yfinance"})
+_PRIMARY_EVENT_EVIDENCE_KINDS = frozenset(
+    {
+        "official_calendar",
+        "government_or_regulatory_filing",
+        "official_announcement",
+        "company_ir",
+    }
+)
 _MAJOR_EVENT_TERMS = (
     "central bank",
     "fed",
@@ -129,6 +137,13 @@ def _validated_events(
         required = ("title", "category", "time", "status", "transmission", "original_source")
         if any(not str(event.get(key) or "").strip() for key in required):
             return (), ("macro_events_invalid",)
+        evidence_kind = event.get("evidence_kind")
+        if not isinstance(evidence_kind, str) or not evidence_kind.strip():
+            return (), ("macro_events_evidence_kind_missing",)
+        if evidence_kind not in _PRIMARY_EVENT_EVIDENCE_KINDS:
+            return (), ("macro_events_evidence_kind_invalid",)
+        if event.get("primary_source_confirmed") is not True:
+            return (), ("macro_events_primary_source_unconfirmed",)
         if not str(event["original_source"]).startswith(("https://", "http://")):
             return (), ("macro_events_original_source_invalid",)
         event_time = _parse_timestamp(event["time"])
@@ -151,6 +166,8 @@ def _render_event_brief(events: Sequence[Mapping[str, Any]], field: Any) -> str:
         rendered.append(
             f"- {event['time']} · {event['category']} · {event['title']} ({event['status']})"
             f"\n  传导：{event['transmission']}"
+            f"\n  evidence_kind: {event['evidence_kind']}"
+            f" · primary_source_confirmed: {str(event['primary_source_confirmed']).lower()}"
             f"\n  source: {event['original_source']} · as_of: {field.as_of}"
         )
     if not rendered:
