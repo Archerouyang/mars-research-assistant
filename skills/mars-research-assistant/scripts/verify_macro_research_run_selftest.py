@@ -166,6 +166,9 @@ def assert_complete_macro_delivers_brief_then_self_contained_board() -> None:
     assert "source: yfinance · as_of: 2026-07-24" in result.board_html
     assert "US CPI" in result.board_html
     assert "source: https://www.bls.gov/cpi/ · as_of: 2026-07-24T20:00:00Z" in result.board_html
+    assert '<header class="masthead">' in result.board_html
+    assert 'class="market-strip"' in result.board_html
+    assert 'class="evidence-rail"' in result.board_html
     assert provider.requests == [MACRO_FIELDS]
 
 
