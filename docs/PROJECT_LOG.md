@@ -31,7 +31,7 @@ Use this shape:
 
 ## 2026-07-25
 
-- Commit: pending `Add stateless research source seam`
+- Commit: `8e69ca0` `feat: add stateless research source seam`
 - Scope: skill, script, decision, validation
 - What changed: added the in-memory `stateless_research_run` source-selection
   seam. It performs a read-only Longbridge CLI authorization preflight,
