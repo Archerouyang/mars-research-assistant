@@ -31,7 +31,7 @@ Use this shape:
 
 ## 2026-07-25
 
-- Commit: pending `Retire persistent Mars research paths`
+- Commit: `2977fba` `refactor: retire persistent research paths`
 - Scope: skill, cleanup, documentation, validation
 - What changed: removed the runtime, Daily Ops, account/holdings, IBKR,
   Longbridge gateway, ArtifactPacket, Gallery, automation, KVN/Alpha, PNG
