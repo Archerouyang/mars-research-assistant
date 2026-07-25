@@ -31,8 +31,23 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `f568eca` `fix: preserve macro event provenance`
+- Scope: skill, script
+- What changed: each Macro event now carries, validates, and displays its own
+  timezone-aware `as_of` timestamp in both the Event Brief and Board. Missing,
+  malformed, or timezone-less event evidence fails closed with a specific
+  blocker and no Board. The acceptance record now documents the user's manual
+  visual approval without retaining machine-local paths.
+- Why it matters: an event batch timestamp can no longer mask different source
+  acquisition times, and an ambiguous local event time cannot be silently
+  interpreted as UTC.
+- Verification: focused Macro selftest passed through `uv`; it includes
+  event-specific source-time retention, missing-time blocking, and
+  timezone-less event-time blocking.
+- Next step: review this focused remediation before closing #102.
+
 - Commit: `9f11966` `feat: localize macro research delivery`
-- Scope: skill, script, validation
+- Scope: skill, script
 - What changed: made the one-shot Macro Event Brief and interactive Board
   Chinese-first: headings, tabs, provenance labels, event statuses, visible
   evidence labels, source timing, chart wording, and the synthetic-fixture
@@ -48,7 +63,7 @@ Use this shape:
   validation boundary.
 
 - Commit: `6eff67f` `style: refine macro board typography`
-- Scope: skill, script, validation
+- Scope: skill, script
 - What changed: refined the self-contained Board's Chinese system-font stack,
   heading and control weights, line-height, and tabular market numerals. The
   layout, colors, source fields, frozen data contract, and browser-only
@@ -63,7 +78,7 @@ Use this shape:
   visual pass.
 
 - Commit: `4fcdb86` `feat: restore one-shot macro board interactions`
-- Scope: skill, script, validation
+- Scope: skill, script
 - What changed: restored the previous Macro Board's browser-only interaction
   model without restoring a runtime: `趋势`, `当前状态`, `下周事件`, and `情景`
   tabs; a two-series trend selector; and a macro-factor exposure selector.
@@ -83,7 +98,7 @@ Use this shape:
   as complete.
 
 - Commit: `4e4d9cf` `feat: restore macro board visual language`
-- Scope: skill, script, validation
+- Scope: skill, script
 - What changed: restored the established standalone research-brief visual
   language for the stateless Macro Board: the strong masthead, compact market
   strip, chart shells and primary-source evidence rail. The renderer still
