@@ -16,10 +16,10 @@
     {
       "id": "treasury-daily-yield-xml-feed",
       "authority": "U.S. Department of the Treasury",
-      "url": "https://home.treasury.gov/treasury-daily-interest-rate-xml-feed",
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve",
       "discovery": "public_web_search_then_direct_open",
       "opened_at": "2026-07-23",
-      "supports": "The official feed documents daily Treasury par-yield-curve data and a stable XML endpoint shape."
+      "supports": "The official Daily Treasury Rates page exposes the exact 2Y, 10Y, and 30Y par-yield columns in a directly readable table."
     },
     {
       "id": "cboe-vix-historical-data",
@@ -137,9 +137,9 @@
     {"source_id":"ecb_meeting_calendar","source_url":"https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html","allowed_categories":["major_central_bank"]}
   ],
   "fields": [
-    {"field_id":"rates.us_2y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"2 Yr","raw_field_path":["records","$last","2 Yr"]},
-    {"field_id":"rates.us_10y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"10 Yr","raw_field_path":["records","$last","10 Yr"]},
-    {"field_id":"rates.us_30y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"30 Yr","raw_field_path":["records","$last","30 Yr"]},
+    {"field_id":"rates.us_2y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"2 Yr","raw_field_path":["records","$last","2 Yr"]},
+    {"field_id":"rates.us_10y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"10 Yr","raw_field_path":["records","$last","10 Yr"]},
+    {"field_id":"rates.us_30y_yield","source_id":"us_treasury_daily_rates","source_url":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve","source_timing":"completed_market","unit":"percent","collection_key":"records","date_key":"date","value_key":"30 Yr","raw_field_path":["records","$last","30 Yr"]},
     {"field_id":"volatility.vix_close","source_id":"cboe_vix_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv","source_timing":"completed_market","unit":"volatility_index_points","collection_key":"records","date_key":"DATE","value_key":"CLOSE","raw_field_path":["records","$last","CLOSE"]},
     {"field_id":"volatility.vix3m_close","source_id":"cboe_vix3m_history","source_url":"https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv","source_timing":"completed_market","unit":"volatility_index_points","collection_key":"records","date_key":"DATE","value_key":"CLOSE","raw_field_path":["records","$last","CLOSE"]},
     {"field_id":"equity.ndx_close","source_id":"fred_nasdaq100_history","source_url":"https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQ100","source_timing":"completed_market","unit":"index_points","collection_key":"records","date_key":"DATE","value_key":"NASDAQ100","raw_field_path":["records","$last","NASDAQ100"]},

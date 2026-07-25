@@ -1,114 +1,64 @@
-[English](README.md) | [简体中文](README.zh-CN.md)
+# 火星投研助手
 
-# 火星投研助手 (Mars Research Assistant)
+把宏观、行业事件、公司基本面与价格行为，收束成可复核的研究判断。
 
-An AI-native, Bayesian decision-support Skill that compresses market, macro,
-policy, company, price-action, and portfolio evidence into an updateable
-decision process. It does not try to predict the next market move: it updates a
-prior with new evidence, compares conditional scenarios, and identifies the
-next observation that would change the decision.
+它不预测下一根 K 线，也不替你下单。它做的是把证据、反方观点、失效条件和下一步验证点放在同一条研究链上，让交易判断可以持续更新。
 
-Version: `1.0.0`
-
-## Install in 30 Seconds
-
-Install the complete portable Agent Skill. The installer detects supported
-coding agents and adapts the target directory.
+## 安装
 
 ```bash
 npx skills@latest add Archerouyang/mars-research-assistant --skill mars-research-assistant -g
 ```
 
-## First Run
-
-Open a new task and say:
+新开任务后直接说：
 
 ```text
-Start today's trading research.
+开始今日交易研究
 ```
 
-The same Skill checks runtime health and, when no private runtime exists,
-enters blank first-run setup. It confirms a local runtime location and offers
-optional authorized read-only data sources. It does not restore or infer a
-watchlist, profile, portfolio, plan, credential, connector grant, or research
-history.
+## 你会得到什么
 
-## Accepted Output Examples
+**宏观先行，但不拿半成品凑数。**
 
-These screenshots are user-selected PNG exports of accepted standalone Boards.
-They use dated public market data and contain no broker account,
-private runtime, or private portfolio information. They are research snapshots,
-not live quotes or trade instructions.
+系统先检查 Longbridge 与 IBKR 的可用能力，再逐字段获取宏观数据。每个字段优先使用合格的券商市场/宏观数据；没有精确字段时才回退到公开一手来源。只要关键字段不完整，就返回明确的数据获取阻塞，而不是用 ETF、新闻或猜测代替。
 
-### Macro Regime Panel
+**持仓只在你同意后读取。**
 
-![Macro Regime Panel showing rates, inflation, risk breadth, and one-month trend analysis](docs/assets/readme/macro-regime-live-2026-07-19.png)
+持仓展示只给出券商、标的、数量、最新价格、市值、成本、未实现盈亏、现金与读取时间。它不会暗中读取账户，不会把缺失字段补成推测，也不会自动生成组合建议。
 
-The Macro panel connects the current liquidity regime with rates, inflation,
-NDX/RUT breadth, volatility, the dollar, credit, oil, and the next material
-events.
+**点名标的，直接进入研究。**
 
-### NVDA 4H Price Action Panel
+例如：`分析 NVDA`、`做 TSM 的 4H PA`。默认会给出行业事件、基本面、催化、估值、反方风险，以及冻结样式的 4H Price Action Board；不会要求你先走完持仓或默认流程。
 
-![NVDA 4H Price Action entry plan with scenarios, key levels, staged entries, and company events](docs/assets/readme/nvda-4h-pa-entry-plan.png)
+![NVDA 4H Price Action 示例](docs/assets/readme/nvda-4h-pa-entry-plan.png)
 
-The Price Action panel separates observation from action: timeframe and data
-provenance, current structure, conditional paths, key levels, invalidation,
-staged execution, and stock-specific event checks remain visible together.
+## 工作方式
 
-Self-contained standalone HTML is the only primary visual artifact. Each Board
-is saved with its canonical snapshot and manifest so it can be reopened and
-updated after an event. PNG is saved only when the user explicitly selects a
-Board for export. See
-[third-party notices](THIRD_PARTY_NOTICES.md) for TradingView attribution and
-Apache-2.0 licensing.
+```text
+开始今日交易研究
+        ↓
+券商能力检查 → Macro Board 或数据获取阻塞
+        ↓
+展示默认券商持仓 / 直接研究指定标的
+        ↓
+按新证据更新判断，而不是把一次观点当结论
+```
 
-## Capabilities and Sources
+所有图表使用可独立打开的 standalone Board。市场字段采用最近共同完成收盘，不把盘中、盘前和不同日期的数据混成一张宏观图。
 
-| Capability | What the Skill produces | Source rule |
-| --- | --- | --- |
-| Weekly and daily market work | Active Market Plan changes, event priorities, and next checks | Verify current facts; show only decision-relevant deltas |
-| Macro, rates, and policy | Regime posture, transmission paths, and affected plans | Prefer official primary sources; use authorized macro data for values |
-| Equity and report research | Thesis, counter-thesis, claim ledger, and verification queue | Public, authorized, or user-provided research only; no paywall bypass |
-| Price action | Declared timeframe, trend/range context, levels, and setup conditions | Authorized OHLCV; TradingView Lightweight Charts for canonical visuals |
-| Alpha Lab input | Published champion ranks, history deltas, and uncertainty for research priority | Read-only private store; preserve model ranks and continue safely when unavailable |
-| Portfolio risk | Concentration, product, theme, broker exposure, and material flags | Authorized read-only broker facts or explicit user input |
-| Trade review | Post-order and post-exit context, errors, and lessons | Read-only execution facts plus user confirmation |
+## 明确边界
 
-When the private Alpha Lab is available, the Skill reads its published champion
-ranking as research priority only. It never retrains or re-ranks the model.
-Alpha contracts and automation details live in the
-[Alpha Lab plan](docs/ALPHA_LAB_PLAN.md).
+- 只做研究与决策支持，不创建、修改、取消或提交真实订单。
+- 券商账户读取必须单独获得同意；安装 Skill 不等于授权账户。
+- 不把私人持仓、凭证、运行时数据或原始券商响应写入公开仓库。
+- 不把预测、目标价、情景或模型输出说成确定结果。
 
-The system is decision support. It does not promise returns, replace regulated
-advice, or turn a data point into an automatic trade instruction.
+## 开发与验证
 
-## Public Skill / Private Runtime
+```bash
+bash scripts/verify-skill.sh
+```
 
-| Public Skill | Private Runtime |
-| --- | --- |
-| One installable `mars-research-assistant` package with research guidance, references, scripts, blank templates, and synthetic fixtures | User-owned profile, watchlist, positions, Active Market Plan, setups, reviews, credentials, and connector grants |
-| Safe to publish and upgrade | Stays outside the repository and every distribution package |
-| Starts with no personal defaults | Created only after explicit local write confirmation |
+核心行为说明见 [Skill 契约](skills/mars-research-assistant/SKILL.md)，字段与交互边界见 [火星投研助手 1.0 规格](docs/MARS_RESEARCH_ASSISTANT_1_0_SPEC.md)。
 
-Installation and upgrades never copy, infer, synchronize, or recover private
-state. Broker and market integrations are optional, separately authorized, and
-read-only. **No order actions:** the Skill never creates, modifies, cancels, or
-submits real orders.
-
-## Troubleshooting and Detailed Docs
-
-| Symptom | Check |
-| --- | --- |
-| Skill is not discovered | Confirm the repository is reachable and the install output names exactly `mars-research-assistant`. |
-| A new task starts without personal data | Expected: first run is blank until the user explicitly initializes a private runtime. |
-| Broker or macro data is unavailable | Authorize the optional read-only source separately; installation does not grant connector access. |
-| A selected Board cannot be exported | User-selected PNG export requires Chrome/Chromium; the standalone HTML remains the primary artifact. |
-
-Detailed documents: [Skill contract](skills/mars-research-assistant/SKILL.md),
-[standalone delivery decision](docs/adr/0011-standalone-board-only-delivery.md),
-[0.3.0 module ownership](docs/adr/0010-deep-module-ownership-for-0.3.0.md),
-[MVP runbook](docs/MVP_RUNBOOK.md), and
-[distribution plan](docs/DISTRIBUTION_AND_README_PLAN.md).
-
-火星投研助手 (Mars Research Assistant) is MIT licensed. Third-party components retain their own licenses.
+MIT License。第三方组件保留各自许可证，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。

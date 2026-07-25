@@ -7,7 +7,7 @@
     "session_state": "completed"
   },
   "us_treasury_daily_rates": {
-    "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve",
+    "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve",
     "retrieved_at": "2026-07-23T21:00:00Z",
     "records": [
       {"date":"2026-06-24","2 Yr":"4.20","10 Yr":"4.40","30 Yr":"4.90"},

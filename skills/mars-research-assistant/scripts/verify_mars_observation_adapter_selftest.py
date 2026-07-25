@@ -9,6 +9,7 @@ from pathlib import Path
 
 from mars_observation_adapter import (
     ObservationAdapterError,
+    load_mars_source_contract,
     normalize_mars_observation_run,
     normalize_mars_observations,
 )
@@ -38,6 +39,24 @@ def require_error(payloads: dict[str, object], expected: str) -> None:
 
 
 def main() -> int:
+    contract = load_mars_source_contract()
+    treasury_urls = {
+        field["source_url"]
+        for field in contract["fields"]
+        if field["field_id"] in {
+            "rates.us_2y_yield",
+            "rates.us_10y_yield",
+            "rates.us_30y_yield",
+        }
+    }
+    require(
+        treasury_urls
+        == {
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve"
+        },
+        "Treasury yield fields must use the directly readable public TextView fallback, not the empty legacy XML route",
+    )
+
     payloads = load_payloads()
     run = normalize_mars_observation_run(payloads, AS_OF)
     observations = normalize_mars_observations(payloads, AS_OF)

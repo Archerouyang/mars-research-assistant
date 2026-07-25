@@ -37,7 +37,7 @@ positions, plans, credentials, connector grants, or research history.
 
 ## README Contract
 
-`README.md` and `README.zh-CN.md` keep the same:
+`README.md` is the single Chinese product entrypoint and keeps:
 
 1. product purpose and Bayesian decision-support model;
 2. one installation command;

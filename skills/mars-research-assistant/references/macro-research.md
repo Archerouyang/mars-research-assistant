@@ -22,7 +22,8 @@ this source order for every refresh:
 
 ```text
 Longbridge/IBKR capability check -> exact broker market or macro field when
-available -> exact public primary-source fallback -> normalized field record ->
+available -> exact public primary-source fallback -> Web Search discovery plus
+direct authority-page open when needed -> normalized field record ->
 macro_preflight.py
 ```
 
@@ -30,9 +31,12 @@ The broker route is field-level, not a blanket source preference: it may be
 used only when the returned field has exact identity, native path, unit,
 timestamp, and completed-close/reference-period basis. For every unsupported
 or incomplete broker field, use the registered public primary source instead.
-Search-result snippets, ETF proxies, caller-derived ratios, and prewritten
-`ResearchResult` objects are not field inputs. Raw provider responses remain in
-memory and are never persisted by the Skill.
+If that path fails, Web Search is mandatory as a discovery fallback: locate and
+directly open the authority page, then verify the exact field identity, unit,
+timestamp, and completed-close/reference-period basis. Search-result snippets,
+ETF proxies, caller-derived ratios, and prewritten `ResearchResult` objects are
+not field inputs. Raw provider responses remain in memory and are never
+persisted by the Skill.
 
 Every retained field is required. Completed-market fields must equal the latest
 common completed close; official releases must identify the latest published
@@ -70,9 +74,13 @@ portfolio source.
 
 Macro field sources may be Longbridge macrodata/market data, IBKR market data,
 or a registered direct public primary fallback. A field must name its actual
-source in the normalized record. A direct source discovered by Web search may
-be admitted only with an exact source map, synthetic fixture, and regression
-test; otherwise it remains unavailable and blocks the Board.
+source in the normalized record. Web Search is a discovery fallback rather than
+a source of values: it must lead to a directly opened authority page. When it
+is used, the Board follow-up must state the affected fields, authority, and
+common completed close/reference period. A newly discovered endpoint must
+receive an exact source map, synthetic fixture, and regression test before it
+can enter a Board; until then the field remains blocked rather than being
+inferred from a search result.
 
 The following are currently excluded: HYG/LQD, SPX, DXY, Brent, gold, and S&P
 500 forward P/E. Do not restore any with a proxy or approximation. A later

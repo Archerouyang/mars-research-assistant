@@ -2,11 +2,7 @@
   "files": [
     {
       "path": "README.md",
-      "sha256": "c64f989dbb4bde9c82c3c1ed463c4773e2832299c69e09e26bd4273a02920838"
-    },
-    {
-      "path": "README.zh-CN.md",
-      "sha256": "6d0649a47ca03b2ec7bd4a60d09cc5d051130e14d3ffe073a14d7999815d03e1"
+      "sha256": "cdf7a31bfa34a611a22df353897631a89a1c572e1977830af3b966ae4c5093af"
     },
     {
       "path": "docs/assets/readme/macro-regime-panel.svg",

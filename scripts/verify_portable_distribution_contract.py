@@ -170,9 +170,14 @@ def validate_skill() -> None:
 
 
 def validate_readme_command() -> None:
-    for readme in (REPO / "README.md", REPO / "README.zh-CN.md"):
-        text = readme.read_text(encoding="utf-8")
-        require(text.count(INSTALL_COMMAND) == 1, f"{readme.name} install command must appear exactly once")
+    readme = REPO / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    require(text.count(INSTALL_COMMAND) == 1, "README.md install command must appear exactly once")
+    require("# 火星投研助手" in text, "README.md must remain the Chinese primary README")
+    require(
+        not (REPO / "README.zh-CN.md").exists(),
+        "README.zh-CN.md was retired; keep one Chinese README to prevent documentation drift",
+    )
 
 
 def validate_isolated_smoke() -> None:

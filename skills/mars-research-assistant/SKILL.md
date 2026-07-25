@@ -141,6 +141,12 @@ default baseline, not a substitute for an explicit user request:
    broker's market/macro capability only when its identity, unit, completed
    close/reference period, timestamp, and normalized path are known. Use an
    exact public primary-source fallback when that broker route is unavailable.
+   If its registered direct path fails, use Web Search to find and directly
+   open the field's authority page before returning a Blocker. Never use a
+   search-result snippet as the field value. When this route is used, say after
+   the Board which fields used it, the authority, and the common completed
+   close/reference period. Only return a Blocker after broker, registered
+   direct, and Web Search fallback paths all fail to yield an exact field.
    On success, create a
    `ResearchResult` with `result_kind=macro` and
    `visual.adapter=macro`, carrying the exact canonical Macro snapshot from
