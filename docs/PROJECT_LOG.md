@@ -29,6 +29,24 @@ Use this shape:
 - Next step:
 ```
 
+## 2026-07-25
+
+- Commit: pending `Add stateless research source seam`
+- Scope: skill, script, decision, validation
+- What changed: added the in-memory `stateless_research_run` source-selection
+  seam. It performs a read-only Longbridge CLI authorization preflight,
+  requires an explicit Longbridge choice only when it is available, otherwise
+  enters the Portable profile, and performs batched lazy fallback for unresolved
+  public research fields. Account, holdings, orders, credentials, and tokens
+  are rejected before any provider can be called.
+- Why it matters: one-shot research can now select a stable source path without
+  a gateway, runtime, cache, plan, or broker-account access surface.
+- Verification: focused injected-provider selftest passed through `uv`; no live
+  provider, broker, account, position, order, credential, or token data was
+  accessed.
+- Next step: implement the macro, instrument, and Price Action Board contracts
+  on this seam, then remove the legacy runtime paths.
+
 ## 2026-07-22
 
 - Commit: pending `Converge visual delivery on standalone Boards`
