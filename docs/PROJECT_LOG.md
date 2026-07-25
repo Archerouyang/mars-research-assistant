@@ -31,21 +31,27 @@ Use this shape:
 
 ## 2026-07-25
 
-- Commit: `bc967be`, `c6a8244` `fix: validate macro completed sessions`; `fix: harden macro session diagnostics`
-- Scope: skill, script, decision, validation
+- Commit: `bc967be` `fix: validate macro completed sessions`
+- Scope: skill, script, decision
 - What changed: Macro delivery now receives one timezone-aware research reference
   time and an injected XNYS completed-session calendar. It derives HYG/LQD and
-  NDX/RUT locally from same-source raw 1D constituent pairs, requires the latest
-  30 increasing common sessions, and preserves an exact data-gap reason when a
-  whole pair cannot be recovered by the allowed lazy fallback.
+  NDX/RUT locally from same-source raw 1D constituent pairs, and requires the
+  latest 30 increasing common sessions.
 - Why it matters: a Board cannot portray a weekend, holiday, stale, duplicated,
   unordered, incomplete, cross-source, or precomputed ratio as the current
-  macro regime. Longbridge remains preferred when complete; only the invalid
-  pair falls back to Portable rather than stitching individual legs.
-- Verification: fixture-only Macro and stateless source-seam selftests, compile
-  gate, and portable distribution contract passed through `bash
-  scripts/verify-skill.sh`; no live provider, account, position, order,
-  credential, or token data was accessed.
+  macro regime. Longbridge remains preferred when complete; an incomplete pair
+  falls back to Portable rather than stitching individual legs.
+- Next step: add exact rejection reasons and then deliver the separately tracked
+  event-evidence and manual visual acceptance boundary.
+
+- Commit: `c6a8244` `fix: harden macro session diagnostics`
+- Scope: skill, script
+- What changed: retained the exact pair-validation failure in the user-visible
+  Macro blocker and added fixture paths for missing/invalid timezones, non-XNYS,
+  duplicate or unordered observations, fewer than 30 shared sessions, a missing
+  constituent, a missing latest session, and cross-source legs.
+- Why it matters: an incomplete pair now gives the researcher a concrete repair
+  action instead of only a generic missing-field message.
 - Next step: deliver the separately tracked event-evidence and manual visual
   acceptance boundary before treating the remediation spec as fully complete.
 
