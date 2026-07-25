@@ -31,6 +31,22 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `9f11966` `feat: localize macro research delivery`
+- Scope: skill, script, validation
+- What changed: made the one-shot Macro Event Brief and interactive Board
+  Chinese-first: headings, tabs, provenance labels, event statuses, visible
+  evidence labels, source timing, chart wording, and the synthetic-fixture
+  warning now render in Chinese. Instrument codes, provider identifiers,
+  `evidence_kind` values, and `data_gap` codes remain stable technical values.
+- Why it matters: the delivery is easier to read in the intended workflow
+  without compromising source traceability, data contracts, or fail-closed
+  blocker semantics.
+- Verification: Macro selftest, complete Skill verifier, isolated
+  portable-install smoke check, and a generated Chinese synthetic Board passed.
+- Next step: keep the visual fixture separate from live market data, then
+  connect an approved live provider only behind the existing field-level
+  validation boundary.
+
 - Commit: `6eff67f` `style: refine macro board typography`
 - Scope: skill, script, validation
 - What changed: refined the self-contained Board's Chinese system-font stack,
