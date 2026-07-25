@@ -42,17 +42,23 @@ focused route instead.
 
    Its `required_actions` are mandatory. Never emit an action listed in
    `forbidden_actions`.
-2. At `macro_state=pending`, run the complete direct-public Macro preflight and
-   deliver exactly one Macro standalone Board or one `Data Acquisition Blocker`.
-   Do not replace either with a prose-only market summary.
+2. At `macro_state=pending`, run the complete direct-public Macro preflight.
+   On success, pass its exact canonical snapshot to a `ResearchResult`
+   (`result_kind=macro`, `visual.adapter=macro`) and execute
+   `scripts/research_result.py`; deliver exactly that generated
+   `standalone_board/research-brief.html`. On failure, deliver one `Data
+   Acquisition Blocker`. Do not replace either with prose, `visualize`,
+   hand-authored HTML, or another Board renderer.
 3. At `macro_state=delivered` without broker authorization, ask for read-only
    authorization. Do not choose a ticker, request a trade horizon, or begin
    company or Price Action analysis.
 4. Once the user has selected and authorized one default broker, read only that
    broker's permitted holdings and capital context. Classify the result:
-   `ready` yields the Portfolio Risk Board; `option_overlay_partial` also
-   yields the Board but marks unavailable option delta/notional/stress fields;
-   `core_gap` yields a concrete data gap only.
+   `ready` yields a `ResearchResult` with `result_kind=portfolio` and
+   `visual.adapter=portfolio`, carrying the validated canonical Portfolio
+   snapshot (or a legacy normalized panel); `option_overlay_partial` uses the
+   same canonical Portfolio Risk renderer while marking unavailable option
+   delta/notional/stress fields; `core_gap` yields a concrete data gap only.
 5. After the Macro result and Portfolio result/gap, ask which ticker the user
    wants to inspect. Only a user-named ticker may enter individual research or
    Price Action, and Price Action still requires its full
@@ -70,6 +76,15 @@ The required Board or Blocker is the first decision-bearing artifact in its
 phase. Do not precede it with a runtime table, a prose macro report, broker
 health output, or a suggested ticker. Source coverage and gaps appear in the
 Board/Blocker and concise copy after it.
+
+The accepted renderer chain is fixed: `macro_preflight.py` snapshot ->
+`ResearchResult(result_kind=macro, visual.adapter=macro)` ->
+`macro_board_visual.py`, and a validated Portfolio snapshot ->
+`ResearchResult(result_kind=portfolio, visual.adapter=portfolio)` ->
+`portfolio_board_visual.py`. Both are written by `research_result.py` as one
+offline `standalone_board` packet. The Portfolio input bridge changes fields,
+not the frozen view structure. Do not substitute `visualize`, custom HTML, or a
+separate CSS system.
 
 ## Default Weekly Cadence
 

@@ -7,12 +7,15 @@ import copy
 import json
 from pathlib import Path
 
-from artifact_packet import build_artifact_packet, canonical_json_bytes, sha256_hex
+from artifact_packet import canonical_json_bytes, sha256_hex
 from daily_ops_routing import resolve_daily_ops_route
+from research_result import build_delivery_packet
 
 
 ROOT = Path(__file__).resolve().parents[1]
+MACRO_FIXTURE = ROOT / "assets" / "fixtures" / "input" / "macro-regime-complete.json"
 PORTFOLIO_FIXTURE = ROOT / "assets" / "fixtures" / "input" / "portfolio-risk-complete.json"
+AS_OF = "2026-07-17T10:00:00Z"
 
 
 def require(condition: bool, message: str) -> None:
@@ -24,6 +27,65 @@ def _refresh_content_hash(snapshot: dict[str, object]) -> None:
     content = copy.deepcopy(snapshot)
     content.pop("content_hash", None)
     snapshot["content_hash"] = sha256_hex(canonical_json_bytes(content))
+
+
+def _research_result(
+    kind: str,
+    visual: dict[str, object],
+    *,
+    partial: bool = False,
+    privacy: str = "public_fixture",
+) -> dict[str, object]:
+    """Build a minimal public result through the production delivery seam."""
+
+    evidence_status = "partial" if partial else "complete"
+    return {
+        "schema_version": "1.0",
+        "result_kind": kind,
+        "as_of": AS_OF,
+        "decision": "Preserve the current evidence gate until confirmation.",
+        "key_evidence": [
+            {
+                "label": "Canonical Board fixture",
+                "value": "Render through the registered visual adapter.",
+                "evidence_type": "fact",
+                "status": evidence_status,
+                "as_of": AS_OF,
+                "source_refs": ["fixture"],
+            }
+        ],
+        "risks": [],
+        "scenarios": [],
+        "next_checks": ["Refresh the decision-sensitive source."],
+        "data_gaps": (
+            [
+                {
+                    "label": "Option overlay Greeks",
+                    "reason": "The overlay is excluded from delta and stress arithmetic.",
+                    "status": "partial",
+                }
+            ]
+            if partial
+            else []
+        ),
+        "sources": [
+            {
+                "id": "fixture",
+                "label": "Synthetic fixture",
+                "priority": "S1",
+                "as_of": AS_OF,
+            }
+        ],
+        "privacy": privacy,
+        "locale": "zh-CN",
+        "visual": visual,
+    }
+
+
+def _require_markers_in_order(html: bytes, markers: tuple[bytes, ...], message: str) -> None:
+    positions = [html.find(marker) for marker in markers]
+    require(all(position >= 0 for position in positions), message)
+    require(positions == sorted(positions), message)
 
 
 def _option_overlay_snapshot() -> dict[str, object]:
@@ -118,12 +180,13 @@ def main() -> int:
         portfolio_state="not_read",
     )
     require(
-        first_turn.required_actions == ("macro_board_or_blocker",),
+        first_turn.required_actions == ("render_macro_research_result_or_blocker",),
         "an unscoped start must deliver Macro before any broker or prose route",
     )
     require(
-        "prose_only_macro_summary" in first_turn.forbidden_actions,
-        "the Macro Board must not degrade into a prose-only summary",
+        {"prose_only_macro_summary", "custom_html_board"}
+        <= set(first_turn.forbidden_actions),
+        "the Macro Board must not degrade into prose or replacement HTML",
     )
 
     macro_blocked = resolve_daily_ops_route(
@@ -155,13 +218,14 @@ def main() -> int:
         portfolio_state="ready",
     )
     require(
-        ready.required_actions == ("portfolio_risk_board", "ask_user_to_select_instrument"),
+        ready.required_actions
+        == ("render_portfolio_research_result", "ask_user_to_select_instrument"),
         "usable holdings must produce the Portfolio Risk Board before an instrument prompt",
     )
     require(
-        "individual_research" in ready.forbidden_actions
-        and "price_action" in ready.forbidden_actions,
-        "an unscoped portfolio baseline must not select an individual ticker or PA path",
+        {"custom_html_board", "individual_research", "price_action"}
+        <= set(ready.forbidden_actions),
+        "an unscoped portfolio baseline must use its canonical Board before ticker or PA work",
     )
 
     overlay_partial = resolve_daily_ops_route(
@@ -171,7 +235,8 @@ def main() -> int:
         portfolio_state="option_overlay_partial",
     )
     require(
-        overlay_partial.required_actions == ("portfolio_risk_board_partial", "ask_user_to_select_instrument"),
+        overlay_partial.required_actions
+        == ("render_portfolio_research_result_partial", "ask_user_to_select_instrument"),
         "missing option Greeks must yield a partial Portfolio Risk Board, not a broker fallback",
     )
     require(
@@ -199,15 +264,95 @@ def main() -> int:
         "a core portfolio gap must not turn into ticker research or broker escalation",
     )
 
-    packet = build_artifact_packet(_option_overlay_snapshot())
-    html = packet.html.decode("utf-8")
+    macro_snapshot = json.loads(MACRO_FIXTURE.read_text(encoding="utf-8"))
+    macro_delivery = build_delivery_packet(
+        _research_result(
+            "macro",
+            {
+                "adapter": "macro",
+                "snapshot": macro_snapshot,
+                "default_view": "Overview",
+            },
+        )
+    )
+    macro_html = macro_delivery.standalone_board.html if macro_delivery.standalone_board else b""
+    _require_markers_in_order(
+        macro_html,
+        (
+            b'aria-label="\xe5\xae\x8f\xe8\xa7\x82\xe8\xa7\x86\xe5\x9b\xbe"',
+            b'data-view="trend"',
+            b'data-view="current"',
+            b'data-view="events"',
+            b'data-view="scenarios"',
+        ),
+        "the Macro delivery must retain the frozen canonical view controls",
+    )
+    for anchor in (b"macro-summary", b"trend-chart", b"scenario-grid"):
+        require(
+            anchor in macro_html,
+            f"the Macro delivery must retain the frozen renderer anchor: {anchor.decode()}",
+        )
+
+    portfolio_delivery = build_delivery_packet(
+        _research_result(
+            "portfolio",
+            {"adapter": "portfolio", "panel": _option_overlay_snapshot()},
+            partial=True,
+        )
+    )
+    html = portfolio_delivery.standalone_board.html if portfolio_delivery.standalone_board else b""
     require(
-        "Greeks unavailable" in html,
+        b"Greeks unavailable" in html,
         "the Portfolio Risk Board must visibly disclose missing option Greeks",
     )
     require(
-        "Option overlay Greeks are unavailable" in html,
+        b"Option overlay Greeks are unavailable" in html,
         "the partial product-risk and stress gap must stay visible in the Board",
+    )
+    require(
+        b"SAMP 2026-09 C220" in html,
+        "the reported partial option must remain visible in the frozen Board",
+    )
+    _require_markers_in_order(
+        html,
+        (
+            b'aria-label="\xe7\xbb\x84\xe5\x90\x88\xe9\xa3\x8e\xe9\x99\xa9\xe8\xa7\x86\xe5\x9b\xbe"',
+            b'data-view="overview"',
+            b'data-view="symbol"',
+            b'data-view="fundamentals"',
+            b'data-view="theme"',
+            b'data-view="product"',
+            b'data-view="broker"',
+            b'data-view="stress"',
+        ),
+        "the partial Portfolio delivery must retain the frozen seven-view control order",
+    )
+    for anchor in (
+        b"portfolio-summary",
+        b"fundamentals-panel",
+        b"stress-panel",
+        b"risk-ledger-row",
+    ):
+        require(
+            anchor in html,
+            f"the Portfolio delivery must retain the frozen renderer anchor: {anchor.decode()}",
+        )
+
+    private_overlay = _option_overlay_snapshot()
+    private_overlay["privacy"] = "private_runtime"
+    _refresh_content_hash(private_overlay)
+    private_delivery = build_delivery_packet(
+        _research_result(
+            "portfolio",
+            {"adapter": "portfolio", "panel": private_overlay},
+            partial=True,
+            privacy="private",
+        )
+    )
+    require(
+        private_delivery.standalone_board is not None
+        and b"Option overlay Greeks are unavailable" in private_delivery.standalone_board.html,
+        "a private canonical snapshot must project into the same frozen partial Board",
     )
 
     explicit_instrument = resolve_daily_ops_route(
@@ -248,6 +393,12 @@ def main() -> int:
         require(
             "first decision-bearing" in document or "第一个决策性用户交付" in document,
             f"{label} must put the required Board or Blocker before prose status output",
+        )
+        require(
+            "ResearchResult" in document
+            and "research_result.py" in document
+            and "visualize" in document,
+            f"{label} must require the canonical renderer and prohibit alternate visuals",
         )
 
     print("daily ops routing selftest passed")

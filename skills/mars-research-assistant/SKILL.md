@@ -63,7 +63,9 @@ response when plain language is clearer; preserve the reasoning discipline.
    `standalone_board` HTML and present its durable path early for acceptance.
    Do not emit a second inline, iframe, or host-dependent visual. For an
    unscoped Daily Ops baseline, the Macro and Portfolio Boards are mandatory
-   delivery gates, not discretionary visuals.
+   delivery gates, not discretionary visuals. They must be generated through
+   `ResearchResult -> DeliveryPacket`, never through `visualize`, hand-authored
+   HTML, or an alternate renderer.
 
 For an explicit user request outside unscoped Daily Ops, do not follow a fixed
 workflow sequence when a shorter valid path reaches the user's outcome. The
@@ -125,9 +127,14 @@ default baseline, not a substitute for an explicit user request:
      --broker-authorized false \
      --portfolio-state not_read
    ```
-2. Acquire the complete direct-public Macro field set and deliver the Macro
-   standalone Board, or the single `Data Acquisition Blocker` when any required
-   field fails. Do not write a prose-only macro summary first.
+2. Acquire the complete direct-public Macro field set. On success, create a
+   `ResearchResult` with `result_kind=macro` and
+   `visual.adapter=macro`, carrying the exact canonical Macro snapshot from
+   `macro_preflight.py`; run
+   `python3 scripts/research_result.py --input <result.json> --output-dir <transient-dir>`
+   and deliver only its `standalone_board/research-brief.html`. On failure,
+   deliver the single `Data Acquisition Blocker`. Do not write a prose-only
+   macro summary first, use `visualize`, or author a replacement HTML Board.
 3. If broker read-only access is not yet authorized, run the route with
    `--macro-state delivered --broker-authorized false --portfolio-state not_read`
    and ask for that authorization next. Do not propose a ticker, trade horizon,
@@ -136,9 +143,13 @@ default baseline, not a substitute for an explicit user request:
    `--macro-state delivered --broker-authorized true --portfolio-state not_read`,
    then read the selected broker's permitted holdings and capital context.
    Classify the result as `ready`, `option_overlay_partial`, or `core_gap` and
-   run the route again with that state. `ready` and `option_overlay_partial`
-   both require the Portfolio Risk standalone Board; only `core_gap` yields a
-   concrete data gap instead.
+   run the route again with that state. For `ready` or
+   `option_overlay_partial`, create a `ResearchResult` with
+   `result_kind=portfolio` and `visual.adapter=portfolio`, carrying the
+   validated canonical Portfolio snapshot (or a legacy normalized panel); run
+   `research_result.py` and deliver only its `standalone_board/research-brief.html`.
+   These states both require the frozen Portfolio Risk Board; only `core_gap`
+   yields a concrete data gap instead.
 5. Only after the Macro and Portfolio baseline has been delivered, ask the user
    which ticker they want to inspect. Generate individual research or Price
    Action only for a ticker the user explicitly names and only after its
@@ -164,6 +175,11 @@ Do not put a runtime-status table, market summary, broker-health table, or
 recommended ticker before it. A one-sentence progress update is allowed while
 data is being acquired; source coverage and data gaps belong inside the Board
 or Blocker and concise follow-on copy.
+
+`macro_board_visual.py` and `portfolio_board_visual.py` are the accepted
+canonical renderers. Their component tokens, view order, and interaction
+surfaces are frozen. Do not reproduce their layout in prompt text, modify their
+HTML in a Daily Ops task, or replace them with `visualize` output.
 
 An explicit request such as `分析 TSM` or `做 NVDA 的 4H PA` takes the focused
 instrument route and does not invent this baseline as a prerequisite. Follow
@@ -216,7 +232,9 @@ Visual adapters are purpose-specific:
 
 `standalone_board/research-brief.html` is the only visual acceptance artifact.
 It must open without host CSS or network access and remain paired with its
-canonical snapshot and manifest. Automated visual checks are limited to
+canonical snapshot and manifest. For an unscoped Daily Ops Macro or Portfolio
+baseline, `visual` is required and must be rendered by its matching canonical
+adapter. Automated visual checks are limited to
 deterministic output, safety, and one openability smoke unless the user requests
 more.
 

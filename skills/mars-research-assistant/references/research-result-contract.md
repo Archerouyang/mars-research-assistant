@@ -32,8 +32,11 @@ delivery Markdown preserves this classification and provenance.
 
 Run `scripts/research_result.py` when deterministic Markdown or a standalone
 Board is needed. Macro and Instrument visuals accept their existing canonical
-Board snapshot, Portfolio accepts its normalized panel, and Price Action accepts
-the existing OHLCV chart payload.
+Board snapshot, Portfolio accepts its canonical risk snapshot or legacy
+normalized panel, and Price Action accepts the existing OHLCV chart payload. In
+unscoped Daily Ops, Macro and Portfolio
+always require this delivery path: `visual` cannot be omitted or replaced with
+`visualize`, copied HTML, or a new renderer.
 
 When `visual` is present, `DeliveryPacket.standalone_board` contains exactly one
 self-contained packet: `snapshot.canonical.json`, `research-brief.html`, and

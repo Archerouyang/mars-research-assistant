@@ -24,6 +24,15 @@ cost-reduction layer. Treat this as classification input for the Board, not an
 implicit request to evaluate the option strategy, its underlying company, or a
 Price Action setup. Those need a later explicit user request.
 
+For the Daily Ops baseline, package the validated canonical Portfolio snapshot
+(or a legacy normalized panel) as
+`ResearchResult(result_kind=portfolio, visual.adapter=portfolio)` and render it
+with `scripts/research_result.py`. This invokes the frozen
+`portfolio_board_visual.py` structure; its input bridge may project fields but
+must not alter the accepted view order or interaction. Do not create a
+Portfolio Risk Board with `visualize`, copied HTML, or a separate
+CSS/interaction system.
+
 The standalone Board should lead with numeric concentration and product-risk visuals.
 Text explains the decision and constraints after the exposure is inspectable.
 Never expose account identifiers or raw broker rows.

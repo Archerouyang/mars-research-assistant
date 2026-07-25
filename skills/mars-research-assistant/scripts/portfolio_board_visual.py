@@ -7,6 +7,8 @@ import copy
 from html import escape
 from typing import Any, Mapping
 
+from artifact_packet_board_adapters import resolve_board_adapter
+from artifact_packet_core import ArtifactPacketError, validate_snapshot
 from board_visual_contract import BoardVisualError, exact_fields
 from board_visual_shared import (
     _base_css,
@@ -24,7 +26,7 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(panel, Mapping):
         raise BoardVisualError("visual_panel_invalid")
     normalized = copy.deepcopy(dict(visual))
-    normalized["panel"] = copy.deepcopy(dict(panel))
+    normalized["panel"] = _normalize_panel(panel)
     validate_portfolio_panel(normalized["panel"])
     return normalized
 
@@ -34,6 +36,137 @@ def render(visual: Mapping[str, Any], privacy: str) -> bytes:
     panel["privacy"] = privacy
     validate_portfolio_panel(panel)
     return _render_panel(panel)
+
+
+def _normalize_panel(panel: Mapping[str, Any]) -> dict[str, Any]:
+    """Accept the current canonical snapshot without changing the frozen Board.
+
+    The accepted seven-view renderer predates the Artifact Packet portfolio
+    schema. Daily Ops now produces that richer schema, so the input bridge
+    preserves its validated calculations and data gaps while retaining the
+    accepted presentation surface. Legacy panels remain supported for existing
+    callers and fixtures.
+    """
+
+    copied = copy.deepcopy(dict(panel))
+    if copied.get("board") != "portfolio_risk":
+        return copied
+    try:
+        copied = validate_snapshot(copied, resolve_board_adapter(copied))
+    except ArtifactPacketError as error:
+        raise BoardVisualError(str(error)) from error
+    return _legacy_panel_from_snapshot(copied)
+
+
+def _legacy_panel_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
+    """Project one validated portfolio snapshot into the accepted view model."""
+
+    payload = snapshot["payload"]
+    positions = list(payload["positions"])
+    unmodeled_options = [
+        position
+        for position in positions
+        if not position["excluded"]
+        and position["product_type"] == "option"
+        and position["delta_exposure"] is None
+    ]
+    unmodeled_option_ids = {str(position["id"]) for position in unmodeled_options}
+
+    def project_aggregation(row: Mapping[str, Any]) -> dict[str, Any]:
+        plan_limit = str(row["plan_limit"])
+        if unmodeled_option_ids.intersection(str(item) for item in row["affected_position_ids"]):
+            plan_limit = (
+                f"{plan_limit} Reported option market value remains visible; its unavailable "
+                "delta and stress contribution are excluded."
+            )
+        return {
+            "label": str(row["label"]),
+            "direct_market_value": float(row["direct_market_value"]),
+            "delta_exposure": float(row["delta_exposure"]),
+            "notional_exposure": float(row["notional_exposure"]),
+            "weight_pct": float(row["weight_pct"]),
+            "plan_limit": plan_limit,
+            "affected_holdings": list(row["affected_holdings"]),
+        }
+
+    risk_ledger = [
+        {
+            "exposure": str(row["exposure"]),
+            "risk_issue": str(row["risk_issue"]),
+            "plan_constraint": str(row["plan_constraint"]),
+            "severity": str(row["severity"]),
+            "status": str(row["status"]),
+        }
+        for row in payload["risk_ledger"]
+    ]
+    if unmodeled_options:
+        option_symbols = ", ".join(str(position["symbol"]) for position in unmodeled_options)
+        option_market_value = sum(
+            abs(float(position["market_value"])) for position in unmodeled_options
+        )
+        risk_ledger.append(
+            {
+                "exposure": "Option overlay data gap",
+                "risk_issue": (
+                    f"Option overlay Greeks are unavailable: {option_symbols} reported market "
+                    f"value {option_market_value:,.0f}; reliable delta is unavailable."
+                ),
+                "plan_constraint": (
+                    "Greeks unavailable. Keep the reported overlay visible, but exclude it from "
+                    "delta and stress calculations until the missing fields are supplied."
+                ),
+                "severity": "medium",
+                "status": "partial",
+            }
+        )
+
+    totals = payload["totals"]
+    confirmed_positions = [
+        position
+        for position in positions
+        if not position["excluded"] and position["delta_exposure"] is not None
+    ]
+    panel_privacy = (
+        "private" if snapshot["privacy"] == "private_runtime" else str(snapshot["privacy"])
+    )
+    return {
+        "schema_version": "1.0",
+        "decision_cutoff": str(snapshot["decision_cutoff"]),
+        "privacy": panel_privacy,
+        "coverage": dict(snapshot["coverage"]),
+        "payload": {
+            "totals": {
+                "gross_market_value": float(totals["gross_market_value"]),
+                "gross_delta_exposure": float(totals["gross_delta_exposure"]),
+                "net_delta_exposure": float(totals["net_delta_exposure"]),
+                "gross_notional_exposure": sum(
+                    abs(float(position["notional_exposure"]))
+                    for position in confirmed_positions
+                ),
+                "cash_context": float(totals["cash_context"]),
+                "currency": str(totals["currency"]),
+                "scope_label": str(totals["scope_label"]),
+            },
+            "aggregations": {
+                key: [project_aggregation(row) for row in payload["aggregations"][key]]
+                for key in ("by_symbol", "by_theme", "by_product", "by_broker")
+            },
+            "stress_scenarios": copy.deepcopy(list(payload["stress_scenarios"])),
+            "source_coverage": [
+                {
+                    "source_alias": str(row["source_alias"]),
+                    "reconciliation_status": str(row["reconciliation_status"]),
+                    "as_of": str(row["as_of"]),
+                }
+                for row in payload["source_coverage"]
+            ],
+            "exclusions": [{"symbol": str(row["symbol"])} for row in payload["exclusions"]],
+            "risk_ledger": risk_ledger,
+            "fundamentals": {"source": "not_provided", "as_of": "", "items": []},
+            "posture": {"label": str(payload["posture"]["label"])},
+            "decision": str(payload["decision"]),
+        },
+    }
 
 
 def _render_panel(snapshot: Mapping[str, Any]) -> bytes:

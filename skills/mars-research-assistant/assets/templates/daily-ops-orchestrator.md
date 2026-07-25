@@ -98,13 +98,18 @@ exist, do not invent actual macro readings.
 仅当用户未点名标的、研报或 PA 时使用。按以下顺序输出：
 
 1. 每次阶段转换先执行 `python3 scripts/daily_ops_routing.py`，传入当前的 intent、macro、broker authorization 与 portfolio state。脚本返回的 `required_actions` 是强制交付，`forbidden_actions` 不得出现在本轮输出或工具路由中。
-2. 第一轮 `macro_state=pending`：先交付完整直接公开字段的 Macro standalone Board；任一必填字段失败则交付唯一的 `Data Acquisition Blocker`。不能用文字晨报、市场摘要或「下一步建议」代替。
+2. 第一轮 `macro_state=pending`：完整直接公开字段通过后，必须以其 canonical snapshot 构建 `ResearchResult(result_kind=macro, visual.adapter=macro)`，运行 `scripts/research_result.py`，并交付生成的 `standalone_board/research-brief.html`。任一必填字段失败才交付唯一的 `Data Acquisition Blocker`。不能用文字晨报、市场摘要、`visualize`、手写 HTML 或「下一步建议」代替。
 3. `macro_state=delivered` 且未获 broker 只读授权：只询问授权；此时不提出 ticker、周期、公司研究或 PA。
-4. 授权并选定唯一默认 broker 后，先读取该 broker 的许可持仓与资本字段，再分类：`ready` 和 `option_overlay_partial` 都必须交付 Portfolio Risk standalone Board；`core_gap` 才明确持仓数据缺口，且不以个股分析代替。
+4. 授权并选定唯一默认 broker 后，先读取该 broker 的许可持仓与资本字段，再分类：`ready` 和 `option_overlay_partial` 都必须以验证通过的 canonical Portfolio snapshot（或兼容 legacy normalized panel）构建 `ResearchResult(result_kind=portfolio, visual.adapter=portfolio)`，运行 `scripts/research_result.py`，并交付冻结的 Portfolio Risk standalone Board；`core_gap` 才明确持仓数据缺口，且不以个股分析代替。
 5. 期权缺 multiplier、Greeks、delta 或可靠 notional，但具备身份、方向、市值、币种、时间戳和现金/NAV 上下文时，使用 `option_overlay_partial`：Board 保留该期权的来源和市值，明确其不进入 delta/stress 计算；不能补零、不能自行读/请求第二券商。
 6. Macro 与持仓风险结果完成后，才请用户指定希望研究的 ticker；个股研究和 PA 仅针对用户点名标的。用户解释期权是备兑 Call、LEAP、对冲、TP 或降成本层，只用于分类，不构成 GOOGL 或任何标的的分析请求。
 
 每个阶段的 Board 或 Blocker 都是第一个决策性用户交付。不能先渲染运行时状态表、券商健康表、文字宏观报告或推荐标的；这些信息只作为 Board/Blocker 内的来源和缺口，或其后的简短说明。
+
+Macro 必须复用 `macro_board_visual.py`，Portfolio 必须复用
+`portfolio_board_visual.py`；两者经 `ResearchResult -> DeliveryPacket` 输出。
+此前冻结的组件 token、视图顺序和交互不允许在 Daily Ops 中重写。不能用
+`visualize`、临时前端或自写 CSS 替代。
 
 用户直接要求某个标的、研报或 PA 时，可以走相应的聚焦路径，不强制补做本基线。
 

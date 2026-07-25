@@ -49,9 +49,10 @@ def resolve_daily_ops_route(
 
     if macro_state == "pending":
         return DailyOpsRoute(
-            ("macro_board_or_blocker",),
+            ("render_macro_research_result_or_blocker",),
             (
                 "prose_only_macro_summary",
+                "custom_html_board",
                 "request_read_only_broker_authorization",
                 "portfolio_risk_board",
                 "individual_research",
@@ -62,6 +63,7 @@ def resolve_daily_ops_route(
         return DailyOpsRoute(
             ("macro_data_acquisition_blocker",),
             (
+                "custom_html_board",
                 "request_read_only_broker_authorization",
                 "portfolio_risk_board",
                 "individual_research",
@@ -80,13 +82,26 @@ def resolve_daily_ops_route(
         )
     if portfolio_state == "ready":
         return DailyOpsRoute(
-            ("portfolio_risk_board", "ask_user_to_select_instrument"),
-            ("individual_research", "price_action", "request_secondary_broker"),
+            ("render_portfolio_research_result", "ask_user_to_select_instrument"),
+            (
+                "custom_html_board",
+                "individual_research",
+                "price_action",
+                "request_secondary_broker",
+            ),
         )
     if portfolio_state == "option_overlay_partial":
         return DailyOpsRoute(
-            ("portfolio_risk_board_partial", "ask_user_to_select_instrument"),
-            ("individual_research", "price_action", "request_secondary_broker"),
+            (
+                "render_portfolio_research_result_partial",
+                "ask_user_to_select_instrument",
+            ),
+            (
+                "custom_html_board",
+                "individual_research",
+                "price_action",
+                "request_secondary_broker",
+            ),
         )
     return DailyOpsRoute(
         ("portfolio_data_gap",),
