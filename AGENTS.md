@@ -48,6 +48,36 @@ active implementation, the coordinator may assign those branches to the
 designated `开发1` task. Keep single-branch mainline work local by default; do
 not dispatch merely to move context elsewhere.
 
+## Product Thinking And MVP
+
+- Start product work from first principles: identify the user's actual decision
+  or job, known facts, assumptions, constraints, safety invariants, and the
+  smallest outcome that can prove useful value.
+- Prefer an early minimum viable prototype over a broad implementation. Make it
+  narrow, usable, and inspectable enough for the user to judge the core
+  workflow, interaction, information hierarchy, and output format.
+- MVP means minimum scope, not low quality. Preserve the clarity, terminology,
+  essential states, failure behavior, and visual hierarchy required for a
+  credible product experience.
+- Optimize for the user's real workflow and decision quality, not for apparent
+  completeness, architectural sophistication, or the amount of generated
+  output. Every element should help the user understand, decide, or act.
+- Present the prototype for manual acceptance before expanding architecture,
+  compatibility layers, automation, or test coverage. After acceptance, harden
+  the approved behavior into a stable format or contract and broaden only where
+  evidence or risk justifies it.
+- Before every substantive response or artifact, perform a requirement-gap
+  self-review: check what the user explicitly requested, what the response still
+  omits, what may have been misinterpreted, whether prior feedback was applied,
+  and whether the delivered format and interaction match the request. Correct
+  discovered gaps before presenting the result.
+- Explicitly disclose any unmet requirement, unresolved assumption, or deferred
+  work. Passing tests is not a substitute for meeting the user's actual request.
+- Treat user dissatisfaction and improvement feedback as product evidence.
+  Correct the current output, record the actionable item in the appropriate
+  planning record, and carry it into the next iteration instead of leaving it
+  only in chat.
+
 ## Context And Goal Hygiene
 
 - Keep the coordinator context focused on requirements, decisions, review
@@ -115,9 +145,44 @@ not dispatch merely to move context elsewhere.
 - Prefer TDD for scripts, transformations, and other cheaply testable behavior.
 - Use existing packaging, cache, and verification scripts before adding a new
   path.
+- Default to the minimum useful automated verification: focused tests for the
+  changed behavior, one narrow end-to-end or openability smoke when needed, and
+  `git diff --check`. Do not automatically expand into the full repository
+  suite, broad acceptance matrices, repeated browser runs, or exhaustive visual
+  checks.
+- Broaden automated verification only when a release gate requires it, the
+  change crosses a shared compatibility or safety interface, a reproduced
+  defect needs wider regression evidence, or the user explicitly requests it.
+- Deliver a usable artifact or workflow to the user as early as possible and
+  prefer explicit human acceptance of user-facing behavior over agent-generated
+  visual proof. Automated checks support that decision; they do not replace it.
+- When the user asks for minimal testing, treat that as a strict scope limit.
+  Report the small checks that ran and identify any intentionally deferred
+  suites without running them speculatively.
 - Run non-quant 1.0 acceptance and release-readiness checks in
   `/Users/archer/Documents/交易想法-1-0-uat`, re-pinned to the accepted `dev`
   commit. A stale UAT snapshot is not release evidence.
+
+## Visual Artifact Delivery
+
+- Give the user the real generated HTML artifact for visual acceptance before
+  public cutover, packaging, or broad screenshot-matrix work. Automated visual
+  checks do not replace the user's visual approval.
+- Resolve every artifact path from the worktree that actually generated it.
+  Before sharing a path or URL, verify that the file exists in that worktree;
+  never assume the main workspace contains an isolated worktree's outputs.
+- Do not hand `file://` links to the Codex in-app browser. Serve the narrowest
+  artifact directory from the generating worktree on `127.0.0.1`, then verify
+  the HTTP page loads with the expected title and view controls before giving
+  the user the URL. Keep that local server running for the review session.
+- For manual visual acceptance, first deliver the canonical Overview and all
+  intended interactive views. Record concrete user feedback and do not claim
+  visual acceptance until the user explicitly approves the rendered result.
+- Keep routine automated visual gates limited to artifact determinism,
+  manifest/hash integrity, offline and privacy safety, plugin synchronization,
+  and a minimal openability/interaction smoke. Run broad viewport, pixel, or
+  screenshot matrices only when the approved issue specifically requires them
+  or a reproduced defect needs them.
 
 ## Planning Records
 

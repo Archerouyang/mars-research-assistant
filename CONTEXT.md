@@ -1,24 +1,20 @@
-# Mars Research Assistant
+# 火星投研助手
 
-这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、经同意的 broker-live 持仓展示、复盘上下文和交易系统可视化。
+这个上下文定义火星投研助手的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、经同意的 broker-live 持仓展示、复盘上下文和交易系统可视化。
 
 ## Language
 
-**火星投研助手 (Mars Research Assistant)**:
-The public project, repository, and distribution brand for Mars Research Assistant.
-_Avoid_: package identifier, private runtime
-
-**Mars Research Assistant**:
-The user-facing trading research product delivered as one portable Agent Skill.
-_Avoid_: native wrapper, per-agent package variant
+**火星投研助手**:
+面向交易研究、市场状态判断、标的分析和经同意持仓展示的单一便携式 Agent Skill。它是研究与决策支持产品，不是 Plugin、自动交易系统或券商账户控制层；机器标识为 `mars-research-assistant`。
+_Avoid_: DailyTrades, Trading Research System, Codex Plugin, Claude Plugin
 
 **Agent Skill package**:
 The single self-contained `mars-research-assistant` package installed across compatible coding agents; it includes every public workflow resource required to run without partial focused-skill selection.
-_Avoid_: partial Skill set, native wrapper
+_Avoid_: trading-research-system, partial skill set, native plugin
 
 **Command-first distribution**:
-The installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill.
-_Avoid_: marketplace-first distribution, per-agent install paths
+The installation model in which one `npx skills` command detects the coding agent and installs the portable Agent Skill. Native Plugin wrappers and marketplace manifests are outside the product boundary.
+_Avoid_: marketplace-first distribution, native plugin commands, per-agent main install commands
 
 **交易投研系统**:
 一套从信息收集到交易复盘的研究与决策支持系统。它服务于主动交易，不是自动下单系统，也不是保证收益的荐股系统。
@@ -29,11 +25,11 @@ _Avoid_: 自动交易系统, 荐股系统
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
-Mars Research Assistant 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、经同意的持仓展示和统计复盘。
-_Avoid_: 多个可被部分安装的公开 Skills, 多个互不相干的分发包
+火星投研助手对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、经同意的持仓展示和统计复盘。
+_Avoid_: 多个可被部分安装的公开 skills, 多个互不相干的 plugin
 
 **Daily Ops Orchestrator**:
-Mars Research Assistant 的主动日程引导层。它位于单一 `mars-research-assistant` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、宏观更新、持仓展示还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
+火星投研助手的主动日程引导层。它位于单一 `mars-research-assistant` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、宏观更新、持仓展示还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
 _Avoid_: 新的荐股模块, 让用户手动 call out 每个步骤
 
 **Daily Ops State**:
@@ -89,28 +85,28 @@ _Avoid_: 研报=交易信号, thesis 直接升级 setup
 _Avoid_: 全自动数据湖, 不可核验来源
 
 **Broker Source**:
-提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge Skill、Terminal CLI 或手动 CSV。Broker Source 是可插拔 adapter，不是 Mars Research Assistant 的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
+提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill 或手动 CSV。Broker Source 是可插拔 adapter，不是火星投研助手的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
 _Avoid_: 单一券商绑定, 券商即系统
 
 **券商只读来源设置**:
 Daily Ops 首次启动或 runtime health 显示 broker source 为 `missing` / `unauthorized` 时触发的只读券商来源访谈。它应询问用户是否启用 Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。本步骤只配置读取意图和偏好，不读取账户、不安装软件、不写入 public repo，也不允许任何 broker write action。
-_Avoid_: 安装 Skill 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
+_Avoid_: 安装 plugin 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
 
 **Read-only Broker Adapter**:
 把 broker 原始数据转换成标准运行时视图的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。适配层可以为一次分析返回内存数据、临时文件或派生快照，但不应要求长期保存券商逐笔事实。
 _Avoid_: 自动下单插件, 账户控制层
 
 **Longbridge Broker Source**:
-Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge Skill 或 Terminal CLI，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
+Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
 **Longbridge Macrodata Source**:
-Longbridge Skill 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source；Mars 1.0 Macro Board 可将其作为已注册字段的 S1 输入，但每条记录必须保留精确字段身份、原生路径、单位、时间戳和最近完成收盘/参考期。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
-_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代字段合同或官方政策事实
+Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
 
 **Longbridge Skill Adapter**:
-把 Longbridge Skill 或 Terminal CLI 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native Skill 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于 Macro Board 的候选 S1 宏观和金融条件字段。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 Skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
-_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在, 用未映射 macrodata 绕过 Mars 字段合同
+把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
+_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在
 
 **Longbridge Terminal CLI Adapter**:
 消费用户已授权的 `longbridge portfolio --format json` 等只读 CLI 输出，并通过 `longbridge_cli_adapter.py` 转换成标准 `portfolio_snapshot.csv` 的本地适配层。该 adapter 只处理已保存 JSON，不主动运行 CLI、不读取 live broker、不调用行情、不创建/修改/取消/提交订单。
@@ -131,6 +127,34 @@ _Avoid_: 用持仓展示或未完成的默认流程阻塞用户明确提出的�
 **Named Instrument Analysis**:
 用户点名标的时，默认交付行业事件、基本面、技术面和 4H Price Action 的完整分析包；用户明确限定范围时才裁剪。技术面与 PA 使用已冻结样式的 4H PA standalone Board，行业事件、基本面、估值、催化与反方风险使用配套 Markdown。该请求不要求先展示持仓，也不构成读取账户持仓的授权。
 _Avoid_: 自动选择标的, 把标的研究错误地阻塞在宏观或持仓展示之后
+
+**决策字段契约**:
+每种 Board 在读取 Provider 之前冻结的标准字段集合，包括字段语义、必需性、允许来源、时效规则和允许的派生计算。Provider 命令成功不等于决策字段可用。
+_Avoid_: 来源可用等于字段齐全, 临时硬编码字段, 用响应标签代替字段语义
+
+**字段获取 Preflight**:
+Board 渲染前对全部保留必需字段执行的确定性获取与校验步骤。任一保留必需字段未达到 `available` 时，Preflight 必须拒绝 Board 并返回数据获取阻塞说明。没有稳定直接来源的期望信号只能经版本化字段合同修订后移出范围，不能作为本轮豁免或 proxy 留在 Board。
+_Avoid_: 先生成 Board 再补来源, 缺字段的半成品 Board
+
+**默认券商**:
+火星投研助手首次设置时由用户选择的唯一只读券商来源，同时承担本轮允许的券商持仓和券商行情读取。系统不得自动切换到另一家券商；默认券商不可用时，Macro Board 仍可按字段契约使用合格的官方或公开来源。
+_Avoid_: 每次任务重复询问券商, 跨券商静默回退, 默认券商等于所有事实来源
+
+**字段状态**:
+决策字段在一次获取运行中的标准状态，只允许 `available`、`stale`、`missing`、`unsupported`、`source_error` 和 `conflicted`。`derived` 和 `fallback` 描述计算或获取路径，不是字段状态。
+_Avoid_: partial 泛化所有缺口, available 表示语义已验证, proxy 状态
+
+**字段合同收缩**:
+当一个期望宏观信号无法由直接、稳定、语义匹配的公开来源取得时，用户可以通过产品规格将它移出当前版本字段合同。移出后它不显示为缺口、placeholder 或可豁免字段；再次加入必须有经过验证的来源映射和 golden case。
+_Avoid_: 永久保留不稳定字段, 静默降级为 optional, Agent 自行用 proxy 补值
+
+**数据获取阻塞说明**:
+保留必需字段获取失败时替代 Board 返回的用户可见结果，列出缺失字段、决策用途、已尝试来源、失败状态和下一步精确获取动作。多个缺失字段应在一次说明中批量展示。
+_Avoid_: 空白 Board, 模糊的 data unavailable, 逐字段反复打断用户
+
+**统一收盘快照**:
+Macro Board 使用的最近一个全部必需市场字段共同具备完整收盘或结算数据的日期。Board 不混用盘中、盘前、盘后和不同交易日数据，并在顶部公开市场数据与新闻政策的独立截止时间。
+_Avoid_: 实时, 当前价格, 不同日期拼接成同一快照
 
 **Source Routing Boundary**:
 按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 可用于已注册的市场/宏观字段和明确授权的只读账户、持仓、成交事实；它们不能替代政策、新闻或未映射字段的来源。宏观 Board 的字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 与 `macro-field-registry-v1.json` 锁定。选择 Longbridge 做一个字段不使其成为政策、行业或新闻的默认来源。
@@ -161,7 +185,7 @@ _Avoid_: 摘要, 复制粘贴
 _Avoid_: 信号, 荐股
 
 **Trading Profile**:
-使用者私有的交易档案，记录交易目标、允许工具、时间框架、策略姿态阈值、主动交易池、ETF 组合、防御/宏观配置规则、拥挤度模型和人工覆盖规则。public Skill 只提供模板和读取规则，不把某个使用者的具体主题、品种、权重或时间框架硬编码为默认行为。
+使用者私有的交易档案，记录交易目标、允许工具、时间框架、策略姿态阈值、主动交易池、ETF 组合、防御/宏观配置规则、拥挤度模型和人工覆盖规则。public plugin 只提供模板和读取规则，不把某个使用者的具体主题、品种、权重或时间框架硬编码为默认行为。
 _Avoid_: 插件默认策略, 公开仓位配置
 
 **核心 ETF 底仓**:
@@ -221,7 +245,7 @@ _Avoid_: 模型自动升级核心池, 一次强势就变 Core
 _Avoid_: 一个 ticker 只能属于一个池, ticker 固定工具表达
 
 **池级工具表达规则**:
-Trading Profile 中按主动交易池配置的工具偏好。一个使用者 profile 可以配置主题核心池默认正股，只有使用者主动声明时才评估 LEAP；大盘流动性龙头池可以主动提示 LEAP 机会，但必须要求高质量位置、合理 IV、足够期限和事件风险确认。工具表达规则不应写死在 public Skill 中。
+Trading Profile 中按主动交易池配置的工具偏好。一个使用者 profile 可以配置主题核心池默认正股，只有使用者主动声明时才评估 LEAP；大盘流动性龙头池可以主动提示 LEAP 机会，但必须要求高质量位置、合理 IV、足够期限和事件风险确认。工具表达规则不应写死在 public plugin 中。
 _Avoid_: 所有池共用工具, 插件主动建议用户未启用的工具
 
 **策略姿态分流**:
@@ -273,7 +297,7 @@ _Avoid_: 估算暴露当实时事实
 _Avoid_: 指数涨=市场全面健康
 
 **拥挤度主题列表**:
-Crowding Score 优先覆盖 Trading Profile 中配置的活跃主题群。主题列表用于决定哪些主题先进入拥挤度、flow、指数权重贡献和行业净暴露分析，不代表其它行业永远不分析。半导体、AI 硬件、存储、AI 应用/软件和 MAG7 可以作为一个使用者 profile 的示例配置，而不是 public Skill 的固定默认。
+Crowding Score 优先覆盖 Trading Profile 中配置的活跃主题群。主题列表用于决定哪些主题先进入拥挤度、flow、指数权重贡献和行业净暴露分析，不代表其它行业永远不分析。半导体、AI 硬件、存储、AI 应用/软件和 MAG7 可以作为一个使用者 profile 的示例配置，而不是 public plugin 的固定默认。
 _Avoid_: 全行业平均覆盖, 永久固定主题
 
 **主线交易池**:
@@ -372,6 +396,62 @@ _Avoid_: 全 universe 出现时间, 今天日期冒充上次入榜
 由独立 Alpha Lab 在每个有效交易日生成的 ticker 级截面排行榜。它以动量为核心，同时允许经过验证的量价、波动、流动性、行业/主题 ETF、市场环境和 point-in-time 基本面因子进入模型。全量合格股票可查询，默认展示 Top10，Top20 进入研究候选池，Top5 进入优先深挖。排行榜只提高研究优先级，不直接生成交易 setup 或订单。`KVN Momentum Leaderboard` 是旧兼容名称，不是新模型的权威术语。
 _Avoid_: KVN 复刻, 买入名单, Agent 临时重排
 
+**Bayesian v1 Production Eligibility Universe**:
+Bayesian v1 每个历史时点可进入资格筛选的美国高流动性合格普通股集合。它必须按当时可知的上市状态、证券类型、价格、流动性、规模和历史长度重建，不限定为 S&P 500 成分；S&P 500 point-in-time membership 仅作为元数据、评估切片和 SPMO 对照，不是唯一准入条件。
+_Avoid_: 当前股票池回填历史, 仅 S&P 500 universe, S&P 500 membership 等同 eligibility
+
+**Bayesian v1 Size Gate**:
+Bayesian v1 Production Eligibility Universe 的历史时点规模门槛。股票在资格日必须具有当时可知且可审计的至少 100 亿美元总市值；不得使用当前市值回填历史。若市值由价格与流通股数重建，股数也必须在资格日当时已经可用。
+_Avoid_: 当前 market cap 回填, position market value, 缺失市值默认放行, 10 亿美元门槛
+
+**Bayesian v1 Eligible Security Types**:
+Bayesian v1 Production Eligibility Universe 只纳入美国交易所上市的普通股和 REIT 普通股。同一发行人的不同可交易普通股类别先作为独立 security 保留。ADR、外国普通股、ETF、ETN、封闭式基金、BDC、优先股、债券、warrant、right、unit、OTC 证券和并购完成前的 SPAC 不具备 v1 资格；de-SPAC 后必须重新满足历史长度、规模、价格和流动性门槛。
+_Avoid_: ADR, 基金份额, pre-merger SPAC, 不同证券类型共用股票因子口径
+
+**Bayesian v1 Ticker Identity Policy**:
+Bayesian v1 的资格、OHLCV、因子和标签主面板直接以数据供应商的当前 ticker 作为唯一证券键。ticker 变更采用供应商在当前 ticker 下提供的回溯历史，不建设 `issuer_id`、`security_id` 或 `listing_id` 层级；raw manifest 仍必须记录请求 symbol、来源、查询参数、`available_at` 和不可变 payload hash。v1 不主动覆盖 ticker 重用、退市或并购继承；发现身份歧义、历史断裂或来源间无法解释的映射冲突时，该证券必须排除并记录原因，待真实冲突案例证明需要后再升级身份模型。
+_Avoid_: 预建复杂 security master, 手工拼接旧 ticker, 身份歧义默认合并, 丢失 provider symbol lineage
+
+**Bayesian v1 Research Notebook Boundary**:
+Bayesian v1 首次验证使用一个可重复运行的 notebook 作为研究模拟与结果展示入口，用于检查数据覆盖、因子分布、Bayesian 后验、walk-forward、相对 SPY 表现、风险指标、预测校准和单因子消融。资格筛选、因子、标签、交易日切分、拟合与评估的权威计算逻辑必须位于可测试的普通模块中，由 notebook 调用；golden cases 和自动化测试负责验证计算正确性与无未来数据泄漏。notebook 必须展示本次输入数据 hash、参数和运行时间，不得维护一套隐藏或重复的核心计算实现。
+_Avoid_: notebook 作为唯一实现, 单元格复制生产逻辑, 隐藏状态, 无法复现的手工结果
+
+**Bayesian v1 Mathematical Review Gate**:
+Bayesian v1 的生产数据合同冻结后、形成实现 spec 或开始任何模型拟合前，必须与使用者单独完成一轮细致的数学模型讨论并取得明确确认。讨论至少覆盖预测目标与 likelihood、横截面或层级结构、特征标准化、先验、时间变化与训练窗口、预测不确定性、排序分数、walk-forward、校准、基准模型、消融和失败判据；应使用公式、最小数值示例和 research notebook 可视化帮助审阅。当前五因子只定义首批候选输入，不预先决定最终 Bayesian 结构。
+_Avoid_: 数据合同等同模型 spec, 未讨论便默认线性高斯模型, 先训练后补数学定义, 只展示收益曲线
+
+**Bayesian v1 Return Basis Policy**:
+Bayesian v1 的技术因子使用拆股调整后的 price-return 序列：`return_20d`、`return_60d`、`realized_volatility_20d` 和 `ema_distance_50d` 不把现金分红作为价格动量。对 feature as-of session `t`，未来 20 个可执行交易 session 的标签使用股票从 `t+1` 官方开盘到 `t+21` 官方开盘的 total return 减 SPY 同一 open-to-open 窗口的 total return，股票和 SPY 均计入期间现金分红。拆股必须调整；若来源无法可靠重建任一侧的开盘价、分红与总回报，样本必须标记数据质量状态，不得静默退回 close-to-close 或 price return。
+_Avoid_: 因子把除息当动量, 标签忽略分红, 股票与 SPY 使用不同收益口径, total return 缺失时静默降级
+
+**Bayesian v1 Terminal Return Policy**:
+Bayesian v1 不估算退市、现金收购、换股并购、破产或无法解释的 ticker 终止所产生的 terminal return。若任一事件发生在未来 20 个交易日标签窗口内，样本必须设置 `label_matured=false`、记录明确的 `exclusion_reason`，并从训练、验证和收益模拟中排除；不得用最后收盘价、0% 或 -100% 代替终值。research notebook 必须按年份披露此类排除样本的数量和占比，明确 survivorship limitation；只有获得可审计的现金对价、换股比例及支付日期后才可升级此政策。
+_Avoid_: 最后价格冒充终值, 默认零收益, 默认完全损失, 隐藏终止样本, 未披露 survivorship limitation
+
+**Bayesian v1 Daily Session Policy**:
+Bayesian v1 只使用版本化 XNYS session calendar artifact 上的完整日线粒度，每个 XNYS session 对应一根日 OHLCV；半日市仍按一个完整交易日计数，不按交易小时折算权重，也不使用分钟线或小时线补齐。因子窗口和未来 20 日标签均按 XNYS session 计数；对 feature as-of session `t`，`target_start_date=t+1`、`target_end_date=t+21`，表示信号生成后 20 个完整 open-to-open session intervals。XNYS 开市但个股缺少完整日线时必须保留为缺失，不得填零成交量或沿用前收盘价；因子所需窗口不完整时不生成该日模型输入，标签任一端点缺少有效官方开盘价时设置 `label_matured=false`，不得改用同日收盘价或顺延到复牌日。SPY 必须使用相同 session 轴。
+_Avoid_: 半日市按小时折算, 分钟线拼日线, 缺失 bar 前值填充, 标签终点顺延, 股票与 SPY 使用不同日历
+
+**Bayesian v1 FMP License Boundary**:
+Bayesian v1 只把 FMP 数据用于使用者的私人内部量化研究。FMP immutable raw payload 只能进入仓库外的 private runtime；公共仓库只允许保存 schema、采集与验证代码、无真实行情的合成 fixtures 及不泄露 FMP 数据的合同文档。在取得适用的书面 display/redistribution 授权前，不得公开发布 FMP 原始数据、行情导出、数据驱动图表或基于 FMP 的公共排行榜；长期保存 raw payload 和展示派生结果的许可若未获明确证明，必须保持 `unknown` 并作为发布阻塞项。API key 可用或 endpoint 返回成功不等于相应 entitlement 或许可已经成立。
+_Avoid_: API key 等同授权, raw payload 进入 Git, 私人套餐支持公共展示, 未确认许可便再分发
+
+**Bayesian Private Model Boundary**:
+Bayesian 量化模型不是火星投研助手的公共开放能力。模型实现、research notebook、数学细节、先验与参数、训练数据、拟合后验、评估产物、历史模拟和生成的排行榜必须保存在独立私有 Quant 仓库或 private runtime 中，不得进入公共 Skill 仓库、公共下载物或公共服务。火星投研助手最多定义和消费一个本地私有结果接口，用于获得当前使用者自己的已生成结果；它不得包含足以重建模型的实现，也不得代表公开发布或向第三方开放排行榜。
+_Avoid_: 公共模型 API, notebook 进入公共插件, 发布模型参数或后验, 公共排行榜, 插件内重建私有模型
+
+**Bayesian Signal-Only Boundary**:
+Bayesian 模型只生成 ticker 级预期超额收益、posterior predictive 跑赢概率、预测区间、因子解释和截面排序，不生成组合权重、仓位规模、买卖点、订单或具体执行建议。`t+1` 开盘到 `t+21` 开盘的标签只用于把信号与 20 个可执行未来 session 的结果对齐并防止同收盘价未来函数，不代表使用者必须按该价格、期限或频率交易；具体交易选择、仓位与执行完全由使用者独立决定。
+_Avoid_: Alpha Rank 等同持仓建议, Top20 自动建仓, 模型决定仓位, 标签端点冒充交易指令
+
+**Bayesian v1 Longbridge Cross-Check Boundary**:
+Longbridge 在 Bayesian v1 中只作为 active symbol 的第二行情与公司行动交叉核验源，不承担 production universe、历史市值、标签或全量 OHLCV 主链。初始 golden set 每月最多使用 50 个唯一 symbol，并在每次采集前读取或核对实际剩余 entitlement；manifest 必须累计当月已请求的唯一 symbol，接近上限时 fail closed，不得通过多账户或改写 symbol 绕过配额。Longbridge 不承担退市证券覆盖；旧 ticker 或退市 symbol 无数据时记录为 `unsupported`，不得据此删除主源历史。Longbridge 与主源不一致时生成 reconciliation discrepancy，不自动覆盖主源数据。
+_Avoid_: Longbridge 全市场回填, 绕过 symbol 配额, 无数据等同证券不存在, 交叉源静默覆盖主源
+
+**Bayesian v1 Immutable Raw Manifest**:
+Bayesian v1 必须在 private runtime 中保存供应商原始响应字节，并以 SHA-256 内容地址保证不可变；不得先规范化或重排 JSON 后再冒充 raw payload。同一请求重新获取时必须追加 manifest observation，不覆盖旧响应；内容相同时允许按 payload hash 去重。最小 manifest 记录 provider、endpoint/version、非敏感请求参数、`fetched_at`、`data_as_of`、`available_at`、响应状态、字节数、entitlement label 和 `payload_sha256`，且禁止保存 API key、token 或授权 header。`data_as_of`、`fetched_at` 与 `available_at` 具有不同语义，不得互相代替；`available_at` 只有来源明确提供或存在已批准且版本化的推导政策时才能填写，否则保持 `unknown`，PIT 资格字段必须 fail closed。每条规范化资格、OHLCV、因子和标签记录都必须通过 `source_manifest_id` 回溯到原始 payload 与 hash。
+_Avoid_: 覆盖式下载, 规范化结果冒充 raw, fetched_at 冒充 available_at, secrets 进入 manifest, 无法回溯来源
+
 **Alpha Score**:
 多因子 Alpha 榜的正式排序分数。1.0 的 Bayesian champion 使用未来 20 个交易日相对 SPY 超额收益的后验预期与预测不确定性构造风险调整分数；LightGBM challenger 独立生成后台截面排名。模型、因子、数据和训练窗口必须有版本，Agent 只能读取和解释已生成分数。
 _Avoid_: 主观打分, 未校准胜率, 新闻热度排名
@@ -421,7 +501,7 @@ _Avoid_: 标的一概而论
 _Avoid_: 所有产品共用一个时间框架
 
 **默认工具时间框架表**:
-Trading Profile 中配置的工具时间框架规则。public Skill 只提供可编辑模板和示例，不把某个使用者的时间框架设为所有人的默认。一个中期主动交易 profile 示例可以是：长期 ETF 核心仓使用 1W/1D 分析、4H/1D 触发；宏观配置 setup 使用 1W/1D 分析、1D/4H 触发；主动个股中期交易使用 1W/1D/4H 分析、4H/1H 触发；LEAP call 使用 1W/1D 分析、1D/4H 触发；2x ETF 使用 1D/4H 分析、4H/1H 触发；0DTE QQQ 使用 1D/4H/1H 背景、15m/5m 触发。
+Trading Profile 中配置的工具时间框架规则。public plugin 只提供可编辑模板和示例，不把某个使用者的时间框架设为所有人的默认。一个中期主动交易 profile 示例可以是：长期 ETF 核心仓使用 1W/1D 分析、4H/1D 触发；宏观配置 setup 使用 1W/1D 分析、1D/4H 触发；主动个股中期交易使用 1W/1D/4H 分析、4H/1H 触发；LEAP call 使用 1W/1D 分析、1D/4H 触发；2x ETF 使用 1D/4H 分析、4H/1H 触发；0DTE QQQ 使用 1D/4H/1H 背景、15m/5m 触发。
 _Avoid_: 日内信号触发长期配置, 低周期决定宏观配置
 
 **实际交易记录**:
@@ -433,7 +513,7 @@ _Avoid_: 事后解释, 记忆中的交易
 _Avoid_: 自动复盘结论, 经纪商即完整日志
 
 **持仓日报**:
-交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 Skill 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
+交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 plugin 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
 _Avoid_: 自动调仓, 账户日报流水账, 手工交易表
 
 **持仓日报快照**:
@@ -457,7 +537,7 @@ _Avoid_: 把盈亏当成唯一质量判断
 _Avoid_: 随机追问
 
 **本地日分区记录**:
-按交易日期在本地保存观察清单、预备交易计划、复盘摘要、持仓日报快照和图表产物。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/mars-research-assistant-runtime`。本地日分区记录不应成为 broker 逐笔交易事实的长期 source of truth。
+按交易日期在本地保存观察清单、预备交易计划、复盘摘要、持仓日报快照和图表产物。Active Market Plan 当前状态在 `{runtime_dir}/market-plan.md`，每日变化轨迹在 `{runtime_dir}/updates/YYYY-MM-DD.md`，日分区记录在 `{runtime_dir}/daily/YYYY-MM-DD/`。默认 `runtime_dir` 是 `~/Documents/dailytrades-runtime`。本地日分区记录不应成为 broker 逐笔交易事实的长期 source of truth。
 _Avoid_: 临时聊天记录, 未归档输出
 
 **盘中分析**:
@@ -528,10 +608,10 @@ _Avoid_: 一个单元格放多个价格
 从原始复盘文本中拆出的 setup、入场、出场、错误标签和经验字段。它保留复盘可读性，同时支持统计错误频率和系统优化。
 _Avoid_: 只有长文本复盘
 
-**Skill-first 系统**:
-优先把交易投研系统实现为 Codex 可直接调用的 Agent Skill，而不是先建设独立前端应用。这样 agent 可以直接使用工作流、脚本、模板和外部工具，不需要用户自己配置模型层。
+**Plugin-first 系统**:
+优先把交易投研系统实现为 Codex 可直接调用的插件和技能，而不是先建设独立前端应用。这样 agent 可以直接使用工作流、脚本、模板和外部工具，不需要用户自己配置模型层。
 _Avoid_: 前端优先系统, 独立 SaaS
 
 **图表产物**:
-由 Skill 或 Codex 按需生成的临时图表页面、图片或报告片段，用于 K 线 setup、多时间框架和均线结构分析。图表产物不是长期维护的前端应用。
+由插件或 Codex 按需生成的临时图表页面、图片或报告片段，用于 K 线 setup、多时间框架和均线结构分析。图表产物不是长期维护的前端应用。
 _Avoid_: Dashboard, 常驻前端
