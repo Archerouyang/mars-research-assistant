@@ -31,6 +31,26 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `4fcdb86` `feat: restore one-shot macro board interactions`
+- Scope: skill, script, validation
+- What changed: restored the previous Macro Board's browser-only interaction
+  model without restoring a runtime: `趋势`, `当前状态`, `下周事件`, and `情景`
+  tabs; a two-series trend selector; and a macro-factor exposure selector.
+  Current status, conditional scenarios, and exposure text are derived only
+  from the frozen one-shot Macro fields, and disclose that exposure is not a
+  holding, account, position, or trade instruction. The representative visual
+  fixture now has a prominent synthetic/not-market-data disclosure.
+- Why it matters: users regain the prior inspection workflow without saved
+  state, broker reads, or invented portfolio context, while a visual test
+  sample can no longer be mistaken for a current market snapshot.
+- Verification: Macro selftest, complete Skill verifier, isolated portable
+  install smoke check, and generated browser-script syntax check passed.
+  Browser-rendered visual QA is explicitly blocked by the local `file:` URL
+  policy and recorded in `skills/mars-research-assistant/design-qa.md`.
+- Next step: manually inspect the newly generated interactive synthetic Board,
+  including each tab and factor selector, before treating its visual acceptance
+  as complete.
+
 - Commit: `4e4d9cf` `feat: restore macro board visual language`
 - Scope: skill, script, validation
 - What changed: restored the established standalone research-brief visual
