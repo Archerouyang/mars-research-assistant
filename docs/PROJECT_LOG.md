@@ -31,6 +31,16 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `a96119f` `test: cover macro event identity binding`
+- Scope: script
+- What changed: added fixture checks that reject an otherwise valid event when
+  only its registered time or allowed evidence classification changes.
+- Why it matters: the event-identity registry remains a complete provenance
+  boundary rather than accidentally degrading to title/category/URL matching.
+- Verification: focused Macro selftest passed through `uv` with both identity
+  mutations blocking the Board.
+- Next step: complete the final focused review before closing #102.
+
 - Commit: `f1fe4aa` `fix: bind macro evidence to events`
 - Scope: skill, script, decision
 - What changed: the primary-event-source registry now approves the complete
