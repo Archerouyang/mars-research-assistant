@@ -20,9 +20,10 @@ Broker access is read-only and source-specific. Reconcile before combining
 accounts. If coverage is incomplete, keep portfolio conclusions conditional.
 
 For a new unscoped Daily Ops session, do not start with a prose public-market
-summary. Run the phase gate below and deliver the required Macro Board or Data
-Acquisition Blocker first; then ask for the smallest authorization or setup
-detail that unlocks personalization.
+summary. Run the phase gate below: its capability-only source check comes first,
+then the Macro Board or Data Acquisition Blocker is the first decision-bearing
+artifact. Only after that Board ask whether the user wants portfolio
+personalization.
 
 ## Unscoped Daily Ops Baseline
 
@@ -35,34 +36,47 @@ focused route instead.
    ```bash
    python3 scripts/daily_ops_routing.py \
      --intent unscoped_daily_start \
+     --capability-state <pending|checked> \
      --macro-state <pending|delivered|blocked> \
+     --portfolio-review <undecided|requested|declined> \
      --broker-authorized <true|false> \
      --portfolio-state <not_read|ready|option_overlay_partial|core_gap>
    ```
 
    Its `required_actions` are mandatory. Never emit an action listed in
    `forbidden_actions`.
-2. At `macro_state=pending`, run the complete direct-public Macro preflight.
+2. At `capability_state=pending`, run `broker_capability.py` for both supported
+   connections. It is capability-only: it checks Longbridge with `check --format
+   json` and recognizes only host-visible IBKR task tools. It must not read an
+   account, portfolio, balance, quote, order, or credential, and it must not
+   alter the installed default broker. Installation setup provides permission
+   for this check; a missing setup is a capability gap, not an account read.
+3. At `capability_state=checked` and `macro_state=pending`, run the complete
+   direct-public Macro preflight.
    On success, pass its exact canonical snapshot to a `ResearchResult`
    (`result_kind=macro`, `visual.adapter=macro`) and execute
    `scripts/research_result.py`; deliver exactly that generated
    `standalone_board/research-brief.html`. On failure, deliver one `Data
    Acquisition Blocker`. Do not replace either with prose, `visualize`,
    hand-authored HTML, or another Board renderer.
-3. At `macro_state=delivered` without broker authorization, ask for read-only
-   authorization. Do not choose a ticker, request a trade horizon, or begin
-   company or Price Action analysis.
-4. Once the user has selected and authorized one default broker, read only that
-   broker's permitted holdings and capital context. Classify the result:
+4. At `macro_state=delivered` with `portfolio_review=undecided`, ask whether
+   the user wants the installed default broker's holdings included in the
+   Portfolio Risk Panel. Do not read them automatically. If declined, ask which
+   research mode the user wants next; do not begin company research, Price
+   Action, or trade guidance.
+5. Only at `portfolio_review=requested`, ask for account read-only authorization
+   when it is missing, then read the installed default broker's permitted
+   holdings and capital context. Classify the result:
    `ready` yields a `ResearchResult` with `result_kind=portfolio` and
    `visual.adapter=portfolio`, carrying the validated canonical Portfolio
    snapshot (or a legacy normalized panel); `option_overlay_partial` uses the
    same canonical Portfolio Risk renderer while marking unavailable option
    delta/notional/stress fields; `core_gap` yields a concrete data gap only.
-5. After the Macro result and Portfolio result/gap, ask which ticker the user
-   wants to inspect. Only a user-named ticker may enter individual research or
-   Price Action, and Price Action still requires its full
-   `ticker + trade_horizon + instrument` context.
+6. After the Portfolio result/gap, or after the user declines portfolio review,
+   ask whether they want individual research, Price Action, or trade guidance.
+   The question itself must not emit a panel. Individual research requires a
+   user-named ticker; Price Action and trade guidance both require
+   `ticker + trade_horizon + instrument`.
 
 An option overlay is not a core portfolio gap merely because its multiplier,
 Greeks, delta, or underlying notional are missing. With valid broker position

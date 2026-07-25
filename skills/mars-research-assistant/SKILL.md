@@ -123,11 +123,22 @@ default baseline, not a substitute for an explicit user request:
    ```bash
    python3 scripts/daily_ops_routing.py \
      --intent unscoped_daily_start \
+     --capability-state pending \
      --macro-state pending \
+     --portfolio-review undecided \
      --broker-authorized false \
      --portfolio-state not_read
    ```
-2. Acquire the complete direct-public Macro field set. On success, create a
+2. At `capability_state=pending`, run the capability-only check for both
+   Longbridge and IBKR. This is source support detection only: Longbridge runs
+   `check --format json`; IBKR is present only when its host-visible task tool
+   is available. It never reads accounts, holdings, balances, positions,
+   quotes, orders, or credentials, and it never changes the installed default
+   broker. The one-time installation setup supplies the permission for this
+   support check. If that setup is absent, report the setup gap, then continue
+   to the public Macro phase without reading account data.
+3. At `capability_state=checked` and `macro_state=pending`, acquire the
+   complete direct-public Macro field set. On success, create a
    `ResearchResult` with `result_kind=macro` and
    `visual.adapter=macro`, carrying the exact canonical Macro snapshot from
    `macro_preflight.py`; run
@@ -135,13 +146,14 @@ default baseline, not a substitute for an explicit user request:
    and deliver only its `standalone_board/research-brief.html`. On failure,
    deliver the single `Data Acquisition Blocker`. Do not write a prose-only
    macro summary first, use `visualize`, or author a replacement HTML Board.
-3. If broker read-only access is not yet authorized, run the route with
-   `--macro-state delivered --broker-authorized false --portfolio-state not_read`
-   and ask for that authorization next. Do not propose a ticker, trade horizon,
-   individual-company analysis, or Price Action workflow yet.
-4. After the user authorizes a default broker, run the route with
-   `--macro-state delivered --broker-authorized true --portfolio-state not_read`,
-   then read the selected broker's permitted holdings and capital context.
+4. After a delivered Macro Board, ask exactly: `是否将默认券商持仓纳入本轮
+   Portfolio Risk Panel？` Do not read a portfolio merely because the default
+   broker was connected at installation. If the user declines, ask what research
+   they want next; do not start individual research, Price Action, or trade
+   guidance automatically.
+5. Only when the user requests the Portfolio Risk Panel, use the installed
+   default broker. If account read-only authorization is absent, ask for it at
+   this point. Otherwise read only the permitted holdings and capital context.
    Classify the result as `ready`, `option_overlay_partial`, or `core_gap` and
    run the route again with that state. For `ready` or
    `option_overlay_partial`, create a `ResearchResult` with
@@ -150,10 +162,11 @@ default baseline, not a substitute for an explicit user request:
    `research_result.py` and deliver only its `standalone_board/research-brief.html`.
    These states both require the frozen Portfolio Risk Board; only `core_gap`
    yields a concrete data gap instead.
-5. Only after the Macro and Portfolio baseline has been delivered, ask the user
-   which ticker they want to inspect. Generate individual research or Price
-   Action only for a ticker the user explicitly names and only after its
-   `ticker + trade_horizon + instrument` context is known.
+6. After the Portfolio result/gap, or after the user declines it, ask which
+   research mode they want: individual/company research, Price Action, or trade
+   guidance. This is only a question, never an automatic panel. Individual
+   research needs a user-named ticker; Price Action and trade guidance require
+   `ticker + trade_horizon + instrument` before they can run.
 
 An option overlay is `option_overlay_partial`, not `core_gap`, when the
 selected broker supplies position identity, direction, market value, currency,
@@ -193,17 +206,13 @@ comparison. Deliver the successful Board transiently, then ask separately
 whether the user wants to save or overwrite a private snapshot. Do not ask for
 broker authorization or runtime-write approval before the public acquisition.
 
-When a first-run request later needs broker data, ask first: `是否启用已连接的只读券商数据？`
-Before the user confirms, describe the run as `authorization_pending` and keep
-research public-only; never call a broker capability command or describe this
-state as `dry-run`. After confirmation, run only the capability check in
-`scripts/broker_capability.py`: it invokes Longbridge `check --format json` and
-recognizes IBKR only when the current Codex task's tool registry includes an
-Interactive Brokers MCP tool. Pass only those host-visible tool names via
-`--task-tool`; never infer them from user text or call an IBKR endpoint. It
-never reads credentials, positions, accounts, balances, or quotes.
-Show the available choices, require exactly one default broker, and persist
-only the minimal private setup via `mars_runtime_config.py`.
+The installation or first-run setup records one default broker and its
+capability-only authorization. Daily Ops never switches that default or asks
+the user to choose again. `scripts/broker_capability.py` reports both supported
+connections without reading account data; only a later, explicit Portfolio Risk
+request authorizes reading the configured broker's permitted account fields.
+If setup is missing, report `authorization_pending` as an installation gap, not
+as `dry-run`, and do not infer a broker choice from user text.
 
 Before concrete entry or exit levels, establish `ticker + trade_horizon +
 instrument`. A reduced-scope watch-only read may proceed without that grouping.

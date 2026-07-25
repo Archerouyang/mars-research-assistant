@@ -173,25 +173,54 @@ def _option_overlay_snapshot() -> dict[str, object]:
 
 
 def main() -> int:
-    first_turn = resolve_daily_ops_route(
+    capability_pending = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="pending",
         macro_state="pending",
+        portfolio_review="undecided",
         broker_authorized=False,
         portfolio_state="not_read",
     )
     require(
-        first_turn.required_actions == ("render_macro_research_result_or_blocker",),
-        "an unscoped start must deliver Macro before any broker or prose route",
+        capability_pending.required_actions == ("check_broker_capability",),
+        "an unscoped start must check broker capability before Macro acquisition",
     )
     require(
-        {"prose_only_macro_summary", "custom_html_board"}
-        <= set(first_turn.forbidden_actions),
-        "the Macro Board must not degrade into prose or replacement HTML",
+        {
+            "prose_only_macro_summary",
+            "render_macro_research_result_or_blocker",
+            "read_portfolio_baseline",
+            "individual_research",
+            "price_action",
+            "trade_guidance",
+        }
+        <= set(capability_pending.forbidden_actions),
+        "a capability probe must not read holdings or begin analysis",
+    )
+
+    macro_pending = resolve_daily_ops_route(
+        intent="unscoped_daily_start",
+        capability_state="checked",
+        macro_state="pending",
+        portfolio_review="undecided",
+        broker_authorized=False,
+        portfolio_state="not_read",
+    )
+    require(
+        macro_pending.required_actions == ("render_macro_research_result_or_blocker",),
+        "a checked source baseline must deliver Macro before portfolio review",
+    )
+    require(
+        {"prose_only_macro_summary", "custom_html_board", "read_portfolio_baseline"}
+        <= set(macro_pending.forbidden_actions),
+        "the Macro Board must not degrade into prose or trigger an account read",
     )
 
     macro_blocked = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="checked",
         macro_state="blocked",
+        portfolio_review="undecided",
         broker_authorized=False,
         portfolio_state="not_read",
     )
@@ -202,41 +231,105 @@ def main() -> int:
 
     after_macro = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="checked",
         macro_state="delivered",
+        portfolio_review="undecided",
         broker_authorized=False,
         portfolio_state="not_read",
     )
     require(
-        after_macro.required_actions == ("request_read_only_broker_authorization",),
-        "broker authorization belongs after the delivered Macro baseline",
+        after_macro.required_actions == ("ask_portfolio_review_consent",),
+        "Macro delivery must ask before reading a broker portfolio",
+    )
+    require(
+        {
+            "request_read_only_broker_authorization",
+            "read_portfolio_baseline",
+            "individual_research",
+            "price_action",
+            "trade_guidance",
+        }
+        <= set(after_macro.forbidden_actions),
+        "a delivered Macro Board must not automatically open account or instrument work",
+    )
+
+    portfolio_declined = resolve_daily_ops_route(
+        intent="unscoped_daily_start",
+        capability_state="checked",
+        macro_state="delivered",
+        portfolio_review="declined",
+        broker_authorized=False,
+        portfolio_state="not_read",
+    )
+    require(
+        portfolio_declined.required_actions == ("ask_user_to_select_research_request",),
+        "declining portfolio review must leave the next research mode to the user",
+    )
+    require(
+        {"read_portfolio_baseline", "individual_research", "price_action", "trade_guidance"}
+        <= set(portfolio_declined.forbidden_actions),
+        "declining portfolio review must not trigger PA or trade guidance",
+    )
+
+    portfolio_requested_unauthorized = resolve_daily_ops_route(
+        intent="unscoped_daily_start",
+        capability_state="checked",
+        macro_state="delivered",
+        portfolio_review="requested",
+        broker_authorized=False,
+        portfolio_state="not_read",
+    )
+    require(
+        portfolio_requested_unauthorized.required_actions == ("request_read_only_broker_authorization",),
+        "portfolio review requires a separate account-read authorization",
+    )
+
+    portfolio_requested = resolve_daily_ops_route(
+        intent="unscoped_daily_start",
+        capability_state="checked",
+        macro_state="delivered",
+        portfolio_review="requested",
+        broker_authorized=True,
+        portfolio_state="not_read",
+    )
+    require(
+        portfolio_requested.required_actions == ("read_portfolio_baseline",),
+        "authorized holdings must be read only after the user requests portfolio review",
     )
 
     ready = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="checked",
         macro_state="delivered",
+        portfolio_review="requested",
         broker_authorized=True,
         portfolio_state="ready",
     )
     require(
         ready.required_actions
-        == ("render_portfolio_research_result", "ask_user_to_select_instrument"),
-        "usable holdings must produce the Portfolio Risk Board before an instrument prompt",
+        == ("render_portfolio_research_result", "ask_user_to_select_research_request"),
+        "usable holdings must produce the Portfolio Risk Board before a user-selected research prompt",
     )
     require(
-        {"custom_html_board", "individual_research", "price_action"}
+        {"custom_html_board", "individual_research", "price_action", "trade_guidance"}
         <= set(ready.forbidden_actions),
-        "an unscoped portfolio baseline must use its canonical Board before ticker or PA work",
+        "an unscoped portfolio baseline must not automatically start ticker, PA, or trade work",
     )
 
     overlay_partial = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="checked",
         macro_state="delivered",
+        portfolio_review="requested",
         broker_authorized=True,
         portfolio_state="option_overlay_partial",
     )
     require(
         overlay_partial.required_actions
-        == ("render_portfolio_research_result_partial", "ask_user_to_select_instrument"),
+        == (
+            "render_portfolio_research_result_partial",
+            "ask_user_to_select_research_request",
+        ),
         "missing option Greeks must yield a partial Portfolio Risk Board, not a broker fallback",
     )
     require(
@@ -250,16 +343,18 @@ def main() -> int:
 
     core_gap = resolve_daily_ops_route(
         intent="unscoped_daily_start",
+        capability_state="checked",
         macro_state="delivered",
+        portfolio_review="requested",
         broker_authorized=True,
         portfolio_state="core_gap",
     )
     require(
-        core_gap.required_actions == ("portfolio_data_gap",),
-        "missing core holdings or capital context must stay a concrete portfolio gap",
+        core_gap.required_actions == ("portfolio_data_gap", "ask_user_to_select_research_request"),
+        "missing core holdings or capital context must stay a concrete gap before the user selects another research mode",
     )
     require(
-        {"individual_research", "price_action", "request_secondary_broker"}
+        {"individual_research", "price_action", "trade_guidance", "request_secondary_broker"}
         <= set(core_gap.forbidden_actions),
         "a core portfolio gap must not turn into ticker research or broker escalation",
     )
@@ -357,7 +452,9 @@ def main() -> int:
 
     explicit_instrument = resolve_daily_ops_route(
         intent="instrument_request",
+        capability_state="pending",
         macro_state="pending",
+        portfolio_review="undecided",
         broker_authorized=False,
         portfolio_state="not_read",
     )
@@ -374,8 +471,10 @@ def main() -> int:
     require("## 无标的 Daily Ops 启动基线" in template, "Daily Ops template must retain the Board-first baseline")
     for document, label in ((skill, "Skill"), (operations, "operations"), (template, "template")):
         require(
-            "daily_ops_routing.py" in document and "option_overlay_partial" in document,
-            f"{label} must require the executable phase gate and partial option path",
+            "daily_ops_routing.py" in document
+            and "capability_state" in document
+            and "option_overlay_partial" in document,
+            f"{label} must require the executable capability gate and partial option path",
         )
         require(
             "request/read another broker" in document
@@ -384,6 +483,12 @@ def main() -> int:
             or "request_secondary_broker" in document
             or "第二券商" in document,
             f"{label} must prohibit automatic secondary-broker escalation",
+        )
+        require(
+            "Portfolio Risk Panel" in document
+            and ("ask whether" in document or "是否将默认券商持仓纳入本轮" in document)
+            and ("trade guidance" in document or "交易指导" in document),
+            f"{label} must ask for portfolio review and research mode before executing account or instrument work",
         )
     require(
         "not an individual-option" in skill,

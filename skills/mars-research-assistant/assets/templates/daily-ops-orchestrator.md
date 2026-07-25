@@ -97,12 +97,13 @@ exist, do not invent actual macro readings.
 
 仅当用户未点名标的、研报或 PA 时使用。按以下顺序输出：
 
-1. 每次阶段转换先执行 `python3 scripts/daily_ops_routing.py`，传入当前的 intent、macro、broker authorization 与 portfolio state。脚本返回的 `required_actions` 是强制交付，`forbidden_actions` 不得出现在本轮输出或工具路由中。
-2. 第一轮 `macro_state=pending`：完整直接公开字段通过后，必须以其 canonical snapshot 构建 `ResearchResult(result_kind=macro, visual.adapter=macro)`，运行 `scripts/research_result.py`，并交付生成的 `standalone_board/research-brief.html`。任一必填字段失败才交付唯一的 `Data Acquisition Blocker`。不能用文字晨报、市场摘要、`visualize`、手写 HTML 或「下一步建议」代替。
-3. `macro_state=delivered` 且未获 broker 只读授权：只询问授权；此时不提出 ticker、周期、公司研究或 PA。
-4. 授权并选定唯一默认 broker 后，先读取该 broker 的许可持仓与资本字段，再分类：`ready` 和 `option_overlay_partial` 都必须以验证通过的 canonical Portfolio snapshot（或兼容 legacy normalized panel）构建 `ResearchResult(result_kind=portfolio, visual.adapter=portfolio)`，运行 `scripts/research_result.py`，并交付冻结的 Portfolio Risk standalone Board；`core_gap` 才明确持仓数据缺口，且不以个股分析代替。
-5. 期权缺 multiplier、Greeks、delta 或可靠 notional，但具备身份、方向、市值、币种、时间戳和现金/NAV 上下文时，使用 `option_overlay_partial`：Board 保留该期权的来源和市值，明确其不进入 delta/stress 计算；不能补零、不能自行读/请求第二券商。
-6. Macro 与持仓风险结果完成后，才请用户指定希望研究的 ticker；个股研究和 PA 仅针对用户点名标的。用户解释期权是备兑 Call、LEAP、对冲、TP 或降成本层，只用于分类，不构成 GOOGL 或任何标的的分析请求。
+1. 每次阶段转换先执行 `python3 scripts/daily_ops_routing.py`，传入当前的 intent、capability、macro、portfolio review、broker authorization 与 portfolio state。脚本返回的 `required_actions` 是强制交付，`forbidden_actions` 不得出现在本轮输出或工具路由中。
+2. 第一轮 `capability_state=pending`：先检查 Longbridge 和 IBKR 的链接支持。该检查只识别连接能力：不读取账户、持仓、余额、报价、订单或凭证，不切换安装时已设定的唯一默认 broker。安装/首次设置留下的 capability 授权用于这一步；若缺失，只报告 setup gap。
+3. `capability_state=checked` 后的 `macro_state=pending`：完整直接公开字段通过后，必须以其 canonical snapshot 构建 `ResearchResult(result_kind=macro, visual.adapter=macro)`，运行 `scripts/research_result.py`，并交付生成的 `standalone_board/research-brief.html`。任一必填字段失败才交付唯一的 `Data Acquisition Blocker`。不能用文字晨报、市场摘要、`visualize`、手写 HTML 或「下一步建议」代替。
+4. `macro_state=delivered` 且 `portfolio_review=undecided`：只问 `是否将默认券商持仓纳入本轮 Portfolio Risk Panel？`。未获用户确认不得读取持仓；此时也不执行公司研究、PA 或交易指导。
+5. 只有用户确认 `portfolio_review=requested` 后，才在缺少账户只读授权时询问授权，并读取唯一默认 broker 的许可持仓与资本字段。`ready` 和 `option_overlay_partial` 都必须以验证通过的 canonical Portfolio snapshot（或兼容 legacy normalized panel）构建 `ResearchResult(result_kind=portfolio, visual.adapter=portfolio)`，运行 `scripts/research_result.py`，并交付冻结的 Portfolio Risk standalone Board；`core_gap` 才明确持仓数据缺口。
+6. 期权缺 multiplier、Greeks、delta 或可靠 notional，但具备身份、方向、市值、币种、时间戳和现金/NAV 上下文时，使用 `option_overlay_partial`：Board 保留该期权的来源和市值，明确其不进入 delta/stress 计算；不能补零、不能自行读/请求第二券商。
+7. Macro 与持仓风险结果完成后，或用户拒绝持仓 Panel 后，只询问下一项研究：`个股/行业研究、PA，还是交易指导？` 不能自动执行任何一个 Panel。个股研究仅针对用户点名标的；PA 与交易指导还需 `ticker + trade_horizon + instrument`。用户解释期权是备兑 Call、LEAP、对冲、TP 或降成本层，只用于分类，不构成 GOOGL 或任何标的的分析请求。
 
 每个阶段的 Board 或 Blocker 都是第一个决策性用户交付。不能先渲染运行时状态表、券商健康表、文字宏观报告或推荐标的；这些信息只作为 Board/Blocker 内的来源和缺口，或其后的简短说明。
 
@@ -120,27 +121,17 @@ When reconciliation is unavailable, include the exact
 `portfolio_reconciliation=unavailable` status and keep combined exposure
 fail-closed until the missing broker-source confirmation is resolved.
 
-## 券商只读来源设置
+## 持仓 Risk Panel 确认
 
-Render this section only after the required Macro Board or Data Acquisition
-Blocker. Include it on every Daily Ops first start when read-only broker access
-is still needed, including when unspecified live broker sources default to
-`needs_review`. On later turns, `missing` or `unauthorized` enters `券商只读来源设置`.
-
-On later turns, `needs_review` asks for matching verification/retry and
-does not repeat authorization setup. `stale`, `partial_data`, `upstream_error`,
-and `empty_positions_unverified` retain distinct availability or verification paths;
-preserve the exact status and put the matching action under `缺失确认` / `下一步指引`.
-
-Ask one concise question:
+先完成 capability-only 链接检查与 Macro Board，再问一条：
 
 ```text
-是否启用只读 broker 数据？选项：Longbridge read-only / IBKR read-only / 两者都启用 / 暂不启用，本轮用 manual CSV 或 no broker facts。
+是否将默认券商持仓纳入本轮 Portfolio Risk Panel？
 ```
 
-State that this is read-only setup only. Do not read broker data, install
-software, save source preferences, or write runtime files until the user
-confirms.
+该确认才允许读取默认 broker 的持仓与资本字段。安装/首次设置已经固定唯一默认 broker；Daily Ops 不切换、不过问另一家 broker，也不把 capability check 当作账户读取授权。
+
+若默认 broker 的账户读取尚未授权，用户确认需要 Portfolio Risk Panel 后才询问一次最小只读授权。`needs_review`、`partial_data`、`upstream_error` 与 `empty_positions_unverified` 保留其精确状态，并放入 Board/gap；不得自动读取第二券商。
 
 ## 标的与交易想法周期确认
 
@@ -161,13 +152,13 @@ or exit triggers.
 
 当 `startup_status=partial / uninitialized` 时，保持只读并按以下顺序输出：
 
-1. 仍从 `macro_state=pending` 的 Macro standalone Board 或唯一的 Data
+1. 先做 `capability_state=pending` 的 IBKR/Longbridge capability-only 链接检查；它不能读取账户或改变默认来源。
+2. 再从 `macro_state=pending` 的 Macro standalone Board 或唯一的 Data
    Acquisition Blocker 开始，不能输出 `可用研究摘要` 代替。
-2. 宏观结果后才说明运行时、broker 与保存计划的降级范围；不生成具体
-   entry/exit trigger。
-3. 未授权时只请求 broker read-only；授权和唯一默认来源确认后再走持仓
-   基线。只有两张基线 Board（或明确 Blocker/gap）结束，才请求用户点名的
-   `ticker + trade_horizon + instrument`。
+3. 宏观结果后才说明运行时与保存计划的降级范围，并询问是否将默认 broker
+   持仓纳入 Portfolio Risk Panel；不生成具体 entry/exit trigger。
+4. 只有用户选择持仓 Panel 后才请求必要的账户只读授权、读取持仓并交付
+   Portfolio Board/gap；之后只询问个股研究、PA 或交易指导的用户需求。
 
 不因运行时缺失跳过 Board；本轮不会写 runtime。
 
