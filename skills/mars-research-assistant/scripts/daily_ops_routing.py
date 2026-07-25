@@ -57,7 +57,7 @@ def resolve_daily_ops_route(
             (
                 "prose_only_macro_summary",
                 "acquire_macro_fields_and_render_research_result_or_blocker",
-                "read_default_broker_holdings",
+                "read_ibkr_holdings",
                 "render_holdings_display",
                 "derived_holdings_risk_analysis",
                 "individual_research",
@@ -70,7 +70,7 @@ def resolve_daily_ops_route(
             ("acquire_macro_fields_and_render_research_result_or_blocker",),
             (
                 "prose_only_macro_summary",
-                "read_default_broker_holdings",
+                "read_ibkr_holdings",
                 "render_holdings_display",
                 "derived_holdings_risk_analysis",
                 "individual_research",
@@ -91,7 +91,7 @@ def resolve_daily_ops_route(
         )
     if holdings_review == "requested" and holdings_state == "not_read":
         return DailyOpsRoute(
-            ("read_consented_default_broker_holdings_and_render_display",),
+            ("read_consented_ibkr_holdings_and_render_display",),
             (
                 "derived_holdings_risk_analysis",
                 "individual_research",

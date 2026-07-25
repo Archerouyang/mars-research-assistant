@@ -79,6 +79,10 @@ def main() -> int:
 
         partial_health = build_runtime_health(runtime_dir, TRADING_DATE, [])
         assert partial_health["startup_status"] == "partial"
+        assert partial_health["provider_configuration"] == {
+            "status": "absent",
+            "reason": "no_broker_choice_config_required",
+        }
         partial_checks = checks_by_id(partial_health)
         assert "alpha_leaderboard_store" not in partial_checks
         assert "analysis_store" not in partial_checks
@@ -98,6 +102,16 @@ def main() -> int:
         assert checks_by_id(ready_health)["trade_plans"]["status"] == "available"
         assert trade_plans.read_text(encoding="utf-8") == sentinel
         assert legacy_store.read_text(encoding="utf-8") == "private data must survive\n"
+
+        (runtime_dir / "mars-runtime-config.json").write_text(
+            '{"default_broker":"longbridge"}\n',
+            encoding="utf-8",
+        )
+        incompatible = build_runtime_health(runtime_dir, TRADING_DATE, [])
+        assert incompatible["provider_configuration"] == {
+            "status": "version_incompatible",
+            "reason": "legacy_broker_choice_config_retired",
+        }
 
     print("private runtime selftest: PASS")
     return 0

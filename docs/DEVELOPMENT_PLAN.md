@@ -22,7 +22,9 @@ Do not include private trade records, credentials, account details, unpublished 
 
 Phase: local trading research workflow MVP.
 
-Goal: make the plugin usable for the core trading research loop before adding heavier external integrations: maintain an overwriteable Active Market Plan, append update notes, scan setup-level plans, read broker facts live when authorized, generate position daily reports, capture review context, and compute risk/statistics snapshots.
+Goal: keep the Skill reliable around three product outcomes: a complete Macro
+Board or precise Blocker, consented factual IBKR holdings display, and
+user-directed named-instrument research with 4H Price Action.
 
 ## Planning North Star
 
@@ -47,11 +49,12 @@ The current product sequence is:
 15. broker-live position daily report automation and visualization snapshots;
 16. post-order review to capture user context from read-only broker facts;
 17. post-exit review to capture results, lessons, and optional statistics snapshots;
-18. broker-agnostic portfolio reconciliation and risk view;
+18. consented factual IBKR holdings display without a portfolio-risk overlay;
 19. basic stats and system review;
 20. automation setup checklist: confirm the Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries through `automation-setup-checklist.md`;
 21. user-confirmed Active Market Plan automations;
-22. Source Routing Boundary: scope broker/account facts, market data, Longbridge macrodata, official policy facts, news, and research by source purpose so selecting Longbridge for one purpose does not become the default source for news;
+22. Source Routing Boundary: use exact IBKR market fields when proven, then
+    registered official sources and verified Web Search fallback by field;
 23. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
 24. Content & Visualization Artifact System MVP: display-first visual artifacts for price action and macro/regime context, with optional durable saves only after confirmation;
 25. persistent Macro Regime workspace: keep one stable private entry point for the current weekly panel, update it as events resolve, and retain immutable snapshots for later review;
@@ -354,19 +357,43 @@ marked passed until the coordinator runs them after integration to `master`.
 
 ## Today
 
-Date: 2026-07-20
+Date: 2026-07-25
 
-- Main task: implement the approved 0.3.0 architecture-deepening spec.
-- Current stage: all four bounded workstreams are integrated; the minimal 0.3.0
-  Skill gate and final Standards/Spec review pass.
-- Next task: present the local candidate for user acceptance before any remote
-  `dev` integration.
-- Definition of done: all four modules meet the spec, accepted inline outputs
-  remain stable, obsolete compatibility paths are removed, focused verification
-  and final Standards/Spec review pass, and no public cutover occurs without
-  explicit approval.
+- Main task: implement GitHub Issue #86, the IBKR-only hard cut.
+- Current stage: local implementation, verification, and two-axis review
+  complete.
+- Next task: obtain separate authorization before pushing or integrating the
+  committed branch.
+- Definition of done: Macro uses IBKR then official/Web Search fallback,
+  Holdings Display is consented and IBKR-only, named-instrument research uses
+  IBKR OHLCV, active second-broker paths are removed, and focused acceptance
+  plus portable install smoke pass.
 
 ## Progress Log
+
+### 2026-07-25
+
+- Approved GitHub Issue #86 and tickets #87-#92 to hard-cut the Skill to one
+  broker Provider: IBKR.
+- Implemented a shared IBKR-only boundary for capability discovery, Macro
+  broker capture, and Holdings Display.
+- Added exact TNX/TYX normalization against observed IBKR history response
+  shape, preserved official Treasury 2Y fallback, and updated the verified TGA
+  field map for the current Treasury DTS schema.
+- Added explicit public-fallback disclosure records, IBKR OHLCV normalization,
+  and consented factual holdings checks.
+- Split registered official direct opens from Web Search discovery receipts;
+  a failed registered field now enters an internal retry state, and only a
+  failed authority-page retry can become the final Blocker.
+- Replaced the legacy risk-bearing IBKR connector adapter with a minimal
+  holdings adapter that retains only approved factual fields and preserves
+  missing values as unavailable.
+- Removed active second-broker adapters, fixtures, configuration, and current
+  user-facing promises. Historical logs remain unchanged.
+- The full Skill gate, isolated portable installation smoke, and
+  `git diff --check` pass. Standards and Issue #86 Spec reviews both pass after
+  closing findings around capability completeness, completed-close semantics,
+  contract identity, holdings provenance, and Web Search gating.
 
 ### 2026-07-20
 

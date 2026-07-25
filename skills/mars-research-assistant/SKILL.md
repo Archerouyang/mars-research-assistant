@@ -79,7 +79,7 @@ unscoped Daily Ops baseline below is a required exception.
 | Start/continue Daily Ops, plans, runtime state, broker coverage | `references/operations.md` |
 | Macro, rates, liquidity, policy, cross-asset transmission | `references/macro-research.md` |
 | Company, industry, fundamentals, catalysts, instrument thesis | `references/instrument-research.md` |
-| Consented default-broker holdings display | `references/holdings-display.md` |
+| Consented IBKR holdings display | `references/holdings-display.md` |
 | Chart, setup, rolling analysis, levels, reduction/entry scenarios | `references/price-action.md` |
 | Report, PDF, link, excerpt, claim verification | `references/report-intake.md` |
 
@@ -128,25 +128,24 @@ default baseline, not a substitute for an explicit user request:
      --holdings-review undecided \
      --holdings-state not_read
    ```
-2. At `capability_state=pending`, run the capability-only check for both
-   Longbridge and IBKR. This is source support detection only: Longbridge runs
-   `check --format json`; IBKR is present only when its host-visible task tool
-   is available. It never reads accounts, holdings, balances, positions,
-   quotes, orders, or credentials, and it never changes the installed default
-   broker. The one-time installation setup supplies the permission for this
-   support check. If that setup is absent, report the setup gap, then continue
-   to the public Macro phase without reading account data.
+2. At `capability_state=pending`, run the capability-only IBKR check. IBKR is
+   available only when a host-visible IBKR task tool is present. This check
+   never reads accounts, holdings, balances, positions, quotes, orders,
+   credentials, or market payloads. If IBKR is unavailable, say so briefly and
+   continue to the public Macro phase.
 3. At `capability_state=checked` and `macro_state=pending`, acquire the
-   complete Macro field set. For every field, prefer an available connected
-   broker's market/macro capability only when its identity, unit, completed
-   close/reference period, timestamp, and normalized path are known. Use an
-   exact public primary-source fallback when that broker route is unavailable.
+   complete Macro field set. For every field, prefer an exact IBKR market field
+   only when its native identity, unit transformation, completed close,
+   timestamp, and normalized path are proven. Use the registered official
+   source when that IBKR field is unavailable.
    If its registered direct path fails, use Web Search to find and directly
    open the field's authority page before returning a Blocker. Never use a
    search-result snippet as the field value. When this route is used, say after
    the Board which fields used it, the authority, and the common completed
    close/reference period. Only return a Blocker after broker, registered
    direct, and Web Search fallback paths all fail to yield an exact field.
+   Treat `web_search_required` as an internal retry state, never as a
+   user-facing result.
    On success, create a
    `ResearchResult` with `result_kind=macro` and
    `visual.adapter=macro`, carrying the exact canonical Macro snapshot from
@@ -155,10 +154,11 @@ default baseline, not a substitute for an explicit user request:
    and deliver only its `standalone_board/research-brief.html`. On failure,
    deliver the single `Data Acquisition Blocker`. Do not write a prose-only
    macro summary first, use `visualize`, or author a replacement HTML Board.
-4. After a delivered Macro Board, ask exactly: `是否读取并展示默认券商持仓，还是
+4. After a delivered Macro Board, ask exactly: `是否读取并展示 IBKR 持仓，还是
    直接研究一个标的？` Do not read account data unless the user explicitly
-   selects holdings for this request. On consent, normalize the default broker's
-   read-only response and use `scripts/holdings_display.py` to display only
+   selects holdings for this request. On consent, normalize IBKR's read-only
+   response with `scripts/ibkr_holdings_adapter.py`, then use
+   `scripts/holdings_display.py` to display only
    broker, symbol, quantity, latest price, market value, cost, unrealized P&L,
    cash, currency, and retrieval time. Show unavailable fields as `不可用`.
    Never calculate concentration, leverage, stress, delta, or a portfolio
@@ -194,12 +194,12 @@ the successful Board transiently, then ask separately whether the user wants to
 save or overwrite a private snapshot. Do not read broker accounts or request a
 runtime write before field acquisition.
 
-The installation or first-run setup may record one default broker for later
-personalized workflows. Daily Ops never switches it or asks the user to choose
-again. `scripts/broker_capability.py` reports both supported connections without
-reading account data. Macro field source selection is field-level and may use
-either connected broker's eligible market/macro capability. Holdings reads use
-only the configured default broker and require fresh per-request consent.
+IBKR is the only supported broker Provider. There is no broker-choice setup,
+switching, aggregation, or compatibility alias. Legacy broker-choice
+configuration is retired and must not be read or migrated. Macro remains
+available through registered official sources and verified Web Search fallback
+when IBKR is unavailable. Holdings reads use only IBKR and require fresh
+per-request consent.
 
 Before concrete entry or exit levels, establish `ticker + trade_horizon +
 instrument`. A reduced-scope watch-only read may proceed without that grouping.

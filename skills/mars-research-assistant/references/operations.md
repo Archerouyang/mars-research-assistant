@@ -18,10 +18,9 @@ python3 scripts/daily_ops_routing.py \
   --holdings-state <not_read|displayed|unavailable>
 ```
 
-1. `capability_state=pending`: run `broker_capability.py` for Longbridge and
-   IBKR. It checks connection support only and must not read account, holdings,
-   balance, quote, order, or credentials. It must not switch the installed
-   default broker.
+1. `capability_state=pending`: run `broker_capability.py` for IBKR. It checks
+   task-visible tool support only and must not read account, holdings, balance,
+   quote, order, credentials, or market payloads.
 2. `capability_state=checked`, `macro_state=pending`: acquire every required
    Macro field. Prefer an eligible broker market/macro record only when field
    identity, unit, native path, timestamp, and latest completed close/reference
@@ -29,12 +28,12 @@ python3 scripts/daily_ops_routing.py \
    for a field without an eligible broker record. Run Macro preflight and deliver
    exactly one canonical Macro standalone Board or one Data Acquisition Blocker.
    Do not substitute a prose summary, `visualize`, or hand-authored HTML.
-3. `macro_state=delivered`: ask exactly: `是否读取并展示默认券商持仓，还是直接研究
+3. `macro_state=delivered`: ask exactly: `是否读取并展示 IBKR 持仓，还是直接研究
    一个标的？` Do not automatically read holdings.
-4. Only after a fresh explicit holdings confirmation: read the configured default
-   broker, normalize the response, and render factual rows through
-   `holdings_display.py`. A failed read yields the concrete field gap and returns
-   control to the user.
+4. Only after a fresh explicit holdings confirmation: read IBKR, normalize the
+   approved factual fields through `ibkr_holdings_adapter.py`, and render them
+   through `holdings_display.py`. A failed read yields the concrete field gap
+   and returns control to the user.
 5. A named ticker at any point executes `run_named_instrument_research_bundle`.
    It does not require a holdings display and defaults to industry events,
    fundamentals, catalysts, valuation, counter-thesis, and a 4H PA Board.
@@ -56,7 +55,8 @@ reads or runtime writes.
 - runtime health and initialization: `runtime_health.py`, `bootstrap_runtime.py`,
   `prepare_daily_runtime.py`, `init_daily.py`;
 - guided routing and factual holdings: `daily_ops_routing.py`,
-  `broker_capability.py`, `holdings_display.py`;
+  `broker_capability.py`, `ibkr_holdings_adapter.py`,
+  `holdings_display.py`;
 - setup and review preparation: `prepare_setup_rows.py`, `intraday_scan.py`,
   `append_review.py`, `write_trade_review_context.py`;
 - read-only summaries: `trade_stats.py`, `watchlist_score.py`, and

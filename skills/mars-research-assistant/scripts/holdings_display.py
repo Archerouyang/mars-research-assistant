@@ -8,16 +8,12 @@ order. The caller owns the per-request consent and the broker read.
 
 from __future__ import annotations
 
-import argparse
-import csv
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from record_schemas import CSV_SCHEMAS
+from ibkr_provider import require_holdings_broker
 
 
-SNAPSHOT_HEADER = frozenset(CSV_SCHEMAS["portfolio_snapshot.csv"])
 POSITION_FIELDS = (
     "broker",
     "symbol",
@@ -45,40 +41,39 @@ def build_holdings_display(
     if not normalized_rows:
         raise ValueError("holdings_display_snapshot_empty")
 
-    brokers = {
-        value
-        for row in normalized_rows
-        for value in [_text(row.get("broker"))]
-        if value != UNAVAILABLE
-    }
-    if len(brokers) != 1:
-        raise ValueError("holdings_display_single_broker_required")
-    broker = next(iter(brokers))
+    for row in normalized_rows:
+        require_holdings_broker(row.get("broker"))
+    broker = "IBKR"
 
     positions: list[dict[str, str]] = []
     cash: list[dict[str, str]] = []
     for row in normalized_rows:
-        if _is_cash(row):
+        row_type = row.get("row_type")
+        if row_type == "cash":
+            if set(row) != {"row_type", *CASH_FIELDS}:
+                raise ValueError("holdings_display_row_schema_invalid")
             cash.append(
                 {
                     "broker": broker,
                     "currency": _text(row.get("currency")),
-                    "cash": _text(row.get("market_value")),
-                    "retrieved_at": _timestamp(row),
+                    "cash": _text(row.get("cash")),
+                    "retrieved_at": _text(row.get("retrieved_at")),
                 }
             )
             continue
+        if row_type != "position" or set(row) != {"row_type", *POSITION_FIELDS}:
+            raise ValueError("holdings_display_row_schema_invalid")
         positions.append(
             {
                 "broker": broker,
                 "symbol": _text(row.get("symbol")),
                 "quantity": _text(row.get("quantity")),
-                "latest_price": _text(row.get("market_price")),
+                "latest_price": _text(row.get("latest_price")),
                 "market_value": _text(row.get("market_value")),
-                "cost": _text(row.get("avg_cost")),
+                "cost": _text(row.get("cost")),
                 "unrealized_pnl": _text(row.get("unrealized_pnl")),
                 "currency": _text(row.get("currency")),
-                "retrieved_at": _timestamp(row),
+                "retrieved_at": _text(row.get("retrieved_at")),
             }
         )
 
@@ -151,29 +146,6 @@ def render_holdings_display_markdown(display: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def load_snapshot(path: str | Path) -> list[dict[str, str]]:
-    """Load only the standard normalized snapshot, never raw broker output."""
-
-    with Path(path).expanduser().open(newline="", encoding="utf-8") as handle:
-        reader = csv.DictReader(handle)
-        if reader.fieldnames is None or not SNAPSHOT_HEADER.issubset(reader.fieldnames):
-            raise ValueError("holdings_display_snapshot_schema_invalid")
-        return [dict(row) for row in reader]
-
-
-def _is_cash(row: Mapping[str, Any]) -> bool:
-    return str(row.get("instrument_type") or "").casefold() == "cash" or str(
-        row.get("symbol") or ""
-    ).upper() == "CASH"
-
-
-def _timestamp(row: Mapping[str, Any]) -> str:
-    source_timestamp = _text(row.get("source_timestamp"))
-    if source_timestamp != UNAVAILABLE:
-        return source_timestamp
-    return _text(row.get("as_of"))
-
-
 def _latest_retrieval(positions: list[dict[str, str]], cash: list[dict[str, str]]) -> str:
     values = [row["retrieved_at"] for row in [*positions, *cash] if row["retrieved_at"] != UNAVAILABLE]
     return max(values) if values else UNAVAILABLE
@@ -198,17 +170,3 @@ def _parse_timestamp(value: str, field_name: str) -> datetime:
     if parsed.tzinfo is None:
         raise ValueError(f"{field_name}_invalid")
     return parsed
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--snapshot", required=True, help="Normalized portfolio_snapshot.csv path")
-    parser.add_argument("--consented-at", required=True, help="Per-request holdings consent timestamp")
-    args = parser.parse_args()
-    display = build_holdings_display(load_snapshot(args.snapshot), consented_at=args.consented_at)
-    print(render_holdings_display_markdown(display), end="")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

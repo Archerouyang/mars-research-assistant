@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field, replace
 from datetime import date, datetime, timedelta, timezone
 import json
 import math
@@ -20,6 +20,9 @@ from mars_web_capture import (
     MarsWebCaptureError,
     normalize_captured_broker_market_observations,
     normalize_captured_mars_observations,
+    REGISTERED_DIRECT_OPEN_METHOD,
+    WEB_SEARCH_DIRECT_OPEN_METHOD,
+    source_method_for_error,
 )
 from research_result import DeliveryPacket, ResearchResultError, build_delivery_packet
 
@@ -57,6 +60,7 @@ FIELD_RECORD_KEYS = frozenset(
         "source_url",
         "source_columns",
         "source_timing",
+        "source_discovery_method",
     }
 )
 COMPLETED_MARKET_MAX_AGE = timedelta(days=7)
@@ -158,6 +162,7 @@ class MacroRunOutcome:
     blockers: tuple[FieldBlocker, ...] = ()
     delivery_packet: DeliveryPacket | None = None
     resolved_values: Mapping[str, Any] = dataclass_field(default_factory=dict)
+    fallback_disclosures: tuple[Mapping[str, str], ...] = ()
 
 
 def load_field_registry(path: Path | None = None) -> dict[str, Any]:
@@ -215,13 +220,41 @@ def run_macro_board(
         for row in broker_observations:
             observations_by_id[str(row["field_id"])] = row
         observations = list(observations_by_id.values())
-    except (MarsWebCaptureError, MarsBrokerMarketCaptureError) as error:
+    except MarsWebCaptureError as error:
+        method = source_method_for_error(web_capture, str(error))
+        if method == REGISTERED_DIRECT_OPEN_METHOD:
+            return _web_search_required((str(error),))
+        outcome = _observation_adapter_blocker(str(error), registry)
+        return (
+            _mark_web_search_attempted(outcome)
+            if method == WEB_SEARCH_DIRECT_OPEN_METHOD
+            else outcome
+        )
+    except MarsBrokerMarketCaptureError as error:
         return _observation_adapter_blocker(str(error), registry)
-    return _run_normalized_macro_board(
+    outcome = _run_normalized_macro_board(
         observations,
         as_of,
         registry=registry,
     )
+    if outcome.kind != "blocker":
+        return outcome
+    rows_by_id = {str(row["field_id"]): row for row in observations}
+    registered = tuple(
+        blocker.field_id
+        for blocker in outcome.blockers
+        if rows_by_id.get(blocker.field_id, {}).get("source_discovery_method")
+        == REGISTERED_DIRECT_OPEN_METHOD
+    )
+    if registered:
+        return _web_search_required(registered)
+    if any(
+        rows_by_id.get(blocker.field_id, {}).get("source_discovery_method")
+        == WEB_SEARCH_DIRECT_OPEN_METHOD
+        for blocker in outcome.blockers
+    ):
+        return _mark_web_search_attempted(outcome)
+    return outcome
 
 
 def _run_normalized_macro_board(
@@ -365,7 +398,38 @@ def _run_normalized_macro_board(
         message="Macro Preflight 已通过；使用最近共同完成收盘数据生成 standalone Board。",
         delivery_packet=packet,
         resolved_values=resolved_values,
+        fallback_disclosures=_fallback_disclosures(rows_by_id),
     )
+
+
+def _fallback_disclosures(
+    rows_by_id: Mapping[str, Mapping[str, Any]],
+) -> tuple[Mapping[str, str], ...]:
+    """Expose authority and reference dates for public fallback disclosure."""
+
+    rows: list[Mapping[str, str]] = []
+    for field_id, row in sorted(rows_by_id.items()):
+        if row.get("source_discovery_method") != "web_search_then_direct_open":
+            continue
+        source_id = row.get("source_id")
+        if not isinstance(source_id, str) or not source_id:
+            continue
+        reference_date = (
+            row.get("market_reference_date")
+            or row.get("reference_period")
+            or row.get("data_as_of")
+        )
+        if not isinstance(reference_date, str) or not reference_date:
+            continue
+        rows.append(
+            {
+                "field_id": field_id,
+                "source_id": source_id,
+                "authority_url": str(row.get("source_url") or source_id),
+                "reference_date": reference_date,
+            }
+        )
+    return tuple(rows)
 
 
 def _observation_adapter_blocker(
@@ -394,6 +458,48 @@ def _observation_adapter_blocker(
         kind="blocker",
         message=_render_blocker((blocker,)),
         blockers=(blocker,),
+    )
+
+
+def _web_search_required(field_ids: tuple[str, ...]) -> MacroRunOutcome:
+    """Return an internal retry state that must never be delivered as a Blocker."""
+
+    return MacroRunOutcome(
+        kind="web_search_required",
+        message=(
+            "Registered source validation failed; run Web Search discovery and "
+            "directly open the authority page before producing a Board or Blocker."
+        ),
+        blockers=tuple(
+            FieldBlocker(
+                field_id=field_id,
+                decision_purpose="完成权威来源的 Web Search 发现与直接打开验证。",
+                attempted_routes=(
+                    "registered_official_source:direct_open",
+                ),
+                status="source_error",
+                reason="web_search_fallback_required",
+            )
+            for field_id in field_ids
+        ),
+    )
+
+
+def _mark_web_search_attempted(outcome: MacroRunOutcome) -> MacroRunOutcome:
+    blockers = tuple(
+        replace(
+            blocker,
+            attempted_routes=(
+                *blocker.attempted_routes,
+                "web_search_discovery:direct_authority_open",
+            ),
+        )
+        for blocker in outcome.blockers
+    )
+    return replace(
+        outcome,
+        blockers=blockers,
+        message=_render_blocker(blockers),
     )
 
 

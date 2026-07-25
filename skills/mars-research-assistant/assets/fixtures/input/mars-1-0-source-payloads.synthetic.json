@@ -73,7 +73,7 @@
     "retrieved_at": "2026-07-23T21:00:00Z",
     "latest_official_observation": "2026-07-22",
     "publication_status": "published",
-    "records": [{"record_date":"2026-07-22","account_type":"Treasury General Account (TGA) Closing Balance","close_today_bal_millions":"650000"}]
+    "records": [{"record_date":"2026-07-22","account_type":"Treasury General Account (TGA) Closing Balance","open_today_bal":"650000","close_today_bal":"null"}]
   },
   "new_york_fed_on_rrp": {
     "source_url": "https://www.newyorkfed.org/markets/desk-operations/reverse-repo",

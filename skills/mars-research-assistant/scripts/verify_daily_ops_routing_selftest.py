@@ -65,10 +65,10 @@ def main() -> int:
     )
     require(
         capability_pending.required_actions == ("check_broker_capability",),
-        "an unscoped start must check both broker capabilities before Macro acquisition",
+        "an unscoped start must check IBKR capability before Macro acquisition",
     )
     require(
-        {"read_default_broker_holdings", "derived_holdings_risk_analysis", "price_action"}
+        {"read_ibkr_holdings", "derived_holdings_risk_analysis", "price_action"}
         <= set(capability_pending.forbidden_actions),
         "a capability check must not read private holdings or start analysis",
     )
@@ -109,7 +109,7 @@ def main() -> int:
         holdings_state="not_read",
     )
     require(
-        holdings_requested.required_actions == ("read_consented_default_broker_holdings_and_render_display",),
+        holdings_requested.required_actions == ("read_consented_ibkr_holdings_and_render_display",),
         "holdings may be read only after explicit user selection",
     )
     require(

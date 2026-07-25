@@ -457,7 +457,6 @@ SOURCE_ALIASES = {
     "new_york_fed_on_rrp": "New York Fed ON RRP results",
     "official_macro_event_allowlist": "Official seven-day macro event sources",
     "white_house_presidential_actions": "White House Presidential Actions",
-    "longbridge_market_data": "Longbridge market or macro data",
     "ibkr_market_data": "Interactive Brokers market data",
     "mars_field_contract": "Mars field contract",
 }

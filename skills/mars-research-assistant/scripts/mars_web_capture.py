@@ -13,10 +13,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable, Mapping
 
+from ibkr_provider import MARKET_SOURCE_ID, require_market_source
 from mars_observation_adapter import ObservationAdapterError, load_mars_source_contract
 
 
-DIRECT_WEB_OPEN_METHOD = "web_search_then_direct_open"
+REGISTERED_DIRECT_OPEN_METHOD = "registered_official_direct_open"
+WEB_SEARCH_DIRECT_OPEN_METHOD = "web_search_then_direct_open"
+DIRECT_WEB_OPEN_METHODS = frozenset(
+    {REGISTERED_DIRECT_OPEN_METHOD, WEB_SEARCH_DIRECT_OPEN_METHOD}
+)
 
 
 class MarsWebCaptureError(ValueError):
@@ -32,17 +37,13 @@ class MarsWebCapture:
     """Ephemeral direct-web capture; only Macro Preflight may consume it."""
 
     _source_payloads: Mapping[str, Any]
+    _source_methods: Mapping[str, str]
     acquired_at: str
 
 
 @dataclass(frozen=True)
 class MarsBrokerMarketCapture:
-    """Ephemeral, normalized broker market/macro observations.
-
-    The host resolves a provider-specific Longbridge or IBKR response before
-    constructing this type. It intentionally accepts no account or raw provider
-    payload and retains only field-level market/macro observations.
-    """
+    """Ephemeral, normalized IBKR market/macro observations."""
 
     observations: tuple[Mapping[str, Any], ...]
     acquired_at: str
@@ -89,8 +90,11 @@ def capture_mars_direct_web_observations(
             raise MarsWebCaptureError(f"{source_id}:direct_web_receipt_invalid")
         if receipt.get("source_url") != expected_url:
             raise MarsWebCaptureError(f"{source_id}:direct_web_source_url_mismatch")
-        if receipt.get("method") != DIRECT_WEB_OPEN_METHOD:
+        method = receipt.get("method")
+        if method not in DIRECT_WEB_OPEN_METHODS:
             raise MarsWebCaptureError(f"{source_id}:direct_web_method_invalid")
+        if payload is None and method != WEB_SEARCH_DIRECT_OPEN_METHOD:
+            raise MarsWebCaptureError(f"{source_id}:web_search_fallback_required")
         opened_at = _parse_timestamp(receipt.get("opened_at"), f"{source_id}:direct_web_opened_at")
         if opened_at > acquired_timestamp:
             raise MarsWebCaptureError(f"{source_id}:direct_web_opened_after_capture")
@@ -106,6 +110,11 @@ def capture_mars_direct_web_observations(
                 raise MarsWebCaptureError(f"{source_id}:direct_web_time_mismatch")
     return MarsWebCapture(
         _source_payloads=source_payloads,
+        _source_methods={
+            source_id: str(receipt["method"])
+            for source_id, receipt in direct_open_receipts.items()
+            if isinstance(receipt, Mapping)
+        },
         acquired_at=acquired_at,
     )
 
@@ -135,7 +144,70 @@ def normalize_captured_mars_observations(
         )
     except ObservationAdapterError as error:
         raise MarsWebCaptureError(str(error)) from error
-    return run.observations
+    event_source_ids = {
+        str(source["source_id"])
+        for source in load_mars_source_contract().get("event_sources", [])
+        if isinstance(source, Mapping)
+    }
+    event_method = (
+        WEB_SEARCH_DIRECT_OPEN_METHOD
+        if any(
+            capture._source_methods.get(source_id) == WEB_SEARCH_DIRECT_OPEN_METHOD
+            for source_id in event_source_ids
+        )
+        else REGISTERED_DIRECT_OPEN_METHOD
+    )
+    rows: list[dict[str, Any]] = []
+    for observation in run.observations:
+        row = dict(observation)
+        source_id = str(row.get("source_id") or "")
+        row["source_discovery_method"] = (
+            event_method
+            if source_id == "official_macro_event_allowlist"
+            else capture._source_methods.get(
+                source_id,
+                REGISTERED_DIRECT_OPEN_METHOD,
+            )
+        )
+        rows.append(row)
+    return tuple(rows)
+
+
+def source_method_for_error(
+    capture: MarsWebCapture,
+    error: str,
+) -> str | None:
+    """Return the acquisition method for the source implicated by an error."""
+
+    if not isinstance(capture, MarsWebCapture):
+        return None
+    contract = load_mars_source_contract()
+    prefix = error.split(":", 1)[0]
+    field_sources = {
+        str(field["field_id"]): str(field["source_id"])
+        for field in contract.get("fields", [])
+        if isinstance(field, Mapping)
+    }
+    source_id = field_sources.get(prefix)
+    if source_id is None and prefix.startswith("completed_market_session"):
+        market_session = contract.get("market_session")
+        if isinstance(market_session, Mapping):
+            source_id = str(market_session["source_id"])
+    if source_id is not None:
+        method = capture._source_methods.get(source_id)
+        if method is not None:
+            return method
+    if prefix.startswith("events.seven_day_allowlist"):
+        event_methods = {
+            capture._source_methods.get(str(source["source_id"]))
+            for source in contract.get("event_sources", [])
+            if isinstance(source, Mapping)
+        }
+        if WEB_SEARCH_DIRECT_OPEN_METHOD in event_methods:
+            return WEB_SEARCH_DIRECT_OPEN_METHOD
+        if REGISTERED_DIRECT_OPEN_METHOD in event_methods:
+            return REGISTERED_DIRECT_OPEN_METHOD
+    return None
 
 
 def capture_mars_broker_market_observations(
@@ -145,9 +217,8 @@ def capture_mars_broker_market_observations(
 ) -> MarsBrokerMarketCapture:
     """Bind already-normalized broker market fields without accepting raw data.
 
-    A record must identify one admitted Longbridge/IBKR market route and its
-    native field identity. Detailed field/unit/freshness checks remain owned by
-    Macro Preflight.
+    A record must identify the admitted IBKR market route and its native field
+    identity. Detailed field/unit/freshness checks remain owned by Preflight.
     """
 
     _parse_timestamp(acquired_at, "broker_market_capture_acquired_at")
@@ -156,14 +227,18 @@ def capture_mars_broker_market_observations(
         if not isinstance(row, Mapping):
             raise MarsBrokerMarketCaptureError("broker_market_observation_invalid")
         source_id = row.get("source_id")
-        if source_id not in {"longbridge_market_data", "ibkr_market_data"}:
-            raise MarsBrokerMarketCaptureError("broker_market_source_not_supported")
+        try:
+            require_market_source(source_id)
+        except ValueError as error:
+            raise MarsBrokerMarketCaptureError(str(error)) from error
         if row.get("retrieval_method") != "broker_market_capture":
             raise MarsBrokerMarketCaptureError("broker_market_method_invalid")
         native_id = row.get("source_native_id")
         if not isinstance(native_id, str) or not native_id.strip():
             raise MarsBrokerMarketCaptureError("broker_market_native_id_missing")
-        rows.append(dict(row))
+        normalized = dict(row)
+        normalized["source_id"] = MARKET_SOURCE_ID
+        rows.append(normalized)
     return MarsBrokerMarketCapture(observations=tuple(rows), acquired_at=acquired_at)
 
 

@@ -21,10 +21,9 @@ field live in `mars-1-0-observation-source-contracts.json`. The host must use
 this source order for every refresh:
 
 ```text
-Longbridge/IBKR capability check -> exact broker market or macro field when
-available -> exact public primary-source fallback -> Web Search discovery plus
-direct authority-page open when needed -> normalized field record ->
-macro_preflight.py
+IBKR capability check -> exact IBKR market field when available -> registered
+official source -> Web Search discovery plus direct authority-page open when
+needed -> normalized field record -> macro_preflight.py
 ```
 
 The broker route is field-level, not a blanket source preference: it may be
@@ -37,6 +36,12 @@ timestamp, and completed-close/reference-period basis. Search-result snippets,
 ETF proxies, caller-derived ratios, and prewritten `ResearchResult` objects are
 not field inputs. Raw provider responses remain in memory and are never
 persisted by the Skill.
+
+`macro_preflight.py` uses `web_search_required` only as an internal acquisition
+retry state when a registered direct payload exists but fails field validation.
+Do not show that state to the user. Repeat acquisition with a
+`web_search_then_direct_open` receipt for the affected authority; only that
+second failure may become the final Data Acquisition Blocker.
 
 Every retained field is required. Completed-market fields must equal the latest
 common completed close; official releases must identify the latest published
@@ -65,22 +70,23 @@ If the user declines persistence, retain no saved runtime artifact and state
 only that historical comparison is unavailable. Never combine permission to
 read public sources with permission to persist private runtime state.
 
-Run `scripts/broker_capability.py` before Macro acquisition. Longbridge uses
-only `check --format json`; IBKR is available only when the current task
-exposes an Interactive Brokers market-data-capable tool. Do not infer tool names
-from user text and do not call positions, accounts, balances, orders, or tokens.
-The capability result is not an account authorization and does not choose a
-portfolio source.
+Run `scripts/broker_capability.py` before Macro acquisition. IBKR is available
+only when the current task exposes an Interactive Brokers tool. Do not infer
+tool names from user text and do not call positions, accounts, balances,
+orders, or credentials during this check. The capability result is not account
+authorization.
 
-Macro field sources may be Longbridge macrodata/market data, IBKR market data,
-or a registered direct public primary fallback. A field must name its actual
-source in the normalized record. Web Search is a discovery fallback rather than
-a source of values: it must lead to a directly opened authority page. When it
-is used, the Board follow-up must state the affected fields, authority, and
-common completed close/reference period. A newly discovered endpoint must
-receive an exact source map, synthetic fixture, and regression test before it
-can enter a Board; until then the field remains blocked rather than being
-inferred from a search result.
+Macro field sources may be exact IBKR market data or a registered direct public
+primary fallback. `scripts/ibkr_macro_adapter.py` currently admits only the
+verified TNX and TYX contracts, applies the locked 0.1 scale, and proves the
+latest bar is a completed daily close. It does not manufacture a 2Y route; 2Y
+uses the official Treasury curve. A field must name its actual source in the
+normalized record. Web Search is a discovery fallback rather than a source of
+values: it must lead to a directly opened authority page. When used, render the
+`fallback_disclosures` records after the Board, naming each affected field,
+authority, and common completed close/reference period. A newly discovered
+endpoint must receive an exact source map, fixture, and regression test before
+it can enter a Board; until then the field remains blocked.
 
 The following are currently excluded: HYG/LQD, SPX, DXY, Brent, gold, and S&P
 500 forward P/E. Do not restore any with a proxy or approximation. A later
@@ -100,59 +106,6 @@ evidence groups behind the exact posture label. NDX/RUT, VIX/VIX3M, and rates
 are time series with direction over the aligned history window. Keep the text
 decision-dense, distinguish facts from inferences, and do not create a trade
 instruction from the Macro Board.
-
-## Legacy Frozen Macro Data Workflow (Compatibility Only)
-
-The following 0.2.0 workflow remains as a compatibility reference for its
-existing CLI helpers. It is not a Mars 1.0 Board acquisition route and cannot
-override the direct-web gate above:
-
-1. Establish capability with `longbridge --version` and `longbridge check`.
-   Current-chat tool visibility, CLI installation, authentication, and data
-   completeness are separate states. A sandbox-only log-file warning is not an
-   authentication failure when the command itself returns valid data.
-2. Discover macro indicator codes, then query a discovered code:
-
-   ```bash
-   longbridge macrodata --keyword <TERM> --country <COUNTRY> --format json
-   longbridge macrodata <CODE> --start <YYYY-MM-DD> --end <YYYY-MM-DD> --limit <N> --format json
-   ```
-
-   Do not guess or permanently hard-code an indicator code when the discovery
-   response can supply it.
-3. Read supported market history with:
-
-   ```bash
-   longbridge kline history <SYMBOL> --period day --start <YYYY-MM-DD> --end <YYYY-MM-DD> --format json
-   ```
-
-   This macro workflow is market-data and macrodata only; it does not call
-   portfolio, assets, positions, or order commands.
-4. Use purpose-specific sources for unsupported series instead of forcing one
-   connector to own every fact: U.S. Treasury for the yield curve, Cboe for RUT
-   and VXN, and an exact DXY index source for DXY. A labelled proxy is allowed
-   only when the exact series is unavailable and the limitation remains
-   visible.
-5. Align market series to the same one-month observation window and common
-   sessions before calculating ratios or changes. NDX/RUT must use same-session
-   closes; missing observations are not silently forward-filled.
-6. Preserve actual, forecast, media, and thesis categories, source registry,
-   `as_of`, and data-gap disclosure through `ResearchResult -> DeliveryPacket`.
-   Public fixtures remain visibly synthetic and can never support a live claim.
-7. Render one self-contained standalone Board as a transient delivery packet.
-   Retain a private snapshot only after the user separately approves that
-   write. Do not emit an iframe, parallel inline fragment, or cross-unit bar
-   chart.
-
-Use this CLI-first sequence for eligible Mars Board fields only after preserving
-the exact source identity and normalized field contract. Do not reinterpret
-missing data as authorization failure, relabel a proxy as an exact index, or add
-a second visual delivery path.
-
-The retained read-only implementation surface is
-`scripts/longbridge_macrodata_adapter.py` for normalized Longbridge responses
-and `scripts/prepare_macro_panel.py` for an explicitly requested local macro
-panel. Neither helper reads broker positions or performs order actions.
 
 ## Mars Standalone Format
 

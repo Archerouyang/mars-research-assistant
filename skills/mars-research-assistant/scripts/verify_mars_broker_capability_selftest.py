@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
-"""Regression coverage for consent-gated, capability-only broker discovery."""
+"""Regression coverage for IBKR-only capability discovery."""
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from types import SimpleNamespace
-
 from broker_capability import (
     CAPABILITY_PROBE_VERSION,
-    LONG_BRIDGE_TIMEOUT_SECONDS,
     probe_broker_capabilities,
 )
-from mars_runtime_config import run_macro_board_from_runtime
-from mars_web_capture import capture_mars_direct_web_observations
-from macro_preflight import load_field_registry
-from runtime_health import build_runtime_health
-
-
-ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "assets" / "fixtures" / "input" / "mars-1-0-source-payloads.synthetic.json"
-AS_OF = "2026-07-24T00:00:00Z"
 
 
 def require(condition: bool, message: str) -> None:
@@ -29,63 +14,13 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def direct_capture():
-    payloads = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    contract = json.loads(
-        (ROOT / "references" / "mars-1-0-observation-source-contracts.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    source_urls = {
-        field["source_id"]: field["source_url"]
-        for field in contract["fields"]
-    }
-    source_urls[contract["market_session"]["source_id"]] = contract["market_session"]["source_url"]
-    source_urls.update(
-        {
-            source["source_id"]: source["source_url"]
-            for source in contract["event_sources"]
-        }
-    )
-    receipts = {
-        source_id: {
-            "source_url": source_url,
-            "opened_at": payloads[source_id]["retrieved_at"],
-            "method": "web_search_then_direct_open",
-        }
-        for source_id, source_url in source_urls.items()
-    }
-    return capture_mars_direct_web_observations(payloads, receipts, acquired_at=AS_OF)
-
-
 def main() -> int:
-    calls: list[tuple[tuple[str, ...], dict[str, object]]] = []
-
-    def longbridge_runner(command, **kwargs):
-        calls.append((tuple(command), kwargs))
-        return SimpleNamespace(
-            returncode=0,
-            stdout='{"token":"must-not-persist","connectivity":"ok"}',
-            stderr="",
-        )
-
-    health = build_runtime_health(Path("/private/nonexistent-mars-runtime"), "2026-07-24", [])
-    require(
-        health["current_mode"] == "authorization_pending",
-        "unprobed broker state must not be labeled dry-run",
-    )
-    source_notes = {item["id"]: item["note"] for item in health["broker_source_health"]}
-    require("not probed" in source_notes["longbridge"], "health must disclose missing capability probe")
-    capability_notes = {item["id"]: item["note"] for item in health["source_capability_health"]}
-    require(
-        "not probed" in capability_notes["longbridge_terminal_cli"],
-        "capability health must disclose missing discovery consistently",
-    )
-
     active = probe_broker_capabilities(
-        longbridge_runner=longbridge_runner,
         task_tool_names=(
             "mcp__codex_apps__interactive_brokers__ibkr__get_account_positions",
+            "mcp__codex_apps__interactive_brokers__ibkr__get_account_balances",
+            "mcp__codex_apps__interactive_brokers__ibkr__get_price_history",
+            "mcp__codex_apps__interactive_brokers__ibkr__search_contracts",
         ),
     )
     require(active["capability_state"] == "checked", "capability probe must retain its checked state")
@@ -93,47 +28,30 @@ def main() -> int:
     require(isinstance(probes, dict), "confirmed probe must return a normalized capability mapping")
     require(
         probes == {
-            "longbridge": {"read_only": "available", "probe_version": CAPABILITY_PROBE_VERSION},
-            "ibkr": {"read_only": "available", "probe_version": CAPABILITY_PROBE_VERSION},
+            "ibkr": {
+                "read_only": "available",
+                "market_data": "available",
+                "holdings": "available",
+                "probe_version": CAPABILITY_PROBE_VERSION,
+            },
         },
-        "only successful capability-only probes may be available",
-    )
-    require(
-        calls
-        == [
-            (
-                ("longbridge", "check", "--format", "json"),
-                {
-                    "capture_output": True,
-                    "check": False,
-                    "text": True,
-                    "timeout": LONG_BRIDGE_TIMEOUT_SECONDS,
-                },
-            )
-        ],
-        "Longbridge discovery must call only its capability check",
-    )
-    rendered = json.dumps(active, sort_keys=True)
-    require(
-        "must-not-persist" not in rendered
-        and "token" not in rendered
-        and "interactive_brokers" not in rendered,
-        "probe output must not retain raw data or task tool names",
+        "the capability boundary must expose only IBKR",
     )
 
-    unavailable = probe_broker_capabilities(
-        longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
-    )
+    unavailable = probe_broker_capabilities()
     require(
         unavailable["capability_probes"] == {
-            "longbridge": {"read_only": "unavailable", "probe_version": CAPABILITY_PROBE_VERSION},
-            "ibkr": {"read_only": "unavailable", "probe_version": CAPABILITY_PROBE_VERSION},
+            "ibkr": {
+                "read_only": "unavailable",
+                "market_data": "unavailable",
+                "holdings": "unavailable",
+                "probe_version": CAPABILITY_PROBE_VERSION,
+            },
         },
-        "failed or task-invisible capabilities must not be treated as authorized",
+        "a task-invisible IBKR capability must remain unavailable",
     )
 
     unrelated = probe_broker_capabilities(
-        longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
         task_tool_names=("mcp__codex_apps__github_list_repositories",),
     )
     require(
@@ -141,20 +59,36 @@ def main() -> int:
         "an unrelated task tool must not make IBKR available",
     )
 
-    with TemporaryDirectory() as temporary:
-        public_first = run_macro_board_from_runtime(
-            Path(temporary) / "mars-runtime", direct_capture(), AS_OF, capability_probes=None
-        )
-    require(
-        public_first.kind == "board",
-        "broker authorization state must not gate a complete direct-public Macro Board",
+    market_only = probe_broker_capabilities(
+        task_tool_names=(
+            "mcp__codex_apps__interactive_brokers__ibkr__get_price_history",
+            "mcp__codex_apps__interactive_brokers__ibkr__search_contracts",
+        ),
     )
     require(
-        public_first.delivery_packet is not None,
-        "a public-first Macro run must emit a standalone Board packet",
+        market_only["capability_probes"]["ibkr"]["market_data"] == "available"
+        and market_only["capability_probes"]["ibkr"]["holdings"] == "unavailable",
+        "market and holdings capabilities must remain distinct",
+    )
+    partial_market = probe_broker_capabilities(
+        task_tool_names=(
+            "mcp__codex_apps__interactive_brokers__ibkr__search_contracts",
+        ),
+    )
+    require(
+        partial_market["capability_probes"]["ibkr"]["market_data"] == "unavailable",
+        "contract search alone must not claim usable market data",
+    )
+    partial_holdings = probe_broker_capabilities(
+        task_tool_names=(
+            "mcp__codex_apps__interactive_brokers__ibkr__get_account_balances",
+        ),
+    )
+    require(
+        partial_holdings["capability_probes"]["ibkr"]["holdings"] == "unavailable",
+        "balances alone must not claim a complete holdings display capability",
     )
 
-    require(load_field_registry()["contract_version"], "fixture seam remains reachable")
     print("mars broker capability selftest passed")
     return 0
 

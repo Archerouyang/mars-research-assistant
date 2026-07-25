@@ -81,43 +81,27 @@ _Avoid_: 看完即采用, 只校验支持证据
 _Avoid_: 研报=交易信号, thesis 直接升级 setup
 
 **第一阶段数据源**:
-交易投研系统 MVP 阶段优先使用的数据来源，包括用户维护或导出的 CSV、可通过 web search 核验的公开来源、Longbridge macrodata、IBKR 行情数据、read-only broker source、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
+火星投研助手 MVP 阶段优先使用的数据来源，包括精确的 IBKR 行情数据、可通过 Web Search 定位并直接打开的公开权威来源、用户提供的研报链接或摘录，以及后续可购买的期权数据 API。第一阶段不要求所有数据全自动接入。
 _Avoid_: 全自动数据湖, 不可核验来源
 
 **Broker Source**:
-提供只读账户、持仓、成交或订单状态数据的券商来源，例如 IBKR connector、Longbridge skill 或手动 CSV。Broker Source 是可插拔 adapter，不是火星投研助手的核心逻辑。默认使用 broker-live 读取，不要求把逐笔交易事实长期保存成本地记录。
-_Avoid_: 单一券商绑定, 券商即系统
+火星投研助手当前唯一支持的只读券商来源是 IBKR。市场数据读取与账户持仓读取是不同授权边界；持仓只在用户本次明确同意后读取。
+_Avoid_: 券商即系统, 市场数据授权等于账户授权
 
 **券商只读来源设置**:
-Daily Ops 首次启动或 runtime health 显示 broker source 为 `missing` / `unauthorized` 时触发的只读券商来源访谈。它应询问用户是否启用 Longbridge read-only、IBKR read-only、两者都启用，或暂不启用并以 manual CSV / no broker facts 继续。本步骤只配置读取意图和偏好，不读取账户、不安装软件、不写入 public repo，也不允许任何 broker write action。
-_Avoid_: 安装 plugin 等于授权 broker, 默认读取账户, 混淆 read-only 和下单权限
+Daily Ops 只检查当前任务是否暴露 IBKR 工具，不再让用户选择默认券商，也不保存券商二选一配置。能力检查不读取账户、持仓、余额、订单、凭证或行情 payload。
+_Avoid_: 安装 Skill 等于授权账户读取, 默认读取持仓, 混淆 read-only 和下单权限
 
 **Read-only Broker Adapter**:
 把 broker 原始数据转换成标准运行时视图的适配层。它只能读取 positions、executions/trades、orders/status 或授权行情，不能创建、修改、取消真实订单，也不能调仓或平仓。适配层可以为一次分析返回内存数据、临时文件或派生快照，但不应要求长期保存券商逐笔事实。
 _Avoid_: 自动下单插件, 账户控制层
 
-**Longbridge Broker Source**:
-Longbridge 作为可选 broker source，第一阶段提供 positions、executions/trades 和 orders/status 的 read-only 数据。若环境没有 Longbridge skill/plugin/terminal，应先询问用户是否安装或启用；可提示用户自行使用 `brew install --cask longbridge/tap/longbridge-terminal`。
-_Avoid_: 内置 Longbridge 依赖, 自动安装
-
-**Longbridge Macrodata Source**:
-Longbridge skill/plugin 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它是宏观数据获取源，不是 broker account source；可作为 `Macro Regime` 和 `Financial Conditions` 的 S1 数据输入，但政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
-_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实
-
-**Longbridge Skill Adapter**:
-把 Longbridge skill/plugin/terminal 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native skill/plugin 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于宏观和金融条件数值。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
-_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在
-
-**Longbridge Terminal CLI Adapter**:
-消费用户已授权的 `longbridge portfolio --format json` 等只读 CLI 输出，并通过 `longbridge_cli_adapter.py` 转换成标准 `portfolio_snapshot.csv` 的本地适配层。该 adapter 只处理已保存 JSON，不主动运行 CLI、不读取 live broker、不调用行情、不创建/修改/取消/提交订单。
-_Avoid_: 把 CLI adapter 当下单层, 把本机安装等同于 macrodata 可用, 把用户真实持仓 fixture 化进 public repo
-
 **Macro Data Source Contract**:
-Mars 1.0 宏观 Board 使用逐字段验证的 market/macro 来源。每次刷新先检查 Longbridge/IBKR 连接支持；每个已注册字段优先采用带精确字段身份、原生路径、单位、时间戳和最近完成收盘/参考期的默认只读券商 market/macro 记录，缺失时再走 `web search -> 直接打开合同 URL -> MarsWebCapture` 的公开一手备援。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段无稳定、精确、可复核来源或本轮取不到，必须拒绝生成 Board；不得用 ETF、新闻摘要或其它代理替代。
+Mars 1.0 宏观 Board 使用逐字段验证的 market/macro 来源。每次刷新先检查 IBKR 工具支持；每个已注册字段优先采用带精确字段身份、原生路径、单位、时间戳和最近完成收盘的 IBKR 记录，缺失时依次走已登记官方来源与 `Web Search -> 直接打开权威页面 -> MarsWebCapture`。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段无稳定、精确、可复核来源或本轮取不到，必须拒绝生成 Board；不得用 ETF、新闻摘要或其它代理替代。
 _Avoid_: 没有实际宏观数值却声称完成宏观分析, 用代理或新闻替代字段合同, 用缺失字段生成 partial Board, 接收未验证的原始 payload
 
 **Holdings Display**:
-持仓展示是默认券商的只读账户快照，但每次读取都需要用户明确同意；宏观 market/macro 字段采集不构成持仓读取授权。展示固定显示券商、标的、数量、最新价格、市值、成本、未实现盈亏、现金和本次读取时间；缺失字段明确显示不可用。它不计算集中度、杠杆调整、压力测试、风险评分或交易建议，独立于 Macro Board，且不触发 PA、个股研究或订单操作。
+持仓展示是 IBKR 的只读账户快照，但每次读取都需要用户明确同意；宏观 market/macro 字段采集不构成持仓读取授权。展示固定显示券商、标的、数量、最新价格、市值、成本、未实现盈亏、现金和本次读取时间；缺失字段明确显示不可用。它不计算集中度、杠杆调整、压力测试、风险评分或交易建议，独立于 Macro Board，且不触发 PA、个股研究或订单操作。
 _Avoid_: 把持仓展示称为 Portfolio Risk Panel, 用缺失字段推导风险暴露, 自动从展示进入个股 PA 或交易指导
 
 **Daily Ops Guidance**:
@@ -136,9 +120,9 @@ _Avoid_: 来源可用等于字段齐全, 临时硬编码字段, 用响应标签�
 Board 渲染前对全部保留必需字段执行的确定性获取与校验步骤。任一保留必需字段未达到 `available` 时，Preflight 必须拒绝 Board 并返回数据获取阻塞说明。没有稳定直接来源的期望信号只能经版本化字段合同修订后移出范围，不能作为本轮豁免或 proxy 留在 Board。
 _Avoid_: 先生成 Board 再补来源, 缺字段的半成品 Board
 
-**默认券商**:
-火星投研助手首次设置时由用户选择的唯一只读券商来源，同时承担本轮允许的券商持仓和券商行情读取。系统不得自动切换到另一家券商；默认券商不可用时，Macro Board 仍可按字段契约使用合格的官方或公开来源。
-_Avoid_: 每次任务重复询问券商, 跨券商静默回退, 默认券商等于所有事实来源
+**IBKR-only Provider**:
+火星投研助手只支持 IBKR 作为券商 Provider。不存在默认券商选择、自动切换、多券商聚合或兼容别名；IBKR 不可用时，Macro Board 仍可按字段契约使用合格的官方或公开来源。
+_Avoid_: 券商选择配置, 跨券商静默回退, IBKR 等于所有事实来源
 
 **字段状态**:
 决策字段在一次获取运行中的标准状态，只允许 `available`、`stale`、`missing`、`unsupported`、`source_error` 和 `conflicted`。`derived` 和 `fallback` 描述计算或获取路径，不是字段状态。
@@ -157,11 +141,11 @@ Macro Board 使用的最近一个全部必需市场字段共同具备完整收�
 _Avoid_: 实时, 当前价格, 不同日期拼接成同一快照
 
 **Source Routing Boundary**:
-按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 可用于已注册的市场/宏观字段和明确授权的只读账户、持仓、成交事实；它们不能替代政策、新闻或未映射字段的来源。宏观 Board 的字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 与 `macro-field-registry-v1.json` 锁定。选择 Longbridge 做一个字段不使其成为政策、行业或新闻的默认来源。
+按 source purpose 和 claim type 选择信源的硬边界。IBKR 可用于已注册的市场字段和明确授权的只读持仓事实；它不能替代政策、新闻或未映射字段的来源。宏观 Board 的字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 与 `macro-field-registry-v1.json` 锁定。
 _Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, 用聚合宏观数据替代字段级来源合同
 
 **Broker-Live Data View**:
-券商只读数据在一次分析运行中的标准视图，包括当前持仓、现金、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成事实展示或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。
+IBKR 只读数据在一次分析运行中的标准视图，包括经用户同意读取的当前持仓、现金和授权行情。核心分析消费这个标准视图，而不是持久化原始响应。逐笔券商事实默认不作为本地 source of truth。
 _Avoid_: 直接读各券商私有结构, 本地交易明细作为唯一事实来源
 
 **IBKR 行情数据**:
@@ -509,12 +493,12 @@ _Avoid_: 日内信号触发长期配置, 低周期决定宏观配置
 _Avoid_: 事后解释, 记忆中的交易
 
 **券商成交事实**:
-来自 IBKR、Longbridge 或其它 broker source 的真实成交、订单或账户记录，例如标的、方向、数量、价格、手续费、时间和盈亏。它用于减少手工录入错误，但不能替代用户对盘面背景、入场理由和执行质量的复盘。
+来自 IBKR 的真实成交或账户记录，例如标的、方向、数量、价格、手续费、时间和盈亏。它用于减少手工录入错误，但不能替代用户对盘面背景、入场理由和执行质量的复盘。
 _Avoid_: 自动复盘结论, 经纪商即完整日志
 
 **持仓日报**:
-交易运营 automation 的一种，定时从授权 broker source 只读读取当前持仓、账户风险、现金/保证金、未实现盈亏、集中度和工具暴露，并生成简洁中文摘要和可视化快照。持仓日报参考 Longbridge 类持仓提醒体验，但在本 plugin 中保持 broker-agnostic，优先使用 Longbridge 或 IBKR 的只读来源，不创建或修改订单。
-_Avoid_: 自动调仓, 账户日报流水账, 手工交易表
+旧版交易运营 automation。当前火星投研助手不提供持仓风险日报，只在用户本次明确同意后展示 IBKR 持仓和现金事实。
+_Avoid_: 自动调仓, 账户日报流水账, Portfolio Risk Panel
 
 **持仓日报快照**:
 持仓日报生成的派生展示产物，例如权重条形图、主题/行业暴露图、PnL 贡献图、期权到期风险提示和需要用户决策的事项。快照可以保存到 runtime 作为复盘材料，但不能包含不必要的逐笔成交明细或账户凭证。

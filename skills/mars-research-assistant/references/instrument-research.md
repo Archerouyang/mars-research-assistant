@@ -21,6 +21,11 @@ For leveraged, inverse, option, or path-dependent products, distinguish the
 underlying thesis from the product's reset, decay, liquidity, gap, and convexity
 risk.
 
+Broker-backed price and OHLCV data use IBKR only. Company fundamentals and
+events may use issuer filings, official releases, and directly opened verified
+Web sources. Do not start this package from a holdings display unless the user
+names the instrument or explicitly accepts the proposed next step.
+
 Published Alpha inputs remain read-only supporting evidence through
 `scripts/alpha_leaderboard_adapter.py` and
 `scripts/analysis_delta_adapter.py`. They do not mutate rankings, promote a

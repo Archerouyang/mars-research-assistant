@@ -11,6 +11,7 @@ from pathlib import Path
 import time
 
 from private_runtime import runtime_health_expectations, startup_required_check_ids
+from ibkr_provider import legacy_configuration_status
 from runtime_state import default_runtime_dir, resolve_runtime_selection
 
 
@@ -21,33 +22,21 @@ BROKER_STATUSES = STATUSES | {
     "upstream_error",
     "empty_positions_unverified",
 }
-BROKER_SOURCES = {"longbridge", "ibkr", "manual"}
-LIVE_BROKER_SOURCES = ("longbridge", "ibkr")
+BROKER_SOURCES = {"ibkr"}
+LIVE_BROKER_SOURCES = ("ibkr",)
 SOURCE_CAPABILITIES = {
-    "longbridge_broker_skill",
-    "longbridge_terminal_cli",
-    "longbridge_macrodata",
     "official_source_fallback",
     "ibkr_connector",
-    "manual_snapshot",
 }
 BROKER_SOURCE_LABELS = {
-    "longbridge": "Longbridge",
     "ibkr": "IBKR",
-    "manual": "Manual snapshot",
 }
 BROKER_SOURCE_CHECK_IDS = {
-    "longbridge": "longbridge_broker_source",
     "ibkr": "ibkr_broker_source",
-    "manual": "manual_snapshot_source",
 }
 SOURCE_CAPABILITY_LABELS = {
-    "longbridge_broker_skill": "Longbridge broker skill",
-    "longbridge_terminal_cli": "Longbridge Terminal CLI",
-    "longbridge_macrodata": "Longbridge macrodata",
     "official_source_fallback": "Official source fallback",
     "ibkr_connector": "IBKR connector",
-    "manual_snapshot": "Manual snapshot",
 }
 
 
@@ -81,7 +70,7 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         metavar="SOURCE=STATUS",
-        help="Broker source status, e.g. longbridge=available or ibkr=unauthorized",
+        help="IBKR source status, e.g. ibkr=available or ibkr=unauthorized",
     )
     parser.add_argument(
         "--source-capability",
@@ -89,10 +78,8 @@ def parse_args() -> argparse.Namespace:
         default=[],
         metavar="CAPABILITY=STATUS",
         help=(
-            "Source capability status, e.g. longbridge_macrodata=available, "
-            "official_source_fallback=available, "
-            "longbridge_terminal_cli=available, longbridge_broker_skill=not_installed, "
-            "or ibkr_connector=available"
+            "Source capability status, e.g. ibkr_connector=available or "
+            "official_source_fallback=available"
         ),
     )
     parser.add_argument(
@@ -131,7 +118,7 @@ def build_runtime_health(
         "current_mode": broker_health["current_mode"],
         "source_capability_health": capability_health["source_capability_health"],
         "broker_source_health": broker_health["source_health"],
-        "portfolio_reconciliation": broker_health["portfolio_reconciliation"],
+        "provider_configuration": legacy_configuration_status(runtime_dir),
         "checks": [asdict(check) for check in checks],
     }
 
@@ -182,11 +169,7 @@ def build_broker_source_health(raw_sources: list[str]) -> dict[str, object]:
         if source not in BROKER_SOURCES or status not in BROKER_STATUSES
     ]
 
-    source_statuses = {
-        "longbridge": "needs_review",
-        "ibkr": "needs_review",
-        "manual": "missing",
-    }
+    source_statuses = {"ibkr": "needs_review"}
     for source, status in parsed:
         if source in BROKER_SOURCES and status in BROKER_STATUSES:
             source_statuses[source] = status
@@ -198,7 +181,7 @@ def build_broker_source_health(raw_sources: list[str]) -> dict[str, object]:
             "status": source_statuses[source],
             "note": broker_source_note(source, source_statuses[source], raw_sources),
         }
-        for source in ("longbridge", "ibkr", "manual")
+        for source in ("ibkr",)
     ]
 
     current_mode = infer_current_mode(source_statuses, raw_sources)
@@ -210,14 +193,13 @@ def build_broker_source_health(raw_sources: list[str]) -> dict[str, object]:
             None,
             broker_source_note(source, source_statuses[source], raw_sources),
         )
-        for source in ("longbridge", "ibkr", "manual")
+        for source in ("ibkr",)
     ]
     checks.append(broker_aggregate_check(source_statuses, invalid, raw_sources))
     return {
         "current_mode": current_mode,
         "source_health": source_health,
         "source_statuses": source_statuses,
-        "portfolio_reconciliation": build_portfolio_reconciliation(source_statuses),
         "checks": checks,
     }
 
@@ -233,25 +215,14 @@ def build_source_capability_health(
         if capability not in SOURCE_CAPABILITIES or status not in BROKER_STATUSES
     ]
     statuses = {
-        "longbridge_broker_skill": broker_source_statuses["longbridge"],
-        "longbridge_terminal_cli": "needs_review",
-        "longbridge_macrodata": "needs_review",
         "official_source_fallback": "missing",
         "ibkr_connector": broker_source_statuses["ibkr"],
-        "manual_snapshot": broker_source_statuses["manual"],
     }
     for capability, status in parsed:
         if capability in SOURCE_CAPABILITIES and status in BROKER_STATUSES:
             statuses[capability] = status
 
-    capability_order = (
-        "longbridge_broker_skill",
-        "longbridge_terminal_cli",
-        "longbridge_macrodata",
-        "official_source_fallback",
-        "ibkr_connector",
-        "manual_snapshot",
-    )
+    capability_order = ("official_source_fallback", "ibkr_connector")
     source_capability_health = [
         {
             "source": SOURCE_CAPABILITY_LABELS[capability],
@@ -290,7 +261,7 @@ def build_source_capability_health(
 def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
     if not raw_sources:
         if status == "needs_review":
-            return "not probed in this run; ask the user before capability-only discovery"
+            return "not probed in this run"
         return "no source status provided"
     if status == "available":
         return "read-only source available for this run"
@@ -303,7 +274,7 @@ def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
     if status == "needs_review":
         return "source status not confirmed; authorization is not inferred"
     if status == "partial_data":
-        return "source is authorized but returned only partial data; exclude incomplete rows from confirmed combined exposure"
+        return "source is authorized but returned only partial data; display only complete factual rows"
     if status == "upstream_error":
         return "source is authorized but its upstream request failed"
     if status == "empty_positions_unverified":
@@ -315,7 +286,7 @@ def broker_source_note(source: str, status: str, raw_sources: list[str]) -> str:
 
 def source_capability_note(capability: str, status: str, raw_capabilities: list[str]) -> str:
     if not raw_capabilities and status == "needs_review":
-        return "not probed in this run; ask the user before capability-only discovery"
+        return "not probed in this run"
     if status == "available":
         return "read-only capability available for this run"
     if status == "not_installed":
@@ -347,8 +318,6 @@ def infer_current_mode(source_statuses: dict[str, str], raw_sources: list[str]) 
         for source in LIVE_BROKER_SOURCES
     ):
         return "live read-only"
-    if source_statuses["manual"] == "available":
-        return "manual snapshot"
     return "dry-run"
 
 
@@ -404,11 +373,7 @@ def broker_aggregate_check(
             ", ".join(f"{source}={status}" for source, status in live_statuses.items()),
         )
 
-    available = [
-        source
-        for source in ("longbridge", "ibkr", "manual")
-        if source_statuses[source] == "available"
-    ]
+    available = [source for source in ("ibkr",) if source_statuses[source] == "available"]
     if available:
         return RuntimeCheck(
             "broker_sources",
@@ -433,37 +398,8 @@ def broker_aggregate_check(
         "Broker sources",
         status,
         None,
-        ", ".join(f"{source}={source_statuses[source]}" for source in ("longbridge", "ibkr", "manual")),
+        f"ibkr={source_statuses['ibkr']}",
     )
-
-
-def build_portfolio_reconciliation(source_statuses: dict[str, str]) -> dict[str, object]:
-    """State whether per-source position detail can be combined as confirmed exposure."""
-
-    confirmed_sources = [
-        source for source in LIVE_BROKER_SOURCES if source_statuses[source] == "available"
-    ]
-    excluded_sources = [
-        source for source in LIVE_BROKER_SOURCES if source_statuses[source] != "available"
-    ]
-    if not confirmed_sources:
-        status = "unavailable"
-        note = "no broker has confirmed position-detail coverage"
-    elif excluded_sources:
-        status = "not_confirmed"
-        note = (
-            "do not present NAV-only, partial, failed, unauthorized, or unverified-empty "
-            "sources as merged confirmed exposure"
-        )
-    else:
-        status = "confirmed"
-        note = "all configured live broker sources have confirmed position-detail coverage"
-    return {
-        "status": status,
-        "confirmed_sources": confirmed_sources,
-        "excluded_sources": excluded_sources,
-        "note": note,
-    }
 
 
 def parse_broker_source(value: str) -> tuple[str, str]:
@@ -516,18 +452,6 @@ def render_markdown(payload: dict[str, object]) -> str:
     for item in broker_source_health:
         assert isinstance(item, dict)
         lines.append(f"| {item['source']} | `{item['status']}` | {item['note']} |")
-
-    reconciliation = payload["portfolio_reconciliation"]
-    assert isinstance(reconciliation, dict)
-    lines += [
-        "",
-        "## Portfolio Reconciliation",
-        "",
-        f"- Status: `{reconciliation['status']}`",
-        f"- Confirmed sources: `{', '.join(reconciliation['confirmed_sources']) or 'none'}`",
-        f"- Excluded sources: `{', '.join(reconciliation['excluded_sources']) or 'none'}`",
-        f"- Note: {reconciliation['note']}",
-    ]
 
     lines += [
         "",

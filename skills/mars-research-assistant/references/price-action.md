@@ -52,7 +52,9 @@ explicit request and `--public`. They may use synthetic fixtures or dated public
 market data after privacy review, but never account, broker, private-runtime, or
 private-portfolio information.
 
-Use `scripts/longbridge_ohlcv_adapter.py` for supported read-only OHLCV input
-and `scripts/price_action_rollforward.py` when a prior analysis is explicitly
-available for comparison. Missing history produces a baseline analysis; it is
-not silently reconstructed.
+Use IBKR `get_price_history` for broker-backed OHLCV and normalize its factual
+parallel arrays through `scripts/ibkr_ohlcv_adapter.py`. If IBKR history is
+unavailable, state the data gap or use user-provided chart data; do not switch
+to another broker. Use `scripts/price_action_rollforward.py` when a prior
+analysis is explicitly available for comparison. Missing history produces a
+baseline analysis; it is not silently reconstructed.

@@ -1,5 +1,10 @@
 # Broker-live position reporting
 
+> Superseded by Issue #86 for Mars Research Assistant. The current Skill
+> supports IBKR only, provides a factual holdings display only after per-request
+> consent, and does not expose the former multi-broker or portfolio-risk flow.
+> The remainder of this ADR is retained as historical context.
+
 The system will treat IBKR, Longbridge, and other broker integrations as read-only live sources for positions, account risk, executions, and order status. It will not require a local spreadsheet, Google Sheet, or durable `trades.csv` copy of broker trade facts as the product source of truth.
 
 **Considered Options**

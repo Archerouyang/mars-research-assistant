@@ -17,17 +17,17 @@ Blocker. It must not replace either artifact with a prose market summary.
 | formal runtime |  |  |
 | startup_status |  |  |
 | current_mode |  |  |
-| default broker |  | do not switch it in Daily Ops |
+| IBKR capability |  | capability only; no account read |
 
 ## 无标的 Daily Ops 启动基线
 
-1. Capability-only check Longbridge and IBKR. It reads no account, holdings,
+1. Capability-only check IBKR. It reads no account, holdings,
    balance, order, or credentials.
-2. Acquire required Macro fields: eligible broker market/macro records first,
+2. Acquire required Macro fields: exact IBKR market records first,
    exact public primary-source fallback per missing field. Deliver the canonical
    Macro Board or exactly one Data Acquisition Blocker.
-3. Ask: `是否读取并展示默认券商持仓，还是直接研究一个标的？`
-4. Only after explicit confirmation, read the default broker and display:
+3. Ask: `是否读取并展示 IBKR 持仓，还是直接研究一个标的？`
+4. Only after explicit confirmation, read IBKR and display:
    broker, symbol, quantity, latest price, market value, cost, unrealized P&L,
    cash, currency, and retrieval time. Missing factual fields are `不可用`.
 5. A user-named ticker directly starts the full package: industry events,

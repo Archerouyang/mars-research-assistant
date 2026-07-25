@@ -133,6 +133,17 @@ def main() -> int:
     require(reserves["reference_period"] == "2026-07-15", "official reference period must remain separate")
     require("market_reference_date" not in reserves, "official releases cannot pretend to be market closes")
 
+    tga = by_id["liquidity.tga_balance"]
+    require(tga["value"] == 650.0, "TGA must use the verified live DTS closing-balance row mapping")
+    require(
+        tga["raw_field_path"][-1] == "open_today_bal",
+        "TGA lineage must name the exact verified live DTS field",
+    )
+
+    ambiguous_tga = copy.deepcopy(payloads)
+    ambiguous_tga["us_treasury_dts"]["records"][0].pop("open_today_bal")
+    require_error(ambiguous_tga, "liquidity.tga_balance:raw_value_invalid")
+
     policy = by_id["policy.us_executive_actions"]
     require(policy["source_timing"] == "policy", "policy timing must be retained")
     require(

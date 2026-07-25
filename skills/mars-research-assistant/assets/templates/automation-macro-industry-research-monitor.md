@@ -30,14 +30,11 @@ Use source priority before allowing a search result to affect the plan:
 
 ## Source Routing Boundary
 
-Search public/authorized sources by source purpose. Longbridge macrodata can
-support broad macro indicator queries across rates, yields, inflation, labor,
-liquidity, credit, FX, commodities, macro values, and financial-condition
-checks, but the monitor must still use official or reputable sources for policy
-facts, public remarks, industry news, and company confirmation. Do not use
-Longbridge as the only source unless the user explicitly limits this run to
-macrodata values; do not use Longbridge as the only source for macro, policy,
-industry, or news analysis.
+Search public/authorized sources by source purpose. Exact IBKR market fields
+may satisfy a registered field contract. Use directly opened official or
+reputable sources for policy facts, public remarks, industry news, company
+confirmation, and every unsupported IBKR field. Search snippets are discovery
+leads, never field values.
 
 ## Query Generation
 

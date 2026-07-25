@@ -47,7 +47,7 @@ or risk defaults.
 
 | source | status | used_for | fallback |
 | --- | --- | --- | --- |
-| Longbridge macrodata | available / unauthorized / not_installed / missing / stale | macro values and financial conditions | official source fallback |
+| IBKR market data | available / unavailable / source_error | exact registered market fields | official source fallback |
 | IBKR market data | available / unauthorized / not_installed / missing / stale | price and OHLCV transmission | public/authorized market data |
 | official source fallback | available / pending / unavailable | S0 facts and fallback values | reputable media leads only |
 
@@ -55,7 +55,7 @@ or risk defaults.
 
 | 指标 | 当前值 | 近5日/20日变化 | 阈值 | 对策略姿态影响 | 数据时间戳 | source |
 | --- | --- | --- | --- | --- | --- | --- |
-| 10Y |  |  | 4.5% | high beta momentum / balanced / defensive |  | Longbridge macrodata / official source fallback |
+| 10Y |  |  | 4.5% | high beta momentum / balanced / defensive |  | IBKR exact field / official source fallback |
 | 30Y |  |  | 5.0% | duration pressure / relief |  |  |
 | HYG/LQD |  |  | widening / tightening | credit risk appetite |  |  |
 | DXY |  |  | breakout / breakdown | USD liquidity and earnings pressure |  |  |

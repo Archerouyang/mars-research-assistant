@@ -42,6 +42,7 @@ for installed in "$CODEX_INSTALL" "$CLAUDE_INSTALL"; do
   test -f "$installed/scripts/research_result.py"
   test -f "$installed/scripts/export_board_png.mjs"
   test -f "$installed/scripts/holdings_display.py"
+  test -f "$installed/scripts/ibkr_holdings_adapter.py"
   test -f "$installed/assets/vendor/lightweight-charts-5.2.0/LICENSE"
   diff -qr "$CANONICAL" "$installed" >/dev/null
   if find "$installed" -type f \( \

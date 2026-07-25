@@ -22,12 +22,10 @@ Collect and confirm:
 - enabled automations: which prompts should be scheduled now.
 - cadence: exact local time, weekdays/weekends, event-window exceptions, and
   whether intraday monitors should run only when active setups exist.
-- allowed sources: public web search, official/primary sources, Longbridge
-  macrodata, IBKR connector, Longbridge broker source, manual CSV for a single
-  run, and user-provided Seeking Alpha reports, excerpts, links, PDFs, or
-  screenshots.
-- Longbridge macrodata is an optional macro and financial-conditions source when
-  installed and authorized.
+- allowed sources: IBKR read-only tools, public Web Search, directly opened
+  official/primary sources, and user-provided reports, excerpts, links, PDFs,
+  or screenshots.
+- IBKR is the only supported broker Provider.
 - runtime write policy: draft-only, ask before writing, allowed runtime files,
   and no public repo writes.
 - read-only broker policy: broker reads require explicit authorization and must

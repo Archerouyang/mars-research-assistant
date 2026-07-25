@@ -90,17 +90,6 @@ def main() -> None:
     run(
         [
             sys.executable,
-            str(SCRIPTS / "macro_regime_artifact.py"),
-            str(FIXTURES / "macro-regime-mini-panel-2026-06-24.json"),
-            "--display-output",
-            str(output / "macro-regime-panel.svg"),
-            "--artifact-id",
-            "readme-macro-regime",
-        ]
-    )
-    run(
-        [
-            sys.executable,
             str(SCRIPTS / "chart_artifact.py"),
             str(FIXTURES / "chart-ohlcv-qqq-sample.json"),
             "--output",

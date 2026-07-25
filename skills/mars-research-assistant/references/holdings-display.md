@@ -1,12 +1,13 @@
 # Holdings Display
 
 Use this reference only after the user explicitly asks to read holdings for the
-current request. A previous broker connection, Macro data read, or stored
-default broker does not constitute holdings consent.
+current request. A previous IBKR connection or Macro data read does not
+constitute holdings consent.
 
-1. Read only the configured default broker through its read-only host adapter.
-2. Normalize the response to the existing portfolio snapshot row schema without
-   exposing account identifiers or raw provider payloads.
+1. Read only IBKR through its read-only host adapter.
+2. Normalize only the approved factual fields with
+   `scripts/ibkr_holdings_adapter.py`, without exposing account identifiers or
+   raw provider payloads.
 3. Render with `scripts/holdings_display.py` and show only: broker, symbol,
    quantity, latest price, market value, cost, unrealized P&L, cash, currency,
    and retrieval time.
@@ -15,5 +16,6 @@ default broker does not constitute holdings consent.
    loss, risk scores, or portfolio recommendations. Do not start PA or a named
    instrument analysis unless the user asks for it.
 
-The display is factual and single-broker. Never aggregate cash across currencies
-or silently combine brokers. Account identifiers stay out of the rendered output.
+The display is factual and IBKR-only. Never aggregate cash across currencies.
+Account identifiers stay out of the rendered output. A legacy broker selection
+file is unsupported and must not affect this path.
