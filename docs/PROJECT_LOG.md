@@ -31,6 +31,22 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `f1fe4aa` `fix: bind macro evidence to events`
+- Scope: skill, script, decision
+- What changed: the primary-event-source registry now approves the complete
+  event identity—title, category, timezone-aware time, evidence kind, and
+  exact original URL—rather than a reusable evidence-kind/URL pair. Malformed
+  and timezone-less event `as_of` timestamps also have focused fail-closed
+  fixture coverage.
+- Why it matters: one official URL can no longer be relabelled as a different
+  confirmed Macro event, while every displayed event retains independently
+  auditable source timing.
+- Verification: focused Macro selftest passed through `uv`, including an event
+  whose title/category conflict with its registered primary source plus missing,
+  malformed, and timezone-less event source-time blockers.
+- Next step: rerun the complete Skill and portable-install gates, then perform
+  a final focused review before closing #102.
+
 - Commit: `f568eca` `fix: preserve macro event provenance`
 - Scope: skill, script
 - What changed: each Macro event now carries, validates, and displays its own

@@ -25,7 +25,7 @@ _Avoid_: 跨源腿拼接、单条预计算比率
 
 **Price Action Board**：只在用户明确询问趋势、点位、入场、减仓或交易计划时生成。它独占同一来源的 120 根完成、前复权 1D OHLCV，以及 EMA20、EMA50、ATR14、关键位、情景和失效条件。
 
-**原始事件证据**：可进入研究结果的事件必须携带 `official_calendar`、`government_or_regulatory_filing`、`official_announcement` 或 `company_ir` 的 `evidence_kind`，并有 `primary_source_confirmed=true`。本次运行还注入一手来源登记器，它只批准已登记的“证据分类 + 精确原始 URL”组合。Web Search 仅发现候选资料，不能成为事件事实。
-_Avoid_: 聚合新闻 URL、仅校验 `https` 的来源、未登记的一手来源
+**原始事件证据**：可进入研究结果的事件必须携带 `official_calendar`、`government_or_regulatory_filing`、`official_announcement` 或 `company_ir` 的 `evidence_kind`，并有 `primary_source_confirmed=true`。本次运行还注入一手来源登记器，它只批准已登记的“事件标题、类别、带时区时间、证据分类 + 精确原始 URL”组合。Web Search 仅发现候选资料，不能成为事件事实。
+_Avoid_: 聚合新闻 URL、仅校验 `https` 的来源、未登记或与事件不匹配的一手来源
 
 **安全边界**：不创建、修改、取消或提交订单；不读取账户、持仓、订单、凭据或 token。Longbridge 预检只暴露 CLI/授权的布尔状态。

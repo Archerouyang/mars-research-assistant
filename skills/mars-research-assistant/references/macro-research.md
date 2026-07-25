@@ -6,7 +6,7 @@
 
 覆盖未来七天的央行决议、CPI/PCE/PPI、就业、GDP、PMI、重大财政或关税政策、长期美债拍卖，和过去 24 小时内明确影响字段的重大事件。每项写明时间、状态（已发生/预期）、传导、`evidence_kind`、`primary_source_confirmed`、`source`、`as_of`。
 
-只有 `official_calendar`、`government_or_regulatory_filing`、`official_announcement` 或 `company_ir` 是可展示的 `evidence_kind`，且 `primary_source_confirmed` 必须为 `true`。每次 Macro 运行还须注入一手来源登记器；它只批准已登记的“证据分类 + 精确原始 URL”组合。Web Search 与聚合新闻只可用于发现候选；它们不能单独成为事件事实。分类缺失、来源未确认、未登记 URL、聚合证据或无效时间都会给出 blocker，并抑制整个 Board。
+只有 `official_calendar`、`government_or_regulatory_filing`、`official_announcement` 或 `company_ir` 是可展示的 `evidence_kind`，且 `primary_source_confirmed` 必须为 `true`。每次 Macro 运行还须注入一手来源登记器；它只批准已登记的“事件标题、类别、带时区时间、证据分类 + 精确原始 URL”组合。Web Search 与聚合新闻只可用于发现候选；它们不能单独成为事件事实。分类缺失、来源未确认、未登记或与事件不匹配的 URL、聚合证据或无效时间都会给出 blocker，并抑制整个 Board。
 
 人工视觉验收时，在调用者新建的临时目录写入一份纯合成代表性 Board：
 
