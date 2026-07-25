@@ -8,6 +8,22 @@ industry, product, broker, currency, cash/collateral, leverage, path dependency,
 and stress scenarios. Disclose user exclusions while omitting them from the
 requested calculation.
 
+## Partial Option Overlays
+
+The baseline Portfolio Risk Board requires confirmed selected-broker holdings,
+market value, timestamp, currency, and cash/collateral or NAV context. A listed
+option missing its contract multiplier, Greeks, delta, or reliable underlying
+notional is an `option_overlay_partial`, not a reason to withhold the Board or
+query another broker. Keep its reported market value and source coverage
+visible; mark its delta, notional, and stress treatment as unavailable; exclude
+it from delta-equivalent and stress arithmetic. Never replace unknown values
+with zero or describe the overlay as a hedge without evidence.
+
+The user may explain an option as a covered call, LEAP, hedge, take-profit, or
+cost-reduction layer. Treat this as classification input for the Board, not an
+implicit request to evaluate the option strategy, its underlying company, or a
+Price Action setup. Those need a later explicit user request.
+
 The standalone Board should lead with numeric concentration and product-risk visuals.
 Text explains the decision and constraints after the exposure is inspectable.
 Never expose account identifiers or raw broker rows.

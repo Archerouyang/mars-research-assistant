@@ -19,8 +19,10 @@ wants that snapshot saved or replaced.
 Broker access is read-only and source-specific. Reconcile before combining
 accounts. If coverage is incomplete, keep portfolio conclusions conditional.
 
-For a new session, provide useful reduced-scope public research first, then ask
-for the smallest authorization or setup detail that unlocks personalization.
+For a new unscoped Daily Ops session, do not start with a prose public-market
+summary. Run the phase gate below and deliver the required Macro Board or Data
+Acquisition Blocker first; then ask for the smallest authorization or setup
+detail that unlocks personalization.
 
 ## Unscoped Daily Ops Baseline
 
@@ -28,24 +30,46 @@ Use this sequence only for an unscoped `开始今天的交易研究` / `continue
 Ops` request. A named instrument, report, or Price Action request takes its
 focused route instead.
 
-1. Run the complete direct-public Macro preflight and deliver exactly one Macro
-   standalone Board or one `Data Acquisition Blocker`. Do not replace either
-   with a prose-only market summary.
-2. If no broker read-only authorization exists, ask for it after the Macro
-   result. Do not choose a ticker, request a trade horizon, or begin company or
-   Price Action analysis.
-3. Once the user has selected and authorized one default broker, read only the
-   permitted holdings and capital context. With usable portfolio fields,
-   deliver the Portfolio Risk standalone Board; without them, report the
-   specific portfolio data gap and do not substitute individual analysis.
-4. After the Macro result and Portfolio result/gap, ask which ticker the user
+1. Execute the side-effect-free phase gate before each transition:
+
+   ```bash
+   python3 scripts/daily_ops_routing.py \
+     --intent unscoped_daily_start \
+     --macro-state <pending|delivered|blocked> \
+     --broker-authorized <true|false> \
+     --portfolio-state <not_read|ready|option_overlay_partial|core_gap>
+   ```
+
+   Its `required_actions` are mandatory. Never emit an action listed in
+   `forbidden_actions`.
+2. At `macro_state=pending`, run the complete direct-public Macro preflight and
+   deliver exactly one Macro standalone Board or one `Data Acquisition Blocker`.
+   Do not replace either with a prose-only market summary.
+3. At `macro_state=delivered` without broker authorization, ask for read-only
+   authorization. Do not choose a ticker, request a trade horizon, or begin
+   company or Price Action analysis.
+4. Once the user has selected and authorized one default broker, read only that
+   broker's permitted holdings and capital context. Classify the result:
+   `ready` yields the Portfolio Risk Board; `option_overlay_partial` also
+   yields the Board but marks unavailable option delta/notional/stress fields;
+   `core_gap` yields a concrete data gap only.
+5. After the Macro result and Portfolio result/gap, ask which ticker the user
    wants to inspect. Only a user-named ticker may enter individual research or
    Price Action, and Price Action still requires its full
    `ticker + trade_horizon + instrument` context.
 
-`scripts/daily_ops_routing.py` encodes this boundary without reading data or
-mutating runtime state. It returns `macro_board_or_blocker` first for every
-unscoped start and never returns a Price Action action on that route.
+An option overlay is not a core portfolio gap merely because its multiplier,
+Greeks, delta, or underlying notional are missing. With valid broker position
+identity, direction, market value, currency, timestamp, and cash/NAV context,
+keep it visible as an unmodeled `option_overlay_partial` and exclude it from
+delta and stress arithmetic. Do not silently zero the field, imply a hedge, or
+read/request a second broker. A user explanation of the overlay's purpose is
+classification evidence, not a request to analyse its underlying ticker.
+
+The required Board or Blocker is the first decision-bearing artifact in its
+phase. Do not precede it with a runtime table, a prose macro report, broker
+health output, or a suggested ticker. Source coverage and gaps appear in the
+Board/Blocker and concise copy after it.
 
 ## Default Weekly Cadence
 

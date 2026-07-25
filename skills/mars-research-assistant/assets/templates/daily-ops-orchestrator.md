@@ -3,6 +3,11 @@
 Use this template when the user asks to start, continue, or check Daily Ops
 without specifying every internal workflow.
 
+For an unscoped start, do not render the status sections below before the
+required Macro standalone Board or its Data Acquisition Blocker. The Board or
+Blocker is the first decision-bearing artifact; use this template afterward for
+concise state, authorization, and next-step copy.
+
 ## 当前日程阶段
 
 - stage:
@@ -92,10 +97,14 @@ exist, do not invent actual macro readings.
 
 仅当用户未点名标的、研报或 PA 时使用。按以下顺序输出：
 
-1. 先交付完整直接公开字段的 Macro standalone Board；任一必填字段失败则交付唯一的 `Data Acquisition Blocker`，不能用文字晨报代替。
-2. 若未获 broker 只读授权，在 Macro 结果后询问授权；此时不提出 ticker、周期、公司研究或 PA。
-3. 授权并选定唯一默认 broker 后，只有在持仓和资本字段可用时交付 Portfolio Risk standalone Board；字段不足则明确持仓数据缺口，不以个股分析代替。
-4. Macro 与持仓风险结果完成后，才请用户指定希望研究的 ticker；个股研究和 PA 仅针对用户点名标的，PA 仍须完整的 `ticker + trade_horizon + instrument`。
+1. 每次阶段转换先执行 `python3 scripts/daily_ops_routing.py`，传入当前的 intent、macro、broker authorization 与 portfolio state。脚本返回的 `required_actions` 是强制交付，`forbidden_actions` 不得出现在本轮输出或工具路由中。
+2. 第一轮 `macro_state=pending`：先交付完整直接公开字段的 Macro standalone Board；任一必填字段失败则交付唯一的 `Data Acquisition Blocker`。不能用文字晨报、市场摘要或「下一步建议」代替。
+3. `macro_state=delivered` 且未获 broker 只读授权：只询问授权；此时不提出 ticker、周期、公司研究或 PA。
+4. 授权并选定唯一默认 broker 后，先读取该 broker 的许可持仓与资本字段，再分类：`ready` 和 `option_overlay_partial` 都必须交付 Portfolio Risk standalone Board；`core_gap` 才明确持仓数据缺口，且不以个股分析代替。
+5. 期权缺 multiplier、Greeks、delta 或可靠 notional，但具备身份、方向、市值、币种、时间戳和现金/NAV 上下文时，使用 `option_overlay_partial`：Board 保留该期权的来源和市值，明确其不进入 delta/stress 计算；不能补零、不能自行读/请求第二券商。
+6. Macro 与持仓风险结果完成后，才请用户指定希望研究的 ticker；个股研究和 PA 仅针对用户点名标的。用户解释期权是备兑 Call、LEAP、对冲、TP 或降成本层，只用于分类，不构成 GOOGL 或任何标的的分析请求。
+
+每个阶段的 Board 或 Blocker 都是第一个决策性用户交付。不能先渲染运行时状态表、券商健康表、文字宏观报告或推荐标的；这些信息只作为 Board/Blocker 内的来源和缺口，或其后的简短说明。
 
 用户直接要求某个标的、研报或 PA 时，可以走相应的聚焦路径，不强制补做本基线。
 
@@ -108,9 +117,10 @@ fail-closed until the missing broker-source confirmation is resolved.
 
 ## 券商只读来源设置
 
-Include this section on every Daily Ops first start, including when unspecified
-live broker sources default to `needs_review`. On later turns, `missing` or
-`unauthorized` enters `券商只读来源设置`.
+Render this section only after the required Macro Board or Data Acquisition
+Blocker. Include it on every Daily Ops first start when read-only broker access
+is still needed, including when unspecified live broker sources default to
+`needs_review`. On later turns, `missing` or `unauthorized` enters `券商只读来源设置`.
 
 On later turns, `needs_review` asks for matching verification/retry and
 does not repeat authorization setup. `stale`, `partial_data`, `upstream_error`,
@@ -146,15 +156,15 @@ or exit triggers.
 
 当 `startup_status=partial / uninitialized` 时，保持只读并按以下顺序输出：
 
-1. `可用研究摘要`：用当前公开/授权的非账户信源概括市场环境、下周 P0/P1
-   事件和主题影响。
-2. `降级范围`：明确未读取 broker、未验证组合暴露、未读取保存计划，且不生成
-   具体 entry/exit trigger。
-3. `下一步确认`：在无标的启动基线完成后，再请求用户点名的
-   `ticker + trade_horizon + instrument`；如尚未授权，则只请求 broker
-   read-only 和 runtime dry-run/初始化选择。
+1. 仍从 `macro_state=pending` 的 Macro standalone Board 或唯一的 Data
+   Acquisition Blocker 开始，不能输出 `可用研究摘要` 代替。
+2. 宏观结果后才说明运行时、broker 与保存计划的降级范围；不生成具体
+   entry/exit trigger。
+3. 未授权时只请求 broker read-only；授权和唯一默认来源确认后再走持仓
+   基线。只有两张基线 Board（或明确 Blocker/gap）结束，才请求用户点名的
+   `ticker + trade_horizon + instrument`。
 
-先摘要，后授权/初始化；本轮不会写 runtime。
+不因运行时缺失跳过 Board；本轮不会写 runtime。
 
 ## 建议下一步
 

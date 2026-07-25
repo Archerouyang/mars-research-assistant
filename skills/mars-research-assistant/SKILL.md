@@ -61,7 +61,9 @@ response when plain language is clearer; preserve the reasoning discipline.
 5. Deliver concise Chinese Markdown unless the user requests another language.
 6. When a visual materially improves inspection, build the self-contained
    `standalone_board` HTML and present its durable path early for acceptance.
-   Do not emit a second inline, iframe, or host-dependent visual.
+   Do not emit a second inline, iframe, or host-dependent visual. For an
+   unscoped Daily Ops baseline, the Macro and Portfolio Boards are mandatory
+   delivery gates, not discretionary visuals.
 
 For an explicit user request outside unscoped Daily Ops, do not follow a fixed
 workflow sequence when a shorter valid path reaches the user's outcome. The
@@ -100,9 +102,11 @@ hashes match. It never deletes, renames, or exports the legacy runtime. Use
 after the user has approved the displayed source and destination paths.
 
 For `Start today's trading research.` or `开始今日交易研究`, inspect runtime
-availability and source coverage, then provide useful public-source research
-before asking for the smallest missing authorization. A missing runtime enters
-blank first-run setup; never restore or infer private state from fixtures.
+availability and source coverage, then run the unscoped Daily Ops routing gate
+before researching. The first public result must be the Macro standalone Board
+or its one Data Acquisition Blocker; prose market commentary is supporting copy
+inside that result, never a substitute. A missing runtime enters blank first-run setup;
+never restore or infer private state from fixtures.
 
 ## Unscoped Daily Ops Baseline
 
@@ -110,24 +114,60 @@ This sequence applies only when the user starts or continues Daily Ops without
 requesting a named instrument, report, or Price Action analysis. It is the
 default baseline, not a substitute for an explicit user request:
 
-1. Acquire the complete direct-public Macro field set and deliver the Macro
+1. Run `python3 scripts/daily_ops_routing.py` with the current phase before
+   taking the next research action. Its `required_actions` are binding and its
+   `forbidden_actions` must not be emitted. For the first turn, use:
+
+   ```bash
+   python3 scripts/daily_ops_routing.py \
+     --intent unscoped_daily_start \
+     --macro-state pending \
+     --broker-authorized false \
+     --portfolio-state not_read
+   ```
+2. Acquire the complete direct-public Macro field set and deliver the Macro
    standalone Board, or the single `Data Acquisition Blocker` when any required
-   field fails.
-2. If broker read-only access is not yet authorized, ask for that authorization
-   next. Do not propose a ticker, trade horizon, individual-company analysis,
-   or Price Action workflow yet.
-3. After the user authorizes a default broker and usable holdings plus capital
-   context are available, deliver the Portfolio Risk standalone Board. If the
-   portfolio data is incomplete, state the portfolio data gap instead of
-   replacing the Board with prose or instrument analysis.
-4. Only after the Macro and Portfolio baseline has been delivered, ask the user
+   field fails. Do not write a prose-only macro summary first.
+3. If broker read-only access is not yet authorized, run the route with
+   `--macro-state delivered --broker-authorized false --portfolio-state not_read`
+   and ask for that authorization next. Do not propose a ticker, trade horizon,
+   individual-company analysis, or Price Action workflow yet.
+4. After the user authorizes a default broker, run the route with
+   `--macro-state delivered --broker-authorized true --portfolio-state not_read`,
+   then read the selected broker's permitted holdings and capital context.
+   Classify the result as `ready`, `option_overlay_partial`, or `core_gap` and
+   run the route again with that state. `ready` and `option_overlay_partial`
+   both require the Portfolio Risk standalone Board; only `core_gap` yields a
+   concrete data gap instead.
+5. Only after the Macro and Portfolio baseline has been delivered, ask the user
    which ticker they want to inspect. Generate individual research or Price
    Action only for a ticker the user explicitly names and only after its
    `ticker + trade_horizon + instrument` context is known.
 
+An option overlay is `option_overlay_partial`, not `core_gap`, when the
+selected broker supplies position identity, direction, market value, currency,
+timestamp, and the portfolio has usable cash or NAV context, but the option is
+missing a multiplier, Greeks, reliable delta, or reliable underlying notional.
+Deliver the Portfolio Board with the overlay visibly marked as unmodeled in
+delta and stress calculations. Do not silently set a missing field to zero,
+claim it is a hedge, or request/read another broker to fill it. A user
+explaining that an option is a covered call, LEAP, hedge, take-profit layer, or
+cost-reduction layer only classifies the overlay; it is not an individual-option
+or Price Action request.
+
+If core holdings or capital context are absent, report `core_gap` with the
+missing fields and ask whether the user wants to provide or authorize a source
+that can supply them. Do not infer a secondary-broker authorization.
+
+The Board or Blocker is the first decision-bearing user artifact in its phase.
+Do not put a runtime-status table, market summary, broker-health table, or
+recommended ticker before it. A one-sentence progress update is allowed while
+data is being acquired; source coverage and data gaps belong inside the Board
+or Blocker and concise follow-on copy.
+
 An explicit request such as `分析 TSM` or `做 NVDA 的 4H PA` takes the focused
 instrument route and does not invent this baseline as a prerequisite. Follow
-`scripts/daily_ops_routing.py` for the deterministic routing boundary.
+the route script as an executable gate, not a reference-only guideline.
 
 For a requested Macro Panel, do not treat a missing saved `macro-panel.json` or
 standalone Board as a reason to withhold today's Board. First run the complete
