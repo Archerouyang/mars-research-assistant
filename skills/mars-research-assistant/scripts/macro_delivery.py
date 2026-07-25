@@ -61,35 +61,67 @@ class MacroDelivery:
     blockers: tuple[str, ...]
 
 
-def build_macro_delivery(fields: Mapping[str, Any]) -> MacroDelivery:
+def ratio_pair_is_acceptable(
+    field: Any,
+    *,
+    research_as_of: str | None,
+    session_calendar: Any | None,
+) -> bool:
+    """Keep a malformed ratio pair unresolved so the normal lazy fallback can retry it."""
+
+    if getattr(field, "name", None) not in {"hyg_lqd_history", "ndx_rut_history"}:
+        return True
+    sessions, session_problems = _completed_xnys_sessions(research_as_of, session_calendar)
+    if session_problems:
+        return True
+    ratio = "HYG/LQD" if field.name == "hyg_lqd_history" else "NDX/RUT"
+    _, pair_problems = _derive_ratio_pair(field, ratio, sessions)
+    return not pair_problems
+
+
+def build_macro_delivery(
+    fields: Mapping[str, Any],
+    *,
+    research_as_of: str | None,
+    session_calendar: Any | None,
+) -> MacroDelivery:
     """Return the Event Brief first and a Board only after all frozen gates pass."""
 
     event_field = fields.get("macro_events")
-    events, event_problems = _validated_events(event_field)
+    events, event_problems = _validated_events(event_field, research_as_of)
     markdown = (
         _render_event_brief(events, event_field)
         if not event_problems
         else "## Macro Event Brief\n- data_gap: macro_events"
     )
     blockers = list(event_problems)
-    blockers.extend(_field_blockers(fields))
+    field_problems, trend_series = _validate_macro_fields(
+        fields,
+        research_as_of=research_as_of,
+        session_calendar=session_calendar,
+    )
+    blockers.extend(field_problems)
     if blockers:
         rendered = markdown + "\n\n## Macro Regime Blocker\n" + "\n".join(
             f"- data_gap: {problem}" for problem in blockers
         )
         return MacroDelivery(rendered, None, tuple(blockers))
-    return MacroDelivery(markdown, render_macro_board(_board_payload(fields, events)), ())
+    return MacroDelivery(markdown, render_macro_board(_board_payload(fields, events, trend_series)), ())
 
 
-def _validated_events(field: Any) -> tuple[tuple[Mapping[str, Any], ...], tuple[str, ...]]:
+def _validated_events(
+    field: Any, research_as_of: str | None
+) -> tuple[tuple[Mapping[str, Any], ...], tuple[str, ...]]:
     if field is None:
         return (), ("macro_events",)
     events = getattr(field, "value", None)
     if not isinstance(events, Sequence) or isinstance(events, (str, bytes)):
         return (), ("macro_events_invalid",)
-    reference_time = _parse_timestamp(getattr(field, "as_of", None))
+    if research_as_of is None:
+        return (), ("research_as_of_missing",)
+    reference_time = _parse_timestamp(research_as_of)
     if reference_time is None:
-        return (), ("macro_events_as_of_invalid",)
+        return (), ("research_as_of_invalid",)
     selected: list[Mapping[str, Any]] = []
     for event in events:
         if not isinstance(event, Mapping):
@@ -149,69 +181,182 @@ def _is_in_event_window(event_time: datetime, status: str, reference_time: datet
     return False
 
 
-def _field_blockers(fields: Mapping[str, Any]) -> tuple[str, ...]:
+def _validate_macro_fields(
+    fields: Mapping[str, Any],
+    *,
+    research_as_of: str | None,
+    session_calendar: Any | None,
+) -> tuple[tuple[str, ...], Mapping[str, list[dict[str, Any]]]]:
     problems = [name for name in MACRO_REQUIRED_FIELDS if name not in fields]
-    if problems:
-        return tuple(problems)
     treasury_names = ("treasury_2y", "treasury_10y", "treasury_30y")
-    treasury_dates = _field_dates(fields, treasury_names, problems)
-    if len(treasury_dates) == len(treasury_names) and len(set(treasury_dates.values())) != 1:
-        problems.append("treasury_curve_date_mismatch")
-    treasury_sources = {
-        str(fields[name].source).casefold() for name in treasury_names
-    }
-    for name in treasury_names:
-        if str(fields[name].source).casefold() not in _OFFICIAL_TREASURY_SOURCES:
-            problems.append(f"{name}_source_invalid")
-    if len(treasury_sources) != 1:
-        problems.append("treasury_curve_source_mismatch")
-    market_dates = _field_dates(fields, _MARKET_FIELDS, problems)
-    if len(market_dates) == len(_MARKET_FIELDS) and len(set(market_dates.values())) != 1:
-        problems.append("market_completed_session_mismatch")
-    for name in _MARKET_FIELDS:
+    if all(name in fields for name in treasury_names):
+        treasury_dates = _field_dates(fields, treasury_names, problems)
+        if len(treasury_dates) == len(treasury_names) and len(set(treasury_dates.values())) != 1:
+            problems.append("treasury_curve_date_mismatch")
+        treasury_sources = {
+            str(fields[name].source).casefold() for name in treasury_names
+        }
+        for name in treasury_names:
+            if str(fields[name].source).casefold() not in _OFFICIAL_TREASURY_SOURCES:
+                problems.append(f"{name}_source_invalid")
+        if len(treasury_sources) != 1:
+            problems.append("treasury_curve_source_mismatch")
+    sessions, session_problems = _completed_xnys_sessions(research_as_of, session_calendar)
+    problems.extend(session_problems)
+    present_market_fields = tuple(name for name in _MARKET_FIELDS if name in fields)
+    market_dates = _field_dates(fields, present_market_fields, problems)
+    if sessions:
+        latest_session = sessions[-1]
+        for name, market_date in market_dates.items():
+            if market_date != latest_session:
+                problems.append(f"{name}_as_of_not_latest_completed_session")
+    for name in present_market_fields:
         if str(fields[name].source).casefold() not in _MARKET_SOURCES:
             problems.append(f"{name}_source_invalid")
     for name in _SCALAR_FIELDS:
+        if name not in fields:
+            continue
         value = fields[name].value
         if not isinstance(value, Mapping) or not isinstance(value.get("value"), (int, float)):
             problems.append(f"{name}_invalid")
     for name in ("vix", "vix3m", "dxy", "wti", "gold"):
+        if name not in fields:
+            continue
         value = fields[name].value
         if not isinstance(value, Mapping) or value.get("completed") is not True:
             problems.append(f"{name}_not_completed")
     for name, symbol in _EXPECTED_SYMBOLS.items():
+        if name not in fields:
+            continue
         value = fields[name].value
         if not isinstance(value, Mapping) or value.get("symbol") != symbol:
             problems.append(f"{name}_semantic_invalid")
-    histories = (fields["hyg_lqd_history"], fields["ndx_rut_history"])
-    point_dates: list[tuple[str, ...]] = []
-    for field, ratio in zip(histories, ("HYG/LQD", "NDX/RUT")):
-        value = field.value
-        points = value.get("points") if isinstance(value, Mapping) else None
-        if not isinstance(value, Mapping) or value.get("ratio") != ratio or not isinstance(points, list) or len(points) != 30:
-            problems.append(f"{field.name}_invalid")
-            continue
-        if tuple(value.get("symbols") or ()) != _EXPECTED_RATIO_SYMBOLS[ratio]:
-            problems.append(f"{field.name}_semantic_invalid")
-        dates = []
-        for point in points:
-            if not isinstance(point, Mapping) or not isinstance(point.get("value"), (int, float)) or not point.get("completed"):
-                problems.append(f"{field.name}_points_invalid")
-                break
-            date = _parse_timestamp(point.get("date"))
-            if date is None:
-                problems.append(f"{field.name}_points_invalid")
-                break
-            dates.append(date.date().isoformat())
-        if len(dates) != 30 or len(set(dates)) != 30 or dates != sorted(dates):
-            problems.append(f"{field.name}_points_invalid")
-        expected_as_of = market_dates.get(field.name)
-        if len(dates) == 30 and expected_as_of is not None and dates[-1] != expected_as_of:
-            problems.append(f"{field.name}_as_of_mismatch")
-        point_dates.append(tuple(dates))
-    if len(point_dates) == 2 and point_dates[0] != point_dates[1]:
-        problems.append("ratio_common_sessions_mismatch")
-    return tuple(dict.fromkeys(problems))
+    trend_series: dict[str, list[dict[str, Any]]] = {}
+    if sessions:
+        for field_name, ratio in (("hyg_lqd_history", "HYG/LQD"), ("ndx_rut_history", "NDX/RUT")):
+            if field_name not in fields:
+                continue
+            pair_points, pair_problems = _derive_ratio_pair(
+                fields[field_name],
+                ratio,
+                sessions,
+            )
+            problems.extend(pair_problems)
+            if not pair_problems:
+                trend_series[ratio] = pair_points
+    return tuple(dict.fromkeys(problems)), trend_series
+
+
+def _completed_xnys_sessions(
+    research_as_of: str | None, session_calendar: Any | None
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if research_as_of is None:
+        return (), ("research_as_of_missing",)
+    reference_time = _parse_timestamp(research_as_of)
+    if reference_time is None:
+        return (), ("research_as_of_invalid",)
+    if session_calendar is None:
+        return (), ("xnys_calendar_missing",)
+    try:
+        raw_sessions = session_calendar.completed_sessions(research_as_of)
+    except Exception:
+        return (), ("xnys_calendar_unavailable",)
+    if not isinstance(raw_sessions, Sequence) or isinstance(raw_sessions, (str, bytes)):
+        return (), ("xnys_calendar_invalid",)
+    sessions: list[str] = []
+    for raw_session in raw_sessions:
+        parsed = _parse_timestamp(raw_session)
+        if parsed is None:
+            return (), ("xnys_calendar_invalid",)
+        session = parsed.date().isoformat()
+        if session > reference_time.date().isoformat():
+            return (), ("xnys_calendar_invalid",)
+        sessions.append(session)
+    if not sessions or len(set(sessions)) != len(sessions) or sessions != sorted(sessions):
+        return (), ("xnys_calendar_invalid",)
+    return tuple(sessions), ()
+
+
+def _derive_ratio_pair(
+    field: Any,
+    ratio: str,
+    sessions: Sequence[str],
+) -> tuple[list[dict[str, Any]], tuple[str, ...]]:
+    expected_symbols = _EXPECTED_RATIO_SYMBOLS[ratio]
+    value = getattr(field, "value", None)
+    if not isinstance(value, Mapping) or value.get("ratio") != ratio:
+        return [], (f"{field.name}_pair_invalid",)
+    legs = value.get("legs")
+    if not isinstance(legs, Mapping) or set(legs) != set(expected_symbols):
+        return [], (f"{field.name}_legs_invalid",)
+    normalized_legs: list[dict[str, float]] = []
+    for symbol in expected_symbols:
+        normalized, leg_problems = _normalize_ratio_leg(
+            legs[symbol],
+            symbol=symbol,
+            field=field,
+            valid_sessions=set(sessions),
+        )
+        if leg_problems:
+            return [], tuple(f"{field.name}_{problem}" for problem in leg_problems)
+        normalized_legs.append(normalized)
+    left, right = normalized_legs
+    common_sessions = [session for session in sessions if session in left and session in right]
+    if len(common_sessions) < 30:
+        return [], (f"{field.name}_fewer_than_30_common_sessions",)
+    selected_sessions = common_sessions[-30:]
+    if selected_sessions[-1] != sessions[-1]:
+        return [], (f"{field.name}_latest_session_missing",)
+    points = []
+    for session in selected_sessions:
+        denominator = right[session]
+        if denominator == 0:
+            return [], (f"{field.name}_zero_denominator",)
+        points.append({"date": session, "value": left[session] / denominator, "completed": True})
+    return points, ()
+
+
+def _normalize_ratio_leg(
+    raw_leg: Any,
+    *,
+    symbol: str,
+    field: Any,
+    valid_sessions: set[str],
+) -> tuple[dict[str, float], tuple[str, ...]]:
+    if not isinstance(raw_leg, Mapping):
+        return {}, ("leg_invalid",)
+    if raw_leg.get("symbol") != symbol:
+        return {}, ("leg_symbol_invalid",)
+    if raw_leg.get("source") != field.source or raw_leg.get("as_of") != field.as_of:
+        return {}, ("leg_source_mismatch",)
+    observations = raw_leg.get("observations")
+    if not isinstance(observations, list) or not observations:
+        return {}, ("leg_observations_missing",)
+    values: dict[str, float] = {}
+    ordered_dates: list[str] = []
+    for observation in observations:
+        if not isinstance(observation, Mapping):
+            return {}, ("leg_observations_invalid",)
+        parsed = _parse_timestamp(observation.get("date"))
+        if parsed is None:
+            return {}, ("leg_observations_invalid",)
+        date = parsed.date().isoformat()
+        close = observation.get("close")
+        if (
+            date not in valid_sessions
+            or not isinstance(close, (int, float))
+            or observation.get("completed") is not True
+            or observation.get("source") != field.source
+            or observation.get("as_of") != field.as_of
+        ):
+            return {}, ("leg_observations_invalid",)
+        if date in values:
+            return {}, ("leg_observations_invalid",)
+        values[date] = float(close)
+        ordered_dates.append(date)
+    if ordered_dates != sorted(ordered_dates):
+        return {}, ("leg_observations_invalid",)
+    return values, ()
 
 
 def _field_dates(
@@ -227,7 +372,11 @@ def _field_dates(
     return dates
 
 
-def _board_payload(fields: Mapping[str, Any], events: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+def _board_payload(
+    fields: Mapping[str, Any],
+    events: Sequence[Mapping[str, Any]],
+    trend_series: Mapping[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
     scalars = {name: fields[name] for name in _SCALAR_FIELDS}
     return {
         "as_of": scalars["vix"].as_of,
@@ -235,9 +384,6 @@ def _board_payload(fields: Mapping[str, Any], events: Sequence[Mapping[str, Any]
         "values": {name: scalars[name].value["value"] for name in _SCALAR_FIELDS},
         "sources": {name: fields[name].source for name in MACRO_REQUIRED_FIELDS},
         "as_ofs": {name: fields[name].as_of for name in MACRO_REQUIRED_FIELDS},
-        "trend_series": {
-            "HYG/LQD": fields["hyg_lqd_history"].value["points"],
-            "NDX/RUT": fields["ndx_rut_history"].value["points"],
-        },
+        "trend_series": dict(trend_series),
         "events": [{**event, "as_of": fields["macro_events"].as_of} for event in events[:5]],
     }

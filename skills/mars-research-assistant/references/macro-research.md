@@ -13,6 +13,8 @@
 - `DX-Y.NYB`（DXY）、`CL=F`（WTI）、`GC=F`（COMEX Gold）；
 - HYG/LQD 与 NDX/RUT 的最近 30 个共同完成交易日折线。
 
-市场字段截至最近一个完成的美国交易日；财政部保留官方发布日期。VIX/VIX3M、准备金、TGA、ON RRP、z-score 与短周期比率不在范围内。
+每次 Macro 运行显式传入带时区的 `research_as_of` 与 XNYS 会话日历；市场字段和折线必须截至该时点前最近一个完成的美国交易日，财政部保留官方发布日期。VIX/VIX3M、准备金、TGA、ON RRP、z-score 与短周期比率不在范围内。
+
+HYG/LQD 与 NDX/RUT 各自由同一来源的两条原始 1D 腿序列计算。Skill 以 XNYS 日历取交集，验证最近 30 个完成会话和末日，再计算比率；任一腿缺失、跨源或会话无效时，整组才可回退到 yfinance，不能拼接单腿。
 
 利率必须使用官方财政部来源。Longbridge 只可替代具有相同已完成日线语义的 VIX、信用与风格数据；否则回退 yfinance。缺少任何冻结字段时，不生成 Board。

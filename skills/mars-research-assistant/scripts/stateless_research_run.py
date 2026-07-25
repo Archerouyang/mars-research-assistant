@@ -98,6 +98,7 @@ class ResearchRequest:
     required_fields: tuple[str, ...]
     source_choice: str | None = None
     delivery: str | None = None
+    research_as_of: str | None = None
 
     def __post_init__(self) -> None:
         if not self.required_fields:
@@ -131,6 +132,12 @@ class BatchProvider(Protocol):
     """A provider that receives all currently unresolved fields in one request."""
 
     def fetch_many(self, fields: tuple[str, ...]) -> Mapping[str, FieldValue]: ...
+
+
+class XNYSSessionCalendar(Protocol):
+    """Supplies completed XNYS sessions for one explicit research reference time."""
+
+    def completed_sessions(self, research_as_of: str) -> Sequence[str]: ...
 
 
 class SourceUnavailable(Exception):
@@ -169,6 +176,7 @@ def run_stateless_research(
     *,
     availability: LongbridgeAvailability,
     providers: Mapping[str, BatchProvider],
+    session_calendar: XNYSSessionCalendar | None = None,
 ) -> ResearchRunResult:
     """Resolve one request through the selected source profile without persistence."""
 
@@ -182,7 +190,12 @@ def run_stateless_research(
         )
 
     profile, source_order = _source_order(request.source_choice, availability)
-    resolved = _resolve_fields(request.required_fields, source_order, providers)
+    resolved = _resolve_fields(
+        request.required_fields,
+        source_order,
+        providers,
+        _macro_field_is_acceptable(request, session_calendar),
+    )
     missing = tuple(field for field in request.required_fields if field not in resolved)
     fields = tuple(resolved[field] for field in request.required_fields if field in resolved)
     result = ResearchRunResult(
@@ -193,7 +206,7 @@ def run_stateless_research(
         missing_fields=missing,
     )
     if request.delivery == "macro_regime":
-        return _attach_macro_delivery(result)
+        return _attach_macro_delivery(result, request.research_as_of, session_calendar)
     return result
 
 
@@ -214,6 +227,7 @@ def _resolve_fields(
     required_fields: tuple[str, ...],
     source_order: tuple[str, ...],
     providers: Mapping[str, BatchProvider],
+    field_is_acceptable: Callable[[FieldValue], bool] | None = None,
 ) -> dict[str, FieldValue]:
     unresolved = required_fields
     resolved: dict[str, FieldValue] = {}
@@ -229,16 +243,47 @@ def _resolve_fields(
             continue
         for name in unresolved:
             value = response.get(name)
-            if value is not None and value.name == name and value.is_available():
+            if (
+                value is not None
+                and value.name == name
+                and value.is_available()
+                and (field_is_acceptable is None or field_is_acceptable(value))
+            ):
                 resolved[name] = value
         unresolved = tuple(name for name in unresolved if name not in resolved)
     return resolved
 
 
-def _attach_macro_delivery(result: ResearchRunResult) -> ResearchRunResult:
+def _macro_field_is_acceptable(
+    request: ResearchRequest,
+    session_calendar: XNYSSessionCalendar | None,
+) -> Callable[[FieldValue], bool] | None:
+    if request.delivery != "macro_regime":
+        return None
+    from macro_delivery import ratio_pair_is_acceptable
+
+    def is_acceptable(field: FieldValue) -> bool:
+        return ratio_pair_is_acceptable(
+            field,
+            research_as_of=request.research_as_of,
+            session_calendar=session_calendar,
+        )
+
+    return is_acceptable
+
+
+def _attach_macro_delivery(
+    result: ResearchRunResult,
+    research_as_of: str | None,
+    session_calendar: XNYSSessionCalendar | None,
+) -> ResearchRunResult:
     from macro_delivery import build_macro_delivery
 
-    delivery = build_macro_delivery({field.name: field for field in result.fields})
+    delivery = build_macro_delivery(
+        {field.name: field for field in result.fields},
+        research_as_of=research_as_of,
+        session_calendar=session_calendar,
+    )
     missing = tuple(dict.fromkeys((*result.missing_fields, *delivery.blockers)))
     return ResearchRunResult(
         status=COMPLETE if not missing else BLOCKED,
