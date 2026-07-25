@@ -63,7 +63,7 @@ def _with_fixture_disclosure(board_html: str) -> str:
 
     marker = '<main id="macro-board">'
     disclosure = (
-        '<p class="fixture-notice"><strong>合成视觉 fixture · not market data</strong> '
+        '<p class="fixture-notice"><strong>合成视觉样本 · 非市场数据</strong> '
         '本页固定样例仅用于验收布局与交互；数值、来源标签和事件均不可用于市场判断。</p>'
     )
     if marker not in board_html:

@@ -155,17 +155,20 @@ def assert_complete_macro_delivers_brief_then_self_contained_board() -> None:
     result = run_macro(provider)
 
     assert result.status == "complete"
-    assert result.markdown is not None and result.markdown.startswith("## Macro Event Brief")
+    assert result.markdown is not None and result.markdown.startswith("## 宏观事件简报")
     assert "US CPI" in result.markdown
     assert result.board_html is not None and "<html" in result.board_html
     for label in ("2Y", "10Y", "30Y", "VIX", "VIX3M", "DXY", "WTI", "Gold", "HYG/LQD", "NDX/RUT"):
         assert label in result.board_html
     assert "VIX/VIX3M" not in result.board_html
     assert "manifest" not in result.board_html.lower()
-    assert "source: treasury · as_of: 2026-07-24" in result.board_html
-    assert "source: yfinance · as_of: 2026-07-24" in result.board_html
+    assert "来源：treasury · 截至：2026-07-24" in result.board_html
+    assert "来源：yfinance · 截至：2026-07-24" in result.board_html
     assert "US CPI" in result.board_html
-    assert "source: https://www.bls.gov/cpi/ · as_of: 2026-07-24T20:00:00Z" in result.board_html
+    assert "来源：https://www.bls.gov/cpi/ · 截至：2026-07-24T20:00:00Z" in result.board_html
+    assert "宏观环境研究简报" in result.board_html
+    assert "30 日" in result.board_html
+    assert "即将发生" in result.board_html
     assert '<header class="masthead">' in result.board_html
     assert 'class="market-strip"' in result.board_html
     assert 'class="evidence-rail"' in result.board_html
@@ -189,11 +192,11 @@ def assert_primary_event_evidence_is_visible_in_the_brief_and_board() -> None:
 
     assert result.status == "complete"
     assert result.markdown is not None
-    assert "evidence_kind: official_calendar" in result.markdown
-    assert "primary_source_confirmed: true" in result.markdown
+    assert "证据类型：official_calendar" in result.markdown
+    assert "已确认一手来源：true" in result.markdown
     assert result.board_html is not None
-    assert "evidence_kind: official_calendar" in result.board_html
-    assert "primary_source_confirmed: true" in result.board_html
+    assert "证据类型：official_calendar" in result.board_html
+    assert "已确认一手来源：true" in result.board_html
 
 
 def assert_missing_event_evidence_kind_blocks_the_board() -> None:
@@ -293,10 +296,10 @@ def assert_representative_fixture_board_is_written_to_the_caller_temp_directory(
         assert output == Path(temporary_directory) / "research-brief.html"
         html = output.read_text(encoding="utf-8")
         assert html.startswith("<!doctype html>")
-        assert "Macro Regime" in html
-        assert "evidence_kind: official_calendar" in html
-        assert "合成视觉 fixture" in html
-        assert "not market data" in html
+        assert "宏观环境" in html
+        assert "证据类型：official_calendar" in html
+        assert "合成视觉样本" in html
+        assert "非市场数据" in html
 
 
 def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:

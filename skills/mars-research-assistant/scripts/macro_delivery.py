@@ -106,7 +106,7 @@ def build_macro_delivery(
     markdown = (
         _render_event_brief(events, event_field)
         if not event_problems
-        else "## Macro Event Brief\n- data_gap: macro_events"
+        else "## 宏观事件简报\n- data_gap: macro_events"
     )
     blockers = list(event_problems)
     field_problems, trend_series = _validate_macro_fields(
@@ -116,7 +116,7 @@ def build_macro_delivery(
     )
     blockers.extend(field_problems)
     if blockers:
-        rendered = markdown + "\n\n## Macro Regime Blocker\n" + "\n".join(
+        rendered = markdown + "\n\n## 宏观环境缺口\n" + "\n".join(
             f"- data_gap: {problem}" for problem in blockers
         )
         return MacroDelivery(rendered, None, tuple(blockers))
@@ -180,15 +180,19 @@ def _render_event_brief(events: Sequence[Mapping[str, Any]], field: Any) -> str:
     rendered = []
     for event in events:
         rendered.append(
-            f"- {event['time']} · {event['category']} · {event['title']} ({event['status']})"
+            f"- {event['time']} · {event['category']} · {event['title']}（{_event_status(event['status'])}）"
             f"\n  传导：{event['transmission']}"
-            f"\n  evidence_kind: {event['evidence_kind']}"
-            f" · primary_source_confirmed: {str(event['primary_source_confirmed']).lower()}"
-            f"\n  source: {event['original_source']} · as_of: {field.as_of}"
+            f"\n  证据类型：{event['evidence_kind']}"
+            f" · 已确认一手来源：{str(event['primary_source_confirmed']).lower()}"
+            f"\n  来源：{event['original_source']} · 截至：{field.as_of}"
         )
     if not rendered:
         rendered.append("- none_found: 当前事件窗口未发现符合范围的重大事件")
-    return "## Macro Event Brief\n" + "\n".join(rendered)
+    return "## 宏观事件简报\n" + "\n".join(rendered)
+
+
+def _event_status(value: Any) -> str:
+    return {"upcoming": "即将发生", "occurred": "已发生"}.get(str(value), str(value))
 
 
 def _parse_timestamp(value: Any) -> datetime | None:
