@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Mapping, Sequence
+from urllib.parse import urlparse
 
 from macro_board_visual import render_macro_board
 
@@ -92,11 +93,16 @@ def build_macro_delivery(
     *,
     research_as_of: str | None,
     session_calendar: Any | None,
+    primary_event_source_registry: Any | None,
 ) -> MacroDelivery:
     """Return the Event Brief first and a Board only after all frozen gates pass."""
 
     event_field = fields.get("macro_events")
-    events, event_problems = _validated_events(event_field, research_as_of)
+    events, event_problems = _validated_events(
+        event_field,
+        research_as_of,
+        primary_event_source_registry,
+    )
     markdown = (
         _render_event_brief(events, event_field)
         if not event_problems
@@ -118,7 +124,9 @@ def build_macro_delivery(
 
 
 def _validated_events(
-    field: Any, research_as_of: str | None
+    field: Any,
+    research_as_of: str | None,
+    primary_event_source_registry: Any | None,
 ) -> tuple[tuple[Mapping[str, Any], ...], tuple[str, ...]]:
     if field is None:
         return (), ("macro_events",)
@@ -144,8 +152,16 @@ def _validated_events(
             return (), ("macro_events_evidence_kind_invalid",)
         if event.get("primary_source_confirmed") is not True:
             return (), ("macro_events_primary_source_unconfirmed",)
-        if not str(event["original_source"]).startswith(("https://", "http://")):
-            return (), ("macro_events_original_source_invalid",)
+        source_problem = _original_source_problem(str(event["original_source"]))
+        if source_problem is not None:
+            return (), (source_problem,)
+        registry_problem = _primary_source_registry_problem(
+            evidence_kind,
+            str(event["original_source"]),
+            primary_event_source_registry,
+        )
+        if registry_problem is not None:
+            return (), (registry_problem,)
         event_time = _parse_timestamp(event["time"])
         if event_time is None:
             return (), ("macro_events_time_invalid",)
@@ -183,6 +199,32 @@ def _parse_timestamp(value: Any) -> datetime | None:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed
+
+
+def _original_source_problem(source: str) -> str | None:
+    parsed = urlparse(source)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return "macro_events_original_source_invalid"
+    return None
+
+
+def _primary_source_registry_problem(
+    evidence_kind: str,
+    original_source: str,
+    primary_event_source_registry: Any | None,
+) -> str | None:
+    if primary_event_source_registry is None:
+        return "macro_events_primary_source_registry_missing"
+    try:
+        approved = primary_event_source_registry.approves(
+            evidence_kind,
+            original_source,
+        )
+    except Exception:
+        return "macro_events_primary_source_registry_unavailable"
+    if approved is not True:
+        return "macro_events_original_source_unverified"
+    return None
 
 
 def _parse_research_as_of(value: str) -> datetime | None:

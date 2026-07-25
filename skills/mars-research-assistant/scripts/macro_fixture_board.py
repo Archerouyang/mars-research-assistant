@@ -11,6 +11,7 @@ from macro_fixture import (
     DEFAULT_RESEARCH_AS_OF,
     DEFAULT_XNYS_CALENDAR,
     MACRO_FIELDS,
+    DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     complete_raw_macro_values,
 )
 from stateless_research_run import (
@@ -49,6 +50,7 @@ def write_representative_macro_board(output_directory: Path) -> Path:
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": FixtureProvider(complete_raw_macro_values())},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
     if result.board_html is None or result.status != "complete":
         raise RuntimeError("representative_macro_fixture_incomplete")

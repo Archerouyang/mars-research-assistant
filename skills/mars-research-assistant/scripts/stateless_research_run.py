@@ -141,6 +141,12 @@ class XNYSSessionCalendar(Protocol):
     def completed_sessions(self, research_as_of: str) -> Sequence[str]: ...
 
 
+class PrimaryEventSourceRegistry(Protocol):
+    """Approves exact original event URLs for one permitted evidence kind."""
+
+    def approves(self, evidence_kind: str, original_source: str) -> bool: ...
+
+
 class SourceUnavailable(Exception):
     """A recoverable source-level failure eligible for the configured fallback."""
 
@@ -178,6 +184,7 @@ def run_stateless_research(
     availability: LongbridgeAvailability,
     providers: Mapping[str, BatchProvider],
     session_calendar: XNYSSessionCalendar | None = None,
+    primary_event_source_registry: PrimaryEventSourceRegistry | None = None,
 ) -> ResearchRunResult:
     """Resolve one request through the selected source profile without persistence."""
 
@@ -208,7 +215,12 @@ def run_stateless_research(
         validation_blockers=validation_blockers,
     )
     if request.delivery == "macro_regime":
-        return _attach_macro_delivery(result, request.research_as_of, session_calendar)
+        return _attach_macro_delivery(
+            result,
+            request.research_as_of,
+            session_calendar,
+            primary_event_source_registry,
+        )
     return result
 
 
@@ -287,6 +299,7 @@ def _attach_macro_delivery(
     result: ResearchRunResult,
     research_as_of: str | None,
     session_calendar: XNYSSessionCalendar | None,
+    primary_event_source_registry: PrimaryEventSourceRegistry | None,
 ) -> ResearchRunResult:
     from macro_delivery import build_macro_delivery
 
@@ -294,6 +307,7 @@ def _attach_macro_delivery(
         {field.name: field for field in result.fields},
         research_as_of=research_as_of,
         session_calendar=session_calendar,
+        primary_event_source_registry=primary_event_source_registry,
     )
     upstream_blockers = tuple(
         blocker

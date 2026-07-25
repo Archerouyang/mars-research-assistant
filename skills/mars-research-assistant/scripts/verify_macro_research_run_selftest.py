@@ -9,12 +9,13 @@ from tempfile import TemporaryDirectory
 from macro_fixture import (
     DEFAULT_RESEARCH_AS_OF,
     DEFAULT_XNYS_CALENDAR,
+    DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     MACRO_FIELDS,
     XNYS_SESSIONS,
     XNYS_SESSIONS_WITH_PREVIOUS,
     StaticXNYSCalendar,
     complete_raw_macro_values,
-    field,
+    fixture_field_value,
 )
 from macro_fixture_board import write_representative_macro_board
 from stateless_research_run import (
@@ -49,6 +50,7 @@ def run_macro(
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
         session_calendar=session_calendar,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
 
@@ -65,6 +67,7 @@ def assert_macro_board_derives_ratio_pairs_at_latest_completed_session() -> None
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
         session_calendar=StaticXNYSCalendar(XNYS_SESSIONS),
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "complete"
@@ -95,6 +98,7 @@ def assert_incomplete_longbridge_pair_lazily_falls_back_as_one_field() -> None:
         availability=LongbridgeAvailability(cli_present=True, authorized=True),
         providers={"longbridge": longbridge, "portable": portable},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "complete"
@@ -117,6 +121,7 @@ def assert_complete_longbridge_pairs_do_not_trigger_portable_fallback() -> None:
         availability=LongbridgeAvailability(cli_present=True, authorized=True),
         providers={"longbridge": longbridge, "portable": portable},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "complete"
@@ -136,6 +141,7 @@ def assert_missing_xnys_calendar_blocks_the_board() -> None:
         ),
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "blocked"
@@ -218,6 +224,39 @@ def assert_aggregated_event_evidence_blocks_the_board() -> None:
     assert "data_gap: macro_events_evidence_kind_invalid" in result.markdown
 
 
+def assert_mislabeled_aggregated_event_url_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["original_source"] = "https://aggregated.example.com/cpi"
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_original_source_unverified" in result.markdown
+
+
+def assert_missing_primary_source_registry_blocks_the_board() -> None:
+    result = run_stateless_research(
+        ResearchRequest(
+            required_fields=MACRO_FIELDS,
+            source_choice="portable",
+            delivery="macro_regime",
+            research_as_of=DEFAULT_RESEARCH_AS_OF,
+        ),
+        availability=LongbridgeAvailability(cli_present=False, authorized=False),
+        providers={"portable": RecordingProvider(complete_raw_macro_values())},
+        session_calendar=DEFAULT_XNYS_CALENDAR,
+    )
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_primary_source_registry_missing" in result.markdown
+
+
 def assert_invalid_event_time_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     events = values["macro_events"].value
@@ -295,7 +334,9 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
 
 def assert_non_official_treasury_field_blocks_the_board() -> None:
     values = complete_raw_macro_values()
-    values["treasury_10y"] = field("treasury_10y", {"value": 4.4, "unit": "%"}, "yfinance")
+    values["treasury_10y"] = fixture_field_value(
+        "treasury_10y", {"value": 4.4, "unit": "%"}, "yfinance"
+    )
     provider = RecordingProvider(values)
 
     result = run_macro(provider)
@@ -336,7 +377,11 @@ def assert_missing_frozen_field_keeps_brief_and_suppresses_board() -> None:
 
 def assert_uncompleted_market_snapshot_blocks_the_board() -> None:
     values = complete_raw_macro_values()
-    values["wti"] = field("wti", {"value": 68.4, "symbol": "CL=F", "completed": False}, "yfinance")
+    values["wti"] = fixture_field_value(
+        "wti",
+        {"value": 68.4, "symbol": "CL=F", "completed": False},
+        "yfinance",
+    )
     provider = RecordingProvider(values)
 
     result = run_macro(provider)
@@ -459,6 +504,7 @@ def assert_invalid_research_as_of_blocks_the_board() -> None:
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "blocked"
@@ -479,6 +525,7 @@ def assert_timezone_less_research_as_of_blocks_the_board() -> None:
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "blocked"
@@ -508,6 +555,7 @@ def assert_cross_source_ratio_legs_do_not_form_a_board() -> None:
         availability=LongbridgeAvailability(cli_present=True, authorized=True),
         providers={"longbridge": provider},
         session_calendar=DEFAULT_XNYS_CALENDAR,
+        primary_event_source_registry=DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY,
     )
 
     assert result.status == "blocked"
@@ -520,7 +568,9 @@ def assert_unparseable_market_as_of_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     for name in ("vix", "vix3m", "dxy", "wti", "gold", "hyg_lqd_history", "ndx_rut_history"):
         original = values[name]
-        values[name] = field(name, original.value, original.source, "not-a-time")
+        values[name] = fixture_field_value(
+            name, original.value, original.source, "not-a-time"
+        )
     provider = RecordingProvider(values)
 
     result = run_macro(provider)
@@ -533,7 +583,9 @@ def assert_unparseable_market_as_of_blocks_the_board() -> None:
 def assert_proxy_market_source_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     original = values["hyg_lqd_history"]
-    values["hyg_lqd_history"] = field("hyg_lqd_history", original.value, "proxy_vendor", original.as_of)
+    values["hyg_lqd_history"] = fixture_field_value(
+        "hyg_lqd_history", original.value, "proxy_vendor", original.as_of
+    )
     provider = RecordingProvider(values)
 
     result = run_macro(provider)
@@ -547,7 +599,9 @@ def assert_stale_ratio_window_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     for name in ("vix", "vix3m", "dxy", "wti", "gold", "hyg_lqd_history", "ndx_rut_history"):
         original = values[name]
-        values[name] = field(name, original.value, original.source, "2026-06-29")
+        values[name] = fixture_field_value(
+            name, original.value, original.source, "2026-06-29"
+        )
     provider = RecordingProvider(values)
 
     result = run_macro(provider)
@@ -567,6 +621,8 @@ def main() -> None:
     assert_missing_event_evidence_kind_blocks_the_board()
     assert_unconfirmed_primary_event_source_blocks_the_board()
     assert_aggregated_event_evidence_blocks_the_board()
+    assert_mislabeled_aggregated_event_url_blocks_the_board()
+    assert_missing_primary_source_registry_blocks_the_board()
     assert_invalid_event_time_blocks_the_board()
     assert_representative_fixture_board_is_written_to_the_caller_temp_directory()
     assert_event_brief_keeps_only_major_events_in_its_time_windows()

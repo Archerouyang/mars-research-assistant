@@ -69,7 +69,27 @@ class StaticXNYSCalendar:
 DEFAULT_XNYS_CALENDAR = StaticXNYSCalendar(XNYS_SESSIONS)
 
 
-def field(
+class StaticPrimaryEventSourceRegistry:
+    """Fixture-only authoritative binding of evidence kind to exact primary URL."""
+
+    def __init__(self, approved_sources: frozenset[tuple[str, str]]) -> None:
+        self.approved_sources = approved_sources
+
+    def approves(self, evidence_kind: str, original_source: str) -> bool:
+        return (evidence_kind, original_source) in self.approved_sources
+
+
+DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY = StaticPrimaryEventSourceRegistry(
+    frozenset(
+        {
+            ("official_calendar", "https://www.bls.gov/cpi/"),
+            ("official_announcement", "https://example.com/events"),
+        }
+    )
+)
+
+
+def fixture_field_value(
     name: str,
     value: object,
     source: str = "official",
@@ -132,7 +152,7 @@ def complete_raw_macro_values(
     """Return a complete, source-labelled Macro delivery fixture."""
 
     return {
-        "macro_events": field(
+        "macro_events": fixture_field_value(
             "macro_events",
             [
                 {
@@ -149,48 +169,48 @@ def complete_raw_macro_values(
             "official_calendar",
             "2026-07-24T20:00:00Z",
         ),
-        "treasury_2y": field(
+        "treasury_2y": fixture_field_value(
             "treasury_2y", {"value": 4.2, "unit": "%"}, "treasury"
         ),
-        "treasury_10y": field(
+        "treasury_10y": fixture_field_value(
             "treasury_10y", {"value": 4.4, "unit": "%"}, "treasury"
         ),
-        "treasury_30y": field(
+        "treasury_30y": fixture_field_value(
             "treasury_30y", {"value": 4.7, "unit": "%"}, "treasury"
         ),
-        "vix": field(
+        "vix": fixture_field_value(
             "vix",
             {"value": 16.2, "symbol": "^VIX", "completed": True},
             market_source,
         ),
-        "vix3m": field(
+        "vix3m": fixture_field_value(
             "vix3m",
             {"value": 19.4, "symbol": "^VIX3M", "completed": True},
             market_source,
         ),
-        "dxy": field(
+        "dxy": fixture_field_value(
             "dxy",
             {"value": 101.1, "symbol": "DX-Y.NYB", "completed": True},
             market_source,
         ),
-        "wti": field(
+        "wti": fixture_field_value(
             "wti",
             {"value": 68.4, "symbol": "CL=F", "completed": True},
             market_source,
         ),
-        "gold": field(
+        "gold": fixture_field_value(
             "gold",
             {"value": 3342.0, "symbol": "GC=F", "completed": True},
             market_source,
         ),
-        "hyg_lqd_history": field(
+        "hyg_lqd_history": fixture_field_value(
             "hyg_lqd_history",
             raw_ratio_pair(
                 "HYG/LQD", "HYG", "LQD", 100.0, 50.0, market_source, sessions
             ),
             market_source,
         ),
-        "ndx_rut_history": field(
+        "ndx_rut_history": fixture_field_value(
             "ndx_rut_history",
             raw_ratio_pair(
                 "NDX/RUT", "^NDX", "^RUT", 200.0, 100.0, market_source, sessions
