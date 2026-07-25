@@ -124,6 +124,7 @@ class ResearchRunResult:
     longbridge: dict[str, bool]
     fields: tuple[FieldValue, ...]
     missing_fields: tuple[str, ...]
+    validation_blockers: tuple[str, ...] = ()
     markdown: str | None = None
     board_html: str | None = None
 
@@ -190,11 +191,11 @@ def run_stateless_research(
         )
 
     profile, source_order = _source_order(request.source_choice, availability)
-    resolved = _resolve_fields(
+    resolved, validation_blockers = _resolve_fields(
         request.required_fields,
         source_order,
         providers,
-        _macro_field_is_acceptable(request, session_calendar),
+        _macro_ratio_pair_validation(request, session_calendar),
     )
     missing = tuple(field for field in request.required_fields if field not in resolved)
     fields = tuple(resolved[field] for field in request.required_fields if field in resolved)
@@ -204,6 +205,7 @@ def run_stateless_research(
         longbridge=availability.as_dict(),
         fields=fields,
         missing_fields=missing,
+        validation_blockers=validation_blockers,
     )
     if request.delivery == "macro_regime":
         return _attach_macro_delivery(result, request.research_as_of, session_calendar)
@@ -227,10 +229,11 @@ def _resolve_fields(
     required_fields: tuple[str, ...],
     source_order: tuple[str, ...],
     providers: Mapping[str, BatchProvider],
-    field_is_acceptable: Callable[[FieldValue], bool] | None = None,
-) -> dict[str, FieldValue]:
+    validation_problems: Callable[[FieldValue], tuple[str, ...]] | None = None,
+) -> tuple[dict[str, FieldValue], tuple[str, ...]]:
     unresolved = required_fields
     resolved: dict[str, FieldValue] = {}
+    rejected: dict[str, tuple[str, ...]] = {}
     for source in source_order:
         if not unresolved:
             break
@@ -247,29 +250,37 @@ def _resolve_fields(
                 value is not None
                 and value.name == name
                 and value.is_available()
-                and (field_is_acceptable is None or field_is_acceptable(value))
             ):
-                resolved[name] = value
+                problems = validation_problems(value) if validation_problems else ()
+                if not problems:
+                    resolved[name] = value
+                else:
+                    rejected[name] = problems
         unresolved = tuple(name for name in unresolved if name not in resolved)
-    return resolved
+    blockers = tuple(
+        problem
+        for name in unresolved
+        for problem in rejected.get(name, ())
+    )
+    return resolved, blockers
 
 
-def _macro_field_is_acceptable(
+def _macro_ratio_pair_validation(
     request: ResearchRequest,
     session_calendar: XNYSSessionCalendar | None,
-) -> Callable[[FieldValue], bool] | None:
+) -> Callable[[FieldValue], tuple[str, ...]] | None:
     if request.delivery != "macro_regime":
         return None
-    from macro_delivery import ratio_pair_is_acceptable
+    from macro_delivery import ratio_pair_validation_problems
 
-    def is_acceptable(field: FieldValue) -> bool:
-        return ratio_pair_is_acceptable(
+    def validation_problems(field: FieldValue) -> tuple[str, ...]:
+        return ratio_pair_validation_problems(
             field,
             research_as_of=request.research_as_of,
             session_calendar=session_calendar,
         )
 
-    return is_acceptable
+    return validation_problems
 
 
 def _attach_macro_delivery(
@@ -284,14 +295,33 @@ def _attach_macro_delivery(
         research_as_of=research_as_of,
         session_calendar=session_calendar,
     )
-    missing = tuple(dict.fromkeys((*result.missing_fields, *delivery.blockers)))
+    upstream_blockers = tuple(
+        blocker
+        for blocker in result.validation_blockers
+        if blocker not in delivery.blockers
+    )
+    missing = tuple(
+        dict.fromkeys(
+            (
+                *result.missing_fields,
+                *result.validation_blockers,
+                *delivery.blockers,
+            )
+        )
+    )
+    markdown = delivery.markdown
+    if upstream_blockers:
+        markdown += "\n" + "\n".join(
+            f"- data_gap: {blocker}" for blocker in upstream_blockers
+        )
     return ResearchRunResult(
         status=COMPLETE if not missing else BLOCKED,
         profile=result.profile,
         longbridge=result.longbridge,
         fields=result.fields,
         missing_fields=missing,
-        markdown=delivery.markdown,
+        validation_blockers=result.validation_blockers,
+        markdown=markdown,
         board_html=delivery.board_html,
     )
 

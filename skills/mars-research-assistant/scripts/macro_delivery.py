@@ -61,22 +61,22 @@ class MacroDelivery:
     blockers: tuple[str, ...]
 
 
-def ratio_pair_is_acceptable(
+def ratio_pair_validation_problems(
     field: Any,
     *,
     research_as_of: str | None,
     session_calendar: Any | None,
-) -> bool:
-    """Keep a malformed ratio pair unresolved so the normal lazy fallback can retry it."""
+) -> tuple[str, ...]:
+    """Report a malformed ratio pair so the normal lazy fallback can retry it."""
 
     if getattr(field, "name", None) not in {"hyg_lqd_history", "ndx_rut_history"}:
-        return True
+        return ()
     sessions, session_problems = _completed_xnys_sessions(research_as_of, session_calendar)
     if session_problems:
-        return True
+        return ()
     ratio = "HYG/LQD" if field.name == "hyg_lqd_history" else "NDX/RUT"
     _, pair_problems = _derive_ratio_pair(field, ratio, sessions)
-    return not pair_problems
+    return pair_problems
 
 
 def build_macro_delivery(
@@ -119,7 +119,7 @@ def _validated_events(
         return (), ("macro_events_invalid",)
     if research_as_of is None:
         return (), ("research_as_of_missing",)
-    reference_time = _parse_timestamp(research_as_of)
+    reference_time = _parse_research_as_of(research_as_of)
     if reference_time is None:
         return (), ("research_as_of_invalid",)
     selected: list[Mapping[str, Any]] = []
@@ -166,6 +166,14 @@ def _parse_timestamp(value: Any) -> datetime | None:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed
+
+
+def _parse_research_as_of(value: str) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
 
 
 def _is_major_event(category: str) -> bool:
@@ -252,7 +260,7 @@ def _completed_xnys_sessions(
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if research_as_of is None:
         return (), ("research_as_of_missing",)
-    reference_time = _parse_timestamp(research_as_of)
+    reference_time = _parse_research_as_of(research_as_of)
     if reference_time is None:
         return (), ("research_as_of_invalid",)
     if session_calendar is None:

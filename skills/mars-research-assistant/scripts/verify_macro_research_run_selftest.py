@@ -68,6 +68,7 @@ XNYS_SESSIONS = (
     "2026-07-23",
     "2026-07-24",
 )
+XNYS_SESSIONS_WITH_PREVIOUS = ("2026-06-11", *XNYS_SESSIONS)
 
 
 class StaticXNYSCalendar:
@@ -83,7 +84,10 @@ DEFAULT_RESEARCH_AS_OF = "2026-07-25T12:00:00Z"
 DEFAULT_XNYS_CALENDAR = StaticXNYSCalendar(XNYS_SESSIONS)
 
 
-def run_macro(provider: RecordingProvider):
+def run_macro(
+    provider: RecordingProvider,
+    session_calendar: StaticXNYSCalendar = DEFAULT_XNYS_CALENDAR,
+):
     return run_stateless_research(
         ResearchRequest(
             required_fields=MACRO_FIELDS,
@@ -93,7 +97,7 @@ def run_macro(provider: RecordingProvider):
         ),
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
-        session_calendar=DEFAULT_XNYS_CALENDAR,
+        session_calendar=session_calendar,
     )
 
 
@@ -148,7 +152,12 @@ def complete_macro_values() -> dict[str, FieldValue]:
     }
 
 
-def raw_leg(symbol: str, start: float, source: str) -> dict[str, object]:
+def raw_leg(
+    symbol: str,
+    start: float,
+    source: str,
+    sessions: tuple[str, ...] = XNYS_SESSIONS,
+) -> dict[str, object]:
     return {
         "symbol": symbol,
         "source": source,
@@ -161,7 +170,7 @@ def raw_leg(symbol: str, start: float, source: str) -> dict[str, object]:
                 "source": source,
                 "as_of": "2026-07-24",
             }
-            for index, date in enumerate(XNYS_SESSIONS)
+            for index, date in enumerate(sessions)
         ],
     }
 
@@ -173,26 +182,34 @@ def raw_ratio_pair(
     left_start: float,
     right_start: float,
     source: str,
+    sessions: tuple[str, ...] = XNYS_SESSIONS,
 ) -> dict[str, object]:
     return {
         "ratio": ratio,
         "legs": {
-            left: raw_leg(left, left_start, source),
-            right: raw_leg(right, right_start, source),
+            left: raw_leg(left, left_start, source, sessions),
+            right: raw_leg(right, right_start, source, sessions),
         },
     }
 
 
-def complete_raw_macro_values(market_source: str = "yfinance") -> dict[str, FieldValue]:
+def complete_raw_macro_values(
+    market_source: str = "yfinance",
+    sessions: tuple[str, ...] = XNYS_SESSIONS,
+) -> dict[str, FieldValue]:
     values = complete_macro_values()
     values["hyg_lqd_history"] = field(
         "hyg_lqd_history",
-        raw_ratio_pair("HYG/LQD", "HYG", "LQD", 100.0, 50.0, market_source),
+        raw_ratio_pair(
+            "HYG/LQD", "HYG", "LQD", 100.0, 50.0, market_source, sessions
+        ),
         market_source,
     )
     values["ndx_rut_history"] = field(
         "ndx_rut_history",
-        raw_ratio_pair("NDX/RUT", "^NDX", "^RUT", 200.0, 100.0, market_source),
+        raw_ratio_pair(
+            "NDX/RUT", "^NDX", "^RUT", 200.0, 100.0, market_source, sessions
+        ),
         market_source,
     )
     for name in ("vix", "vix3m", "dxy", "wti", "gold"):
@@ -409,7 +426,7 @@ def assert_uncompleted_market_snapshot_blocks_the_board() -> None:
     assert result.markdown is not None and "wti_not_completed" in result.markdown
 
 
-def assert_invalid_or_duplicate_common_session_dates_block_the_board() -> None:
+def assert_non_xnys_observation_blocks_the_board_with_a_precise_reason() -> None:
     values = complete_raw_macro_values()
     for name in ("hyg_lqd_history", "ndx_rut_history"):
         legs = values[name].value["legs"]
@@ -424,7 +441,89 @@ def assert_invalid_or_duplicate_common_session_dates_block_the_board() -> None:
 
     assert result.status == "blocked"
     assert result.board_html is None
-    assert result.markdown is not None and "data_gap: hyg_lqd_history" in result.markdown
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_leg_observations_invalid" in result.markdown
+
+
+def assert_duplicate_observation_date_blocks_the_board_with_a_precise_reason() -> None:
+    values = complete_raw_macro_values()
+    legs = values["hyg_lqd_history"].value["legs"]
+    assert isinstance(legs, dict)
+    observations = legs["HYG"]["observations"]
+    assert isinstance(observations, list)
+    observations[1]["date"] = observations[0]["date"]
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_leg_observations_invalid" in result.markdown
+
+
+def assert_unordered_observations_block_the_board_with_a_precise_reason() -> None:
+    values = complete_raw_macro_values()
+    legs = values["hyg_lqd_history"].value["legs"]
+    assert isinstance(legs, dict)
+    observations = legs["HYG"]["observations"]
+    assert isinstance(observations, list)
+    observations[1], observations[2] = observations[2], observations[1]
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_leg_observations_invalid" in result.markdown
+
+
+def assert_fewer_than_30_common_sessions_blocks_the_board_with_a_precise_reason() -> None:
+    values = complete_raw_macro_values()
+    legs = values["hyg_lqd_history"].value["legs"]
+    assert isinstance(legs, dict)
+    observations = legs["HYG"]["observations"]
+    assert isinstance(observations, list)
+    observations.pop()
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_fewer_than_30_common_sessions" in result.markdown
+
+
+def assert_missing_ratio_constituent_blocks_the_board_with_a_precise_reason() -> None:
+    values = complete_raw_macro_values()
+    legs = values["hyg_lqd_history"].value["legs"]
+    assert isinstance(legs, dict)
+    del legs["LQD"]
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_legs_invalid" in result.markdown
+
+
+def assert_missing_latest_session_blocks_the_board_with_a_precise_reason() -> None:
+    values = complete_raw_macro_values(sessions=XNYS_SESSIONS_WITH_PREVIOUS)
+    legs = values["hyg_lqd_history"].value["legs"]
+    assert isinstance(legs, dict)
+    observations = legs["HYG"]["observations"]
+    assert isinstance(observations, list)
+    observations.pop()
+
+    result = run_macro(
+        RecordingProvider(values),
+        StaticXNYSCalendar(XNYS_SESSIONS_WITH_PREVIOUS),
+    )
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: hyg_lqd_history_latest_session_missing" in result.markdown
 
 
 def assert_invalid_research_as_of_blocks_the_board() -> None:
@@ -436,6 +535,26 @@ def assert_invalid_research_as_of_blocks_the_board() -> None:
             source_choice="portable",
             delivery="macro_regime",
             research_as_of="not-a-time",
+        ),
+        availability=LongbridgeAvailability(cli_present=False, authorized=False),
+        providers={"portable": provider},
+        session_calendar=DEFAULT_XNYS_CALENDAR,
+    )
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None and "research_as_of_invalid" in result.markdown
+
+
+def assert_timezone_less_research_as_of_blocks_the_board() -> None:
+    provider = RecordingProvider(complete_raw_macro_values())
+
+    result = run_stateless_research(
+        ResearchRequest(
+            required_fields=MACRO_FIELDS,
+            source_choice="portable",
+            delivery="macro_regime",
+            research_as_of="2026-07-25T12:00:00",
         ),
         availability=LongbridgeAvailability(cli_present=False, authorized=False),
         providers={"portable": provider},
@@ -473,7 +592,8 @@ def assert_cross_source_ratio_legs_do_not_form_a_board() -> None:
 
     assert result.status == "blocked"
     assert result.board_html is None
-    assert result.markdown is not None and "data_gap: ndx_rut_history" in result.markdown
+    assert result.markdown is not None
+    assert "data_gap: ndx_rut_history_leg_source_mismatch" in result.markdown
 
 
 def assert_unparseable_market_as_of_blocks_the_board() -> None:
@@ -528,8 +648,14 @@ def main() -> None:
     assert_unclassified_macro_event_blocks_the_board()
     assert_missing_frozen_field_keeps_brief_and_suppresses_board()
     assert_uncompleted_market_snapshot_blocks_the_board()
-    assert_invalid_or_duplicate_common_session_dates_block_the_board()
+    assert_non_xnys_observation_blocks_the_board_with_a_precise_reason()
+    assert_duplicate_observation_date_blocks_the_board_with_a_precise_reason()
+    assert_unordered_observations_block_the_board_with_a_precise_reason()
+    assert_fewer_than_30_common_sessions_blocks_the_board_with_a_precise_reason()
+    assert_missing_ratio_constituent_blocks_the_board_with_a_precise_reason()
+    assert_missing_latest_session_blocks_the_board_with_a_precise_reason()
     assert_invalid_research_as_of_blocks_the_board()
+    assert_timezone_less_research_as_of_blocks_the_board()
     assert_cross_source_ratio_legs_do_not_form_a_board()
     assert_unparseable_market_as_of_blocks_the_board()
     assert_proxy_market_source_blocks_the_board()
