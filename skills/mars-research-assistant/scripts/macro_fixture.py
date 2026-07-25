@@ -235,7 +235,7 @@ def complete_raw_macro_values(
         "vix3m": fixture_field_value(
             "vix3m",
             {"value": 19.4, "symbol": "^VIX3M", "completed": True},
-            market_source,
+            "cboe_official",
         ),
         "dxy": fixture_field_value(
             "dxy",

@@ -13,7 +13,7 @@ _Avoid_: 事件 `as_of`、提供方行情时间
 
 **Macro Event Brief**：宏观运行始终最先交付的 Markdown，覆盖未来七日关键日历事件与最近 24 小时重大传导事件。
 
-**Macro Regime Board**：只在 Treasury 2Y/10Y/30Y、VIX、VIX3M、DXY、WTI、Gold、HYG/LQD、NDX/RUT 和时间校验齐全时生成。HYG/LQD 与 NDX/RUT 展示 30 个共同完成交易日折线；不包含 VIX/VIX3M、TGA、ON RRP、准备金或 z-score。
+**Macro Regime Board**：只在 Treasury 2Y/10Y/30Y、VIX、VIX3M、DXY、WTI、Gold、HYG/LQD、NDX/RUT 和时间校验齐全时生成。HYG/LQD 与 NDX/RUT 展示 30 个共同完成交易日折线；不包含 VIX/VIX3M、TGA、ON RRP、准备金或 z-score。VIX3M 固定直接使用 Cboe 官方日线，并以 `cboe_official` 标记；它不是三个月 VIX 均值，也不是其他市场字段的通用 Cboe 来源。
 
 **共同完成市场会话**：HYG、LQD、NDX 与 RUT 四腿均有已完成 1D 观测、且位于同一注入的 XNYS 会话日历中的交易日；其最后一日必须等于本次市场参考日。比率在该交集后计算，数据源不是会话完整性的权威。
 _Avoid_: 提供方 `completed` 标记、预计算比率日期

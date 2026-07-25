@@ -723,6 +723,42 @@ def assert_proxy_market_source_blocks_the_board() -> None:
     assert result.markdown is not None and "data_gap: hyg_lqd_history" in result.markdown
 
 
+def assert_cboe_official_vix3m_can_complete_macro_board() -> None:
+    result = run_macro(RecordingProvider(complete_raw_macro_values()))
+
+    assert result.status == "complete"
+    assert result.board_html is not None
+    assert "来源：cboe_official · 截至：2026-07-24" in result.board_html
+
+
+def assert_non_official_vix3m_source_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    original = values["vix3m"]
+    values["vix3m"] = fixture_field_value(
+        "vix3m", original.value, "longbridge", original.as_of
+    )
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None and "data_gap: vix3m_source_invalid" in result.markdown
+
+
+def assert_cboe_official_is_limited_to_vix3m() -> None:
+    values = complete_raw_macro_values()
+    original = values["dxy"]
+    values["dxy"] = fixture_field_value(
+        "dxy", original.value, "cboe_official", original.as_of
+    )
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None and "data_gap: dxy_source_invalid" in result.markdown
+
+
 def assert_stale_ratio_window_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     for name in ("vix", "vix3m", "dxy", "wti", "gold", "hyg_lqd_history", "ndx_rut_history"):
@@ -775,6 +811,9 @@ def main() -> None:
     assert_cross_source_ratio_legs_do_not_form_a_board()
     assert_unparseable_market_as_of_blocks_the_board()
     assert_proxy_market_source_blocks_the_board()
+    assert_cboe_official_vix3m_can_complete_macro_board()
+    assert_non_official_vix3m_source_blocks_the_board()
+    assert_cboe_official_is_limited_to_vix3m()
     assert_stale_ratio_window_blocks_the_board()
     print("macro research run selftest passed")
 

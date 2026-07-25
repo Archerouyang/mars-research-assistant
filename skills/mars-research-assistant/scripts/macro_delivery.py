@@ -36,6 +36,9 @@ _EXPECTED_RATIO_SYMBOLS = {"HYG/LQD": ("HYG", "LQD"), "NDX/RUT": ("^NDX", "^RUT"
 _OFFICIAL_TREASURY_SOURCES = frozenset({"treasury", "official_treasury", "treasury.gov"})
 _MARKET_FIELDS = ("vix", "vix3m", "dxy", "wti", "gold", "hyg_lqd_history", "ndx_rut_history")
 _MARKET_SOURCES = frozenset({"longbridge", "yfinance"})
+_MARKET_SOURCE_OVERRIDES = {
+    "vix3m": frozenset({"cboe_official"}),
+}
 _PRIMARY_EVENT_EVIDENCE_KINDS = frozenset(
     {
         "official_calendar",
@@ -291,7 +294,8 @@ def _validate_macro_fields(
             if market_date != latest_session:
                 problems.append(f"{name}_as_of_not_latest_completed_session")
     for name in present_market_fields:
-        if str(fields[name].source).casefold() not in _MARKET_SOURCES:
+        allowed_sources = _MARKET_SOURCE_OVERRIDES.get(name, _MARKET_SOURCES)
+        if str(fields[name].source).casefold() not in allowed_sources:
             problems.append(f"{name}_source_invalid")
     for name in _SCALAR_FIELDS:
         if name not in fields:

@@ -38,6 +38,7 @@ Longbridge CLI 是可选的独立二进制，不在 Python 依赖中。Skill 会
 ## 数据与安全
 
 - Longbridge 优先用于语义等价的结构化市场、公司、财务、日历和新闻发现字段；缺口才按批次回退。
+- VIX3M 固定直接使用 Cboe 官方日线，并明确标记为 `cboe_official`；不经 Longbridge 或 yfinance，三个月 VIX 均值也不是 VIX3M。
 - Web Search 只发现候选来源；重大事件须以标题、类别、带时区时间、受限 `evidence_kind` 和精确一手 URL 共同确认，才可进入 Brief 与 Board。
 - 每个字段保留来源与时间；不以代理值掩盖缺口。
 - 不下单，不读取账户、持仓、订单、凭据或 token。

@@ -31,6 +31,19 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: pending `Use official Cboe VIX3M directly`
+- Scope: skill, script, data, decision
+- What changed: made the explicitly labelled `cboe_official` source the fixed
+  direct source for VIX3M. Longbridge and yfinance are not queried or accepted
+  for this field; all other market fields retain their existing source boundary.
+- Why it matters: the Board can use the authoritative three-month implied
+  volatility index without mislabelling it as a vendor value or replacing it
+  with a different three-month VIX average.
+- Verification: focused Macro selftest covers the direct VIX3M path, rejection
+  of a non-official VIX3M source, and rejection of `cboe_official` for DXY.
+- Next step: rerun the complete Skill and isolated-install gates, then use the
+  source-labelled VIX3M value in the next one-shot Macro run.
+
 - Commit: `a96119f` `test: cover macro event identity binding`
 - Scope: script
 - What changed: added fixture checks that reject an otherwise valid event when

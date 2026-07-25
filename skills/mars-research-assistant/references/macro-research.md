@@ -27,4 +27,4 @@ uv run python scripts/macro_fixture_board.py --output-dir /absolute/temporary/di
 
 HYG/LQD 与 NDX/RUT 各自由同一来源的两条原始 1D 腿序列计算。Skill 以 XNYS 日历取交集，验证最近 30 个完成会话和末日，再计算比率；任一腿缺失、跨源或会话无效时，整组才可回退到 yfinance，不能拼接单腿。
 
-利率必须使用官方财政部来源。Longbridge 只可替代具有相同已完成日线语义的 VIX、信用与风格数据；否则回退 yfinance。缺少任何冻结字段时，不生成 Board。
+利率必须使用官方财政部来源。VIX3M 固定直接使用 Cboe 官方日线并标记为 `cboe_official`；不向 Longbridge 或 yfinance 请求该字段。Longbridge 只可替代具有相同已完成日线语义的 VIX、信用与风格数据；否则回退 yfinance。Cboe 的这一用途只适用于 VIX3M，且必须保留直接来源与实际 `as_of`；不得用三个月 VIX 均值冒充 VIX3M，也不得将 Cboe 用于其他市场字段。缺少任何冻结字段时，不生成 Board。
