@@ -199,6 +199,49 @@ def assert_primary_event_evidence_is_visible_in_the_brief_and_board() -> None:
     assert "已确认一手来源：true" in result.board_html
 
 
+def assert_each_event_keeps_its_own_source_time() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events.append(
+        {
+            "title": "US PPI",
+            "category": "PPI",
+            "time": "2026-07-30T12:30:00Z",
+            "as_of": "2026-07-24T18:00:00Z",
+            "status": "upcoming",
+            "transmission": "rates and risk assets",
+            "original_source": "https://www.bls.gov/cpi/",
+            "evidence_kind": "official_calendar",
+            "primary_source_confirmed": True,
+        }
+    )
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "complete"
+    assert result.markdown is not None
+    assert "US PPI" in result.markdown
+    assert "来源：https://www.bls.gov/cpi/ · 截至：2026-07-24T18:00:00Z" in result.markdown
+    assert result.board_html is not None
+    assert "US PPI" in result.board_html
+    assert "来源：https://www.bls.gov/cpi/ · 截至：2026-07-24T18:00:00Z" in result.board_html
+
+
+def assert_missing_event_source_time_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    del events[0]["as_of"]
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_as_of_missing" in result.markdown
+
+
 def assert_missing_event_evidence_kind_blocks_the_board() -> None:
     values = complete_raw_macro_values()
     events = values["macro_events"].value
@@ -289,6 +332,20 @@ def assert_invalid_event_time_blocks_the_board() -> None:
     assert "data_gap: macro_events_time_invalid" in result.markdown
 
 
+def assert_timezone_less_event_time_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["time"] = "2026-07-25T08:30:00"
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_time_invalid" in result.markdown
+
+
 def assert_representative_fixture_board_is_written_to_the_caller_temp_directory() -> None:
     with TemporaryDirectory() as temporary_directory:
         output = write_representative_macro_board(Path(temporary_directory))
@@ -312,6 +369,7 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "title": "Old CPI",
                 "category": "CPI",
                 "time": "2026-07-22T12:30:00Z",
+                "as_of": "2026-07-24T20:00:00Z",
                 "status": "occurred",
                 "transmission": "stale observation",
                 "original_source": "https://www.bls.gov/cpi/",
@@ -322,6 +380,7 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "title": "Late CPI",
                 "category": "CPI",
                 "time": "2026-08-02T12:30:00Z",
+                "as_of": "2026-07-24T20:00:00Z",
                 "status": "upcoming",
                 "transmission": "outside planning horizon",
                 "original_source": "https://www.bls.gov/cpi/",
@@ -332,6 +391,7 @@ def assert_event_brief_keeps_only_major_events_in_its_time_windows() -> None:
                 "title": "Single-name earnings",
                 "category": "earnings",
                 "time": "2026-07-25T12:30:00Z",
+                "as_of": "2026-07-24T20:00:00Z",
                 "status": "upcoming",
                 "transmission": "not macro policy evidence",
                 "original_source": "https://example.com/events",
@@ -638,12 +698,15 @@ def main() -> None:
     assert_missing_xnys_calendar_blocks_the_board()
     assert_complete_macro_delivers_brief_then_self_contained_board()
     assert_primary_event_evidence_is_visible_in_the_brief_and_board()
+    assert_each_event_keeps_its_own_source_time()
+    assert_missing_event_source_time_blocks_the_board()
     assert_missing_event_evidence_kind_blocks_the_board()
     assert_unconfirmed_primary_event_source_blocks_the_board()
     assert_aggregated_event_evidence_blocks_the_board()
     assert_mislabeled_aggregated_event_url_blocks_the_board()
     assert_missing_primary_source_registry_blocks_the_board()
     assert_invalid_event_time_blocks_the_board()
+    assert_timezone_less_event_time_blocks_the_board()
     assert_representative_fixture_board_is_written_to_the_caller_temp_directory()
     assert_event_brief_keeps_only_major_events_in_its_time_windows()
     assert_non_official_treasury_field_blocks_the_board()

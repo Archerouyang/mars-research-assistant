@@ -104,7 +104,7 @@ def build_macro_delivery(
         primary_event_source_registry,
     )
     markdown = (
-        _render_event_brief(events, event_field)
+        _render_event_brief(events)
         if not event_problems
         else "## 宏观事件简报\n- data_gap: macro_events"
     )
@@ -142,9 +142,19 @@ def _validated_events(
     for event in events:
         if not isinstance(event, Mapping):
             return (), ("macro_events_invalid",)
-        required = ("title", "category", "time", "status", "transmission", "original_source")
+        required = (
+            "title",
+            "category",
+            "time",
+            "status",
+            "transmission",
+            "original_source",
+        )
         if any(not str(event.get(key) or "").strip() for key in required):
             return (), ("macro_events_invalid",)
+        event_as_of = event.get("as_of")
+        if not isinstance(event_as_of, str) or not event_as_of.strip():
+            return (), ("macro_events_as_of_missing",)
         evidence_kind = event.get("evidence_kind")
         if not isinstance(evidence_kind, str) or not evidence_kind.strip():
             return (), ("macro_events_evidence_kind_missing",)
@@ -162,9 +172,11 @@ def _validated_events(
         )
         if registry_problem is not None:
             return (), (registry_problem,)
-        event_time = _parse_timestamp(event["time"])
+        event_time = _parse_timestamp(event["time"], require_timezone=True)
         if event_time is None:
             return (), ("macro_events_time_invalid",)
+        if _parse_timestamp(event_as_of, require_timezone=True) is None:
+            return (), ("macro_events_as_of_invalid",)
         status = str(event["status"])
         if status not in {"upcoming", "occurred"}:
             return (), ("macro_events_status_invalid",)
@@ -176,7 +188,7 @@ def _validated_events(
     return tuple(selected), ()
 
 
-def _render_event_brief(events: Sequence[Mapping[str, Any]], field: Any) -> str:
+def _render_event_brief(events: Sequence[Mapping[str, Any]]) -> str:
     rendered = []
     for event in events:
         rendered.append(
@@ -184,7 +196,7 @@ def _render_event_brief(events: Sequence[Mapping[str, Any]], field: Any) -> str:
             f"\n  传导：{event['transmission']}"
             f"\n  证据类型：{event['evidence_kind']}"
             f" · 已确认一手来源：{str(event['primary_source_confirmed']).lower()}"
-            f"\n  来源：{event['original_source']} · 截至：{field.as_of}"
+            f"\n  来源：{event['original_source']} · 截至：{event['as_of']}"
         )
     if not rendered:
         rendered.append("- none_found: 当前事件窗口未发现符合范围的重大事件")
@@ -195,12 +207,14 @@ def _event_status(value: Any) -> str:
     return {"upcoming": "即将发生", "occurred": "已发生"}.get(str(value), str(value))
 
 
-def _parse_timestamp(value: Any) -> datetime | None:
+def _parse_timestamp(value: Any, *, require_timezone: bool = False) -> datetime | None:
     try:
         parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except ValueError:
         return None
     if parsed.tzinfo is None:
+        if require_timezone:
+            return None
         return parsed.replace(tzinfo=timezone.utc)
     return parsed
 
@@ -456,5 +470,5 @@ def _board_payload(
         "sources": {name: fields[name].source for name in MACRO_REQUIRED_FIELDS},
         "as_ofs": {name: fields[name].as_of for name in MACRO_REQUIRED_FIELDS},
         "trend_series": dict(trend_series),
-        "events": [{**event, "as_of": fields["macro_events"].as_of} for event in events[:5]],
+        "events": list(events[:5]),
     }

@@ -159,6 +159,7 @@ def complete_raw_macro_values(
                     "title": "US CPI",
                     "category": "CPI",
                     "time": "2026-07-29T12:30:00Z",
+                    "as_of": "2026-07-24T20:00:00Z",
                     "status": "upcoming",
                     "transmission": "rates and risk assets",
                     "original_source": "https://www.bls.gov/cpi/",
