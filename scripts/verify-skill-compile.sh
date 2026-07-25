@@ -14,8 +14,13 @@ fi
 mkdir -p "$SKILL_COMPILE_CACHE_ROOT"
 PYCACHE_PREFIX="$(mktemp -d "$SKILL_COMPILE_CACHE_ROOT/run.XXXXXX")"
 
+if ! command -v uv >/dev/null 2>&1; then
+  echo "error: uv is required" >&2
+  exit 127
+fi
+
 PYTHONPYCACHEPREFIX="$PYCACHE_PREFIX" \
-  "$PYTHON_BIN" -m compileall -q "$SKILL_SCRIPTS"
+  uv run --no-sync --python "$PYTHON_BIN" python -m compileall -q "$SKILL_SCRIPTS"
 
 echo "Skill compile gate ok: $SKILL_SCRIPTS"
 echo "Bytecode cache: $PYCACHE_PREFIX"
