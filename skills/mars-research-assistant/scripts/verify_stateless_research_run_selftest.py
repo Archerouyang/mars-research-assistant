@@ -107,6 +107,82 @@ def assert_preflight_fails_closed_when_cli_status_times_out() -> None:
     assert availability.as_dict() == {"cli_present": True, "authorized": False}
 
 
+def assert_preflight_accepts_active_nested_token_status() -> None:
+    def active_token_runner(_command: tuple[str, ...]) -> tuple[int, str]:
+        return 0, '{"token": {"status": "active"}}'
+
+    availability = preflight_longbridge(
+        which=lambda _name: "/usr/local/bin/longbridge",
+        command_runner=active_token_runner,
+    )
+
+    assert availability.as_dict() == {"cli_present": True, "authorized": True}
+
+
+def assert_preflight_rejects_unknown_nested_token_status() -> None:
+    def unknown_token_runner(_command: tuple[str, ...]) -> tuple[int, str]:
+        return 0, '{"token": {"status": "unknown"}}'
+
+    availability = preflight_longbridge(
+        which=lambda _name: "/usr/local/bin/longbridge",
+        command_runner=unknown_token_runner,
+    )
+
+    assert availability.as_dict() == {"cli_present": True, "authorized": False}
+
+
+def assert_preflight_ignores_active_account_status() -> None:
+    def active_account_runner(_command: tuple[str, ...]) -> tuple[int, str]:
+        return 0, '{"account": {"status": "active"}}'
+
+    availability = preflight_longbridge(
+        which=lambda _name: "/usr/local/bin/longbridge",
+        command_runner=active_account_runner,
+    )
+
+    assert availability.as_dict() == {"cli_present": True, "authorized": False}
+
+
+def assert_preflight_rejects_active_top_level_status() -> None:
+    def active_status_runner(_command: tuple[str, ...]) -> tuple[int, str]:
+        return 0, '{"status": "active"}'
+
+    availability = preflight_longbridge(
+        which=lambda _name: "/usr/local/bin/longbridge",
+        command_runner=active_status_runner,
+    )
+
+    assert availability.as_dict() == {"cli_present": True, "authorized": False}
+
+
+def assert_preflight_rejects_active_token_after_explicit_root_denial() -> None:
+    for key in ("authorized", "authenticated", "token_valid", "valid"):
+        def contradictory_status_runner(_command: tuple[str, ...], key: str = key) -> tuple[int, str]:
+            return 0, f'{{"{key}": false, "token": {{"status": "active"}}}}'
+
+        availability = preflight_longbridge(
+            which=lambda _name: "/usr/local/bin/longbridge",
+            command_runner=contradictory_status_runner,
+        )
+
+        assert availability.as_dict() == {"cli_present": True, "authorized": False}
+
+
+def assert_preflight_fails_closed_for_missing_or_malformed_token_status() -> None:
+    for output in ("not-json", "{}", '{"token": {}}'):
+        def incomplete_status_runner(
+            _command: tuple[str, ...], output: str = output
+        ) -> tuple[int, str]:
+            return 0, output
+
+        availability = preflight_longbridge(
+            which=lambda _name: "/usr/local/bin/longbridge",
+            command_runner=incomplete_status_runner,
+        )
+
+        assert availability.as_dict() == {"cli_present": True, "authorized": False}
+
+
 def assert_source_error_falls_back_once_for_all_unresolved_fields() -> None:
     longbridge = UnavailableProvider()
     portable = RecordingProvider(
@@ -160,6 +236,12 @@ def main() -> None:
     assert_authorized_longbridge_uses_one_primary_batch_without_fallback()
     assert_preflight_fails_closed_when_cli_disappears_after_detection()
     assert_preflight_fails_closed_when_cli_status_times_out()
+    assert_preflight_accepts_active_nested_token_status()
+    assert_preflight_rejects_unknown_nested_token_status()
+    assert_preflight_ignores_active_account_status()
+    assert_preflight_rejects_active_top_level_status()
+    assert_preflight_rejects_active_token_after_explicit_root_denial()
+    assert_preflight_fails_closed_for_missing_or_malformed_token_status()
     assert_source_error_falls_back_once_for_all_unresolved_fields()
     assert_unavailable_longbridge_enters_portable_without_a_choice()
     assert_private_broker_fields_are_rejected_before_provider_access()

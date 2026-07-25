@@ -359,7 +359,19 @@ def _authorization_is_valid(output: str) -> bool:
     if not isinstance(payload, Mapping):
         return False
 
-    for key in ("authorized", "authenticated", "token_valid", "valid"):
+    if any(payload.get(key) is False for key in _AUTHORIZATION_BOOLEAN_KEYS):
+        return False
+    return _token_authorization_is_valid(payload.get("token"))
+
+
+_AUTHORIZATION_BOOLEAN_KEYS = ("authorized", "authenticated", "token_valid", "valid")
+
+
+def _token_authorization_is_valid(payload: Any) -> bool:
+    if not isinstance(payload, Mapping):
+        return False
+
+    for key in _AUTHORIZATION_BOOLEAN_KEYS:
         value = payload.get(key)
         if isinstance(value, bool):
             return value
