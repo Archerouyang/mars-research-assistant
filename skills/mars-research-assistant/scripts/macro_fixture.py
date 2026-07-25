@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import Mapping
+
 from stateless_research_run import FieldValue
 
 
@@ -70,20 +72,66 @@ DEFAULT_XNYS_CALENDAR = StaticXNYSCalendar(XNYS_SESSIONS)
 
 
 class StaticPrimaryEventSourceRegistry:
-    """Fixture-only authoritative binding of evidence kind to exact primary URL."""
+    """Fixture-only authoritative binding of an event to exact primary evidence."""
 
-    def __init__(self, approved_sources: frozenset[tuple[str, str]]) -> None:
-        self.approved_sources = approved_sources
+    def __init__(
+        self,
+        approved_events: frozenset[tuple[str, str, str, str, str]],
+    ) -> None:
+        self.approved_events = approved_events
 
-    def approves(self, evidence_kind: str, original_source: str) -> bool:
-        return (evidence_kind, original_source) in self.approved_sources
+    def approves(self, event: Mapping[str, object]) -> bool:
+        identity = (
+            event.get("title"),
+            event.get("category"),
+            event.get("time"),
+            event.get("evidence_kind"),
+            event.get("original_source"),
+        )
+        return (
+            all(isinstance(value, str) for value in identity)
+            and identity in self.approved_events
+        )
 
 
 DEFAULT_PRIMARY_EVENT_SOURCE_REGISTRY = StaticPrimaryEventSourceRegistry(
     frozenset(
         {
-            ("official_calendar", "https://www.bls.gov/cpi/"),
-            ("official_announcement", "https://example.com/events"),
+            (
+                "US CPI",
+                "CPI",
+                "2026-07-29T12:30:00Z",
+                "official_calendar",
+                "https://www.bls.gov/cpi/",
+            ),
+            (
+                "US PPI",
+                "PPI",
+                "2026-07-30T12:30:00Z",
+                "official_calendar",
+                "https://www.bls.gov/ppi/",
+            ),
+            (
+                "Old CPI",
+                "CPI",
+                "2026-07-22T12:30:00Z",
+                "official_calendar",
+                "https://www.bls.gov/cpi/",
+            ),
+            (
+                "Late CPI",
+                "CPI",
+                "2026-08-02T12:30:00Z",
+                "official_calendar",
+                "https://www.bls.gov/cpi/",
+            ),
+            (
+                "Single-name earnings",
+                "earnings",
+                "2026-07-25T12:30:00Z",
+                "official_announcement",
+                "https://example.com/events",
+            ),
         }
     )
 )

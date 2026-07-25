@@ -142,9 +142,9 @@ class XNYSSessionCalendar(Protocol):
 
 
 class PrimaryEventSourceRegistry(Protocol):
-    """Approves exact original event URLs for one permitted evidence kind."""
+    """Approves one exact event against its primary evidence record."""
 
-    def approves(self, evidence_kind: str, original_source: str) -> bool: ...
+    def approves(self, event: Mapping[str, Any]) -> bool: ...
 
 
 class SourceUnavailable(Exception):

@@ -211,7 +211,7 @@ def assert_each_event_keeps_its_own_source_time() -> None:
             "as_of": "2026-07-24T18:00:00Z",
             "status": "upcoming",
             "transmission": "rates and risk assets",
-            "original_source": "https://www.bls.gov/cpi/",
+            "original_source": "https://www.bls.gov/ppi/",
             "evidence_kind": "official_calendar",
             "primary_source_confirmed": True,
         }
@@ -222,10 +222,25 @@ def assert_each_event_keeps_its_own_source_time() -> None:
     assert result.status == "complete"
     assert result.markdown is not None
     assert "US PPI" in result.markdown
-    assert "来源：https://www.bls.gov/cpi/ · 截至：2026-07-24T18:00:00Z" in result.markdown
+    assert "来源：https://www.bls.gov/ppi/ · 截至：2026-07-24T18:00:00Z" in result.markdown
     assert result.board_html is not None
     assert "US PPI" in result.board_html
-    assert "来源：https://www.bls.gov/cpi/ · 截至：2026-07-24T18:00:00Z" in result.board_html
+    assert "来源：https://www.bls.gov/ppi/ · 截至：2026-07-24T18:00:00Z" in result.board_html
+
+
+def assert_mismatched_event_source_blocks_the_board() -> None:
+    values = complete_raw_macro_values()
+    events = values["macro_events"].value
+    assert isinstance(events, list)
+    events[0]["title"] = "US PPI"
+    events[0]["category"] = "PPI"
+
+    result = run_macro(RecordingProvider(values))
+
+    assert result.status == "blocked"
+    assert result.board_html is None
+    assert result.markdown is not None
+    assert "data_gap: macro_events_original_source_unverified" in result.markdown
 
 
 def assert_missing_event_source_time_blocks_the_board() -> None:
@@ -240,6 +255,21 @@ def assert_missing_event_source_time_blocks_the_board() -> None:
     assert result.board_html is None
     assert result.markdown is not None
     assert "data_gap: macro_events_as_of_missing" in result.markdown
+
+
+def assert_invalid_event_source_time_blocks_the_board() -> None:
+    for source_time in ("not-a-time", "2026-07-24T20:00:00"):
+        values = complete_raw_macro_values()
+        events = values["macro_events"].value
+        assert isinstance(events, list)
+        events[0]["as_of"] = source_time
+
+        result = run_macro(RecordingProvider(values))
+
+        assert result.status == "blocked"
+        assert result.board_html is None
+        assert result.markdown is not None
+        assert "data_gap: macro_events_as_of_invalid" in result.markdown
 
 
 def assert_missing_event_evidence_kind_blocks_the_board() -> None:
@@ -699,7 +729,9 @@ def main() -> None:
     assert_complete_macro_delivers_brief_then_self_contained_board()
     assert_primary_event_evidence_is_visible_in_the_brief_and_board()
     assert_each_event_keeps_its_own_source_time()
+    assert_mismatched_event_source_blocks_the_board()
     assert_missing_event_source_time_blocks_the_board()
+    assert_invalid_event_source_time_blocks_the_board()
     assert_missing_event_evidence_kind_blocks_the_board()
     assert_unconfirmed_primary_event_source_blocks_the_board()
     assert_aggregated_event_evidence_blocks_the_board()

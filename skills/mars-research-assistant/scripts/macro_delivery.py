@@ -155,6 +155,14 @@ def _validated_events(
         event_as_of = event.get("as_of")
         if not isinstance(event_as_of, str) or not event_as_of.strip():
             return (), ("macro_events_as_of_missing",)
+        event_time = _parse_timestamp(event["time"], require_timezone=True)
+        if event_time is None:
+            return (), ("macro_events_time_invalid",)
+        if _parse_timestamp(event_as_of, require_timezone=True) is None:
+            return (), ("macro_events_as_of_invalid",)
+        status = str(event["status"])
+        if status not in {"upcoming", "occurred"}:
+            return (), ("macro_events_status_invalid",)
         evidence_kind = event.get("evidence_kind")
         if not isinstance(evidence_kind, str) or not evidence_kind.strip():
             return (), ("macro_events_evidence_kind_missing",)
@@ -166,20 +174,11 @@ def _validated_events(
         if source_problem is not None:
             return (), (source_problem,)
         registry_problem = _primary_source_registry_problem(
-            evidence_kind,
-            str(event["original_source"]),
+            event,
             primary_event_source_registry,
         )
         if registry_problem is not None:
             return (), (registry_problem,)
-        event_time = _parse_timestamp(event["time"], require_timezone=True)
-        if event_time is None:
-            return (), ("macro_events_time_invalid",)
-        if _parse_timestamp(event_as_of, require_timezone=True) is None:
-            return (), ("macro_events_as_of_invalid",)
-        status = str(event["status"])
-        if status not in {"upcoming", "occurred"}:
-            return (), ("macro_events_status_invalid",)
         if not _is_major_event(str(event["category"])) or not _is_in_event_window(
             event_time, status, reference_time
         ):
@@ -227,17 +226,13 @@ def _original_source_problem(source: str) -> str | None:
 
 
 def _primary_source_registry_problem(
-    evidence_kind: str,
-    original_source: str,
+    event: Mapping[str, Any],
     primary_event_source_registry: Any | None,
 ) -> str | None:
     if primary_event_source_registry is None:
         return "macro_events_primary_source_registry_missing"
     try:
-        approved = primary_event_source_registry.approves(
-            evidence_kind,
-            original_source,
-        )
+        approved = primary_event_source_registry.approves(event)
     except Exception:
         return "macro_events_primary_source_registry_unavailable"
     if approved is not True:
