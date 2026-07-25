@@ -1,5 +1,8 @@
 # Broker-live position reporting
 
+> Superseded by ADR 0012 and ADR 0013. Account and holdings reads are outside
+> the stateless Skill boundary.
+
 > Superseded by Issue #86 for Mars Research Assistant. The current Skill
 > supports IBKR only, provides a factual holdings display only after per-request
 > consent, and does not expose the former multi-broker or portfolio-risk flow.

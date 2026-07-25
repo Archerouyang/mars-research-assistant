@@ -1,5 +1,7 @@
 # ADR 0009: ResearchResult delivery contract
 
+> Superseded by ADR 0015. ResearchResult and its delivery packet are retired.
+
 ## Status
 
 Accepted for Mars Research Assistant 0.2.0. The inline-delivery portion was

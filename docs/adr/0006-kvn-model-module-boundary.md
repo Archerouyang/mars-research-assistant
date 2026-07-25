@@ -1,5 +1,7 @@
 # KVN model module boundary
 
+> Superseded for this Skill by ADR 0013. KVN/Alpha workflows are outside scope.
+
 The system will treat KVN as a separate quantitative model module that produces
 daily ticker-level momentum snapshots. The Mars Research Assistant Skill will
 consume those snapshots, but will not own model construction, factor research,

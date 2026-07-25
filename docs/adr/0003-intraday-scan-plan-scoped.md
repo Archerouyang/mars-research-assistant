@@ -1,5 +1,8 @@
 # Intraday scan is scoped to Active Market Plan setups
 
+> Superseded by ADR 0013. Active Market Plans and persistent scans are outside
+> the stateless Skill boundary.
+
 Intraday setup scanning will only evaluate setup-level entries already present in the Active Market Plan, current watchlist, or prepared setup files. It will monitor planned symbols, instruments, timeframes, trigger conditions, invalidation levels, and setup notes to determine whether a setup is active, approaching, triggered, invalidated, completed, or worth the user's attention.
 
 **Considered Options**

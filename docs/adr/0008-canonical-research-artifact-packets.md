@@ -1,5 +1,8 @@
 # Canonical research artifact packets
 
+> Superseded by ADR 0015. ArtifactPacket is retired in favor of direct Board
+> delivery.
+
 The research-Board visual system will use immutable snapshot-driven artifact
 packets. This ADR supersedes only the renderer, artifact-identity, and fallback
 clauses of [ADR 0002](0002-chart-artifacts-not-dashboard.md).

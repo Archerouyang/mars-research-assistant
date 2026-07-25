@@ -38,12 +38,10 @@ CLAUDE_INSTALL="$CLAUDE_CONFIG_DIR/skills/mars-research-assistant"
 
 for installed in "$CODEX_INSTALL" "$CLAUDE_INSTALL"; do
   test -f "$installed/SKILL.md"
-  test -f "$installed/references/research-result-contract.md"
-  test -f "$installed/scripts/research_result.py"
-  test -f "$installed/scripts/export_board_png.mjs"
-  test -f "$installed/scripts/holdings_display.py"
-  test -f "$installed/scripts/ibkr_holdings_adapter.py"
-  test -f "$installed/assets/vendor/lightweight-charts-5.2.0/LICENSE"
+  test -f "$installed/references/macro-research.md"
+  test -f "$installed/references/instrument-research.md"
+  test -f "$installed/scripts/stateless_research_run.py"
+  test -f "$installed/scripts/verify_stateless_research_run_selftest.py"
   diff -qr "$CANONICAL" "$installed" >/dev/null
   if find "$installed" -type f \( \
     -name '.env' -o \

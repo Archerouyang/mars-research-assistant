@@ -1,5 +1,8 @@
 # Chart artifacts, not a dashboard
 
+> Superseded by ADR 0015. Boards are direct one-shot self-contained HTML; PNG
+> export and durable chart artifacts are retired.
+
 The Mars Research Assistant will generate display-first chart artifacts on demand instead of maintaining a permanent charting frontend. For price action review, the Skill may generate transient chat images, local HTML pages, or Markdown report sections showing K lines, 20 EMA, 50 EMA, multi-timeframe structure, and setup annotations.
 
 The canonical price-action renderer is TradingView Lightweight Charts v5.2.0

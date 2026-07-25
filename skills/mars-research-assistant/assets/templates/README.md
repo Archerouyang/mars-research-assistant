@@ -1,13 +1,3 @@
-# Blank Public Templates
+# Retired templates
 
-These templates define empty schemas and prompts for a user-owned private
-runtime. They contain no default watchlist, portfolio, setup, trading profile,
-personal risk parameter, broker state, or research history.
-
-Each user initializes a private runtime locally. Skill installation and upgrade
-must never restore or overwrite user state from this directory.
-
-| Format | Public contract |
-| --- | --- |
-| CSV | Header-only schemas with no user rows. |
-| Markdown/TOML | Blank scaffolding to be initialized and owned on the user's device. |
+无状态 Skill 不维护计划、自动化、订单、持仓或运行时模板。本目录仅保留说明文件，避免重新引入持久化工作流。

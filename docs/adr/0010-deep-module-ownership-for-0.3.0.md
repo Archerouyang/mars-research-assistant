@@ -1,5 +1,7 @@
 # ADR 0010: Deep module ownership for 0.3.0
 
+> Superseded by ADR 0012 through ADR 0015 for the stateless Skill direction.
+
 ## Status
 
 Accepted for Mars Research Assistant 0.3.0.

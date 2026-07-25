@@ -1,5 +1,8 @@
 # ADR 0011: Standalone Board Only Delivery
 
+> Superseded by ADR 0015. Direct Board delivery no longer has a ResearchResult,
+> manifest, hash or Gallery protocol.
+
 ## Status
 
 Accepted on 2026-07-22 for Mars Research Assistant 0.4.0.

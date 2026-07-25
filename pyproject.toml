@@ -4,11 +4,13 @@ version = "1.0.0"
 description = "Development tooling for 火星投研助手 (Mars Research Assistant)."
 license = "MIT"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+  "yfinance>=0.2.66",
+]
 
 [dependency-groups]
 dev = [
-  "PyYAML>=6.0.3",
+  "PyYAML==6.0.3",
 ]
 
 [tool.uv]

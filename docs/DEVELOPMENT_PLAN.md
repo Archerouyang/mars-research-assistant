@@ -1,5 +1,10 @@
 # Development Plan
 
+> Status: historical roadmap. The active product direction is the accepted
+> [stateless Longbridge-first research specification](specs/2026-07-25-stateless-longbridge-first-research.md).
+> Runtime, Daily Ops, broker holdings, ArtifactPacket, Gallery, automation and
+> IBKR-only paths are retired rather than future milestones.
+
 This document is the public source of truth for Mars Research Assistant feature,
 integration, and approved architecture-optimization planning, daily task
 selection, and progress. It is used by the weekday development brief and
@@ -53,8 +58,8 @@ The current product sequence is:
 19. basic stats and system review;
 20. automation setup checklist: confirm the Daily Ops thread, timezone, cadence, `runtime_dir`, allowed sources, runtime write policy, read-only broker permissions, and paywall boundaries through `automation-setup-checklist.md`;
 21. user-confirmed Active Market Plan automations;
-22. Source Routing Boundary: use exact IBKR market fields when proven, then
-    registered official sources and verified Web Search fallback by field;
+22. Source Routing Boundary: Macro uses registered official sources and
+    verified Web Search fallback; IBKR market data is reserved for requested PA;
 23. scheduled macro/industry/news research monitor: after a weekly plan defines P0/P1 focus variables, run user-confirmed recurring searches over public/authorized sources and return only decision-useful deltas, research leads, verification queue, and Active Market Plan impact;
 24. Content & Visualization Artifact System MVP: display-first visual artifacts for price action and macro/regime context, with optional durable saves only after confirmation;
 25. persistent Macro Regime workspace: keep one stable private entry point for the current weekly panel, update it as events resolve, and retain immutable snapshots for later review;
@@ -364,10 +369,10 @@ Date: 2026-07-25
   complete.
 - Next task: obtain separate authorization before pushing or integrating the
   committed branch.
-- Definition of done: Macro uses IBKR then official/Web Search fallback,
-  Holdings Display is consented and IBKR-only, named-instrument research uses
-  IBKR OHLCV, active second-broker paths are removed, and focused acceptance
-  plus portable install smoke pass.
+- Definition of done: Macro uses public authorities with Web Search discovery
+  fallback, Holdings Display is consented and IBKR-only, named-instrument
+  research uses IBKR OHLCV, active second-broker and Macro-IBKR paths are
+  removed, and focused acceptance passes.
 
 ## Progress Log
 
@@ -375,11 +380,8 @@ Date: 2026-07-25
 
 - Approved GitHub Issue #86 and tickets #87-#92 to hard-cut the Skill to one
   broker Provider: IBKR.
-- Implemented a shared IBKR-only boundary for capability discovery, Macro
-  broker capture, and Holdings Display.
-- Added exact TNX/TYX normalization against observed IBKR history response
-  shape, preserved official Treasury 2Y fallback, and updated the verified TGA
-  field map for the current Treasury DTS schema.
+- Implemented a narrow IBKR boundary for named-instrument PA market data and
+  consented Holdings Display. Macro uses public authorities only.
 - Added explicit public-fallback disclosure records, IBKR OHLCV normalization,
   and consented factual holdings checks.
 - Split registered official direct opens from Web Search discovery receipts;

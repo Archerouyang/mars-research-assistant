@@ -1,16 +1,7 @@
-# Safety And Sources
+# 来源、时间与安全
 
-Use sources by purpose:
-
-- `S0`: official releases, filings, policy, company IR, product terms;
-- `S1`: authorized market, macro, calendar, and read-only broker data;
-- `S2`: reputable media leads that need primary confirmation for material facts;
-- `S3`: research, consensus, user thesis, and interpretation.
-
-Use current primary sources when facts may have changed. A connector working for
-one purpose does not make it authoritative for another. Preserve source status
-exactly: `partial_data` and `upstream_error` are not `unauthorized`; empty
-positions without reconciliation are not proof of an empty account.
-
-No broker write action is supported. Do not expose account identifiers, raw
-broker responses, credentials, or private runtime paths in public output.
+- 只读 Longbridge 预检只判断 CLI 存在及授权有效性；不读取账户、持仓、订单、凭据或 token。
+- 授权有效后仍须用户本次确认；不可用或拒绝时用 Portable Profile，不得静默安装或登录。
+- 主源先按数据集批量请求；只对缺失或校验失败字段访问回退来源。每个结果必须显示实际 `source` 和 `as_of`。
+- Web Search 是发现层；决策性事件必须有原始公告、监管披露、官方日历或公司 IR 证据。
+- 不创建、修改、取消、提交订单，也不把研究结论写成确定预测。

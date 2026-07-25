@@ -7,7 +7,6 @@ import copy
 from html import escape
 from typing import Any, Mapping
 
-from artifact_packet import build_artifact_packet
 from board_visual_contract import BoardVisualError, exact_fields
 from board_visual_shared import (
     _base_css,
@@ -36,11 +35,6 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
 def render(visual: Mapping[str, Any], privacy: str) -> bytes:
     del privacy
     snapshot = visual["snapshot"]
-    build_artifact_packet(
-        snapshot,
-        default_view=str(visual["default_view"]),
-        presentation_state="ready",
-    )
     return _render_snapshot(snapshot)
 
 

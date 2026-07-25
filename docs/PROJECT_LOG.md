@@ -31,6 +31,20 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: pending `Retire persistent Mars research paths`
+- Scope: skill, cleanup, documentation, validation
+- What changed: removed the runtime, Daily Ops, account/holdings, IBKR,
+  Longbridge gateway, ArtifactPacket, Gallery, automation, KVN/Alpha, PNG
+  export, legacy templates and stale visual artifacts. Retained the three Board
+  renderer cores and the stateless source-selection seam; rewrote the public
+  Skill, references, installation path and focused verification around them.
+- Why it matters: installation and one-shot research no longer carry inactive
+  private-workflow code or a path that can request broker account data.
+- Verification: the compile gate, portable distribution contract and injected
+  stateless source seam selftest passed through `uv` without live providers.
+- Next step: implement each Board's data acquisition and delivery contract on
+  the stateless seam.
+
 - Commit: `8e69ca0` `feat: add stateless research source seam`
 - Scope: skill, script, decision, validation
 - What changed: added the in-memory `stateless_research_run` source-selection

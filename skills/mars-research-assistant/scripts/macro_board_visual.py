@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from html import escape
 from typing import Any, Mapping
 
-from artifact_packet import build_artifact_packet
 from board_visual_contract import BoardVisualError, exact_fields
 from board_visual_shared import (
     _base_css,
@@ -37,11 +36,6 @@ def normalize(visual: Mapping[str, Any]) -> dict[str, Any]:
 def render(visual: Mapping[str, Any], privacy: str) -> bytes:
     del privacy
     snapshot = visual["snapshot"]
-    build_artifact_packet(
-        snapshot,
-        default_view=str(visual["default_view"]),
-        presentation_state="ready",
-    )
     return _render_snapshot(snapshot)
 
 
@@ -137,6 +131,7 @@ def _render_snapshot(snapshot: Mapping[str, Any]) -> bytes:
     policy_rows = "".join(
         f'<article class="policy-row"><div class="policy-head"><strong>{escape(str(row["title"]))}</strong>'
         f'<span>{escape(_format_event_time(row["published_at"]))}</span></div>'
+        f'<span class="policy-source">{escape(str(row.get("original_title", "")))}</span>'
         f'<span class="policy-source">{escape(str(row["source"]))}'
         f'{" · " + escape(str(row["policy_status"])) + " · " + escape(str(row["posture_effect"])) if is_mars_direct else ""}'
         '</span></article>'
