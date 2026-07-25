@@ -31,6 +31,25 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `ab1fd8b` `feat: deliver stateless macro regime board`
+- Scope: skill, script, validation
+- What changed: added the stateless Macro Event Brief and directly embedded
+  Macro Regime Board delivery. The Board accepts only the frozen Treasury,
+  volatility, dollar, WTI, gold, credit and growth/small-cap fields; it shows
+  per-field source/time and two 30-session lines, while the Brief retains
+  original event evidence. Invalid event windows, non-official Treasury data,
+  incomplete or non-common market sessions, and any required gap now produce
+  explicit blockers instead of a partial Board.
+- Why it matters: a macro request can return an auditable one-shot result
+  without a runtime, manifest, Gallery or broker-account surface, and users do
+  not mistake a proxy or incomplete market snapshot for a full regime view.
+- Verification: fixture-only Macro delivery selftest, stateless source seam
+  selftest, compile, and portable distribution contract passed through `uv`;
+  no live provider, account, position, order, credential, or token data was
+  accessed.
+- Next step: implement the Instrument Research delivery contract on the same
+  stateless source seam.
+
 - Commit: `2977fba` `refactor: retire persistent research paths`
 - Scope: skill, cleanup, documentation, validation
 - What changed: removed the runtime, Daily Ops, account/holdings, IBKR,
