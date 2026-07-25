@@ -31,6 +31,22 @@ Use this shape:
 
 ## 2026-07-25
 
+- Commit: `4e4d9cf` `feat: restore macro board visual language`
+- Scope: skill, script, validation
+- What changed: restored the established standalone research-brief visual
+  language for the stateless Macro Board: the strong masthead, compact market
+  strip, chart shells and primary-source evidence rail. The renderer still
+  accepts only the frozen Macro v1 payload and retains source/as_of plus event
+  evidence fields; it does not restore any retired runtime or persistence path.
+- Why it matters: the direct Board again reads like the earlier Macro research
+  surface without weakening the fail-closed data or primary-event-evidence
+  boundaries.
+- Verification: the visual-shell regression assertions, complete Skill
+  verifier, and isolated portable-install smoke check passed. A newly generated
+  synthetic temporary Board remains pending the user's manual visual check.
+- Next step: receive explicit visual acceptance of the synthetic Board; do not
+  treat the manual visual boundary as complete before that check.
+
 - Commit: `f82efcd` `fix: bind macro events to primary sources`
 - Scope: skill, script, decision
 - What changed: Macro delivery now accepts an injected primary-event-source
