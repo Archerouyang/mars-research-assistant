@@ -1,6 +1,6 @@
 # Mars Research Assistant
 
-这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、broker-live 持仓日报、复盘上下文和交易系统可视化。
+这个上下文定义交易投研系统的领域语言。系统用于把市场信息转化为可验证、可复盘、可更新的 Active Market Plan、setup pool、经同意的 broker-live 持仓展示、复盘上下文和交易系统可视化。
 
 ## Language
 
@@ -29,11 +29,11 @@ _Avoid_: 自动交易系统, 荐股系统
 _Avoid_: 聊天流程, 临时分析
 
 **技能集架构**:
-Mars Research Assistant 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、组合风险和统计复盘。
+Mars Research Assistant 对外是一个自包含 Agent Skill，内部通过路由和 focused workflows 分担 Active Market Plan 更新、setup 扫描、交易复盘、宏观/标的研究、经同意的持仓展示和统计复盘。
 _Avoid_: 多个可被部分安装的公开 Skills, 多个互不相干的分发包
 
 **Daily Ops Orchestrator**:
-Mars Research Assistant 的主动日程引导层。它位于单一 `mars-research-assistant` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、持仓风险检查还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
+Mars Research Assistant 的主动日程引导层。它位于单一 `mars-research-assistant` Skill 的路由入口，在内部 focused workflows 之前工作：先判断当前是周度 deep update、盘前 quick update、盘中 trigger monitor、盘后 review、研报摄取、宏观更新、持仓展示还是交易复盘，再告诉用户下一步应该做什么、为什么、缺少哪些确认，以及确认后会调用哪个 workflow。Daily Ops Orchestrator 不产生独立交易信号，也不替代内部 workflows。
 _Avoid_: 新的荐股模块, 让用户手动 call out 每个步骤
 
 **Daily Ops State**:
@@ -105,27 +105,39 @@ Longbridge 作为可选 broker source，第一阶段提供 positions、execution
 _Avoid_: 内置 Longbridge 依赖, 自动安装
 
 **Longbridge Macrodata Source**:
-Longbridge Skill 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source，可用于非 Board 的辅助研究和交叉核验；它不是 Mars 1.0 Macro Board 的字段来源，不能替代逐字段直接公开来源合同。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
-_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代官方政策事实或 Mars 字段合同
+Longbridge Skill 中的 `macrodata` 能力，用于多指标宏观数据查询，包括利率/收益率、经济指标、通胀、就业、流动性、信用、外汇、商品和金融条件相关数据。它不是 broker account source；Mars 1.0 Macro Board 可将其作为已注册字段的 S1 输入，但每条记录必须保留精确字段身份、原生路径、单位、时间戳和最近完成收盘/参考期。政策原文、官方讲话、法规状态和经济数据最终发布时间仍应优先用 S0 官方来源确认。
+_Avoid_: 把宏观数据源当账户权限, 用聚合数据替代字段合同或官方政策事实
 
 **Longbridge Skill Adapter**:
-把 Longbridge Skill 或 Terminal CLI 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native Skill 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于非 Board 宏观和金融条件数值研究。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 Skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
-_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在, 用 macrodata 绕过 Mars 直接来源合同
+把 Longbridge Skill 或 Terminal CLI 的只读能力接入 Trading Research 标准运行时视图的适配层。它拆成三个 capability：`longbridge_broker_skill` 用于 Codex-native Skill 暴露的 positions、executions/trades、orders/status 等 broker facts；`longbridge_terminal_cli` 用于用户已安装且授权的 Longbridge Terminal CLI 只读 portfolio/position JSON；`longbridge_macrodata` 用于 Macro Board 的候选 S1 宏观和金融条件字段。Daily Ops 启动时应显示 `source_capability_health`，区分当前 chat 未暴露 Skill capability、terminal CLI 是否可用、macrodata 是否可用、未授权、缺失、过期和可用状态。
+_Avoid_: 把 Longbridge skill 当普通 connector 泛称, 混淆 broker facts 和 macrodata, 当前 chat 未暴露能力时说 Longbridge 不存在, 用未映射 macrodata 绕过 Mars 字段合同
 
 **Longbridge Terminal CLI Adapter**:
 消费用户已授权的 `longbridge portfolio --format json` 等只读 CLI 输出，并通过 `longbridge_cli_adapter.py` 转换成标准 `portfolio_snapshot.csv` 的本地适配层。该 adapter 只处理已保存 JSON，不主动运行 CLI、不读取 live broker、不调用行情、不创建/修改/取消/提交订单。
 _Avoid_: 把 CLI adapter 当下单层, 把本机安装等同于 macrodata 可用, 把用户真实持仓 fixture 化进 public repo
 
 **Macro Data Source Contract**:
-Mars 1.0 宏观 Board 只使用逐字段验证的直接公开来源。每次刷新必须先 `web search -> 直接打开合同 URL -> MarsWebCapture`，然后才允许归一化与生成 Board；普通数据字典、搜索摘要、券商配置和代理不能进入公开入口。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段没有稳定、精确、可复核的公开来源合同，或本轮没有取得该字段，必须拒绝生成 Board；不得用 Longbridge、IBKR、ETF、新闻摘要或其它代理替代。券商只读数据继续限于独立的账户/持仓风险研究。
-_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用券商行情或新闻替代直接公开宏观字段, 用缺失字段生成 partial Board, 接收未验证的原始 payload
+Mars 1.0 宏观 Board 使用逐字段验证的 market/macro 来源。每次刷新先检查 Longbridge/IBKR 连接支持；每个已注册字段优先采用带精确字段身份、原生路径、单位、时间戳和最近完成收盘/参考期的默认只读券商 market/macro 记录，缺失时再走 `web search -> 直接打开合同 URL -> MarsWebCapture` 的公开一手备援。市场字段必须等于最近共同完成收盘，官方流动性字段必须等于最新正式发布观测，白宫行政政策必须在 24 小时内从 Presidential Actions 直接来源归一化。若一个字段无稳定、精确、可复核来源或本轮取不到，必须拒绝生成 Board；不得用 ETF、新闻摘要或其它代理替代。
+_Avoid_: 没有实际宏观数值却声称完成宏观分析, 用代理或新闻替代字段合同, 用缺失字段生成 partial Board, 接收未验证的原始 payload
+
+**Holdings Display**:
+持仓展示是默认券商的只读账户快照，但每次读取都需要用户明确同意；宏观 market/macro 字段采集不构成持仓读取授权。展示固定显示券商、标的、数量、最新价格、市值、成本、未实现盈亏、现金和本次读取时间；缺失字段明确显示不可用。它不计算集中度、杠杆调整、压力测试、风险评分或交易建议，独立于 Macro Board，且不触发 PA、个股研究或订单操作。
+_Avoid_: 把持仓展示称为 Portfolio Risk Panel, 用缺失字段推导风险暴露, 自动从展示进入个股 PA 或交易指导
+
+**Daily Ops Guidance**:
+Daily Ops 的宏观、持仓展示和标的研究是建议顺序，不是强制阶段门禁。宏观交付后只询问用户是否展示持仓或研究标的；用户可在任意时点点名标的并直接进入相应的 PA、技术面或基本面分析。
+_Avoid_: 用持仓展示或未完成的默认流程阻塞用户明确提出的标的研究
+
+**Named Instrument Analysis**:
+用户点名标的时，默认交付行业事件、基本面、技术面和 4H Price Action 的完整分析包；用户明确限定范围时才裁剪。技术面与 PA 使用已冻结样式的 4H PA standalone Board，行业事件、基本面、估值、催化与反方风险使用配套 Markdown。该请求不要求先展示持仓，也不构成读取账户持仓的授权。
+_Avoid_: 自动选择标的, 把标的研究错误地阻塞在宏观或持仓展示之后
 
 **Source Routing Boundary**:
-按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 仅可用于明确授权的只读账户、持仓、成交和价格事实；Mars 宏观字段不从券商或新闻源取得。宏观 Board 的公开来源、字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 锁定。选择 Longbridge 做股票数据或券商数据不使其成为政策、宏观、行业或新闻的默认来源。
-_Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, 用聚合宏观数据替代字段级公开来源合同
+按 source purpose 和 claim type 选择信源的硬边界。Longbridge/IBKR 可用于已注册的市场/宏观字段和明确授权的只读账户、持仓、成交事实；它们不能替代政策、新闻或未映射字段的来源。宏观 Board 的字段路径、时间口径和代理禁令由 `mars-1-0-observation-source-contracts.json` 与 `macro-field-registry-v1.json` 锁定。选择 Longbridge 做一个字段不使其成为政策、行业或新闻的默认来源。
+_Avoid_: 一个 connector 变成所有证据来源, 行情源替代新闻源, 用聚合宏观数据替代字段级来源合同
 
 **Broker-Live Data View**:
-券商只读数据在一次分析运行中的标准视图，包括当前持仓、账户风险、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成可视化或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。
+券商只读数据在一次分析运行中的标准视图，包括当前持仓、现金、成交、订单状态和可授权行情。核心分析消费这个标准视图，而不是直接依赖 IBKR、Longbridge 或其它券商的原始结构。该视图可以按需生成事实展示或摘要快照，但逐笔券商事实默认不作为本地 source of truth 持久化。
 _Avoid_: 直接读各券商私有结构, 本地交易明细作为唯一事实来源
 
 **IBKR 行情数据**:

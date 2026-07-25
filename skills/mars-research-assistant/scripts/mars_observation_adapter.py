@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 import json
 import math
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 
 RETAINED_RAW_FIELD_IDS = frozenset(
@@ -181,17 +181,32 @@ def _validate_event_contract(event_contract: Any, event_sources: Any) -> None:
 def normalize_mars_observations(
     source_payloads: Mapping[str, Any],
     as_of: str,
+    *,
+    omitted_field_ids: Iterable[str] = (),
 ) -> list[dict[str, Any]]:
     """Return the retained raw base observations with normalized histories only."""
 
-    return list(normalize_mars_observation_run(source_payloads, as_of).observations)
+    return list(
+        normalize_mars_observation_run(
+            source_payloads,
+            as_of,
+            omitted_field_ids=omitted_field_ids,
+        ).observations
+    )
 
 
 def normalize_mars_observation_run(
     source_payloads: Mapping[str, Any],
     as_of: str,
+    *,
+    omitted_field_ids: Iterable[str] = (),
 ) -> MarsRawObservationRun:
-    """Validate a complete one-run raw-observation boundary for Mars Macro."""
+    """Validate the direct-web fallback fields required for one Mars Macro run.
+
+    Macro Preflight can omit market fields already supplied by an admissible
+    broker-market capture. This adapter still owns every remaining direct field,
+    the completed-session proof, and official-release freshness validation.
+    """
 
     if not isinstance(source_payloads, Mapping):
         raise ObservationAdapterError("source_payloads_invalid")
@@ -200,6 +215,16 @@ def normalize_mars_observation_run(
     fields = contract.get("fields")
     if not isinstance(fields, list):
         raise ObservationAdapterError("source_contract_invalid")
+    omitted_values = tuple(omitted_field_ids)
+    if not all(isinstance(field_id, str) and field_id for field_id in omitted_values):
+        raise ObservationAdapterError("omitted_field_ids_invalid")
+    omitted_ids = frozenset(omitted_values)
+    all_field_ids = {str(field["field_id"]) for field in fields if isinstance(field, Mapping)}
+    unsupported_omissions = sorted(omitted_ids - all_field_ids)
+    if unsupported_omissions:
+        raise ObservationAdapterError(
+            f"omitted_field_not_supported:{unsupported_omissions[0]}"
+        )
     event_contract = contract.get("event_contract")
     event_sources = contract.get("event_sources")
     if not isinstance(event_contract, Mapping) or not isinstance(event_sources, list):
@@ -219,7 +244,15 @@ def normalize_mars_observation_run(
         source_payloads,
         as_of_timestamp,
     )
-    rows = [_normalize_field(dict(field), source_payloads, as_of_timestamp) for field in fields]
+    selected_fields = [
+        dict(field)
+        for field in fields
+        if str(field["field_id"]) not in omitted_ids
+    ]
+    rows = [
+        _normalize_field(field, source_payloads, as_of_timestamp)
+        for field in selected_fields
+    ]
     rows.append(_normalize_event_set(event_contract, event_sources, source_payloads, as_of_timestamp))
     _align_completed_market_histories(
         rows,

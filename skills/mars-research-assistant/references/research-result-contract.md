@@ -5,8 +5,8 @@ Use this reference only when creating a stable research delivery packet.
 The model may research and reason freely. Before delivery, express the answer as
 one `ResearchResult` with:
 
-- `result_kind`: `operations`, `macro`, `instrument`, `portfolio`,
-  `price_action`, or `report`;
+- `result_kind`: `operations`, `macro`, `instrument`, `price_action`, or
+  `report`;
 - `as_of` and `decision`;
 - `key_evidence`, `risks`, `scenarios`, `next_checks`, and visible `data_gaps`;
 - compact `sources` with priority and timestamp;
@@ -32,11 +32,9 @@ delivery Markdown preserves this classification and provenance.
 
 Run `scripts/research_result.py` when deterministic Markdown or a standalone
 Board is needed. Macro and Instrument visuals accept their existing canonical
-Board snapshot, Portfolio accepts its canonical risk snapshot or legacy
-normalized panel, and Price Action accepts the existing OHLCV chart payload. In
-unscoped Daily Ops, Macro and Portfolio
-always require this delivery path: `visual` cannot be omitted or replaced with
-`visualize`, copied HTML, or a new renderer.
+Board snapshot, and Price Action accepts the existing OHLCV chart payload. In
+unscoped Daily Ops, Macro always requires this delivery path: `visual` cannot
+be omitted or replaced with `visualize`, copied HTML, or a new renderer.
 
 When `visual` is present, `DeliveryPacket.standalone_board` contains exactly one
 self-contained packet: `snapshot.canonical.json`, `research-brief.html`, and

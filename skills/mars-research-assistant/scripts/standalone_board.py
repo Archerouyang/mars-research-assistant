@@ -20,21 +20,11 @@ SCHEMA_VERSION = "1.0"
 BOARD_VIEWS = {
     "macro": ("trend", "current", "events", "scenarios"),
     "instrument": ("overview", "price", "peers", "catalysts"),
-    "portfolio": (
-        "overview",
-        "symbol",
-        "fundamentals",
-        "theme",
-        "product",
-        "broker",
-        "stress",
-    ),
     "price_action": ("bull", "base", "bear"),
 }
 BOARD_DEFAULT_VIEWS = {
     "macro": "trend",
     "instrument": "overview",
-    "portfolio": "overview",
     "price_action": "base",
 }
 

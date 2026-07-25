@@ -12,7 +12,7 @@ under `{runtime_dir}/ops-state.md`, not in the public Skill repo.
 - last_quick_update:
 - last_intraday_scan:
 - last_post_market_review:
-- last_position_daily_report:
+- last_holdings_display:
 - last_research_monitor:
 
 ## Pending Confirmations

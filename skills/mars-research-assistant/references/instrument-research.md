@@ -1,5 +1,11 @@
 # Instrument Research
 
+For a user-named ticker, the default package includes industry events,
+fundamentals, catalysts, valuation, counter-thesis, and 4H Price Action. The
+4H PA component uses the frozen standalone Board; the other sections are concise
+Markdown. Do not require Holdings Display first, and honor any user request that
+explicitly narrows this package.
+
 An instrument thesis requires four evidence families:
 
 1. industry structure and peers;

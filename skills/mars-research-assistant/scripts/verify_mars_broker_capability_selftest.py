@@ -69,15 +69,6 @@ def main() -> int:
             stderr="",
         )
 
-    pending = probe_broker_capabilities(
-        read_only_confirmed=False,
-        longbridge_runner=longbridge_runner,
-        task_tool_names=("mcp__codex_apps__interactive_brokers__ibkr__get_account_positions",),
-    )
-    require(pending["authorization_state"] == "authorization_pending", "consent must be requested first")
-    require(pending["capability_probes"] is None, "pending state must not fabricate broker capability")
-    require(not calls, "a pending consent state must not invoke Longbridge")
-
     health = build_runtime_health(Path("/private/nonexistent-mars-runtime"), "2026-07-24", [])
     require(
         health["current_mode"] == "authorization_pending",
@@ -92,13 +83,12 @@ def main() -> int:
     )
 
     active = probe_broker_capabilities(
-        read_only_confirmed=True,
         longbridge_runner=longbridge_runner,
         task_tool_names=(
             "mcp__codex_apps__interactive_brokers__ibkr__get_account_positions",
         ),
     )
-    require(active["authorization_state"] == "confirmed", "confirmed probe must retain consent state")
+    require(active["capability_state"] == "checked", "capability probe must retain its checked state")
     probes = active["capability_probes"]
     require(isinstance(probes, dict), "confirmed probe must return a normalized capability mapping")
     require(
@@ -132,7 +122,6 @@ def main() -> int:
     )
 
     unavailable = probe_broker_capabilities(
-        read_only_confirmed=True,
         longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
     )
     require(
@@ -144,7 +133,6 @@ def main() -> int:
     )
 
     unrelated = probe_broker_capabilities(
-        read_only_confirmed=True,
         longbridge_runner=lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout="", stderr="failure"),
         task_tool_names=("mcp__codex_apps__github_list_repositories",),
     )

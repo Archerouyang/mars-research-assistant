@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the only Mars Macro ResearchResult from normalized direct observations."""
+"""Build the only Mars Macro ResearchResult from normalized field-contract observations."""
 
 from __future__ import annotations
 
@@ -27,6 +27,8 @@ def build_mars_macro_research_result(
     """Create a bounded Macro result without accepting caller narrative or charts."""
 
     market_date = str(observations["equity.ndx_close"]["market_reference_date"])
+    rates_source = str(observations["rates.us_10y_yield"]["source_id"])
+    relative_source = str(observations["volatility.vix_close"]["source_id"])
     rate_series = [
         _trend(observations["rates.us_2y_yield"], "2Y", "percent"),
         _trend(observations["rates.us_10y_yield"], "10Y", "percent"),
@@ -131,27 +133,27 @@ def build_mars_macro_research_result(
                 "Policy Watch",
             ],
             "modules": [
-                _module("plan_context", "complete", as_of, "mars_direct_contract", {
-                    "active_plan_id": "mars-direct-macro-v1",
+                _module("plan_context", "complete", as_of, "mars_field_contract", {
+                    "active_plan_id": "mars-field-contract-v1",
                     "applicable_horizon": "current",
                     "applicable_session": as_of,
-                    "assumptions": "只使用本轮验证的直接来源字段。",
+                    "assumptions": "只使用本轮验证的精确字段来源。",
                     "constraints": "未验证字段不得以代理进入 Board。",
-                    "current_posture": "直接来源快照。",
+                    "current_posture": "字段合同快照。",
                     "decision_rules": "字段或共同收盘日不完整时拒绝生成 Board。",
-                }, "Mars 直接来源字段合同已启用。"),
-                _module("rates_liquidity", "complete", as_of, "us_treasury_daily_rates", {
+                }, "Mars 精确字段合同已启用。"),
+                _module("rates_liquidity", "complete", as_of, rates_source, {
                     "rule": "2Y、10Y、30Y 使用同一共同完成收盘；流动性使用最新官方发布值。",
                     "scope": "美国国债收益率曲线和三项官方流动性字段。",
-                }, "收益率与流动性字段均来自直接来源。"),
-                _module("cross_asset", "complete", as_of, "cboe_vix_history", {
+                }, "收益率与流动性字段均来自精确字段来源。"),
+                _module("cross_asset", "complete", as_of, relative_source, {
                     "rule": "VIX/VIX3M 与 NDX/RUT 均由同一共同完成收盘日的直接历史计算。",
                     "scope": "波动期限结构与成长/小盘相对强弱。",
-                }, "波动与相对强弱字段均来自直接来源。"),
+                }, "波动与相对强弱字段均来自精确字段来源。"),
                 _module("policy_watch", "complete", as_of, "white_house_presidential_actions", {
                     "rule": "未来七日事件与特朗普政策均使用直接来源的限字段摘要。",
                     "scope": "事件保留时间、时区、参考期、共识和前值；政策不写入原始正文。",
-                }, "事件和行政政策字段已按直接来源合同验证。"),
+                }, "事件和行政政策字段已按公开一手来源合同验证。"),
             ],
             "holdings_context": {
                 "conditional": True,
@@ -164,7 +166,7 @@ def build_mars_macro_research_result(
                     "kind": "theme",
                     "label": "利率敏感资产",
                     "sensitivity": "长期收益率与波动期限结构变化。",
-                    "impact": "Conditional on a separate reconciled portfolio read.",
+                    "impact": "Conditional on a separate consented holdings read.",
                     "plan_rule": "不从本面板产生交易指令。",
                 },
                 {
@@ -172,16 +174,16 @@ def build_mars_macro_research_result(
                     "kind": "theme",
                     "label": "成长/小盘相对强弱",
                     "sensitivity": "NDX/RUT 的水平、变化率和二十日标准化读数。",
-                    "impact": "Conditional on a separate reconciled portfolio read.",
+                    "impact": "Conditional on a separate consented holdings read.",
                     "plan_rule": "只作为后续研究的交叉确认。",
                 },
             ],
             "evidence": [
-                _evidence("rate-actual", "直接利率与流动性", "rates_liquidity", "actual", "us_treasury_daily_rates", "rates-sensitive", as_of,
-                          "收益率曲线和流动性字段通过直接来源合同验证。",
+                _evidence("rate-actual", "利率与流动性", "rates_liquidity", "actual", rates_source, "rates-sensitive", as_of,
+                          "收益率曲线和流动性字段通过精确字段合同验证。",
                           "期限结构与流动性需要和波动、相对强弱共同解读。"),
-                _evidence("relative-actual", "波动与相对强弱", "cross_asset", "actual", "cboe_vix_history", "relative-strength", as_of,
-                          "VIX/VIX3M 与 NDX/RUT 由同一完成收盘日的历史计算。",
+                _evidence("relative-actual", "波动与相对强弱", "cross_asset", "actual", relative_source, "relative-strength", as_of,
+                          "VIX/VIX3M 与 NDX/RUT 由同一完成收盘日的合同历史计算。",
                           "比值的变化率与标准化读数用于描述结构，不构成交易指令。"),
                 _evidence("event-actual", "未来七日高影响事件", "policy_watch", "actual", "official_macro_event_allowlist", "rates-sensitive", as_of,
                           "未来七日事件来自直接、限字段摘要。",
@@ -207,7 +209,7 @@ def build_mars_macro_research_result(
         "snapshot_id": f"mars-macro-{market_date}",
         "source_registry": _source_registry(observations),
         "state_reasons": [
-            "未建立直接来源合同的字段不进入本面板。",
+            "未建立精确字段来源合同的字段不进入本面板。",
             "不支持盘中 Macro Board；市场字段只使用最近共同完成收盘。",
         ],
         "timezone": "UTC",
@@ -234,15 +236,15 @@ def build_mars_macro_research_result(
                 "evidence_type": "fact",
                 "status": "complete",
                 "as_of": as_of,
-                "source_refs": ["us_treasury_daily_rates"],
+                "source_refs": [rates_source],
             }
         ],
         "risks": [
             {
                 "label": "字段边界",
                 "severity": "high",
-                "detail": "缺少直接来源合同的字段不会用代理补齐。",
-                "invalidation": "为该字段建立并验证精确公开来源合同。",
+                "detail": "缺少精确字段来源合同的字段不会用代理补齐。",
+                "invalidation": "为该字段建立并验证精确来源合同。",
             }
         ],
         "scenarios": [
@@ -250,7 +252,7 @@ def build_mars_macro_research_result(
             for row in snapshot["payload"]["scenarios"]
         ],
         "next_checks": [
-            "下一次直接来源刷新时重新验证共同完成收盘、事件时间和最新官方观测。"
+            "下一次字段刷新时重新验证共同完成收盘、事件时间和最新官方观测。"
         ],
         "data_gaps": [],
         "sources": sources,
@@ -265,7 +267,7 @@ def _trend(row: Mapping[str, Any], label: str, unit: str) -> dict[str, Any]:
         label,
         unit,
         row["history"],
-        "直接来源的共同完成收盘历史。",
+        "通过字段合同验证的共同完成收盘历史。",
     )
 
 
@@ -455,7 +457,9 @@ SOURCE_ALIASES = {
     "new_york_fed_on_rrp": "New York Fed ON RRP results",
     "official_macro_event_allowlist": "Official seven-day macro event sources",
     "white_house_presidential_actions": "White House Presidential Actions",
-    "mars_direct_contract": "Mars direct field contract",
+    "longbridge_market_data": "Longbridge market or macro data",
+    "ibkr_market_data": "Interactive Brokers market data",
+    "mars_field_contract": "Mars field contract",
 }
 
 
@@ -487,8 +491,8 @@ def _source_registry(
     ]
     rows.append(
         {
-            "id": "mars_direct_contract",
-            "alias": SOURCE_ALIASES["mars_direct_contract"],
+            "id": "mars_field_contract",
+            "alias": SOURCE_ALIASES["mars_field_contract"],
             "priority": "S3",
             "as_of": max(observed_at.values()),
             "freshness_policy_id": "official-current-v1",

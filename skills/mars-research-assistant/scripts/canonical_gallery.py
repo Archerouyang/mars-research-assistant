@@ -111,20 +111,6 @@ BOARD_SPECS = (
         ),
         approved_views=("Overview", "Cross-Asset Impact"),
     ),
-    BoardSpec(
-        board_id="portfolio_risk",
-        slug="portfolio-risk",
-        fixture_prefix="portfolio-risk",
-        view_ids=(
-            ("Overview", "overview"),
-            ("By Symbol", "by-symbol"),
-            ("By Theme / Industry", "by-theme-industry"),
-            ("By Product", "by-product"),
-            ("By Broker", "by-broker"),
-            ("Stress Tests", "stress-tests"),
-        ),
-        approved_views=("Overview", "Stress Tests"),
-    ),
 )
 BOARD_BY_ID = {item.board_id: item for item in BOARD_SPECS}
 APPROVED_CAPTURES = tuple(

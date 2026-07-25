@@ -89,14 +89,14 @@ def run_macro_board_from_runtime(
     as_of: str,
     *,
     capability_probes: Mapping[str, Any] | None = None,
+    broker_market_capture: Any | None = None,
     registry: Mapping[str, Any] | None = None,
 ):
-    """Compatibility entry for a direct-public Macro Board.
+    """Compatibility entry for a field-contract Macro Board.
 
-    A Mars Macro Board is determined only by its direct-public field contract.
-    The private runtime broker choice belongs to separate authorized
-    account/portfolio workflows, so neither its absence nor a capability change
-    can stop a complete public capture from reaching the blocker-or-Board seam.
+    A Mars Macro Board uses eligible normalized broker market/macro fields with
+    exact public fallbacks. The private runtime broker choice does not authorize
+    account access and cannot authorize a holdings display.
     This function never writes the runtime; persistence remains a separate,
     explicit action after a Board has been delivered.
     """
@@ -104,7 +104,12 @@ def run_macro_board_from_runtime(
     del runtime_dir, capability_probes
     from macro_preflight import run_macro_board
 
-    return run_macro_board(web_capture, as_of, registry=registry)
+    return run_macro_board(
+        web_capture,
+        as_of,
+        broker_market_capture=broker_market_capture,
+        registry=registry,
+    )
 
 
 def load_private_config(runtime_dir: str | Path) -> dict[str, Any]:

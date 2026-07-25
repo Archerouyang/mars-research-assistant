@@ -13,10 +13,6 @@
       "sha256": "f7c6d5db82d91fce78ac55abfebd1ada88fb2d2d9c163a0b5797a5332ae4516b"
     },
     {
-      "path": "docs/assets/readme/position-risk-panel.svg",
-      "sha256": "33b15cb3eac13d3c860a9b3cb2d0752587a40d3a23a712ac6779c31b840c22ab"
-    },
-    {
       "path": "docs/assets/readme/price-action-panel-fallback.svg",
       "sha256": "2fa994d12ead7b36ce4cd5ce559fd4ade52dd68886288f8ff4e6920f2801eed9"
     }

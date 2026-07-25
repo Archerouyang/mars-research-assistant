@@ -13,7 +13,7 @@ delivery boundary:
 The model owns research judgment. Deterministic code owns safety, provenance,
 privacy, data-gap handling, concise Markdown, and an optional self-contained
 standalone Board.
-Macro, Instrument, Portfolio, and Price Action keep purpose-specific visual
+Macro and Price Action keep purpose-specific visual
 adapters behind that shared boundary.
 
 The only distributed behavior source is `skills/mars-research-assistant/`.
@@ -29,8 +29,9 @@ The only distributed behavior source is `skills/mars-research-assistant/`.
   changes the decision;
 - Bayesian decision support that updates a prior with current evidence instead
   of presenting market research as prediction;
-- frozen Macro, Portfolio Risk, and Price Action panel structures accepted
-  through manual inspection;
+- frozen Macro and Price Action panel structures accepted through manual
+  inspection; consented holdings display remains factual and does not create a
+  risk panel;
 - user-selected PNG export only, with no automatic save, frontend, or hosting;
 - retained immutable ArtifactPacket behavior for canonical public artifacts;
 - no mutable legacy KVN store, legacy trade importer, generated cache, or
@@ -64,9 +65,9 @@ portion for 0.4.0.
 
 Version 0.4.0 removes the parallel Codex-inline delivery surface. A visual
 `ResearchResult` produces one `standalone_board` packet containing canonical
-snapshot bytes, self-contained HTML, and a hash-linked manifest. Macro,
-Instrument, Portfolio, and Price Action preserve their accepted view structures
-behind purpose-specific Board adapters. The decision is recorded in
+snapshot bytes, self-contained HTML, and a hash-linked manifest. Macro and
+Price Action preserve their accepted view structures behind purpose-specific
+Board adapters. The decision is recorded in
 [`ADR 0011`](adr/0011-standalone-board-only-delivery.md).
 
 ## Current Status
@@ -74,15 +75,15 @@ behind purpose-specific Board adapters. The decision is recorded in
 | Area | Status | Acceptance |
 | --- | --- | --- |
 | Broker-Live product knowledge | implemented | focused known/unknown and leveraged-product self-test |
-| Purpose-specific Board visual adapters | implemented | four frozen view structures render in standalone HTML |
+| Purpose-specific Board visual adapters | implemented | Macro and Price Action structures render in standalone HTML |
 | Private Runtime ownership | implemented | temporary-runtime idempotence, health, and data-preservation self-test |
-| Artifact Packet facade | implemented | three Board reference packets and immutable writes remain stable |
+| Artifact Packet facade | implemented | supported Board reference packets and immutable writes remain stable |
 | ResearchResult delivery seam | implemented | focused self-test and deterministic output |
 | ArtifactPacket compatibility | retained | focused compatibility self-test |
 | Bayesian decision support | implemented | Skill and ResearchResult contract name prior, evidence update, posterior decision, and next check |
 | Macro standalone Board | user accepted structure | direct-open inspection with real data |
 | Price Action standalone Board | user accepted structure | direct-open inspection with real data |
-| Portfolio Risk standalone Board | user accepted structure | direct-open inspection with authorized read-only data |
+| Holdings Display | implemented | fresh consent, factual default-broker snapshot, no derived risk analysis |
 | Optional PNG export | user accepted | explicit export and visual inspection |
 | Legacy code, cache, database, fixture, and test cleanup | verified candidate | cleanup ledger and repository scan passed |
 | Portable Skill distribution | verified candidate | Skill gate and isolated install smoke passed |

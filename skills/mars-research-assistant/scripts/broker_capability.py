@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Consent-gated, capability-only discovery for supported read-only brokers."""
+"""Capability-only discovery for broker market and macro sources."""
 
 from __future__ import annotations
 
@@ -17,25 +17,18 @@ IBKR_TASK_TOOL_PREFIX = "mcp__codex_apps__interactive_brokers__"
 
 def probe_broker_capabilities(
     *,
-    read_only_confirmed: bool,
     longbridge_runner: Callable[..., Any] = subprocess.run,
     task_tool_names: Iterable[str] = (),
 ) -> dict[str, object]:
     """Return normalized capability state without retaining broker responses.
 
     This is intentionally not an account-data adapter. Longbridge runs only its
-    documented connectivity/token check after consent. IBKR has no portable
-    credential store; the host supplies only its current task-visible tool names.
+    documented connectivity/token check. IBKR has no portable credential store;
+    the host supplies only its current task-visible tool names.
     """
 
-    if read_only_confirmed is not True:
-        return {
-            "authorization_state": "authorization_pending",
-            "capability_probes": None,
-        }
-
     return {
-        "authorization_state": "confirmed",
+        "capability_state": "checked",
         "capability_probes": {
             "longbridge": _capability_probe(_probe_longbridge(longbridge_runner)),
             "ibkr": _capability_probe(_probe_ibkr(task_tool_names)),
@@ -70,12 +63,7 @@ def _probe_ibkr(task_tool_names: Iterable[str]) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run consent-gated, capability-only broker checks without reading account data."
-    )
-    parser.add_argument(
-        "--confirm-read-only",
-        action="store_true",
-        help="Required before the Longbridge capability check is invoked.",
+        description="Run capability-only broker checks without reading account data."
     )
     parser.add_argument(
         "--task-tool",
@@ -91,7 +79,6 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     result = probe_broker_capabilities(
-        read_only_confirmed=args.confirm_read_only,
         task_tool_names=args.task_tool,
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic, no-I/O routing for unscoped Mars Daily Ops phases."""
+"""Deterministic, no-I/O routing for guided Mars Daily Ops."""
 
 from __future__ import annotations
 
@@ -10,10 +10,8 @@ import json
 
 CAPABILITY_STATES = frozenset({"pending", "checked"})
 MACRO_STATES = frozenset({"pending", "delivered", "blocked"})
-PORTFOLIO_REVIEW_STATES = frozenset({"undecided", "requested", "declined"})
-PORTFOLIO_STATES = frozenset(
-    {"not_read", "ready", "option_overlay_partial", "core_gap"}
-)
+HOLDINGS_REVIEW_STATES = frozenset({"undecided", "requested", "declined"})
+HOLDINGS_STATES = frozenset({"not_read", "displayed", "unavailable"})
 
 
 @dataclass(frozen=True)
@@ -29,43 +27,39 @@ def resolve_daily_ops_route(
     intent: str,
     capability_state: str,
     macro_state: str,
-    portfolio_review: str,
-    broker_authorized: bool,
-    portfolio_state: str,
+    holdings_review: str,
+    holdings_state: str,
 ) -> DailyOpsRoute:
-    """Return one phase's required Board or data action without side effects.
+    """Return one guided Daily Ops action without performing I/O.
 
-    An unscoped workflow is intentionally stateful: source capability is checked
-    before public acquisition, account data needs its own portfolio-review
-    consent, and individual research, Price Action, and trade guidance remain
-    user-selected. A directly named instrument remains focused.
+    Capability checks establish eligible market/macro sources. Macro is the
+    default artifact for an unscoped start. Holdings Display is optional and
+    can only follow fresh user consent. A named instrument always bypasses the
+    optional holdings step.
     """
 
     if intent == "instrument_request":
-        return DailyOpsRoute(("instrument_research_or_price_action",), ())
+        return DailyOpsRoute(("run_named_instrument_research_bundle",), ())
     if intent != "unscoped_daily_start":
         raise ValueError("daily_ops_intent_invalid")
     if capability_state not in CAPABILITY_STATES:
         raise ValueError("daily_ops_capability_state_invalid")
     if macro_state not in MACRO_STATES:
         raise ValueError("daily_ops_macro_state_invalid")
-    if portfolio_review not in PORTFOLIO_REVIEW_STATES:
-        raise ValueError("daily_ops_portfolio_review_state_invalid")
-    if portfolio_state not in PORTFOLIO_STATES:
-        raise ValueError("daily_ops_portfolio_state_invalid")
-    if not broker_authorized and portfolio_state != "not_read":
-        raise ValueError("portfolio_state_requires_broker_authorization")
+    if holdings_review not in HOLDINGS_REVIEW_STATES:
+        raise ValueError("daily_ops_holdings_review_state_invalid")
+    if holdings_state not in HOLDINGS_STATES:
+        raise ValueError("daily_ops_holdings_state_invalid")
 
     if capability_state == "pending":
         return DailyOpsRoute(
             ("check_broker_capability",),
             (
                 "prose_only_macro_summary",
-                "render_macro_research_result_or_blocker",
-                "custom_html_board",
-                "request_read_only_broker_authorization",
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
+                "acquire_macro_fields_and_render_research_result_or_blocker",
+                "read_default_broker_holdings",
+                "render_holdings_display",
+                "derived_holdings_risk_analysis",
                 "individual_research",
                 "price_action",
                 "trade_guidance",
@@ -73,13 +67,12 @@ def resolve_daily_ops_route(
         )
     if macro_state == "pending":
         return DailyOpsRoute(
-            ("render_macro_research_result_or_blocker",),
+            ("acquire_macro_fields_and_render_research_result_or_blocker",),
             (
                 "prose_only_macro_summary",
-                "custom_html_board",
-                "request_read_only_broker_authorization",
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
+                "read_default_broker_holdings",
+                "render_holdings_display",
+                "derived_holdings_risk_analysis",
                 "individual_research",
                 "price_action",
                 "trade_guidance",
@@ -89,106 +82,32 @@ def resolve_daily_ops_route(
         return DailyOpsRoute(
             ("macro_data_acquisition_blocker",),
             (
-                "custom_html_board",
-                "request_read_only_broker_authorization",
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
+                "render_holdings_display",
+                "derived_holdings_risk_analysis",
                 "individual_research",
                 "price_action",
                 "trade_guidance",
             ),
         )
-    if portfolio_review == "undecided":
+    if holdings_review == "requested" and holdings_state == "not_read":
         return DailyOpsRoute(
-            ("ask_portfolio_review_consent",),
+            ("read_consented_default_broker_holdings_and_render_display",),
             (
-                "request_read_only_broker_authorization",
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
+                "derived_holdings_risk_analysis",
                 "individual_research",
                 "price_action",
                 "trade_guidance",
             ),
         )
-    if portfolio_review == "declined":
+    if holdings_review == "requested" and holdings_state == "unavailable":
         return DailyOpsRoute(
-            ("ask_user_to_select_research_request",),
-            (
-                "request_read_only_broker_authorization",
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
-                "individual_research",
-                "price_action",
-                "trade_guidance",
-            ),
-        )
-    if not broker_authorized:
-        return DailyOpsRoute(
-            ("request_read_only_broker_authorization",),
-            (
-                "read_portfolio_baseline",
-                "portfolio_risk_board",
-                "individual_research",
-                "price_action",
-                "trade_guidance",
-            ),
-        )
-    if portfolio_state == "not_read":
-        return DailyOpsRoute(
-            ("read_portfolio_baseline",),
-            (
-                "individual_research",
-                "price_action",
-                "trade_guidance",
-                "request_secondary_broker",
-            ),
-        )
-    if portfolio_state == "ready":
-        return DailyOpsRoute(
-            (
-                "render_portfolio_research_result",
-                "ask_user_to_select_research_request",
-            ),
-            (
-                "custom_html_board",
-                "individual_research",
-                "price_action",
-                "trade_guidance",
-                "request_secondary_broker",
-            ),
-        )
-    if portfolio_state == "option_overlay_partial":
-        return DailyOpsRoute(
-            (
-                "render_portfolio_research_result_partial",
-                "ask_user_to_select_research_request",
-            ),
-            (
-                "custom_html_board",
-                "individual_research",
-                "price_action",
-                "trade_guidance",
-                "request_secondary_broker",
-            ),
+            ("holdings_display_data_gap", "offer_next_research_action"),
+            ("derived_holdings_risk_analysis", "individual_research", "price_action", "trade_guidance"),
         )
     return DailyOpsRoute(
-        ("portfolio_data_gap", "ask_user_to_select_research_request"),
-        (
-            "individual_research",
-            "price_action",
-            "trade_guidance",
-            "request_secondary_broker",
-        ),
+        ("offer_next_research_action",),
+        ("derived_holdings_risk_analysis", "individual_research", "price_action", "trade_guidance"),
     )
-
-
-def _parse_bool(value: str) -> bool:
-    normalized = value.strip().casefold()
-    if normalized == "true":
-        return True
-    if normalized == "false":
-        return False
-    raise argparse.ArgumentTypeError("expected true or false")
 
 
 def main() -> int:
@@ -198,27 +117,19 @@ def main() -> int:
         required=True,
         choices=("unscoped_daily_start", "instrument_request"),
     )
-    parser.add_argument(
-        "--capability-state", required=True, choices=sorted(CAPABILITY_STATES)
-    )
+    parser.add_argument("--capability-state", required=True, choices=sorted(CAPABILITY_STATES))
     parser.add_argument("--macro-state", required=True, choices=sorted(MACRO_STATES))
     parser.add_argument(
-        "--portfolio-review", required=True, choices=sorted(PORTFOLIO_REVIEW_STATES)
+        "--holdings-review", required=True, choices=sorted(HOLDINGS_REVIEW_STATES)
     )
-    parser.add_argument("--broker-authorized", required=True, type=_parse_bool)
-    parser.add_argument(
-        "--portfolio-state",
-        required=True,
-        choices=sorted(PORTFOLIO_STATES),
-    )
+    parser.add_argument("--holdings-state", required=True, choices=sorted(HOLDINGS_STATES))
     args = parser.parse_args()
     route = resolve_daily_ops_route(
         intent=args.intent,
         capability_state=args.capability_state,
         macro_state=args.macro_state,
-        portfolio_review=args.portfolio_review,
-        broker_authorized=args.broker_authorized,
-        portfolio_state=args.portfolio_state,
+        holdings_review=args.holdings_review,
+        holdings_state=args.holdings_state,
     )
     print(json.dumps(asdict(route), sort_keys=True))
     return 0

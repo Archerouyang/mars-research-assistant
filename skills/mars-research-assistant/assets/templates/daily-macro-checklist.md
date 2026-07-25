@@ -30,7 +30,7 @@ policy/data -> rates/liquidity/USD/sector -> earnings or valuation -> ticker imp
 - Crowded trades:
 - Trades to avoid:
 
-## Portfolio Risk
+## Holdings Context
 
 - Biggest shared macro exposure:
 - Event risk today:

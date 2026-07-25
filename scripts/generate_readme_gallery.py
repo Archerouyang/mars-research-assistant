@@ -111,18 +111,6 @@ def main() -> None:
             "readme-price-action",
         ]
     )
-    run(
-        [
-            sys.executable,
-            str(SCRIPTS / "position_risk_artifact.py"),
-            str(FIXTURES / "position-risk-representative.json"),
-            "--display-output",
-            str(output / "position-risk-panel.svg"),
-            "--artifact-id",
-            "readme-position-risk",
-        ]
-    )
-
     browser = find_browser(args.browser_path)
     if args.browser_mode == "required" and browser is None:
         raise SystemExit("Chrome/Chromium is required to capture the PA README image")

@@ -24,12 +24,6 @@ REFERENCE_PACKETS = {
         "html": (1148088, "d06b51bfd19c56846f4543b0ca83d8d783ee9965e7ebac6431e07cfd3618865e"),
         "manifest": (842, "987ac2bf5f9657dd16d9709d5734169ce98ccae93d5fbdc6b65da453a82fa9f7"),
     },
-    "portfolio-risk": {
-        "board": "portfolio_risk",
-        "json": (19233, "f690292d79ed3e60afe1922025fd0fcadd124acb8eec603b0c47e0bc34b7f806"),
-        "html": (1175902, "015337bc914d0c4212e1114ce66784c488103db36a69c7037745315e83c62fcc"),
-        "manifest": (844, "bb07a6482a64ba2163b79ed0bf929eb7220fea16e77877e92fcb9e4049478b76"),
-    },
 }
 SUPPORTED_PUBLIC_INTERFACE = {
     "ArtifactPacket",

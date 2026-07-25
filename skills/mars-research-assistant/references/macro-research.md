@@ -16,20 +16,23 @@ small and entirely field-contract driven:
   calendars;
 - White House Presidential Actions as a bounded U.S. executive-policy record.
 
-The exact source URL, column/path, timing, and unit for every retained field
-live in `mars-1-0-observation-source-contracts.json`. The host must use this
-sequence for every refresh:
+The exact field identity, unit, timing, and source path for every retained
+field live in `mars-1-0-observation-source-contracts.json`. The host must use
+this source order for every refresh:
 
 ```text
-web search -> direct open of the exact contract URL -> MarsWebCapture ->
-mars_observation_adapter.py -> macro_preflight.py
+Longbridge/IBKR capability check -> exact broker market or macro field when
+available -> exact public primary-source fallback -> normalized field record ->
+macro_preflight.py
 ```
 
-`MarsWebCapture` is transient and requires a direct-open receipt for every
-contract source. The public `run_macro_board` seam accepts that typed capture
-only: it does not accept a generic payload map, broker configuration, proxy,
-search-result snippet, caller-derived ratio, or prewritten `ResearchResult`.
-Raw page responses remain in memory and are never persisted by the Skill.
+The broker route is field-level, not a blanket source preference: it may be
+used only when the returned field has exact identity, native path, unit,
+timestamp, and completed-close/reference-period basis. For every unsupported
+or incomplete broker field, use the registered public primary source instead.
+Search-result snippets, ETF proxies, caller-derived ratios, and prewritten
+`ResearchResult` objects are not field inputs. Raw provider responses remain in
+memory and are never persisted by the Skill.
 
 Every retained field is required. Completed-market fields must equal the latest
 common completed close; official releases must identify the latest published
@@ -44,7 +47,7 @@ unsupported, conflicted, or source-error field returns one `Data Acquisition
 Blocker`. It never produces a partial Board, placeholder, or proxy-backed
 result.
 
-Start every Mars Macro request with the direct-public acquisition sequence
+Start every Mars Macro request with the field-contract acquisition sequence
 above. The absence of a saved `macro-panel.json`, a prior standalone Board, a
 private runtime, or a broker configuration is only a missing historical
 baseline; it must not block today's public field acquisition. A complete capture
@@ -58,27 +61,18 @@ If the user declines persistence, retain no saved runtime artifact and state
 only that historical comparison is unavailable. Never combine permission to
 read public sources with permission to persist private runtime state.
 
-Read-only broker setup is separate and only applies to a later
-account/portfolio-personalized workflow. Until the user confirms it, report
-`authorization_pending` for broker capability only and do not call a broker
-probe. After confirmation, run
-`scripts/broker_capability.py --confirm-read-only --format json`: Longbridge
-uses only `check --format json`; IBKR can be marked available only by a
-current-task Interactive Brokers MCP tool name passed as `--task-tool`. Do not
-infer tool names from user text or call an IBKR endpoint. Do not read positions,
-accounts, balances, tokens, or market payloads. Show the user the available
-choices, require exactly one default broker, and explicitly confirm read-only
-use before writing the minimal private `mars-runtime-config.json` with
-`configure_first_run`. Public and official field routes do not switch the
-configured broker. `run_macro_board_from_runtime` remains a compatibility name
-for the public blocker-or-Board seam; it does not inspect, require, or write
-private broker configuration.
+Run `scripts/broker_capability.py` before Macro acquisition. Longbridge uses
+only `check --format json`; IBKR is available only when the current task
+exposes an Interactive Brokers market-data-capable tool. Do not infer tool names
+from user text and do not call positions, accounts, balances, orders, or tokens.
+The capability result is not an account authorization and does not choose a
+portfolio source.
 
-Macro Board fields never come from Longbridge, IBKR, an ETF proxy, a search
-snippet, media, or a calendar summary. Broker selection is relevant only to
-separately authorized account and portfolio workflows. A direct public source
-discovered with Web search may be added only with an exact source map,
-synthetic fixture, and regression test; otherwise the field stays absent.
+Macro field sources may be Longbridge macrodata/market data, IBKR market data,
+or a registered direct public primary fallback. A field must name its actual
+source in the normalized record. A direct source discovered by Web search may
+be admitted only with an exact source map, synthetic fixture, and regression
+test; otherwise it remains unavailable and blocks the Board.
 
 The following are currently excluded: HYG/LQD, SPX, DXY, Brent, gold, and S&P
 500 forward P/E. Do not restore any with a proxy or approximation. A later
@@ -142,9 +136,10 @@ override the direct-web gate above:
    write. Do not emit an iframe, parallel inline fragment, or cross-unit bar
    chart.
 
-Do not use this CLI-first sequence to populate a Mars Board, reinterpret
-missing data as authorization failure, relabel a proxy as an exact index, or
-add a second visual delivery path.
+Use this CLI-first sequence for eligible Mars Board fields only after preserving
+the exact source identity and normalized field contract. Do not reinterpret
+missing data as authorization failure, relabel a proxy as an exact index, or add
+a second visual delivery path.
 
 The retained read-only implementation surface is
 `scripts/longbridge_macrodata_adapter.py` for normalized Longbridge responses
@@ -154,8 +149,8 @@ panel. Neither helper reads broker positions or performs order actions.
 ## Mars Standalone Format
 
 Mars 1.0 keeps one self-contained `standalone_board` artifact. It renders only
-the four direct-field surfaces named above. A failed direct source is a Blocker,
-not an empty panel and not a partial artifact.
+the four field-contract surfaces named above. A failed required source path is
+a Blocker, not an empty panel and not a partial artifact.
 
 The Board must open without host CSS or network access, and its snapshot, HTML,
 and manifest remain paired. Layout and new interaction surfaces still require

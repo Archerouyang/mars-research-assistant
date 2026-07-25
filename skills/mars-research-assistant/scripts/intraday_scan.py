@@ -83,7 +83,7 @@ def next_step(row: dict[str, str]) -> str:
             return "execution_check_required; confirm trigger-timeframe follow-through and risk"
         return "confirm trigger-timeframe follow-through and risk before any action"
     if status == "needs_review":
-        return "review plan quality, portfolio risk, and missing data"
+        return "review plan quality, holdings facts, and missing data"
     if status == "approaching":
         return "wait for trigger-timeframe confirmation; verify blockers"
     if status == "active":

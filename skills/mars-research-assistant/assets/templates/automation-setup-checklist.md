@@ -49,7 +49,7 @@ Use only the automations with stable prompt contracts:
 - `quick_update_prompt`: weekday premarket or fast daily update.
 - `intraday_trigger_monitor`: market-hours monitor for prepared setups only.
 - `post_market_review_prompt`: end-of-day setup and review cleanup.
-- `position_daily_report`: read-only holdings and risk summary.
+- `holdings_display`: consented read-only holdings facts only.
 - `macro_industry_research_monitor`: recurring focused search over confirmed
   weekly P0/P1 variables.
 - `broker_reconciliation_prompt`: optional read-only broker fact alignment when

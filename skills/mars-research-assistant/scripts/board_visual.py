@@ -9,7 +9,6 @@ from typing import Any, Mapping
 from board_visual_contract import BoardVisualAdapter, BoardVisualError, required_text
 import instrument_board_visual
 import macro_board_visual
-import portfolio_board_visual
 import price_action_board_visual
 
 
@@ -18,10 +17,6 @@ ADAPTERS: Mapping[str, BoardVisualAdapter] = {
     "instrument": BoardVisualAdapter(
         instrument_board_visual.normalize,
         instrument_board_visual.render,
-    ),
-    "portfolio": BoardVisualAdapter(
-        portfolio_board_visual.normalize,
-        portfolio_board_visual.render,
     ),
     "price_action": BoardVisualAdapter(
         price_action_board_visual.normalize,

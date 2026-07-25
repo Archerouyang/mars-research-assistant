@@ -4,11 +4,9 @@ Before concrete levels, establish `ticker + trade_horizon + instrument`. Use the
 user's confirmed primary timeframe; auxiliary timeframes refine execution but do
 not overwrite the primary structure.
 
-In an unscoped Daily Ops session, never start this workflow because a Macro or
-Portfolio Risk Board has completed. Ask whether the user wants Price Action or
-trade guidance first. Run it only for a user-named ticker with the complete
-`ticker + trade_horizon + instrument` context; a request to choose the next
-research mode is not that request.
+Do not start Price Action merely because a Macro Board or Holdings Display
+completed. A user-named ticker starts the named-instrument package and defaults
+to the 4H PA Board unless the user narrows the requested scope.
 
 Use authorized OHLCV or user-provided chart data. Distinguish observed structure
 from interpretation. Include current price, relevant EMA context, support,

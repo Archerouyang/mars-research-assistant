@@ -8,7 +8,6 @@ from typing import Any, Mapping
 from artifact_packet_core import ArtifactPacketError, BoardAdapter
 import artifact_packet_instrument_adapter as instrument
 import artifact_packet_macro_adapter as macro
-import artifact_packet_portfolio_adapter as portfolio
 
 
 BOARD_ADAPTERS: Mapping[tuple[str, str], BoardAdapter] = {
@@ -27,16 +26,6 @@ BOARD_ADAPTERS: Mapping[tuple[str, str], BoardAdapter] = {
         render=macro.render_board,
         allowed_modules=frozenset(macro.REQUIRED_MACRO_MODULES),
         freshness_policies=macro.FRESHNESS_POLICIES,
-    ),
-    (portfolio.BOARD_ID, "1"): BoardAdapter(
-        board_id=portfolio.BOARD_ID,
-        payload_version=portfolio.PAYLOAD_VERSION,
-        validate_payload=portfolio.validate_payload,
-        render=portfolio.render_board,
-        allowed_modules=frozenset(portfolio.REQUIRED_PORTFOLIO_MODULES),
-        freshness_policies=portfolio.FRESHNESS_POLICIES,
-        allow_snapshot_action_term=portfolio.allow_snapshot_action_term,
-        validate_snapshot_text=portfolio.validate_snapshot_text,
     ),
 }
 

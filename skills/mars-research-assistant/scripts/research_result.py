@@ -19,7 +19,7 @@ from standalone_board import build_standalone_board
 
 SCHEMA_VERSION = "1.0"
 RESULT_KINDS = frozenset(
-    {"operations", "macro", "instrument", "portfolio", "price_action", "report"}
+    {"operations", "macro", "instrument", "price_action", "report"}
 )
 EVIDENCE_STATES = frozenset({"complete", "partial", "stale", "source_error"})
 EVIDENCE_TYPES = frozenset({"fact", "inference", "thesis", "counter_thesis"})

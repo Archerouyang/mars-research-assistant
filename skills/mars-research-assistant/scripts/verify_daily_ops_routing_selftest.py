@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression coverage for the unscoped Daily Ops Board-first state machine."""
+"""Behavior checks for the guided Mars Daily Ops router."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from research_result import build_delivery_packet
 
 ROOT = Path(__file__).resolve().parents[1]
 MACRO_FIXTURE = ROOT / "assets" / "fixtures" / "input" / "macro-regime-complete.json"
-PORTFOLIO_FIXTURE = ROOT / "assets" / "fixtures" / "input" / "portfolio-risk-complete.json"
 AS_OF = "2026-07-17T10:00:00Z"
 
 
@@ -29,19 +28,10 @@ def _refresh_content_hash(snapshot: dict[str, object]) -> None:
     snapshot["content_hash"] = sha256_hex(canonical_json_bytes(content))
 
 
-def _research_result(
-    kind: str,
-    visual: dict[str, object],
-    *,
-    partial: bool = False,
-    privacy: str = "public_fixture",
-) -> dict[str, object]:
-    """Build a minimal public result through the production delivery seam."""
-
-    evidence_status = "partial" if partial else "complete"
+def _macro_result(snapshot: dict[str, object]) -> dict[str, object]:
     return {
         "schema_version": "1.0",
-        "result_kind": kind,
+        "result_kind": "macro",
         "as_of": AS_OF,
         "decision": "Preserve the current evidence gate until confirmation.",
         "key_evidence": [
@@ -49,7 +39,7 @@ def _research_result(
                 "label": "Canonical Board fixture",
                 "value": "Render through the registered visual adapter.",
                 "evidence_type": "fact",
-                "status": evidence_status,
+                "status": "complete",
                 "as_of": AS_OF,
                 "source_refs": ["fixture"],
             }
@@ -57,119 +47,12 @@ def _research_result(
         "risks": [],
         "scenarios": [],
         "next_checks": ["Refresh the decision-sensitive source."],
-        "data_gaps": (
-            [
-                {
-                    "label": "Option overlay Greeks",
-                    "reason": "The overlay is excluded from delta and stress arithmetic.",
-                    "status": "partial",
-                }
-            ]
-            if partial
-            else []
-        ),
-        "sources": [
-            {
-                "id": "fixture",
-                "label": "Synthetic fixture",
-                "priority": "S1",
-                "as_of": AS_OF,
-            }
-        ],
-        "privacy": privacy,
+        "data_gaps": [],
+        "sources": [{"id": "fixture", "label": "Synthetic fixture", "priority": "S1", "as_of": AS_OF}],
+        "privacy": "public_fixture",
         "locale": "zh-CN",
-        "visual": visual,
+        "visual": {"adapter": "macro", "snapshot": snapshot, "default_view": "Overview"},
     }
-
-
-def _require_markers_in_order(html: bytes, markers: tuple[bytes, ...], message: str) -> None:
-    positions = [html.find(marker) for marker in markers]
-    require(all(position >= 0 for position in positions), message)
-    require(positions == sorted(positions), message)
-
-
-def _option_overlay_snapshot() -> dict[str, object]:
-    """Return a valid partial Board where an option's Greeks are unavailable."""
-
-    snapshot = json.loads(PORTFOLIO_FIXTURE.read_text(encoding="utf-8"))
-    payload = snapshot["payload"]
-    option = next(
-        position
-        for position in payload["positions"]
-        if position["product_type"] == "option"
-    )
-    option["option_greeks"] = None
-    option["delta_exposure"] = None
-    option["source_delta_exposure"] = None
-
-    included = [position for position in payload["positions"] if not position["excluded"]]
-    totals = payload["totals"]
-    totals["gross_market_value"] = sum(abs(position["market_value"]) for position in included)
-    totals["net_market_value"] = sum(position["market_value"] for position in included)
-    totals["gross_delta_exposure"] = sum(
-        abs(position["delta_exposure"] or 0.0) for position in included
-    )
-    totals["net_delta_exposure"] = sum(
-        position["delta_exposure"] or 0.0 for position in included
-    )
-    totals["options_delta_included"] = False
-
-    positions_by_id = {position["id"]: position for position in payload["positions"]}
-    for rows in payload["aggregations"].values():
-        for row in rows:
-            positions = [positions_by_id[position_id] for position_id in row["affected_position_ids"]]
-            row["direct_market_value"] = sum(position["direct_exposure"] for position in positions)
-            row["delta_exposure"] = sum(position["delta_exposure"] or 0.0 for position in positions)
-            row["notional_exposure"] = sum(position["notional_exposure"] for position in positions)
-            row["weight_pct"] = round(
-                100.0
-                * sum(abs(position["delta_exposure"] or 0.0) for position in positions)
-                / totals["gross_delta_exposure"],
-                1,
-            )
-
-    missing_option_id = option["id"]
-    scope = totals["gross_delta_exposure"]
-    unscoped_derivative_notional = abs(option["notional_exposure"])
-    for scenario in payload["stress_scenarios"]:
-        scenario["affected_position_ids"] = [
-            position_id
-            for position_id in scenario["affected_position_ids"]
-            if position_id != missing_option_id
-        ]
-        scenario["affected_holdings"] = [
-            positions_by_id[position_id]["symbol"]
-            for position_id in scenario["affected_position_ids"]
-        ]
-        scenario["impact_contributions"] = [
-            contribution
-            for contribution in scenario["impact_contributions"]
-            if contribution["position_id"] != missing_option_id
-        ]
-        scenario["estimated_impact"] = sum(
-            contribution["estimated_impact"]
-            for contribution in scenario["impact_contributions"]
-        )
-        scenario["covered_exposure"] = sum(
-            abs(positions_by_id[position_id]["delta_exposure"] or 0.0)
-            for position_id in scenario["affected_position_ids"]
-        )
-        scenario["missing_exposure"] = scope - scenario["covered_exposure"]
-        scenario["unscoped_derivative_notional"] = unscoped_derivative_notional
-        scenario["status"] = "partial"
-        scenario["gap_reason"] = "Option overlay Greeks are unavailable and excluded from delta stress."
-
-    for module in payload["modules"]:
-        if module["id"] in {"product_risk", "stress_inputs"}:
-            module["evidence_state"] = "partial"
-            module["gap_reason"] = "Option overlay Greeks are unavailable."
-    snapshot["coverage"] = {"required_complete": 4, "required_total": 6}
-    snapshot["evidence_state"] = "partial"
-    snapshot["state_reasons"].append(
-        "Option overlay remains visible but is excluded from delta and stress calculations."
-    )
-    _refresh_content_hash(snapshot)
-    return snapshot
 
 
 def main() -> int:
@@ -177,334 +60,99 @@ def main() -> int:
         intent="unscoped_daily_start",
         capability_state="pending",
         macro_state="pending",
-        portfolio_review="undecided",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="undecided",
+        holdings_state="not_read",
     )
     require(
         capability_pending.required_actions == ("check_broker_capability",),
-        "an unscoped start must check broker capability before Macro acquisition",
+        "an unscoped start must check both broker capabilities before Macro acquisition",
     )
     require(
-        {
-            "prose_only_macro_summary",
-            "render_macro_research_result_or_blocker",
-            "read_portfolio_baseline",
-            "individual_research",
-            "price_action",
-            "trade_guidance",
-        }
+        {"read_default_broker_holdings", "derived_holdings_risk_analysis", "price_action"}
         <= set(capability_pending.forbidden_actions),
-        "a capability probe must not read holdings or begin analysis",
+        "a capability check must not read private holdings or start analysis",
     )
 
     macro_pending = resolve_daily_ops_route(
         intent="unscoped_daily_start",
         capability_state="checked",
         macro_state="pending",
-        portfolio_review="undecided",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="undecided",
+        holdings_state="not_read",
     )
     require(
-        macro_pending.required_actions == ("render_macro_research_result_or_blocker",),
-        "a checked source baseline must deliver Macro before portfolio review",
-    )
-    require(
-        {"prose_only_macro_summary", "custom_html_board", "read_portfolio_baseline"}
-        <= set(macro_pending.forbidden_actions),
-        "the Macro Board must not degrade into prose or trigger an account read",
-    )
-
-    macro_blocked = resolve_daily_ops_route(
-        intent="unscoped_daily_start",
-        capability_state="checked",
-        macro_state="blocked",
-        portfolio_review="undecided",
-        broker_authorized=False,
-        portfolio_state="not_read",
-    )
-    require(
-        macro_blocked.required_actions == ("macro_data_acquisition_blocker",),
-        "a failed Macro preflight must return the one acquisition blocker",
+        macro_pending.required_actions == ("acquire_macro_fields_and_render_research_result_or_blocker",),
+        "an unscoped start must automatically deliver Macro after capability detection",
     )
 
     after_macro = resolve_daily_ops_route(
         intent="unscoped_daily_start",
         capability_state="checked",
         macro_state="delivered",
-        portfolio_review="undecided",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="undecided",
+        holdings_state="not_read",
     )
     require(
-        after_macro.required_actions == ("ask_portfolio_review_consent",),
-        "Macro delivery must ask before reading a broker portfolio",
+        after_macro.required_actions == ("offer_next_research_action",),
+        "Macro completion must guide the user rather than force a holdings read",
     )
     require(
-        {
-            "request_read_only_broker_authorization",
-            "read_portfolio_baseline",
-            "individual_research",
-            "price_action",
-            "trade_guidance",
-        }
-        <= set(after_macro.forbidden_actions),
-        "a delivered Macro Board must not automatically open account or instrument work",
+        "derived_holdings_risk_analysis" in after_macro.forbidden_actions,
+        "the guided flow must never derive risk analysis from an optional display",
     )
 
-    portfolio_declined = resolve_daily_ops_route(
+    holdings_requested = resolve_daily_ops_route(
         intent="unscoped_daily_start",
         capability_state="checked",
         macro_state="delivered",
-        portfolio_review="declined",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="requested",
+        holdings_state="not_read",
     )
     require(
-        portfolio_declined.required_actions == ("ask_user_to_select_research_request",),
-        "declining portfolio review must leave the next research mode to the user",
+        holdings_requested.required_actions == ("read_consented_default_broker_holdings_and_render_display",),
+        "holdings may be read only after explicit user selection",
     )
     require(
-        {"read_portfolio_baseline", "individual_research", "price_action", "trade_guidance"}
-        <= set(portfolio_declined.forbidden_actions),
-        "declining portfolio review must not trigger PA or trade guidance",
+        "derived_holdings_risk_analysis" in holdings_requested.forbidden_actions,
+        "a consented holdings read must remain display-only",
     )
 
-    portfolio_requested_unauthorized = resolve_daily_ops_route(
+    holdings_unavailable = resolve_daily_ops_route(
         intent="unscoped_daily_start",
         capability_state="checked",
         macro_state="delivered",
-        portfolio_review="requested",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="requested",
+        holdings_state="unavailable",
     )
     require(
-        portfolio_requested_unauthorized.required_actions == ("request_read_only_broker_authorization",),
-        "portfolio review requires a separate account-read authorization",
+        holdings_unavailable.required_actions == ("holdings_display_data_gap", "offer_next_research_action"),
+        "a failed holdings read must disclose the gap and return control to the user",
     )
 
-    portfolio_requested = resolve_daily_ops_route(
-        intent="unscoped_daily_start",
-        capability_state="checked",
-        macro_state="delivered",
-        portfolio_review="requested",
-        broker_authorized=True,
-        portfolio_state="not_read",
-    )
-    require(
-        portfolio_requested.required_actions == ("read_portfolio_baseline",),
-        "authorized holdings must be read only after the user requests portfolio review",
-    )
-
-    ready = resolve_daily_ops_route(
-        intent="unscoped_daily_start",
-        capability_state="checked",
-        macro_state="delivered",
-        portfolio_review="requested",
-        broker_authorized=True,
-        portfolio_state="ready",
-    )
-    require(
-        ready.required_actions
-        == ("render_portfolio_research_result", "ask_user_to_select_research_request"),
-        "usable holdings must produce the Portfolio Risk Board before a user-selected research prompt",
-    )
-    require(
-        {"custom_html_board", "individual_research", "price_action", "trade_guidance"}
-        <= set(ready.forbidden_actions),
-        "an unscoped portfolio baseline must not automatically start ticker, PA, or trade work",
-    )
-
-    overlay_partial = resolve_daily_ops_route(
-        intent="unscoped_daily_start",
-        capability_state="checked",
-        macro_state="delivered",
-        portfolio_review="requested",
-        broker_authorized=True,
-        portfolio_state="option_overlay_partial",
-    )
-    require(
-        overlay_partial.required_actions
-        == (
-            "render_portfolio_research_result_partial",
-            "ask_user_to_select_research_request",
-        ),
-        "missing option Greeks must yield a partial Portfolio Risk Board, not a broker fallback",
-    )
-    require(
-        "request_secondary_broker" in overlay_partial.forbidden_actions,
-        "an option overlay gap must not silently expand the authorized broker scope",
-    )
-    require(
-        "request_secondary_broker" in ready.forbidden_actions,
-        "a ready single-broker baseline must not invite a second broker",
-    )
-
-    core_gap = resolve_daily_ops_route(
-        intent="unscoped_daily_start",
-        capability_state="checked",
-        macro_state="delivered",
-        portfolio_review="requested",
-        broker_authorized=True,
-        portfolio_state="core_gap",
-    )
-    require(
-        core_gap.required_actions == ("portfolio_data_gap", "ask_user_to_select_research_request"),
-        "missing core holdings or capital context must stay a concrete gap before the user selects another research mode",
-    )
-    require(
-        {"individual_research", "price_action", "trade_guidance", "request_secondary_broker"}
-        <= set(core_gap.forbidden_actions),
-        "a core portfolio gap must not turn into ticker research or broker escalation",
-    )
-
-    macro_snapshot = json.loads(MACRO_FIXTURE.read_text(encoding="utf-8"))
-    macro_delivery = build_delivery_packet(
-        _research_result(
-            "macro",
-            {
-                "adapter": "macro",
-                "snapshot": macro_snapshot,
-                "default_view": "Overview",
-            },
-        )
-    )
-    macro_html = macro_delivery.standalone_board.html if macro_delivery.standalone_board else b""
-    _require_markers_in_order(
-        macro_html,
-        (
-            b'aria-label="\xe5\xae\x8f\xe8\xa7\x82\xe8\xa7\x86\xe5\x9b\xbe"',
-            b'data-view="trend"',
-            b'data-view="current"',
-            b'data-view="events"',
-            b'data-view="scenarios"',
-        ),
-        "the Macro delivery must retain the frozen canonical view controls",
-    )
-    for anchor in (b"macro-summary", b"trend-chart", b"scenario-grid"):
-        require(
-            anchor in macro_html,
-            f"the Macro delivery must retain the frozen renderer anchor: {anchor.decode()}",
-        )
-
-    portfolio_delivery = build_delivery_packet(
-        _research_result(
-            "portfolio",
-            {"adapter": "portfolio", "panel": _option_overlay_snapshot()},
-            partial=True,
-        )
-    )
-    html = portfolio_delivery.standalone_board.html if portfolio_delivery.standalone_board else b""
-    require(
-        b"Greeks unavailable" in html,
-        "the Portfolio Risk Board must visibly disclose missing option Greeks",
-    )
-    require(
-        b"Option overlay Greeks are unavailable" in html,
-        "the partial product-risk and stress gap must stay visible in the Board",
-    )
-    require(
-        b"SAMP 2026-09 C220" in html,
-        "the reported partial option must remain visible in the frozen Board",
-    )
-    _require_markers_in_order(
-        html,
-        (
-            b'aria-label="\xe7\xbb\x84\xe5\x90\x88\xe9\xa3\x8e\xe9\x99\xa9\xe8\xa7\x86\xe5\x9b\xbe"',
-            b'data-view="overview"',
-            b'data-view="symbol"',
-            b'data-view="fundamentals"',
-            b'data-view="theme"',
-            b'data-view="product"',
-            b'data-view="broker"',
-            b'data-view="stress"',
-        ),
-        "the partial Portfolio delivery must retain the frozen seven-view control order",
-    )
-    for anchor in (
-        b"portfolio-summary",
-        b"fundamentals-panel",
-        b"stress-panel",
-        b"risk-ledger-row",
-    ):
-        require(
-            anchor in html,
-            f"the Portfolio delivery must retain the frozen renderer anchor: {anchor.decode()}",
-        )
-
-    private_overlay = _option_overlay_snapshot()
-    private_overlay["privacy"] = "private_runtime"
-    _refresh_content_hash(private_overlay)
-    private_delivery = build_delivery_packet(
-        _research_result(
-            "portfolio",
-            {"adapter": "portfolio", "panel": private_overlay},
-            partial=True,
-            privacy="private",
-        )
-    )
-    require(
-        private_delivery.standalone_board is not None
-        and b"Option overlay Greeks are unavailable" in private_delivery.standalone_board.html,
-        "a private canonical snapshot must project into the same frozen partial Board",
-    )
-
-    explicit_instrument = resolve_daily_ops_route(
+    named_instrument = resolve_daily_ops_route(
         intent="instrument_request",
         capability_state="pending",
         macro_state="pending",
-        portfolio_review="undecided",
-        broker_authorized=False,
-        portfolio_state="not_read",
+        holdings_review="undecided",
+        holdings_state="not_read",
     )
     require(
-        explicit_instrument.required_actions == ("instrument_research_or_price_action",),
-        "a user-named instrument may take the focused route",
+        named_instrument.required_actions == ("run_named_instrument_research_bundle",),
+        "a named ticker must bypass optional Holdings Display",
     )
 
-    skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-    operations = (ROOT / "references" / "operations.md").read_text(encoding="utf-8")
-    template = (ROOT / "assets" / "templates" / "daily-ops-orchestrator.md").read_text(encoding="utf-8")
-    require("## Unscoped Daily Ops Baseline" in skill, "Skill must expose the Board-first baseline")
-    require("## Unscoped Daily Ops Baseline" in operations, "operations must own the Board-first baseline")
-    require("## 无标的 Daily Ops 启动基线" in template, "Daily Ops template must retain the Board-first baseline")
-    for document, label in ((skill, "Skill"), (operations, "operations"), (template, "template")):
-        require(
-            "daily_ops_routing.py" in document
-            and "capability_state" in document
-            and "option_overlay_partial" in document,
-            f"{label} must require the executable capability gate and partial option path",
-        )
-        require(
-            "request/read another broker" in document
-            or "second broker" in document
-            or "请求第二券商" in document
-            or "request_secondary_broker" in document
-            or "第二券商" in document,
-            f"{label} must prohibit automatic secondary-broker escalation",
-        )
-        require(
-            "Portfolio Risk Panel" in document
-            and ("ask whether" in document or "是否将默认券商持仓纳入本轮" in document)
-            and ("trade guidance" in document or "交易指导" in document),
-            f"{label} must ask for portfolio review and research mode before executing account or instrument work",
-        )
-    require(
-        "not an individual-option" in skill,
-        "Skill must keep option-purpose explanations out of individual research",
-    )
-    for document, label in ((skill, "Skill"), (operations, "operations"), (template, "template")):
-        require(
-            "first decision-bearing" in document or "第一个决策性用户交付" in document,
-            f"{label} must put the required Board or Blocker before prose status output",
-        )
-        require(
-            "ResearchResult" in document
-            and "research_result.py" in document
-            and "visualize" in document,
-            f"{label} must require the canonical renderer and prohibit alternate visuals",
-        )
+    macro_snapshot = json.loads(MACRO_FIXTURE.read_text(encoding="utf-8"))
+    _refresh_content_hash(macro_snapshot)
+    macro_delivery = build_delivery_packet(_macro_result(macro_snapshot))
+    macro_html = macro_delivery.standalone_board.html if macro_delivery.standalone_board else b""
+    for marker in (
+        b'aria-label="\xe5\xae\x8f\xe8\xa7\x82\xe8\xa7\x86\xe5\x9b\xbe"',
+        b'data-view="trend"',
+        b'data-view="current"',
+        b'data-view="events"',
+        b'data-view="scenarios"',
+    ):
+        require(marker in macro_html, "the Macro delivery must retain the frozen canonical view controls")
 
     print("daily ops routing selftest passed")
     return 0

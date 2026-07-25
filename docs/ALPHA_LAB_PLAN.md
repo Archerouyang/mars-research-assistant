@@ -15,7 +15,7 @@ Alpha Leaderboard snapshots.
 
 The public `mars-research-assistant` Skill will consume versioned snapshots and validation
 summaries. It owns natural-language routing, concise explanation, incremental
-analysis, Trade Plan Preparation, Price Action timing, and portfolio-risk
+analysis, Trade Plan Preparation, Price Action timing, and factual holdings
 context. It must not let an agent re-rank or rewrite deterministic model output.
 The existing optional external-snapshot router remains the current behavior
 until the Skill-integration slice and its executable contract are complete.

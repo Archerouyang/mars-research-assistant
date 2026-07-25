@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from mars_observation_adapter import ObservationAdapterError, load_mars_source_contract
 
@@ -23,11 +23,28 @@ class MarsWebCaptureError(ValueError):
     """Raised when the host has not provided a complete direct-web capture."""
 
 
+class MarsBrokerMarketCaptureError(ValueError):
+    """Raised when a normalized broker-market observation is unsafe to admit."""
+
+
 @dataclass(frozen=True)
 class MarsWebCapture:
     """Ephemeral direct-web capture; only Macro Preflight may consume it."""
 
     _source_payloads: Mapping[str, Any]
+    acquired_at: str
+
+
+@dataclass(frozen=True)
+class MarsBrokerMarketCapture:
+    """Ephemeral, normalized broker market/macro observations.
+
+    The host resolves a provider-specific Longbridge or IBKR response before
+    constructing this type. It intentionally accepts no account or raw provider
+    payload and retains only field-level market/macro observations.
+    """
+
+    observations: tuple[Mapping[str, Any], ...]
     acquired_at: str
 
 
@@ -96,18 +113,73 @@ def capture_mars_direct_web_observations(
 def normalize_captured_mars_observations(
     capture: MarsWebCapture,
     as_of: str,
+    *,
+    omitted_field_ids: Iterable[str] = (),
 ) -> tuple[dict[str, Any], ...]:
-    """Normalize only a typed direct-web capture; reject generic payloads."""
+    """Normalize direct fallback fields from a typed capture only.
+
+    `omitted_field_ids` is reserved for exact market fields already supplied by
+    the broker-market boundary. It never waives the session proof, event
+    allowlist, policy evidence, or official macro-release checks.
+    """
 
     if not isinstance(capture, MarsWebCapture):
         raise MarsWebCaptureError("direct_web_capture_required")
     try:
         from mars_observation_adapter import normalize_mars_observation_run
 
-        run = normalize_mars_observation_run(capture._source_payloads, as_of)
+        run = normalize_mars_observation_run(
+            capture._source_payloads,
+            as_of,
+            omitted_field_ids=omitted_field_ids,
+        )
     except ObservationAdapterError as error:
         raise MarsWebCaptureError(str(error)) from error
     return run.observations
+
+
+def capture_mars_broker_market_observations(
+    observations: Iterable[Mapping[str, Any]],
+    *,
+    acquired_at: str,
+) -> MarsBrokerMarketCapture:
+    """Bind already-normalized broker market fields without accepting raw data.
+
+    A record must identify one admitted Longbridge/IBKR market route and its
+    native field identity. Detailed field/unit/freshness checks remain owned by
+    Macro Preflight.
+    """
+
+    _parse_timestamp(acquired_at, "broker_market_capture_acquired_at")
+    rows: list[Mapping[str, Any]] = []
+    for row in observations:
+        if not isinstance(row, Mapping):
+            raise MarsBrokerMarketCaptureError("broker_market_observation_invalid")
+        source_id = row.get("source_id")
+        if source_id not in {"longbridge_market_data", "ibkr_market_data"}:
+            raise MarsBrokerMarketCaptureError("broker_market_source_not_supported")
+        if row.get("retrieval_method") != "broker_market_capture":
+            raise MarsBrokerMarketCaptureError("broker_market_method_invalid")
+        native_id = row.get("source_native_id")
+        if not isinstance(native_id, str) or not native_id.strip():
+            raise MarsBrokerMarketCaptureError("broker_market_native_id_missing")
+        rows.append(dict(row))
+    return MarsBrokerMarketCapture(observations=tuple(rows), acquired_at=acquired_at)
+
+
+def normalize_captured_broker_market_observations(
+    capture: MarsBrokerMarketCapture,
+    as_of: str,
+) -> tuple[dict[str, Any], ...]:
+    """Return typed broker observations only when capture timing is valid."""
+
+    if not isinstance(capture, MarsBrokerMarketCapture):
+        raise MarsBrokerMarketCaptureError("broker_market_capture_required")
+    cutoff = _parse_timestamp(as_of, "decision_cutoff")
+    acquired_at = _parse_timestamp(capture.acquired_at, "broker_market_capture_acquired_at")
+    if acquired_at > cutoff:
+        raise MarsBrokerMarketCaptureError("broker_market_capture_after_decision_cutoff")
+    return tuple(dict(row) for row in capture.observations)
 
 
 def _parse_timestamp(value: Any, context: str) -> datetime:

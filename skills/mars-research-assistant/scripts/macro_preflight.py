@@ -13,7 +13,14 @@ from typing import Any, Iterable, Mapping
 
 from artifact_packet_core import ArtifactPacketError
 from mars_macro_builder import build_mars_macro_research_result
-from mars_web_capture import MarsWebCapture, MarsWebCaptureError, normalize_captured_mars_observations
+from mars_web_capture import (
+    MarsBrokerMarketCapture,
+    MarsBrokerMarketCaptureError,
+    MarsWebCapture,
+    MarsWebCaptureError,
+    normalize_captured_broker_market_observations,
+    normalize_captured_mars_observations,
+)
 from research_result import DeliveryPacket, ResearchResultError, build_delivery_packet
 
 
@@ -45,10 +52,11 @@ FIELD_RECORD_KEYS = frozenset(
         "lineage",
         "diagnostic_ref",
         "source_symbol",
+        "source_native_id",
         "history",
         "source_url",
-    "source_columns",
-    "source_timing",
+        "source_columns",
+        "source_timing",
     }
 )
 COMPLETED_MARKET_MAX_AGE = timedelta(days=7)
@@ -172,13 +180,42 @@ def run_macro_board(
     web_capture: MarsWebCapture,
     as_of: str,
     *,
+    broker_market_capture: MarsBrokerMarketCapture | None = None,
     registry: Mapping[str, Any] | None = None,
 ) -> MacroRunOutcome:
-    """Return a direct-web blocker or canonical Board without broker state."""
+    """Return a field-contract Board from public and broker market captures.
+
+    A supplied broker capture is the primary path for its approved market/macro
+    fields. Direct public capture is required only for fields not covered by a
+    valid broker record. The workflow never carries broker account, holdings,
+    balance, or order data.
+    """
 
     try:
-        observations = normalize_captured_mars_observations(web_capture, as_of)
-    except MarsWebCaptureError as error:
+        broker_observations: tuple[dict[str, Any], ...] = ()
+        if broker_market_capture is not None:
+            broker_observations = normalize_captured_broker_market_observations(
+                broker_market_capture,
+                as_of,
+            )
+        broker_field_ids: set[str] = set()
+        for row in broker_observations:
+            field_id = row.get("field_id")
+            if not isinstance(field_id, str):
+                raise MarsBrokerMarketCaptureError("broker_market_field_id_missing")
+            broker_field_ids.add(field_id)
+        observations = list(
+            normalize_captured_mars_observations(
+                web_capture,
+                as_of,
+                omitted_field_ids=broker_field_ids,
+            )
+        )
+        observations_by_id = {str(row["field_id"]): row for row in observations}
+        for row in broker_observations:
+            observations_by_id[str(row["field_id"])] = row
+        observations = list(observations_by_id.values())
+    except (MarsWebCaptureError, MarsBrokerMarketCaptureError) as error:
         return _observation_adapter_blocker(str(error), registry)
     return _run_normalized_macro_board(
         observations,
@@ -346,8 +383,8 @@ def _observation_adapter_blocker(
     if field is None:
         blocker = FieldBlocker(
             field_id="preflight.acquisition",
-            decision_purpose="验证直接来源、共同完成收盘和最新官方观测。",
-            attempted_routes=("mars_direct_observation_adapter",),
+            decision_purpose="验证宏观字段来源、共同完成收盘和最新官方观测。",
+            attempted_routes=("mars_macro_observation_adapter",),
             status="source_error",
             reason=error,
         )
@@ -564,7 +601,14 @@ def _validate_observation(
     if row.get("retrieval_method") not in allowed_methods:
         return ("unsupported", "retrieval_method_not_allowed", "")
     source_map = source_maps.get(str(field["field_id"]))
-    if source_map is not None and not _matches_source_map(row, source_map):
+    if source_map is not None and source_id == source_map.get("source_id"):
+        if not _matches_source_map(row, source_map):
+            return ("source_error", "source_contract_provenance_invalid", "")
+    elif row.get("retrieval_method") == "broker_market_capture":
+        native_id = row.get("source_native_id")
+        if not isinstance(native_id, str) or not native_id.strip():
+            return ("source_error", "broker_source_native_id_missing", "")
+    elif source_map is not None:
         return ("source_error", "source_contract_provenance_invalid", "")
     timing_key = (
         "market_reference_date"

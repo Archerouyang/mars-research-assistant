@@ -18,7 +18,8 @@ surface attention priorities. This is decision support only.
    `invalidated`, `needs_review`, or `completed`.
 3. Require execution-timeframe confirmation for `triggered`; price contact alone
    is only `approaching`.
-4. Include broker/portfolio risk only when authorized read-only facts are
+4. Include factual broker holdings only when the user has authorized the
+   read-only account read for that request; do not derive portfolio risk.
    available or a current position daily report exists.
 5. Ask before writing any update note or status change.
 

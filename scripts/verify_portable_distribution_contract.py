@@ -36,7 +36,6 @@ FIXTURE_RUNTIME_DAILY_FILES = {
     "broker_orders.csv",
     "intraday-watchlist.csv",
     "portfolio_snapshot.csv",
-    "position-daily-report.md",
     "reviews.md",
     "trade-plans.csv",
 }
