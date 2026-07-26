@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ask Mars"
+  short_description: "推荐下一步交易研究 Skill"
+  default_prompt: "使用 $ask-mars 帮我判断下一步该做什么交易研究。"

@@ -1,4 +1,0 @@
-interface:
-  display_name: "火星投研助手"
-  short_description: "One-shot macro, company, and price-action research"
-  default_prompt: "Use $mars-research-assistant to answer the current research question without reading accounts or saved runtime state."

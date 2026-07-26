@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "skill": "ask-mars",
+  "delivery": "recommendation",
+  "response_fields": [
+    "recommended_skills",
+    "first_step",
+    "minimum_input"
+  ],
+  "forbidden_effects": [
+    "research",
+    "market_data",
+    "board_render",
+    "drive_write"
+  ],
+  "scenarios": [
+    {
+      "request": "帮我准备下周美股事件，并研究 NVDA。",
+      "expected": {
+        "recommended_skills": [
+          "市场催化剂简报",
+          "标的研究"
+        ],
+        "sequence": [
+          "市场催化剂简报",
+          "标的研究"
+        ],
+        "first_step": "市场催化剂简报",
+        "minimum_input": [
+          "目标市场",
+          "研究时间范围"
+        ]
+      }
+    }
+  ]
+}

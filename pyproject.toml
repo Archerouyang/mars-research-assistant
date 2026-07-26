@@ -1,17 +1,10 @@
 [project]
-name = "mars-research-assistant"
+name = "mars-skills"
 version = "1.0.0"
-description = "Development tooling for 火星投研助手 (Mars Research Assistant)."
+description = "Development tooling for the independent Mars Skills collection."
 license = "MIT"
 requires-python = ">=3.12,<3.13"
-dependencies = [
-  "yfinance>=0.2.66",
-]
-
-[dependency-groups]
-dev = [
-  "PyYAML==6.0.3",
-]
+dependencies = []
 
 [tool.uv]
 package = false
