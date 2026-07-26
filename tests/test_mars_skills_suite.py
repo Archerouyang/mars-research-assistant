@@ -114,6 +114,16 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             output_path,
         )
 
+    def _render_price_action_fixture(
+        self, repository: Path, fixture: str, output_path: Path
+    ) -> subprocess.CompletedProcess[str]:
+        return self._render_fixture(
+            repository,
+            "scripts/render_price_action_fixture.py",
+            fixture,
+            output_path,
+        )
+
     def test_offline_suite_verifier_accepts_the_public_collection(self) -> None:
         result = self._run_verifier(ROOT)
 
@@ -125,6 +135,180 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("market-catalysts-brief", result.stdout)
+
+    def test_price_action_fixture_renders_valid_ohlcv_without_fundamentals_or_macro(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-valid.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# Price Action：NVDA", research)
+        self.assertIn("## 数据状态", research)
+        self.assertIn("公开 best-effort EOD", research)
+        self.assertIn("## 价格结构", research)
+        self.assertIn("## 关键位", research)
+        self.assertIn("## 情景与失效", research)
+        self.assertIn("失效条件", research)
+        self.assertNotIn("## 基本面", research)
+        self.assertNotIn("## 宏观", research)
+
+    def test_price_action_fixture_stops_on_timezone_less_ohlcv(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-invalid-timezone.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("数据不可用：OHLCV bar requires a timezone-aware timestamp", research)
+        self.assertIn("## 数据缺口", research)
+        self.assertNotIn("## 价格结构", research)
+        self.assertNotIn("## 关键位", research)
+
+    def test_price_action_fixture_exposes_fmp_rate_limit_without_a_technical_conclusion(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-fmp-rate-limited.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("FMP EOD", research)
+        self.assertIn("rate_limited", research)
+        self.assertIn("未回显任何凭据", research)
+        self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_stops_when_ohlcv_timeframe_does_not_match_request(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "price-action-valid.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["ohlcv"]["timeframe"] = "1H"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "price-action.md"
+
+            result = self._render_price_action_fixture(
+                repository,
+                "tests/fixtures/price-action-valid.json",
+                output_path,
+            )
+            research = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("数据不可用：OHLCV timeframe does not match requested timeframe", research)
+        self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_fixture_stops_when_fmp_entitlement_is_not_available(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-fmp-not-entitled.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("FMP EOD", research)
+        self.assertIn("not_entitled", research)
+        self.assertIn("未回显任何凭据", research)
+        self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_stops_when_fmp_is_not_configured_or_unauthorized(
+        self,
+    ) -> None:
+        for status in ("not_configured", "unauthorized"):
+            with self.subTest(status=status), tempfile.TemporaryDirectory(
+                prefix="mars-skills-test-"
+            ) as temporary:
+                repository = self._copy_repository(Path(temporary))
+                fixture_path = (
+                    repository
+                    / "tests"
+                    / "fixtures"
+                    / "price-action-fmp-rate-limited.json"
+                )
+                fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+                fixture["provider"]["status"] = status
+                fixture_path.write_text(
+                    json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                output_path = Path(temporary) / "price-action.md"
+                result = self._render_price_action_fixture(
+                    repository,
+                    "tests/fixtures/price-action-fmp-rate-limited.json",
+                    output_path,
+                )
+                research = output_path.read_text(encoding="utf-8")
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn(status, research)
+            self.assertIn("未回显任何凭据", research)
+            self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_rejects_unknown_provider_status_without_echoing_it(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "price-action-fmp-rate-limited.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            unknown_status = "secret" + "=fake-test-value"
+            fixture["provider"]["status"] = unknown_status
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._render_price_action_fixture(
+                repository,
+                "tests/fixtures/price-action-fmp-rate-limited.json",
+                Path(temporary) / "price-action.md",
+            )
+
+        output = result.stdout + result.stderr
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("provider status must be one of", output)
+        self.assertNotIn(unknown_status, output)
+
+    def test_offline_suite_verifier_rejects_price_action_without_optional_fmp_boundary(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "price-action" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract["optional_fmp_eod"] = False
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("optional fmp eod", result.stdout + result.stderr)
 
     def test_instrument_research_fixture_renders_primary_evidence_without_macro_or_price_action(
         self,

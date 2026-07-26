@@ -1,0 +1,12 @@
+{
+  "instrument": "NVDA",
+  "timeframe": "1D",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "provider": {
+    "name": "FMP EOD",
+    "kind": "fmp_eod",
+    "status": "available",
+    "entitlement_status": "not_entitled",
+    "as_of": "2026-07-26T09:00:00-04:00"
+  }
+}
