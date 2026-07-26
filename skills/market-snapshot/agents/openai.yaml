@@ -1,0 +1,4 @@
+interface:
+  display_name: "市场快照"
+  short_description: "生成带来源标记的中文市场与宏观快照"
+  default_prompt: "使用 $market-snapshot 生成一份当前市场状态的中文 Markdown 快照。"

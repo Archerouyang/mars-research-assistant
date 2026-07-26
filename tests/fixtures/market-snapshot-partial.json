@@ -1,0 +1,152 @@
+{
+  "title": "市场快照",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "status": "通胀读数回落但长端利率仍偏高，信用与波动率需要持续观察。",
+  "status_source": {
+    "name": "公开宏观与市场资料汇总",
+    "as_of": "2026-07-26T09:00:00-04:00"
+  },
+  "indicator_groups": [
+    {
+      "title": "利率与通胀",
+      "indicators": [
+        {
+          "label": "2 年期国债",
+          "value": "4.18%",
+          "source": {
+            "name": "美国财政部每日收益率曲线",
+            "as_of": "2026-07-25"
+          }
+        },
+        {
+          "label": "10 年期国债",
+          "value": "4.55%",
+          "source": {
+            "name": "美国财政部每日收益率曲线",
+            "as_of": "2026-07-25"
+          }
+        },
+        {
+          "label": "30 年期国债",
+          "value": "5.06%",
+          "source": {
+            "name": "美国财政部每日收益率曲线",
+            "as_of": "2026-07-25"
+          }
+        },
+        {
+          "label": "CPI（同比）",
+          "value": "3.5%",
+          "source": {
+            "name": "美国劳工统计局 CPI",
+            "as_of": "2026-07-14"
+          }
+        },
+        {
+          "label": "核心 CPI（同比）",
+          "value": "2.6%",
+          "source": {
+            "name": "美国劳工统计局 CPI",
+            "as_of": "2026-07-14"
+          }
+        },
+        {
+          "label": "PPI（环比）",
+          "value": "-0.3%",
+          "source": {
+            "name": "美国劳工统计局 PPI",
+            "as_of": "2026-07-15"
+          }
+        }
+      ]
+    },
+    {
+      "title": "风险偏好与信用",
+      "indicators": [
+        {
+          "label": "VIX",
+          "value": "18.58",
+          "source": {
+            "name": "Cboe VIX",
+            "as_of": "2026-07-24T20:15:00-04:00"
+          }
+        },
+        {
+          "label": "VIX3M",
+          "value": "21.23",
+          "source": {
+            "name": "Cboe 波动率期限结构",
+            "as_of": "2026-07-22T15:14:46-04:00"
+          }
+        },
+        {
+          "label": "HYG/LQD",
+          "status": "unavailable",
+          "reason": "未获得同一交易时点的 HYG 与 LQD 收盘价，不能可靠计算比值。"
+        }
+      ]
+    },
+    {
+      "title": "美元与大宗商品",
+      "indicators": [
+        {
+          "label": "DXY",
+          "status": "unavailable",
+          "reason": "本 fixture 未提供可复核的美元指数报价。"
+        },
+        {
+          "label": "WTI 原油",
+          "value": "65.50",
+          "source": {
+            "name": "FMP EOD 商品报价（示例）",
+            "as_of": "2026-07-24"
+          }
+        },
+        {
+          "label": "黄金",
+          "value": "3,350.20",
+          "source": {
+            "name": "FMP EOD 商品报价（示例）",
+            "as_of": "2026-07-24"
+          }
+        }
+      ]
+    }
+  ],
+  "event_context": [
+    {
+      "label": "PCE 物价指数",
+      "details": "下一次月度发布已排定。",
+      "market_implication": "可能改变对通胀与利率路径的定价。",
+      "source": {
+        "name": "美国经济分析局发布日程",
+        "as_of": "2026-07-26"
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "label": "基准情景",
+      "condition": "通胀继续降温且长端利率不再上冲。",
+      "market_implication": "风险资产的估值压力缓和。",
+      "source": {
+        "name": "本快照已列示的利率与通胀数据",
+        "as_of": "2026-07-26T09:00:00-04:00"
+      }
+    }
+  ],
+  "risks": [
+    {
+      "label": "长端利率再上行",
+      "details": "30 年期收益率仍处于相对高位。",
+      "watch": "观察国债收益率曲线与后续通胀发布。",
+      "source": {
+        "name": "美国财政部每日收益率曲线",
+        "as_of": "2026-07-25"
+      }
+    }
+  ],
+  "data_gaps": [
+    "可选的 FMP 数据只在用户本地已配置且符号可用时使用；本快照不保存或输出凭据。"
+  ]
+}

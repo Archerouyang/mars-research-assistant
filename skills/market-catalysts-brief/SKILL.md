@@ -8,7 +8,7 @@ description: 面向指定市场与时间范围，产出中文 Markdown 市场催
 同目录的 `capability.json` 定义本 Skill 的公开交付边界与离线验收场景。
 
 ```mars-skill-policy
-{"delivery":"markdown_brief","forbidden_effects":["board_render","account_access","broker_write","drive_write"]}
+{"delivery":"markdown_brief","forbidden_effects":["account_access","broker_write","drive_write"]}
 ```
 
 明确目标市场和研究时间范围；未指定时，说明采用的合理假设。交付中文 Markdown，先给
@@ -21,4 +21,4 @@ description: 面向指定市场与时间范围，产出中文 Markdown 市场催
 覆盖与问题相关的宏观/政策、重要财报、地缘政治、贸易与监管；不要为了凑数而编造事件，
 也不要因缺少可核实新闻而声称“没有事件”。
 
-只交付本简报。不要生成 Board，不读取账户、持仓或订单，不执行交易，也不写入 Drive。
+只交付本简报。不要改为市场快照，不读取账户、持仓或订单，不执行交易，也不写入 Drive。

@@ -13,9 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MarsSkillsSuiteTests(unittest.TestCase):
-    def _run_verifier(
-        self, repository: Path, extra_environment: dict[str, str] | None = None
-    ) -> subprocess.CompletedProcess[str]:
+    def _offline_environment(self) -> dict[str, str]:
         environment = os.environ.copy()
         environment.update(
             {
@@ -24,6 +22,12 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 "UV_PYTHON_INSTALL_DIR": str(ROOT / ".scratch" / "uv-python"),
             }
         )
+        return environment
+
+    def _run_verifier(
+        self, repository: Path, extra_environment: dict[str, str] | None = None
+    ) -> subprocess.CompletedProcess[str]:
+        environment = self._offline_environment()
         if extra_environment:
             environment.update(extra_environment)
         return subprocess.run(
@@ -66,6 +70,30 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         )
         return copied
 
+    def _render_market_snapshot_fixture(
+        self, repository: Path, output_path: Path
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                "uv",
+                "run",
+                "--offline",
+                "--no-python-downloads",
+                "--no-sync",
+                "python",
+                "scripts/render_market_snapshot_fixture.py",
+                "--input",
+                "tests/fixtures/market-snapshot-partial.json",
+                "--output",
+                str(output_path),
+            ],
+            cwd=repository,
+            capture_output=True,
+            text=True,
+            check=False,
+            env=self._offline_environment(),
+        )
+
     def test_offline_suite_verifier_accepts_the_public_collection(self) -> None:
         result = self._run_verifier(ROOT)
 
@@ -77,6 +105,111 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("market-catalysts-brief", result.stdout)
+
+    def test_market_snapshot_fixture_renders_a_partial_markdown_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "market-snapshot.md"
+            result = self._render_market_snapshot_fixture(ROOT, output_path)
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            snapshot = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 市场快照", snapshot)
+        self.assertIn("## 当前状态", snapshot)
+        self.assertIn("## 核心指标", snapshot)
+        self.assertIn("2 年期国债", snapshot)
+        self.assertIn("CPI（同比）", snapshot)
+        self.assertIn("VIX3M", snapshot)
+        self.assertIn("HYG/LQD", snapshot)
+        self.assertIn("DXY", snapshot)
+        self.assertIn("WTI 原油", snapshot)
+        self.assertIn("黄金", snapshot)
+        self.assertIn("数据不可用", snapshot)
+        self.assertIn("美国财政部", snapshot)
+        self.assertIn("Cboe", snapshot)
+        self.assertIn("2026-07-26T09:00:00-04:00", snapshot)
+
+    def test_market_snapshot_renderer_rejects_an_unavailable_indicator_without_a_reason(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "market-snapshot-partial.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["indicator_groups"][2]["indicators"][0].pop("reason")
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._render_market_snapshot_fixture(
+                repository, Path(temporary) / "market-snapshot.md"
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unavailable indicator requires a reason", result.stdout + result.stderr)
+
+    def test_market_snapshot_renderer_keeps_a_partial_snapshot_when_optional_sections_absent(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "market-snapshot-partial.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            for section in ("event_context", "scenarios", "risks"):
+                fixture.pop(section)
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "market-snapshot.md"
+
+            result = self._render_market_snapshot_fixture(repository, output_path)
+            snapshot = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("## 近期催化剂", snapshot)
+        self.assertIn("## 情景与触发", snapshot)
+        self.assertIn("## 风险暴露", snapshot)
+        self.assertIn("数据不可用", snapshot)
+
+    def test_market_snapshot_renderer_rejects_a_populated_indicator_without_source(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "market-snapshot-partial.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["indicator_groups"][0]["indicators"][0].pop("source", None)
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._render_market_snapshot_fixture(
+                repository, Path(temporary) / "market-snapshot.md"
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("indicator requires a source", result.stdout + result.stderr)
+
+    def test_offline_suite_verifier_rejects_a_market_snapshot_without_explicit_request(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "market-snapshot" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract["explicit_request_required"] = False
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("explicit request", result.stdout + result.stderr)
 
     def test_offline_suite_verifier_rejects_a_catalyst_without_market_transmission(
         self,
@@ -214,7 +347,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("capability contract", result.stdout + result.stderr)
 
     def test_offline_suite_verifier_rejects_each_missing_ask_mars_policy_effect(self) -> None:
-        for effect in ("research", "market_data", "board_render", "drive_write"):
+        for effect in ("research", "market_data", "drive_write"):
             with self.subTest(effect=effect), tempfile.TemporaryDirectory(
                 prefix="mars-skills-test-"
             ) as temporary:

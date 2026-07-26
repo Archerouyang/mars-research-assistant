@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 from typing import Any
 
@@ -132,7 +133,7 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
             )
 
     if identifier == "ask-mars":
-        expected_forbidden = {"research", "market_data", "board_render", "drive_write"}
+        expected_forbidden = {"research", "market_data", "drive_write"}
         if contract.get("delivery") != "recommendation" or set(forbidden) != expected_forbidden:
             _fail("Ask Mars must remain recommendation-only")
         if response_fields != ["recommended_skills", "first_step", "minimum_input"]:
@@ -142,107 +143,77 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
             _fail("Ask Mars compound-request first step changed")
         if first.get("sequence") != ["市场催化剂简报", "标的研究"]:
             _fail("Ask Mars compound-request sequence changed")
-    if identifier == "market-catalysts-brief":
-        _verify_market_catalysts_contract(contract)
+    _verify_required_contract_values(contract)
+    _verify_fixture_scenarios(contract["scenarios"], contract.get("fixture_validation"))
 
 
-def _read_fixture(path_value: object) -> dict[str, Any]:
+def _fixture_path(path_value: object, context: str) -> Path:
     if not isinstance(path_value, str) or not path_value.strip():
-        _fail("market catalysts fixture path missing")
+        _fail(f"{context} fixture path missing")
     fixture_path = (ROOT / path_value).resolve()
     if not fixture_path.is_relative_to(ROOT.resolve()):
-        _fail(f"market catalysts fixture is outside the repository: {path_value}")
+        _fail(f"{context} fixture is outside the repository: {path_value}")
     if not fixture_path.is_file():
-        _fail(f"market catalysts fixture missing: {path_value}")
-    return _read_json(fixture_path)
+        _fail(f"{context} fixture missing: {path_value}")
+    return fixture_path
 
 
-def _require_text(row: dict[str, Any], field: str, context: str) -> str:
-    value = row.get(field)
-    if not isinstance(value, str) or not value.strip():
-        _fail(f"market catalysts {context} requires {field.replace('_', ' ')}")
-    return value
+def _verify_required_contract_values(contract: dict[str, Any]) -> None:
+    required = contract.get("required_contract")
+    if required is None:
+        return
+    if not isinstance(required, dict) or not required:
+        _fail("required contract values must be a non-empty object")
+    for field, expected in required.items():
+        if contract.get(field) != expected:
+            _fail(f"required contract value changed: {field.replace('_', ' ')}")
 
 
-def _render_catalyst_event(event: dict[str, Any]) -> str:
-    source = event.get("source")
-    if not isinstance(source, dict):
-        _fail("market catalysts event source must be an object")
-    title = _require_text(event, "title", "event")
-    category = _require_text(event, "category", "event")
-    time_or_status = _require_text(event, "time_or_status", "event")
-    transmission = _require_text(event, "market_transmission", "event")
-    evidence_status = _require_text(event, "evidence_status", "event")
-    source_name = _require_text(source, "name", "source")
-    source_url = _require_text(source, "url", "source")
-    source_kind = _require_text(source, "kind", "source")
-    source_as_of = _require_text(event, "as_of", "event")
-    return "\n".join(
-        (
-            f"### {title}",
-            f"- 类别：{category}",
-            f"- 时间/状态：{time_or_status}",
-            f"- 市场传导：{transmission}",
-            f"- 证据状态：{evidence_status}",
-            f"- 来源：{source_name}（{source_kind}）{source_url}",
-            f"- 来源时间：{source_as_of}",
-        )
-    )
-
-
-def _render_market_catalysts_brief(fixture: dict[str, Any]) -> str:
-    target_market = _require_text(fixture, "target_market", "fixture")
-    research_as_of = _require_text(fixture, "research_as_of", "fixture")
-    data_gap = _require_text(fixture, "data_gap", "fixture")
-    scheduled = fixture.get("scheduled_events")
-    risks = fixture.get("developing_risks")
-    if not isinstance(scheduled, list) or not scheduled:
-        _fail("market catalysts fixture requires scheduled events")
-    if not isinstance(risks, list) or not risks:
-        _fail("market catalysts fixture requires developing risks")
-    if not all(isinstance(event, dict) for event in [*scheduled, *risks]):
-        _fail("market catalysts fixture events must be objects")
-    scheduled_section = "## 已定事件\n\n" + "\n\n".join(
-        _render_catalyst_event(event) for event in scheduled
-    )
-    risks_section = "## 发展中风险\n\n" + "\n\n".join(
-        _render_catalyst_event(event) for event in risks
-    )
-    return "\n\n".join(
-        (
-            "# 市场催化剂简报",
-            f"- 目标市场：{target_market}\n- 研究时间：{research_as_of}",
-            scheduled_section,
-            risks_section,
-            f"## 数据缺口\n\n{data_gap}",
-        )
-    )
-
-
-def _verify_market_catalysts_contract(contract: dict[str, Any]) -> None:
-    expected_forbidden = {"board_render", "account_access", "broker_write", "drive_write"}
-    expected_fields = [
-        "research_as_of",
-        "scheduled_events",
-        "developing_risks",
-        "data_gap",
-    ]
-    if contract.get("delivery") != "markdown_brief":
-        _fail("market catalysts must remain a Markdown brief")
-    if contract.get("response_fields") != expected_fields:
-        _fail("market catalysts response fields changed")
-    if set(contract.get("forbidden_effects", [])) != expected_forbidden:
-        _fail("market catalysts responsibility boundary changed")
-    for scenario in contract["scenarios"]:
-        rendered = _render_market_catalysts_brief(_read_fixture(scenario.get("fixture")))
-        for required_heading in (
-            "# 市场催化剂简报",
-            "## 已定事件",
-            "## 发展中风险",
-            "## 数据缺口",
-        ):
-            if required_heading not in rendered:
-                _fail(f"market catalysts Markdown missing section: {required_heading}")
+def _verify_fixture_scenarios(
+    scenarios: list[dict[str, Any]], validation: object
+) -> None:
+    fixture_scenarios = [scenario for scenario in scenarios if "fixture" in scenario]
+    if not fixture_scenarios:
+        if validation is not None:
+            _fail("fixture validation has no fixture scenarios")
+        return
+    if not isinstance(validation, dict):
+        _fail("fixture scenarios require fixture validation")
+    renderer = _fixture_path(validation.get("renderer"), "fixture renderer")
+    artifact_name = validation.get("artifact")
+    markers = validation.get("required_markers")
+    if not isinstance(artifact_name, str) or Path(artifact_name).name != artifact_name:
+        _fail("fixture validation artifact must be a filename")
+    if not isinstance(markers, list) or not all(
+        isinstance(marker, str) and marker for marker in markers
+    ):
+        _fail("fixture validation requires rendered evidence markers")
+    for scenario in fixture_scenarios:
+        fixture = _fixture_path(scenario.get("fixture"), "fixture")
+        with tempfile.TemporaryDirectory(prefix="mars-skills-fixture-") as temporary:
+            output = Path(temporary) / artifact_name
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(renderer),
+                    "--input",
+                    str(fixture),
+                    "--output",
+                    str(output),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                _fail(f"fixture render failed: {result.stderr.strip()}")
+            if not output.is_file():
+                _fail("fixture renderer did not create its artifact")
+            rendered = output.read_text(encoding="utf-8")
+        for marker in markers:
+            if marker not in rendered:
+                _fail(f"fixture missing rendered evidence: {marker}")
 
 
 def _public_candidates() -> list[Path]:

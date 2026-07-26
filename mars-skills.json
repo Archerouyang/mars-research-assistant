@@ -9,6 +9,10 @@
     {
       "id": "market-catalysts-brief",
       "display_name": "市场催化剂简报"
+    },
+    {
+      "id": "market-snapshot",
+      "display_name": "市场快照"
     }
   ]
 }

@@ -10,7 +10,6 @@
   "forbidden_effects": [
     "research",
     "market_data",
-    "board_render",
     "drive_write"
   ],
   "scenarios": [

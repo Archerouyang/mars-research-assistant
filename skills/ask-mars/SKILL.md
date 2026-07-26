@@ -12,7 +12,7 @@ disable-model-invocation: true
 共同约束交付行为。
 
 ```mars-skill-policy
-{"delivery":"recommendation","forbidden_effects":["research","market_data","board_render","drive_write"]}
+{"delivery":"recommendation","forbidden_effects":["research","market_data","drive_write"]}
 ```
 
 先判断用户真正需要的研究交付，再建议最小的一组 Mars Skills。可以推荐一个下一步，
@@ -25,7 +25,7 @@ disable-model-invocation: true
 - 用户还需要提供的最少信息；
 - 如果问题包含后续步骤，说明它们何时有必要。
 
-不要自动执行任何被建议的 Skill。不要自行搜索、获取市场数据、生成 Board、写入
+不要自动执行任何被建议的 Skill。不要自行搜索、获取市场数据、生成研究交付、写入
 Google Drive、读取账户或执行交易。用户确认并显式调用相应 Skill 后，才由那个
 独立 Skill 处理研究或写入。
 

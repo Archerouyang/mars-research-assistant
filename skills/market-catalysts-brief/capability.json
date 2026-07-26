@@ -9,11 +9,20 @@
     "data_gap"
   ],
   "forbidden_effects": [
-    "board_render",
     "account_access",
     "broker_write",
     "drive_write"
   ],
+  "fixture_validation": {
+    "renderer": "scripts/render_market_catalysts_fixture.py",
+    "artifact": "research-brief.md",
+    "required_markers": [
+      "# 市场催化剂简报",
+      "## 已定事件",
+      "## 发展中风险",
+      "## 数据缺口"
+    ]
+  },
   "scenarios": [
     {
       "request": "整理下周美股需要关注的宏观、财报和地缘政治催化剂。",

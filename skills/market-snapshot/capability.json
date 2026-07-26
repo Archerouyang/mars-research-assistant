@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "skill": "market-snapshot",
+  "delivery": "markdown_snapshot",
+  "explicit_request_required": true,
+  "response_fields": [
+    "research_as_of",
+    "current_state",
+    "core_indicators",
+    "scenario_triggers",
+    "risk_exposure",
+    "data_gap"
+  ],
+  "forbidden_effects": [
+    "account_access",
+    "broker_write",
+    "drive_write",
+    "persistent_state"
+  ],
+  "baseline_indicator_groups": [
+    "利率与通胀：2Y、10Y、30Y、CPI、核心 CPI、PPI",
+    "风险偏好与信用：VIX、VIX3M、HYG/LQD",
+    "美元与大宗商品：DXY、WTI 原油、黄金"
+  ],
+  "required_contract": {
+    "delivery": "markdown_snapshot",
+    "explicit_request_required": true
+  },
+  "fixture_validation": {
+    "renderer": "scripts/render_market_snapshot_fixture.py",
+    "artifact": "market-snapshot.md",
+    "required_markers": [
+      "# 市场快照",
+      "## 当前状态",
+      "## 核心指标",
+      "## 情景与触发",
+      "## 风险暴露",
+      "## 数据缺口",
+      "数据不可用"
+    ]
+  },
+  "scenarios": [
+    {
+      "request": "给我一份当前美股宏观与风险偏好的市场快照。",
+      "fixture": "tests/fixtures/market-snapshot-partial.json",
+      "expected": {
+        "research_as_of": "included",
+        "current_state": "included",
+        "core_indicators": "included",
+        "scenario_triggers": "included",
+        "risk_exposure": "included",
+        "data_gap": "included"
+      }
+    }
+  ]
+}
