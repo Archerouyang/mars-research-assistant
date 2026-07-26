@@ -142,6 +142,107 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
             _fail("Ask Mars compound-request first step changed")
         if first.get("sequence") != ["市场催化剂简报", "标的研究"]:
             _fail("Ask Mars compound-request sequence changed")
+    if identifier == "market-catalysts-brief":
+        _verify_market_catalysts_contract(contract)
+
+
+def _read_fixture(path_value: object) -> dict[str, Any]:
+    if not isinstance(path_value, str) or not path_value.strip():
+        _fail("market catalysts fixture path missing")
+    fixture_path = (ROOT / path_value).resolve()
+    if not fixture_path.is_relative_to(ROOT.resolve()):
+        _fail(f"market catalysts fixture is outside the repository: {path_value}")
+    if not fixture_path.is_file():
+        _fail(f"market catalysts fixture missing: {path_value}")
+    return _read_json(fixture_path)
+
+
+def _require_text(row: dict[str, Any], field: str, context: str) -> str:
+    value = row.get(field)
+    if not isinstance(value, str) or not value.strip():
+        _fail(f"market catalysts {context} requires {field.replace('_', ' ')}")
+    return value
+
+
+def _render_catalyst_event(event: dict[str, Any]) -> str:
+    source = event.get("source")
+    if not isinstance(source, dict):
+        _fail("market catalysts event source must be an object")
+    title = _require_text(event, "title", "event")
+    category = _require_text(event, "category", "event")
+    time_or_status = _require_text(event, "time_or_status", "event")
+    transmission = _require_text(event, "market_transmission", "event")
+    evidence_status = _require_text(event, "evidence_status", "event")
+    source_name = _require_text(source, "name", "source")
+    source_url = _require_text(source, "url", "source")
+    source_kind = _require_text(source, "kind", "source")
+    source_as_of = _require_text(event, "as_of", "event")
+    return "\n".join(
+        (
+            f"### {title}",
+            f"- 类别：{category}",
+            f"- 时间/状态：{time_or_status}",
+            f"- 市场传导：{transmission}",
+            f"- 证据状态：{evidence_status}",
+            f"- 来源：{source_name}（{source_kind}）{source_url}",
+            f"- 来源时间：{source_as_of}",
+        )
+    )
+
+
+def _render_market_catalysts_brief(fixture: dict[str, Any]) -> str:
+    target_market = _require_text(fixture, "target_market", "fixture")
+    research_as_of = _require_text(fixture, "research_as_of", "fixture")
+    data_gap = _require_text(fixture, "data_gap", "fixture")
+    scheduled = fixture.get("scheduled_events")
+    risks = fixture.get("developing_risks")
+    if not isinstance(scheduled, list) or not scheduled:
+        _fail("market catalysts fixture requires scheduled events")
+    if not isinstance(risks, list) or not risks:
+        _fail("market catalysts fixture requires developing risks")
+    if not all(isinstance(event, dict) for event in [*scheduled, *risks]):
+        _fail("market catalysts fixture events must be objects")
+    scheduled_section = "## 已定事件\n\n" + "\n\n".join(
+        _render_catalyst_event(event) for event in scheduled
+    )
+    risks_section = "## 发展中风险\n\n" + "\n\n".join(
+        _render_catalyst_event(event) for event in risks
+    )
+    return "\n\n".join(
+        (
+            "# 市场催化剂简报",
+            f"- 目标市场：{target_market}\n- 研究时间：{research_as_of}",
+            scheduled_section,
+            risks_section,
+            f"## 数据缺口\n\n{data_gap}",
+        )
+    )
+
+
+def _verify_market_catalysts_contract(contract: dict[str, Any]) -> None:
+    expected_forbidden = {"board_render", "account_access", "broker_write", "drive_write"}
+    expected_fields = [
+        "research_as_of",
+        "scheduled_events",
+        "developing_risks",
+        "data_gap",
+    ]
+    if contract.get("delivery") != "markdown_brief":
+        _fail("market catalysts must remain a Markdown brief")
+    if contract.get("response_fields") != expected_fields:
+        _fail("market catalysts response fields changed")
+    if set(contract.get("forbidden_effects", [])) != expected_forbidden:
+        _fail("market catalysts responsibility boundary changed")
+    for scenario in contract["scenarios"]:
+        rendered = _render_market_catalysts_brief(_read_fixture(scenario.get("fixture")))
+        for required_heading in (
+            "# 市场催化剂简报",
+            "## 已定事件",
+            "## 发展中风险",
+            "## 数据缺口",
+        ):
+            if required_heading not in rendered:
+                _fail(f"market catalysts Markdown missing section: {required_heading}")
 
 
 def _public_candidates() -> list[Path]:

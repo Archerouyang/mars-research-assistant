@@ -5,6 +5,10 @@
     {
       "id": "ask-mars",
       "display_name": "Ask Mars"
+    },
+    {
+      "id": "market-catalysts-brief",
+      "display_name": "市场催化剂简报"
     }
   ]
 }

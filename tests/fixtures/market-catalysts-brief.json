@@ -1,0 +1,48 @@
+{
+  "target_market": "美国股票市场",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "scheduled_events": [
+    {
+      "title": "示例通胀数据发布",
+      "category": "宏观/政策",
+      "time_or_status": "已定：2026-07-29 08:30 ET",
+      "market_transmission": "美国利率路径预期可能重估。",
+      "evidence_status": "官方日历",
+      "source": {
+        "name": "示例统计机构",
+        "kind": "官方日历",
+        "url": "https://calendar.example.test/inflation"
+      },
+      "as_of": "2026-07-26T09:00:00-04:00"
+    },
+    {
+      "title": "示例公司季度财报",
+      "category": "重要财报",
+      "time_or_status": "已定：2026-07-30 收盘后 ET",
+      "market_transmission": "业绩指引可能影响相关行业的盈利预期。",
+      "evidence_status": "发行人 IR",
+      "source": {
+        "name": "示例公司投资者关系",
+        "kind": "公司 IR",
+        "url": "https://issuer.example.test/investors"
+      },
+      "as_of": "2026-07-26T09:00:00-04:00"
+    }
+  ],
+  "developing_risks": [
+    {
+      "title": "示例贸易谈判进展",
+      "category": "地缘政治/贸易/监管",
+      "time_or_status": "发展中：报道仍待官方确认",
+      "market_transmission": "关税或供应链预期变化可能影响出口行业风险溢价。",
+      "evidence_status": "已报道，待官方确认",
+      "source": {
+        "name": "示例可信媒体",
+        "kind": "可信媒体",
+        "url": "https://news.example.test/trade"
+      },
+      "as_of": "2026-07-26T08:45:00-04:00"
+    }
+  ],
+  "data_gap": "本 fixture 为合成验收数据；真实研究应说明尚未核实的事件与来源限制。"
+}

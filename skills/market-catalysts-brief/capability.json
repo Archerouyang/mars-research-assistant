@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "skill": "market-catalysts-brief",
+  "delivery": "markdown_brief",
+  "response_fields": [
+    "research_as_of",
+    "scheduled_events",
+    "developing_risks",
+    "data_gap"
+  ],
+  "forbidden_effects": [
+    "board_render",
+    "account_access",
+    "broker_write",
+    "drive_write"
+  ],
+  "scenarios": [
+    {
+      "request": "整理下周美股需要关注的宏观、财报和地缘政治催化剂。",
+      "fixture": "tests/fixtures/market-catalysts-brief.json",
+      "expected": {
+        "research_as_of": "2026-07-26T09:00:00-04:00",
+        "scheduled_events": "included",
+        "developing_risks": "included",
+        "data_gap": "included"
+      }
+    }
+  ]
+}

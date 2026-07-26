@@ -1,0 +1,4 @@
+interface:
+  display_name: "市场催化剂简报"
+  short_description: "梳理近期影响市场的事件、风险与潜在传导路径"
+  default_prompt: "使用 $market-catalysts-brief 整理下周美股的重要催化剂。"
