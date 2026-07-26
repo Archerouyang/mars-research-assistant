@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "skill": "drive-writeback",
+  "delivery": "drive_writeback",
+  "completed_research_required": true,
+  "explicit_confirmation_required": true,
+  "response_fields": [
+    "research_status",
+    "proposed_destination",
+    "proposed_operation",
+    "index_update",
+    "confirmation_status",
+    "write_result"
+  ],
+  "forbidden_effects": [
+    "research",
+    "market_data",
+    "account_access",
+    "broker_write",
+    "trade_execution"
+  ],
+  "archive_routes": {
+    "inbox": {
+      "label": "收件箱",
+      "destination_template": "收件箱 / {title}",
+      "operation": "create",
+      "index_update": false,
+      "simulated_result": "已模拟创建"
+    },
+    "daily_market_thought": {
+      "label": "每日市场思考",
+      "destination_template": "每日市场思考 / {date}",
+      "operation": "更新目标文档中本次写入拥有的内容区段",
+      "index_update": false,
+      "simulated_result": "已模拟更新"
+    },
+    "trade_plan": {
+      "label": "交易计划",
+      "destination_template": "交易计划 / {period}",
+      "operation": "更新目标文档中本次写入拥有的内容区段",
+      "index_update": true,
+      "simulated_result": "已模拟更新"
+    },
+    "topic_research": {
+      "label": "专题研究",
+      "destination_template": "专题研究 / {title}",
+      "operation": "创建新的专题研究文档",
+      "index_update": true,
+      "simulated_result": "已模拟创建"
+    },
+    "weekly_review": {
+      "label": "周度复盘",
+      "destination_template": "周度复盘 / {period}",
+      "operation": "更新目标文档中本次写入拥有的内容区段",
+      "index_update": true,
+      "simulated_result": "已模拟更新"
+    },
+    "case_review": {
+      "label": "案例复盘",
+      "destination_template": "案例复盘 / {title}",
+      "operation": "创建新的案例复盘文档",
+      "index_update": true,
+      "simulated_result": "已模拟创建"
+    }
+  },
+  "required_contract": {
+    "delivery": "drive_writeback",
+    "completed_research_required": true,
+    "explicit_confirmation_required": true
+  },
+  "fixture_validation": {
+    "renderer": "scripts/render_drive_writeback_fixture.py",
+    "artifact": "drive-writeback.md",
+    "required_markers": [
+      "# Drive 写入",
+      "目标位置：",
+      "确认状态：",
+      "写入结果："
+    ]
+  },
+  "scenarios": [
+    {
+      "request": "将已完成的每日市场思考写入交易研究中心。",
+      "fixture": "tests/fixtures/drive-writeback-proposal.json",
+      "expected": {
+        "research_status": "completed",
+        "proposed_destination": "included",
+        "proposed_operation": "included",
+        "index_update": "not_updated",
+        "confirmation_status": "pending",
+        "write_result": "not_executed"
+      }
+    },
+    {
+      "request": "确认将该专题研究写入已提议的交易研究中心位置。",
+      "fixture": "tests/fixtures/drive-writeback-confirmed-topic.json",
+      "expected": {
+        "research_status": "completed",
+        "proposed_destination": "included",
+        "proposed_operation": "included",
+        "index_update": "simulated_updated",
+        "confirmation_status": "confirmed",
+        "write_result": "simulated_created"
+      }
+    }
+  ]
+}

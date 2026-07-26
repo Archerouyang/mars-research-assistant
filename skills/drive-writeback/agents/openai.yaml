@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drive 写入"
+  short_description: "先提议目标位置并在确认后将已完成研究归档到交易研究中心"
+  default_prompt: "使用 $drive-writeback 提议将一份已完成研究归档到交易研究中心。"

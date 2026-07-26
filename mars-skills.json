@@ -21,6 +21,10 @@
     {
       "id": "price-action",
       "display_name": "Price Action"
+    },
+    {
+      "id": "drive-writeback",
+      "display_name": "Drive 写入"
     }
   ]
 }

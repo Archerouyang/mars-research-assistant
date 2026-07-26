@@ -124,6 +124,16 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             output_path,
         )
 
+    def _render_drive_writeback_fixture(
+        self, repository: Path, fixture: str, output_path: Path
+    ) -> subprocess.CompletedProcess[str]:
+        return self._render_fixture(
+            repository,
+            "scripts/render_drive_writeback_fixture.py",
+            fixture,
+            output_path,
+        )
+
     def test_offline_suite_verifier_accepts_the_public_collection(self) -> None:
         result = self._run_verifier(ROOT)
 
@@ -135,6 +145,179 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("market-catalysts-brief", result.stdout)
+
+    def test_drive_writeback_proposes_a_daily_destination_without_writing(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-proposal.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            proposal = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# Drive 写入提议", proposal)
+        self.assertIn("目标位置：每日市场思考 / 2026-07-26", proposal)
+        self.assertIn(
+            "提议标识：daily_market_thought:每日市场思考 / 2026-07-26",
+            proposal,
+        )
+        self.assertIn("确认状态：等待用户明确确认", proposal)
+        self.assertIn("写入结果：未执行", proposal)
+        self.assertIn("总索引：不更新", proposal)
+
+    def test_drive_writeback_allows_confirmed_topic_creation_and_index_update(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-confirmed-topic.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# Drive 写入结果", result_markdown)
+        self.assertIn("目标位置：专题研究 / 半导体资本开支", result_markdown)
+        self.assertIn("确认状态：已明确确认", result_markdown)
+        self.assertIn("写入结果：已模拟创建", result_markdown)
+        self.assertIn("总索引：更新（模拟）", result_markdown)
+
+    def test_drive_writeback_does_not_write_for_a_confirmation_of_another_proposal(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "drive-writeback-confirmed-topic.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["confirmation"] = {
+                "proposal_id": "topic_research:专题研究 / 另一份研究",
+                "explicit": True,
+            }
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                repository,
+                "tests/fixtures/drive-writeback-confirmed-topic.json",
+                output_path,
+            )
+            proposal = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("# Drive 写入提议", proposal)
+        self.assertIn("确认状态：确认与当前提议不匹配", proposal)
+        self.assertIn("写入结果：未执行", proposal)
+        self.assertNotIn("# Drive 写入结果", proposal)
+
+    def test_drive_writeback_proposes_each_research_center_destination(self) -> None:
+        cases = (
+            ("inbox", "盘前想法", "收件箱 / 盘前想法", "总索引：不更新"),
+            (
+                "daily_market_thought",
+                "半导体资本开支",
+                "每日市场思考 / 2026-07-26",
+                "总索引：不更新",
+            ),
+            ("trade_plan", "半导体资本开支", "交易计划 / 2026-W31", "总索引：更新"),
+            ("topic_research", "半导体资本开支", "专题研究 / 半导体资本开支", "总索引：更新"),
+            ("weekly_review", "半导体资本开支", "周度复盘 / 2026-W31", "总索引：更新"),
+            ("case_review", "半导体资本开支", "案例复盘 / 半导体资本开支", "总索引：更新"),
+        )
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "drive-writeback-proposal.json"
+            for research_type, title, destination, index_status in cases:
+                with self.subTest(research_type=research_type):
+                    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+                    fixture["research"] = {
+                        "status": "completed",
+                        "type": research_type,
+                        "date": "2026-07-26",
+                        "period": "2026-W31",
+                        "title": title,
+                        "content": "已完成的研究内容。",
+                    }
+                    fixture_path.write_text(
+                        json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                    output_path = Path(temporary) / "drive-writeback.md"
+                    result = self._render_drive_writeback_fixture(
+                        repository,
+                        "tests/fixtures/drive-writeback-proposal.json",
+                        output_path,
+                    )
+                    proposal = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
+
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"目标位置：{destination}", proposal)
+                    self.assertIn(index_status, proposal)
+
+    def test_drive_writeback_rejects_research_that_is_not_completed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "drive-writeback-proposal.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["research"]["status"] = "draft"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                repository,
+                "tests/fixtures/drive-writeback-proposal.json",
+                output_path,
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("only completed research can be archived", result.stdout + result.stderr)
+        self.assertFalse(output_path.exists())
+
+    def test_drive_writeback_rejects_completed_research_without_content(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "drive-writeback-proposal.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["research"].pop("content", None)
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                repository,
+                "tests/fixtures/drive-writeback-proposal.json",
+                output_path,
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("research content requires text", result.stdout + result.stderr)
+        self.assertFalse(output_path.exists())
+
+    def test_offline_suite_verifier_rejects_drive_writeback_without_confirmation_gate(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "drive-writeback" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract["explicit_confirmation_required"] = False
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("explicit confirmation required", result.stdout + result.stderr)
 
     def test_price_action_fixture_renders_valid_ohlcv_without_fundamentals_or_macro(
         self,
