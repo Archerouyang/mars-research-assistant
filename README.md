@@ -8,6 +8,7 @@
 - **Ask Mars**：推荐应使用的 Skill、执行顺序、第一步与最少输入。
 - **市场催化剂简报**：交付区分已定事件与发展中风险的中文 Markdown 简报。
 - **市场快照**：交付带来源、时间与可见数据缺口的中文 Markdown 市场快照。
+- **标的研究**：交付基于 SEC/发行人 IR 一手证据的单标的基本面、行业与公司事件研究。
 
 后续 Skill 将按同一套离线验收入口独立加入，不把数据源、可视化或 Drive 写入变成
 所有研究的前置条件。
@@ -20,8 +21,8 @@
 bash scripts/install-mars-skill.sh --skill ask-mars --target /path/to/agent-skills
 ```
 
-安装市场催化剂简报或市场快照时，将 `ask-mars` 分别替换为
-`market-catalysts-brief` 或 `market-snapshot`。每个 Skill 都可单独安装。
+安装其他研究 Skill 时，将 `ask-mars` 替换为对应 id，例如
+`market-catalysts-brief`、`market-snapshot` 或 `instrument-research`。每个 Skill 都可单独安装。
 
 安装命令只会写入明确给出的目标目录，且不会覆盖同名 Skill。开发环境使用 `uv`：
 

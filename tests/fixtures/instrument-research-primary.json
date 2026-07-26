@@ -1,0 +1,65 @@
+{
+  "instrument": "NVDA",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "identity": {
+    "issuer": "NVIDIA Corporation",
+    "source": {
+      "name": "2026 年 10-K",
+      "kind": "sec_filing",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/example",
+      "as_of": "2026-03-01"
+    }
+  },
+  "fundamentals": [
+    {
+      "label": "收入结构",
+      "statement": "公司在年度报告中按业务和地区披露收入信息。",
+      "source": {
+        "name": "2026 年 10-K",
+        "kind": "sec_filing",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/example",
+        "as_of": "2026-03-01"
+      }
+    }
+  ],
+  "industry_context": [
+    {
+      "label": "需求驱动",
+      "statement": "公司在股东信中说明数据中心需求是其经营讨论的关键主题。",
+      "source": {
+        "name": "致股东信",
+        "kind": "issuer_ir",
+        "url": "https://investor.nvidia.com/example",
+        "as_of": "2026-05-20"
+      }
+    }
+  ],
+  "company_events": [
+    {
+      "label": "业绩发布",
+      "statement": "发行人已发布季度业绩材料。",
+      "source": {
+        "name": "季度业绩新闻稿",
+        "kind": "issuer_ir",
+        "url": "https://investor.nvidia.com/example-results",
+        "as_of": "2026-05-20"
+      }
+    }
+  ],
+  "inferences": [
+    {
+      "label": "经营观察",
+      "statement": "收入结构与管理层披露使数据中心需求成为后续验证重点，而不是确定性预测。",
+      "validation_condition": "后续季度披露继续确认数据中心需求。",
+      "source": {
+        "name": "2026 年 10-K",
+        "kind": "sec_filing",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/example",
+        "as_of": "2026-03-01"
+      }
+    }
+  ],
+  "data_gaps": [
+    "fixture 不代表实时价格、估值或交易建议。"
+  ]
+}

@@ -70,8 +70,8 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         )
         return copied
 
-    def _render_market_snapshot_fixture(
-        self, repository: Path, output_path: Path
+    def _render_fixture(
+        self, repository: Path, renderer: str, fixture: str, output_path: Path
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
@@ -81,9 +81,9 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 "--no-python-downloads",
                 "--no-sync",
                 "python",
-                "scripts/render_market_snapshot_fixture.py",
+                renderer,
                 "--input",
-                "tests/fixtures/market-snapshot-partial.json",
+                fixture,
                 "--output",
                 str(output_path),
             ],
@@ -92,6 +92,26 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             text=True,
             check=False,
             env=self._offline_environment(),
+        )
+
+    def _render_market_snapshot_fixture(
+        self, repository: Path, output_path: Path
+    ) -> subprocess.CompletedProcess[str]:
+        return self._render_fixture(
+            repository,
+            "scripts/render_market_snapshot_fixture.py",
+            "tests/fixtures/market-snapshot-partial.json",
+            output_path,
+        )
+
+    def _render_instrument_research_fixture(
+        self, repository: Path, fixture: str, output_path: Path
+    ) -> subprocess.CompletedProcess[str]:
+        return self._render_fixture(
+            repository,
+            "scripts/render_instrument_research_fixture.py",
+            fixture,
+            output_path,
         )
 
     def test_offline_suite_verifier_accepts_the_public_collection(self) -> None:
@@ -105,6 +125,138 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("market-catalysts-brief", result.stdout)
+
+    def test_instrument_research_fixture_renders_primary_evidence_without_macro_or_price_action(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "instrument-research.md"
+            result = self._render_instrument_research_fixture(
+                ROOT,
+                "tests/fixtures/instrument-research-primary.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 标的研究：NVDA", research)
+        self.assertIn("## 事实与证据", research)
+        self.assertIn("SEC 披露", research)
+        self.assertIn("发行人 IR", research)
+        self.assertIn("## 基本面", research)
+        self.assertIn("## 行业背景", research)
+        self.assertIn("## 公司事件", research)
+        self.assertIn("## 推断", research)
+        self.assertIn("验证条件：后续季度披露继续确认数据中心需求。", research)
+        self.assertIn("## 数据缺口", research)
+        self.assertNotIn("## 宏观", research)
+        self.assertNotIn("## Price Action", research)
+
+    def test_instrument_research_fixture_keeps_evidence_gap_visible_without_company_facts(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "instrument-research.md"
+            result = self._render_instrument_research_fixture(
+                ROOT,
+                "tests/fixtures/instrument-research-evidence-gap.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 标的研究：UNKNOWN", research)
+        self.assertIn("发行人身份未确认", research)
+        self.assertIn("数据不可用", research)
+        self.assertIn("不会将聚合资料写成公司事实", research)
+        self.assertNotIn("## 基本面", research)
+
+    def test_instrument_research_renderer_rejects_company_facts_without_primary_evidence(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "instrument-research-primary.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["fundamentals"][0]["source"]["kind"] = "aggregate_quote"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._render_instrument_research_fixture(
+                repository,
+                "tests/fixtures/instrument-research-primary.json",
+                Path(temporary) / "instrument-research.md",
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("requires primary filing or issuer IR evidence", result.stdout + result.stderr)
+
+    def test_instrument_research_keeps_confirmed_issuer_research_when_one_section_is_missing(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "instrument-research-primary.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture.pop("industry_context")
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "instrument-research.md"
+
+            result = self._render_instrument_research_fixture(
+                repository,
+                "tests/fixtures/instrument-research-primary.json",
+                output_path,
+            )
+            research = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("## 基本面", research)
+        self.assertIn("## 行业背景", research)
+        self.assertIn("数据不可用：未提供行业背景的一手证据。", research)
+        self.assertIn("## 数据缺口", research)
+
+    def test_instrument_research_fixture_accepts_non_us_regulatory_disclosure(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "instrument-research.md"
+            result = self._render_instrument_research_fixture(
+                ROOT,
+                "tests/fixtures/instrument-research-non-us.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 标的研究：7203.T", research)
+        self.assertIn("监管披露", research)
+        self.assertIn("非美国发行人", research)
+
+    def test_offline_suite_verifier_rejects_instrument_research_without_a_single_instrument(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "instrument-research" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract["single_instrument_required"] = False
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("single instrument", result.stdout + result.stderr)
 
     def test_market_snapshot_fixture_renders_a_partial_markdown_snapshot(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:

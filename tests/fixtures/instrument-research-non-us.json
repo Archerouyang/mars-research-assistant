@@ -1,0 +1,63 @@
+{
+  "instrument": "7203.T",
+  "research_as_of": "2026-07-26T09:00:00+09:00",
+  "identity": {
+    "issuer": "Toyota Motor Corporation（非美国发行人）",
+    "source": {
+      "name": "年度证券报告",
+      "kind": "regulatory_filing",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/example",
+      "as_of": "2026-06-25"
+    }
+  },
+  "fundamentals": [
+    {
+      "label": "财务披露",
+      "statement": "发行人通过适用监管披露提供年度财务资料。",
+      "source": {
+        "name": "年度证券报告",
+        "kind": "regulatory_filing",
+        "url": "https://disclosure2dl.edinet-fsa.go.jp/example",
+        "as_of": "2026-06-25"
+      }
+    }
+  ],
+  "industry_context": [
+    {
+      "label": "行业环境",
+      "statement": "发行人在监管披露的经营讨论中说明汽车业务环境。",
+      "source": {
+        "name": "年度证券报告",
+        "kind": "regulatory_filing",
+        "url": "https://disclosure2dl.edinet-fsa.go.jp/example",
+        "as_of": "2026-06-25"
+      }
+    }
+  ],
+  "company_events": [
+    {
+      "label": "业绩材料",
+      "statement": "发行人 IR 已发布最近一期业绩材料。",
+      "source": {
+        "name": "业绩发布资料",
+        "kind": "issuer_ir",
+        "url": "https://global.toyota/en/ir/example",
+        "as_of": "2026-05-08"
+      }
+    }
+  ],
+  "inferences": [
+    {
+      "label": "后续验证",
+      "statement": "应继续以适用监管披露和发行人更新验证经营环境变化。",
+      "validation_condition": "后续监管披露或发行人业绩材料确认经营环境变化。",
+      "source": {
+        "name": "年度证券报告",
+        "kind": "regulatory_filing",
+        "url": "https://disclosure2dl.edinet-fsa.go.jp/example",
+        "as_of": "2026-06-25"
+      }
+    }
+  ],
+  "data_gaps": []
+}

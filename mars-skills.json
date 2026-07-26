@@ -13,6 +13,10 @@
     {
       "id": "market-snapshot",
       "display_name": "市场快照"
+    },
+    {
+      "id": "instrument-research",
+      "display_name": "标的研究"
     }
   ]
 }

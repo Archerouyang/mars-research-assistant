@@ -1,0 +1,11 @@
+{
+  "instrument": "UNKNOWN",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "identity": {
+    "status": "unavailable",
+    "reason": "发行人身份未确认，无法把该符号可靠对应到适用的 SEC 或发行人资料。"
+  },
+  "data_gaps": [
+    "不会将聚合资料写成公司事实；需要确认发行人身份或提供一手披露。"
+  ]
+}
