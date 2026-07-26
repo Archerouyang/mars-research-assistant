@@ -36,6 +36,8 @@
     "required_markers": [
       "# Price Action：",
       "## 数据状态",
+      "来源：",
+      "as_of：",
       "## 数据缺口"
     ]
   },

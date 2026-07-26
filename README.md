@@ -34,11 +34,20 @@ uv venv .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
+## 可选本地 FMP
+
+免费基础能力不需要 API key。若你的本地 Agent 环境已经私密配置了 FMP，并且具备相应 EOD
+权限，市场快照或 Price Action 可以把它作为可选数据增强；FMP 不可用、未授权或限流时，仍应
+显示数据缺口或使用适用的公开 best-effort 数据。
+
+本仓库不保存、读取或要求任何 FMP 凭据。不要将凭据放入仓库、Skill 目录、fixture、文档或日志。
+
 ## 验证
 
 ```bash
 bash scripts/verify-mars-skills.sh
 ```
 
-该命令只使用本地 fixture 和临时目录；不会请求市场数据、读取账户、写入 Drive 或
-需要任何凭据。
+这是唯一的离线发布验收入口：它检查六个 Skill 的发现与独立安装、fixture 场景、来源/时间/缺口
+标注、确认写入边界，以及凭据、私有路径和退役能力的公共表面门禁。该命令只使用本地 fixture
+和临时目录；不会请求市场数据、读取账户、写入 Drive 或需要任何凭据。

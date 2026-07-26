@@ -24,6 +24,24 @@ SECRET_ASSIGNMENT = re.compile(
 )
 LEGACY_TERMS = ("long" + "bridge", "mars" + "-research-assistant")
 POLICY_BLOCK = re.compile(r"```mars-skill-policy\n(?P<payload>\{.*?\})\n```", re.DOTALL)
+RELEASE_SKILL_IDS = frozenset(
+    {
+        "ask-mars",
+        "market-catalysts-brief",
+        "market-snapshot",
+        "instrument-research",
+        "price-action",
+        "drive-writeback",
+    }
+)
+DATA_EVIDENCE_MARKERS = {
+    "market-catalysts-brief": frozenset(
+        {"研究时间：", "- 来源：", "- 来源时间："}
+    ),
+    "market-snapshot": frozenset({"来源：", "as_of："}),
+    "instrument-research": frozenset({"来源：", "as_of："}),
+    "price-action": frozenset({"来源：", "as_of："}),
+}
 
 
 def _fail(message: str) -> None:
@@ -144,7 +162,9 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
         if first.get("sequence") != ["市场催化剂简报", "标的研究"]:
             _fail("Ask Mars compound-request sequence changed")
     _verify_required_contract_values(contract)
-    _verify_fixture_scenarios(contract["scenarios"], contract.get("fixture_validation"))
+    _verify_fixture_scenarios(
+        identifier, contract["scenarios"], contract.get("fixture_validation")
+    )
 
 
 def _fixture_path(path_value: object, context: str) -> Path:
@@ -170,7 +190,7 @@ def _verify_required_contract_values(contract: dict[str, Any]) -> None:
 
 
 def _verify_fixture_scenarios(
-    scenarios: list[dict[str, Any]], validation: object
+    identifier: str, scenarios: list[dict[str, Any]], validation: object
 ) -> None:
     fixture_scenarios = [scenario for scenario in scenarios if "fixture" in scenario]
     if not fixture_scenarios:
@@ -188,6 +208,13 @@ def _verify_fixture_scenarios(
         isinstance(marker, str) and marker for marker in markers
     ):
         _fail("fixture validation requires rendered evidence markers")
+    evidence_markers = DATA_EVIDENCE_MARKERS.get(identifier, frozenset())
+    missing_evidence_markers = evidence_markers - set(markers)
+    if missing_evidence_markers:
+        _fail(
+            f"evidence markers missing: {identifier} "
+            f"({', '.join(sorted(missing_evidence_markers))})"
+        )
     for scenario in fixture_scenarios:
         fixture = _fixture_path(scenario.get("fixture"), "fixture")
         with tempfile.TemporaryDirectory(prefix="mars-skills-fixture-") as temporary:
@@ -301,6 +328,8 @@ def _verify_isolated_copies(skill_directories: dict[str, Path]) -> None:
 
 def main() -> int:
     manifest_skills = _manifest_skills()
+    if set(manifest_skills) != RELEASE_SKILL_IDS:
+        _fail("six release Skills are required")
     skill_directories = _skill_directories()
     if set(manifest_skills) != set(skill_directories):
         _fail("collection manifest and discovered Skills differ")

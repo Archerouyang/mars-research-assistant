@@ -98,6 +98,7 @@ def render_research(fixture: dict[str, Any]) -> str:
             "",
             "## 事实与证据",
             f"数据不可用：{reason}",
+            f"- 来源：未提供可验证资料（as_of：{research_as_of}）",
             "",
             "## 数据缺口",
         ]

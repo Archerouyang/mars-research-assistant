@@ -146,6 +146,52 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("market-catalysts-brief", result.stdout)
 
+    def test_offline_suite_verifier_requires_all_six_release_skills(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            manifest_path = repository / "mars-skills.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["skills"] = [
+                skill for skill in manifest["skills"] if skill["id"] != "drive-writeback"
+            ]
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            shutil.rmtree(repository / "skills" / "drive-writeback")
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("six release Skills", result.stdout + result.stderr)
+
+    def test_offline_suite_verifier_requires_evidence_markers_for_data_skills(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "price-action" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            markers = contract["fixture_validation"]["required_markers"]
+            contract["fixture_validation"]["required_markers"] = [
+                marker for marker in markers if marker != "as_of："
+            ]
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("evidence markers missing", result.stdout + result.stderr)
+
+    def test_readme_describes_optional_local_fmp_and_the_single_release_check(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("FMP", readme)
+        self.assertIn("可选", readme)
+        self.assertIn("bash scripts/verify-mars-skills.sh", readme)
+        self.assertNotIn("long" + "bridge", readme.lower())
+
     def test_drive_writeback_proposes_a_daily_destination_without_writing(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             output_path = Path(temporary) / "drive-writeback.md"
@@ -537,6 +583,8 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("# 标的研究：UNKNOWN", research)
         self.assertIn("发行人身份未确认", research)
         self.assertIn("数据不可用", research)
+        self.assertIn("来源：未提供可验证资料", research)
+        self.assertIn("as_of：2026-07-26T09:00:00-04:00", research)
         self.assertIn("不会将聚合资料写成公司事实", research)
         self.assertNotIn("## 基本面", research)
 
