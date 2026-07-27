@@ -6,6 +6,18 @@
   "price_action_only": true,
   "ohlcv_quality_required": true,
   "optional_fmp_eod": true,
+  "static_daily_svg_chart": {
+    "fmp_eod_1d": true,
+    "visible_bars": 120,
+    "minimum_history_bars": 319,
+    "sma_windows": [
+      20,
+      50,
+      200
+    ],
+    "volume_panel": true,
+    "key_levels": true
+  },
   "data_source_selection": {
     "ask_fmp_before_fetch": true,
     "yfinance_when_fmp_not_selected": true,
@@ -15,6 +27,7 @@
     "research_as_of",
     "data_status",
     "data_source_selection",
+    "daily_static_svg_chart",
     "price_structure",
     "key_levels",
     "scenarios_invalidation",
@@ -35,6 +48,18 @@
     "price_action_only": true,
     "ohlcv_quality_required": true,
     "optional_fmp_eod": true,
+    "static_daily_svg_chart": {
+      "fmp_eod_1d": true,
+      "visible_bars": 120,
+      "minimum_history_bars": 319,
+      "sma_windows": [
+        20,
+        50,
+        200
+      ],
+      "volume_panel": true,
+      "key_levels": true
+    },
     "data_source_selection": {
       "ask_fmp_before_fetch": true,
       "yfinance_when_fmp_not_selected": true,
@@ -61,6 +86,7 @@
         "research_as_of": "included",
         "data_status": "qualified",
         "data_source_selection": "yfinance",
+        "daily_static_svg_chart": "withheld",
         "price_structure": "included",
         "key_levels": "included",
         "scenarios_invalidation": "included",
@@ -74,6 +100,7 @@
         "research_as_of": "included",
         "data_status": "unavailable",
         "data_source_selection": "yfinance",
+        "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
         "scenarios_invalidation": "withheld",
@@ -87,6 +114,7 @@
         "research_as_of": "included",
         "data_status": "rate_limited",
         "data_source_selection": "fmp_confirmation_pending",
+        "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
         "scenarios_invalidation": "withheld",
@@ -100,9 +128,24 @@
         "research_as_of": "included",
         "data_status": "not_entitled",
         "data_source_selection": "fmp_confirmation_pending",
+        "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
         "scenarios_invalidation": "withheld",
+        "data_gap": "included"
+      }
+    },
+    {
+      "request": "用本地 FMP EOD 的合格 1D OHLCV 研究 NVDA，并输出日线静态图。",
+      "fixture": "tests/fixtures/price-action-fmp-daily-chart.json",
+      "expected": {
+        "research_as_of": "included",
+        "data_status": "qualified",
+        "data_source_selection": "fmp",
+        "daily_static_svg_chart": "included",
+        "price_structure": "included",
+        "key_levels": "included",
+        "scenarios_invalidation": "included",
         "data_gap": "included"
       }
     }

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from xml.etree import ElementTree
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -387,8 +388,169 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("## 关键位", research)
         self.assertIn("## 情景与失效", research)
         self.assertIn("失效条件", research)
+        self.assertNotIn("<svg", research)
         self.assertNotIn("## 基本面", research)
         self.assertNotIn("## 宏观", research)
+
+    def test_price_action_renders_static_svg_for_qualified_fmp_daily_ohlcv(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-fmp-daily-chart.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("## 日线图", research)
+        self.assertIn('<svg', research)
+        self.assertIn('aria-label="NVDA 日线 Price Action 图"', research)
+        self.assertEqual(research.count('data-candle="'), 120)
+        self.assertEqual(research.count('data-volume="'), 120)
+        self.assertIn('data-series="sma-20"', research)
+        self.assertIn('data-series="sma-50"', research)
+        self.assertIn('data-series="sma-200"', research)
+        self.assertIn('data-legend="sma-20"', research)
+        self.assertIn('data-legend="sma-50"', research)
+        self.assertIn('data-legend="sma-200"', research)
+        self.assertIn('data-key-level="支撑"', research)
+        self.assertIn('data-key-level="阻力"', research)
+        self.assertIn("FMP EOD", research)
+        self.assertIn("2026-06-19T16:00:00-04:00", research)
+        svg = research[research.index("<svg") : research.index("</svg>") + 6]
+        root = ElementTree.fromstring(svg)
+        volume_bars = [
+            element for element in root.iter() if "data-volume" in element.attrib
+        ]
+        sma200 = next(
+            element
+            for element in root.iter()
+            if element.attrib.get("data-series") == "sma-200"
+        )
+        self.assertEqual(len(volume_bars), 120)
+        self.assertEqual(len(sma200.attrib["points"].split()), 120)
+        self.assertTrue(
+            all(
+                abs(float(bar.attrib["y"]) + float(bar.attrib["height"]) - 510.0)
+                < 0.02
+                for bar in volume_bars
+            )
+        )
+
+    def test_price_action_with_fmp_daily_history_below_full_sma200_window_withholds_chart_and_conclusion(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = (
+                repository / "tests" / "fixtures" / "price-action-fmp-daily-chart.json"
+            )
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["ohlcv"]["bars"] = fixture["ohlcv"]["bars"][-318:]
+            fixture["ohlcv"]["coverage_start"] = fixture["ohlcv"]["bars"][0][
+                "timestamp"
+            ][:10]
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                repository,
+                "tests/fixtures/price-action-fmp-daily-chart.json",
+                output_path,
+            )
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("少于 319 根", research)
+        self.assertNotIn("<svg", research)
+        self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_with_nonpositive_fmp_volume_withholds_chart_and_conclusion(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = (
+                repository / "tests" / "fixtures" / "price-action-fmp-daily-chart.json"
+            )
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            for bar in fixture["ohlcv"]["bars"][-120:]:
+                bar["volume"] = 0
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                repository,
+                "tests/fixtures/price-action-fmp-daily-chart.json",
+                output_path,
+            )
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("positive volume", research)
+        self.assertNotIn("<svg", research)
+        self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_rejects_unqualified_fmp_daily_chart_inputs(
+        self,
+    ) -> None:
+        cases = (
+            ("unadjusted", "OHLCV adjustment must be adjusted"),
+            ("out_of_order", "OHLCV timestamps must be strictly increasing"),
+            ("non_finite", "OHLCV bar requires finite close"),
+            ("negative_volume", "OHLCV bar requires positive volume"),
+            ("invalid_candle", "OHLCV bar has inconsistent price bounds"),
+            ("unparseable_level", "key level price must contain a number"),
+        )
+        for case, expected_reason in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory(
+                prefix="mars-skills-test-"
+            ) as temporary:
+                repository = self._copy_repository(Path(temporary))
+                fixture_path = (
+                    repository
+                    / "tests"
+                    / "fixtures"
+                    / "price-action-fmp-daily-chart.json"
+                )
+                fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+                bars = fixture["ohlcv"]["bars"]
+                if case == "unadjusted":
+                    fixture["ohlcv"]["adjustment"] = "unadjusted"
+                elif case == "out_of_order":
+                    bars[-2], bars[-1] = bars[-1], bars[-2]
+                elif case == "non_finite":
+                    bars[-1]["close"] = float("nan")
+                elif case == "negative_volume":
+                    bars[-1]["volume"] = -1
+                elif case == "invalid_candle":
+                    bars[-1]["low"] = bars[-1]["high"] + 1
+                else:
+                    fixture["key_levels"][0]["price"] = "N/A"
+                fixture_path.write_text(
+                    json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                output_path = Path(temporary) / "price-action.md"
+                result = self._render_price_action_fixture(
+                    repository,
+                    "tests/fixtures/price-action-fmp-daily-chart.json",
+                    output_path,
+                )
+                research = output_path.read_text(encoding="utf-8")
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn(expected_reason, research)
+            self.assertNotIn("<svg", research)
+            self.assertNotIn("## 价格结构", research)
 
     def test_price_action_uses_qualified_user_supplied_ohlcv_without_source_prompt(
         self,
