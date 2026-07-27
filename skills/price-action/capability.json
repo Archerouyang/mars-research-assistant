@@ -8,6 +8,7 @@
   "optional_fmp_eod": true,
   "static_daily_svg_chart": {
     "fmp_eod_1d": true,
+    "yfinance_1d": true,
     "visible_bars": 120,
     "minimum_history_bars": 319,
     "sma_windows": [
@@ -50,6 +51,7 @@
     "optional_fmp_eod": true,
     "static_daily_svg_chart": {
       "fmp_eod_1d": true,
+      "yfinance_1d": true,
       "visible_bars": 120,
       "minimum_history_bars": 319,
       "sma_windows": [
@@ -80,16 +82,30 @@
   },
   "scenarios": [
     {
-      "request": "用日线研究 NVDA 的价格结构、关键位和失效条件，不使用 FMP。",
-      "fixture": "tests/fixtures/price-action-valid.json",
+      "request": "FMP 失败后，我确认用 yfinance 日线研究 NVDA 的价格结构、关键位和失效条件。",
+      "fixture": "tests/fixtures/price-action-yfinance-daily-chart.json",
       "expected": {
         "research_as_of": "included",
         "data_status": "qualified",
-        "data_source_selection": "yfinance",
-        "daily_static_svg_chart": "withheld",
+        "data_source_selection": "fmp_to_yfinance_confirmed",
+        "daily_static_svg_chart": "included",
         "price_structure": "included",
         "key_levels": "included",
         "scenarios_invalidation": "included",
+        "data_gap": "included"
+      }
+    },
+    {
+      "request": "不使用 FMP，用 yfinance 日线研究 NVDA，但历史覆盖不足。",
+      "fixture": "tests/fixtures/price-action-valid.json",
+      "expected": {
+        "research_as_of": "included",
+        "data_status": "unavailable",
+        "data_source_selection": "yfinance",
+        "daily_static_svg_chart": "withheld",
+        "price_structure": "withheld",
+        "key_levels": "withheld",
+        "scenarios_invalidation": "withheld",
         "data_gap": "included"
       }
     },
@@ -128,6 +144,34 @@
         "research_as_of": "included",
         "data_status": "not_entitled",
         "data_source_selection": "fmp_confirmation_pending",
+        "daily_static_svg_chart": "withheld",
+        "price_structure": "withheld",
+        "key_levels": "withheld",
+        "scenarios_invalidation": "withheld",
+        "data_gap": "included"
+      }
+    },
+    {
+      "request": "不使用 FMP，用 yfinance 日线研究 NVDA，但 OHLCV 缺少成交量字段。",
+      "fixture": "tests/fixtures/price-action-yfinance-missing-field.json",
+      "expected": {
+        "research_as_of": "included",
+        "data_status": "unavailable",
+        "data_source_selection": "yfinance",
+        "daily_static_svg_chart": "withheld",
+        "price_structure": "withheld",
+        "key_levels": "withheld",
+        "scenarios_invalidation": "withheld",
+        "data_gap": "included"
+      }
+    },
+    {
+      "request": "FMP 失败后已确认切换 yfinance，但 yfinance 仍不可用。",
+      "fixture": "tests/fixtures/price-action-yfinance-unavailable.json",
+      "expected": {
+        "research_as_of": "included",
+        "data_status": "rate_limited",
+        "data_source_selection": "fmp_to_yfinance_confirmed",
         "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",

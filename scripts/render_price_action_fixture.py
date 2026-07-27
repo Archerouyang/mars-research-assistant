@@ -259,7 +259,7 @@ def _static_daily_svg(
 ) -> str:
     if len(bars) < CHART_MINIMUM_HISTORY_BARS:
         raise PriceActionError(
-            "FMP 日线 OHLCV 少于 319 根，无法为最近 120 根生成完整 SMA200。"
+            "日线 OHLCV 少于 319 根，无法为最近 120 根生成完整 SMA200。"
         )
     visible = bars[-CHART_VISIBLE_BARS:]
     closes = [float(bar["close"]) for bar in bars]
@@ -565,6 +565,27 @@ def _scenarios(scenarios: object) -> list[str]:
     return rendered
 
 
+def _daily_chart_approved(
+    timeframe: str, provider: Provider, source_selection: SourceSelection
+) -> bool:
+    if timeframe != "1D":
+        return False
+    if provider.kind == "fmp_eod":
+        return (
+            source_selection.selected == "fmp"
+            and source_selection.yfinance_fallback_consent == "not_needed"
+        )
+    if provider.kind == "public_best_effort":
+        return (
+            source_selection.selected == "yfinance"
+            and source_selection.yfinance_fallback_consent == "not_applicable"
+        ) or (
+            source_selection.selected == "fmp"
+            and source_selection.yfinance_fallback_consent == "granted"
+        )
+    return False
+
+
 def render_price_action(fixture: dict[str, Any]) -> str:
     instrument = _text(fixture.get("instrument"), "fixture")
     timeframe = _text(fixture.get("timeframe"), "fixture")
@@ -609,12 +630,7 @@ def render_price_action(fixture: dict[str, Any]) -> str:
         )
     structure = _text(fixture.get("structure"), "fixture")
     chart: list[str] = []
-    if (
-        timeframe == "1D"
-        and source_selection.selected == "fmp"
-        and source_selection.yfinance_fallback_consent == "not_needed"
-        and provider.kind == "fmp_eod"
-    ):
+    if _daily_chart_approved(timeframe, provider, source_selection):
         try:
             chart = [
                 "## 日线图",

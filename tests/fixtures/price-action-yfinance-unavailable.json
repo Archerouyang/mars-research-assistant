@@ -1,0 +1,15 @@
+{
+  "instrument": "NVDA",
+  "timeframe": "1D",
+  "research_as_of": "2026-07-26T09:00:00-04:00",
+  "source_selection": {
+    "selected": "fmp",
+    "yfinance_fallback_consent": "granted"
+  },
+  "provider": {
+    "name": "yfinance EOD",
+    "kind": "public_best_effort",
+    "status": "rate_limited",
+    "as_of": "2026-07-25T16:00:00-04:00"
+  }
+}

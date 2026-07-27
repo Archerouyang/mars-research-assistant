@@ -39,7 +39,8 @@ uv pip install --python .venv/bin/python -r requirements.txt
 免费基础能力不需要 API key。Price Action 在没有用户提供合格 OHLCV 时，会先询问是否使用
 本地私密配置的 FMP；用户未配置或明确不使用 FMP 时，才使用 yfinance。若用户已选择 FMP
 但它不可用、未授权、限流或数据不合格，Skill 会说明原因并询问是否切换 yfinance，不会静默
-降级。yfinance 必须标为非官方 best-effort，且仍须通过 OHLCV 质量检查。
+降级。yfinance 必须标为非官方 best-effort，且仍须通过与 FMP 相同的 OHLCV 质量检查；合格
+日线输入会交付同一份 Markdown 中的静态 SVG，数据不合格则只交付状态和缺口。
 
 本仓库不保存、读取或要求任何 FMP 凭据。不要将凭据放入仓库、Skill 目录、fixture、文档或日志。
 
