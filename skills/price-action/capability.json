@@ -5,29 +5,25 @@
   "single_instrument_required": true,
   "price_action_only": true,
   "ohlcv_quality_required": true,
-  "optional_fmp_eod": true,
+  "yfinance_only": true,
   "static_daily_svg_chart": {
-    "fmp_eod_1d": true,
     "yfinance_1d": true,
     "visible_bars": 120,
     "minimum_history_bars": 319,
-    "sma_windows": [
-      20,
-      50,
-      200
-    ],
+    "sma_windows": [20, 50, 200],
     "volume_panel": true,
     "key_levels": true
   },
-  "data_source_selection": {
-    "ask_fmp_before_fetch": true,
-    "yfinance_when_fmp_not_selected": true,
-    "fmp_failure_requires_yfinance_confirmation": true
+  "data_source": {
+    "provider": "yfinance",
+    "classification": "non_official_best_effort",
+    "credentials_required": false,
+    "fallback_allowed": false
   },
   "response_fields": [
     "research_as_of",
     "data_status",
-    "data_source_selection",
+    "data_source",
     "daily_static_svg_chart",
     "price_structure",
     "key_levels",
@@ -48,24 +44,20 @@
     "single_instrument_required": true,
     "price_action_only": true,
     "ohlcv_quality_required": true,
-    "optional_fmp_eod": true,
+    "yfinance_only": true,
     "static_daily_svg_chart": {
-      "fmp_eod_1d": true,
       "yfinance_1d": true,
       "visible_bars": 120,
       "minimum_history_bars": 319,
-      "sma_windows": [
-        20,
-        50,
-        200
-      ],
+      "sma_windows": [20, 50, 200],
       "volume_panel": true,
       "key_levels": true
     },
-    "data_source_selection": {
-      "ask_fmp_before_fetch": true,
-      "yfinance_when_fmp_not_selected": true,
-      "fmp_failure_requires_yfinance_confirmation": true
+    "data_source": {
+      "provider": "yfinance",
+      "classification": "non_official_best_effort",
+      "credentials_required": false,
+      "fallback_allowed": false
     }
   },
   "fixture_validation": {
@@ -74,7 +66,7 @@
     "required_markers": [
       "# Price Action：",
       "## 数据状态",
-      "数据选择：",
+      "数据源：yfinance",
       "来源：",
       "as_of：",
       "## 数据缺口"
@@ -82,12 +74,12 @@
   },
   "scenarios": [
     {
-      "request": "FMP 失败后，我确认用 yfinance 日线研究 NVDA 的价格结构、关键位和失效条件。",
+      "request": "用 yfinance 日线研究 NVDA 的价格结构、关键位和失效条件。",
       "fixture": "tests/fixtures/price-action-yfinance-daily-chart.json",
       "expected": {
         "research_as_of": "included",
         "data_status": "qualified",
-        "data_source_selection": "fmp_to_yfinance_confirmed",
+        "data_source": "yfinance_only",
         "daily_static_svg_chart": "included",
         "price_structure": "included",
         "key_levels": "included",
@@ -96,12 +88,12 @@
       }
     },
     {
-      "request": "不使用 FMP，用 yfinance 日线研究 NVDA，但历史覆盖不足。",
+      "request": "用 yfinance 日线研究 NVDA，但历史覆盖不足。",
       "fixture": "tests/fixtures/price-action-valid.json",
       "expected": {
         "research_as_of": "included",
         "data_status": "unavailable",
-        "data_source_selection": "yfinance",
+        "data_source": "yfinance_only",
         "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
@@ -110,12 +102,12 @@
       }
     },
     {
-      "request": "用日线研究 NVDA，但没有带时区的 OHLCV。",
+      "request": "用 yfinance 日线研究 NVDA，但没有带时区的 OHLCV。",
       "fixture": "tests/fixtures/price-action-invalid-timezone.json",
       "expected": {
         "research_as_of": "included",
         "data_status": "unavailable",
-        "data_source_selection": "yfinance",
+        "data_source": "yfinance_only",
         "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
@@ -124,72 +116,16 @@
       }
     },
     {
-      "request": "用本地 FMP EOD 研究 NVDA，但该数据源限流。",
-      "fixture": "tests/fixtures/price-action-fmp-rate-limited.json",
-      "expected": {
-        "research_as_of": "included",
-        "data_status": "rate_limited",
-        "data_source_selection": "fmp_confirmation_pending",
-        "daily_static_svg_chart": "withheld",
-        "price_structure": "withheld",
-        "key_levels": "withheld",
-        "scenarios_invalidation": "withheld",
-        "data_gap": "included"
-      }
-    },
-    {
-      "request": "用本地 FMP EOD 研究 NVDA，但该账户没有 EOD 权限。",
-      "fixture": "tests/fixtures/price-action-fmp-not-entitled.json",
-      "expected": {
-        "research_as_of": "included",
-        "data_status": "not_entitled",
-        "data_source_selection": "fmp_confirmation_pending",
-        "daily_static_svg_chart": "withheld",
-        "price_structure": "withheld",
-        "key_levels": "withheld",
-        "scenarios_invalidation": "withheld",
-        "data_gap": "included"
-      }
-    },
-    {
-      "request": "不使用 FMP，用 yfinance 日线研究 NVDA，但 OHLCV 缺少成交量字段。",
-      "fixture": "tests/fixtures/price-action-yfinance-missing-field.json",
-      "expected": {
-        "research_as_of": "included",
-        "data_status": "unavailable",
-        "data_source_selection": "yfinance",
-        "daily_static_svg_chart": "withheld",
-        "price_structure": "withheld",
-        "key_levels": "withheld",
-        "scenarios_invalidation": "withheld",
-        "data_gap": "included"
-      }
-    },
-    {
-      "request": "FMP 失败后已确认切换 yfinance，但 yfinance 仍不可用。",
+      "request": "用 yfinance 日线研究 NVDA，但数据源限流。",
       "fixture": "tests/fixtures/price-action-yfinance-unavailable.json",
       "expected": {
         "research_as_of": "included",
         "data_status": "rate_limited",
-        "data_source_selection": "fmp_to_yfinance_confirmed",
+        "data_source": "yfinance_only",
         "daily_static_svg_chart": "withheld",
         "price_structure": "withheld",
         "key_levels": "withheld",
         "scenarios_invalidation": "withheld",
-        "data_gap": "included"
-      }
-    },
-    {
-      "request": "用本地 FMP EOD 的合格 1D OHLCV 研究 NVDA，并输出日线静态图。",
-      "fixture": "tests/fixtures/price-action-fmp-daily-chart.json",
-      "expected": {
-        "research_as_of": "included",
-        "data_status": "qualified",
-        "data_source_selection": "fmp",
-        "daily_static_svg_chart": "included",
-        "price_structure": "included",
-        "key_levels": "included",
-        "scenarios_invalidation": "included",
         "data_gap": "included"
       }
     }

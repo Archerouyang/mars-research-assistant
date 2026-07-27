@@ -17,18 +17,15 @@
 **Price Action**：面向价格结构、关键位、情景与失效条件的技术研究；不自动
 包含基本面或行业叙事。
 
-**Price Action 图表**：在合格的 FMP 或经明确选择/确认的 yfinance 日线 OHLCV 的 Price
-Action 交付中内嵌的静态 SVG；以同一份至少 319 根历史日线的数据展示最近 120 根 K 线、
-成交量、SMA20/50/200 与已解析关键位，并标记来源和 as_of。yfinance 图表还须标为非官方
-best-effort。它是一次性研究可视化，不保存浏览器或研究状态。
+**Price Action 图表**：在合格的 yfinance 日线 OHLCV 的 Price Action 交付中内嵌的静态 SVG；
+以同一份至少 319 根历史日线的数据展示最近 120 根 K 线、成交量、SMA20/50/200 与已解析关键位，
+并标记来源和 as_of。yfinance 必须标为非官方 best-effort。它是一次性研究可视化，不保存浏览器或研究状态。
 
 **免费基础能力**：不要求用户提供 API key 也能完成的公开/官方来源研究；
 数据不足时如实呈现缺口。
 
-**OHLCV 适配器**：为需要历史价格、成交量和技术分析的交付提供数据的可替换
-来源。Price Action 在取数前先询问用户是否使用 FMP；用户未配置或选择不使用 FMP
-时，才使用零配置的 yfinance 公开回退。不得静默从 FMP 切换到 yfinance；FMP 失败时
-应展示数据状态并取得用户同意后再切换。两者都必须通过交付所需的 OHLCV 质量检查。
+**OHLCV 适配器**：Price Action 只使用零配置的 yfinance 公开 best-effort 数据。它不提供
+其他来源或回退路径，且必须通过交付所需的 OHLCV 质量检查。
 
 **Drive 写入 Skill**：为完成的研究内容猜测交易研究中心的归档位置，并在
 用户确认后按对应模板新建或更新文档。Ask Mars 可以协助建议，但不能代替用户

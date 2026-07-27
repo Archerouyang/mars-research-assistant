@@ -17,11 +17,8 @@ class PriceActionError(ValueError):
     """Report unusable OHLCV without producing a technical conclusion."""
 
 
-PROVIDER_KINDS = {"public_best_effort", "fmp_eod", "user_supplied"}
-PROVIDER_STATUSES = {"available", "not_configured", "unauthorized", "rate_limited"}
-FMP_ENTITLEMENT_STATUSES = {"available", "not_entitled", "unavailable"}
-SOURCE_SELECTIONS = {"fmp", "yfinance", "user_supplied"}
-YFINANCE_FALLBACK_CONSENTS = {"not_applicable", "not_needed", "pending", "granted"}
+PROVIDER_KINDS = {"public_best_effort"}
+PROVIDER_STATUSES = {"available", "rate_limited", "unavailable"}
 CHART_VISIBLE_BARS = 120
 SMA_WINDOWS = (20, 50, 200)
 CHART_MINIMUM_HISTORY_BARS = CHART_VISIBLE_BARS + max(SMA_WINDOWS) - 1
@@ -39,31 +36,10 @@ class Provider:
     kind: str
     as_of: str
     status: str
-    entitlement_status: str | None
 
     @property
     def label(self) -> str:
-        if self.kind == "public_best_effort":
-            return f"{self.name}（非官方 best-effort）"
-        return self.name
-
-
-@dataclass(frozen=True)
-class SourceSelection:
-    selected: str
-    yfinance_fallback_consent: str
-
-    @property
-    def status_line(self) -> str:
-        if self.selected == "user_supplied":
-            return "数据选择：使用用户提供的 OHLCV。"
-        if self.selected == "yfinance":
-            return "数据选择：未使用 FMP；已选择 yfinance。"
-        if self.yfinance_fallback_consent == "pending":
-            return "数据选择：已选择 FMP；切换至 yfinance 需用户确认。"
-        if self.yfinance_fallback_consent == "granted":
-            return "数据选择：已选择 FMP；用户已确认切换至 yfinance。"
-        return "数据选择：已选择 FMP。"
+        return "yfinance EOD（非官方 best-effort）"
 
 
 @dataclass(frozen=True)
@@ -85,70 +61,19 @@ def _provider(provider: object) -> Provider:
         raise PriceActionError("provider requires an object")
     kind = _text(provider.get("kind"), "provider")
     if kind not in PROVIDER_KINDS:
-        raise PriceActionError("provider kind must be supported")
+        raise PriceActionError("provider must be yfinance public best-effort")
+    if _text(provider.get("name"), "provider") != "yfinance EOD":
+        raise PriceActionError("provider must be yfinance EOD")
     status = _text(provider.get("status", "available"), "provider")
     if status not in PROVIDER_STATUSES:
         raise PriceActionError(
-            "provider status must be one of: available, not_configured, unauthorized, rate_limited"
+            "provider status must be one of: available, rate_limited, unavailable"
         )
-    entitlement_status = None
-    if kind == "fmp_eod":
-        entitlement_status = _text(provider.get("entitlement_status"), "FMP entitlement")
-        if entitlement_status not in FMP_ENTITLEMENT_STATUSES:
-            raise PriceActionError(
-                "FMP entitlement must be one of: available, not_entitled, unavailable"
-            )
     return Provider(
         name=_text(provider.get("name"), "provider"),
         kind=kind,
         as_of=_text(provider.get("as_of"), "provider"),
         status=status,
-        entitlement_status=entitlement_status,
-    )
-
-
-def _source_selection(selection: object, provider: Provider) -> SourceSelection:
-    if not isinstance(selection, dict):
-        raise PriceActionError("source selection requires an object")
-    selected = _text(selection.get("selected"), "source selection")
-    if selected not in SOURCE_SELECTIONS:
-        raise PriceActionError(
-            "source selection must be one of: fmp, yfinance, user_supplied"
-        )
-    consent = _text(
-        selection.get("yfinance_fallback_consent"), "yfinance fallback consent"
-    )
-    if consent not in YFINANCE_FALLBACK_CONSENTS:
-        raise PriceActionError(
-            "yfinance fallback consent must be one of: "
-            "not_applicable, not_needed, pending, granted"
-        )
-    if selected == "user_supplied":
-        if consent != "not_applicable" or provider.kind != "user_supplied":
-            raise PriceActionError("user-supplied selection requires a user-supplied provider")
-    elif selected == "yfinance":
-        if consent != "not_applicable" or provider.kind != "public_best_effort":
-            raise PriceActionError("yfinance selection requires a public best-effort provider")
-    elif provider.kind == "public_best_effort":
-        if consent != "granted":
-            raise PriceActionError("FMP to yfinance fallback requires explicit user consent")
-    elif provider.kind == "fmp_eod":
-        if consent == "granted":
-            raise PriceActionError(
-                "granted yfinance fallback requires a yfinance provider"
-            )
-        if consent == "not_applicable":
-            raise PriceActionError("FMP selection requires a fallback consent state")
-        if (
-            provider.status != "available"
-            or provider.entitlement_status != "available"
-        ) and consent != "pending":
-            raise PriceActionError("unavailable FMP requires pending yfinance confirmation")
-    else:
-        raise PriceActionError("FMP selection requires an FMP or yfinance provider")
-    return SourceSelection(
-        selected=selected,
-        yfinance_fallback_consent=consent,
     )
 
 
@@ -513,7 +438,6 @@ def _unavailable_report(
     instrument: str,
     research_as_of: str,
     provider: Provider,
-    source_selection: SourceSelection,
     reason: str,
 ) -> str:
     return "\n".join(
@@ -523,7 +447,7 @@ def _unavailable_report(
             f"研究截至：{research_as_of}",
             "",
             "## 数据状态",
-            f"- {source_selection.status_line}",
+            "- 数据源：yfinance（非官方 best-effort，唯一数据源）。",
             f"- 来源：{provider.label}（as_of：{provider.as_of}）",
             f"- 数据不可用：{reason}",
             "",
@@ -565,25 +489,8 @@ def _scenarios(scenarios: object) -> list[str]:
     return rendered
 
 
-def _daily_chart_approved(
-    timeframe: str, provider: Provider, source_selection: SourceSelection
-) -> bool:
-    if timeframe != "1D":
-        return False
-    if provider.kind == "fmp_eod":
-        return (
-            source_selection.selected == "fmp"
-            and source_selection.yfinance_fallback_consent == "not_needed"
-        )
-    if provider.kind == "public_best_effort":
-        return (
-            source_selection.selected == "yfinance"
-            and source_selection.yfinance_fallback_consent == "not_applicable"
-        ) or (
-            source_selection.selected == "fmp"
-            and source_selection.yfinance_fallback_consent == "granted"
-        )
-    return False
+def _daily_chart_approved(timeframe: str, provider: Provider) -> bool:
+    return timeframe == "1D" and provider.kind == "public_best_effort"
 
 
 def render_price_action(fixture: dict[str, Any]) -> str:
@@ -591,22 +498,12 @@ def render_price_action(fixture: dict[str, Any]) -> str:
     timeframe = _text(fixture.get("timeframe"), "fixture")
     research_as_of = _text(fixture.get("research_as_of"), "fixture")
     provider = _provider(fixture.get("provider"))
-    source_selection = _source_selection(fixture.get("source_selection"), provider)
     if provider.status != "available":
         return _unavailable_report(
             instrument,
             research_as_of,
             provider,
-            source_selection,
-            f"{provider.name} 暂不可用：{provider.status}。未回显任何凭据。",
-        )
-    if provider.kind == "fmp_eod" and provider.entitlement_status != "available":
-        return _unavailable_report(
-            instrument,
-            research_as_of,
-            provider,
-            source_selection,
-            f"{provider.name} 暂不可用：{provider.entitlement_status}。未回显任何凭据。",
+            f"yfinance 暂不可用：{provider.status}。",
         )
     try:
         time_range, timezone, adjustment, bars = _valid_ohlcv(
@@ -615,22 +512,11 @@ def render_price_action(fixture: dict[str, Any]) -> str:
         key_levels = _key_levels(fixture.get("key_levels"))
     except PriceActionError as error:
         return _unavailable_report(
-            instrument, research_as_of, provider, source_selection, str(error)
-        )
-    if (
-        source_selection.selected == "fmp"
-        and source_selection.yfinance_fallback_consent == "pending"
-    ):
-        return _unavailable_report(
-            instrument,
-            research_as_of,
-            provider,
-            source_selection,
-            f"{provider.name} 正等待用户确认是否切换至 yfinance。未回显任何凭据。",
+            instrument, research_as_of, provider, str(error)
         )
     structure = _text(fixture.get("structure"), "fixture")
     chart: list[str] = []
-    if _daily_chart_approved(timeframe, provider, source_selection):
+    if _daily_chart_approved(timeframe, provider):
         try:
             chart = [
                 "## 日线图",
@@ -639,7 +525,7 @@ def render_price_action(fixture: dict[str, Any]) -> str:
             ]
         except PriceActionError as error:
             return _unavailable_report(
-                instrument, research_as_of, provider, source_selection, str(error)
+                instrument, research_as_of, provider, str(error)
             )
     lines = [
         f"# Price Action：{instrument}",
@@ -648,7 +534,7 @@ def render_price_action(fixture: dict[str, Any]) -> str:
         "",
         "## 数据状态",
         f"- 时间框架：{timeframe}",
-        f"- {source_selection.status_line}",
+        "- 数据源：yfinance（非官方 best-effort，唯一数据源）。",
         f"- 来源：{provider.label}（as_of：{provider.as_of}）",
         f"- 覆盖范围：{time_range}；时区：{timezone}；复权：{adjustment}",
         "",
