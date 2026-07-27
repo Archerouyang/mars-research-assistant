@@ -17,15 +17,13 @@
 
 ## 安装
 
-在本地仓库中安装 Ask Mars：
+安装器只交付完整的六个 Mars Skills：
 
 ```bash
-bash scripts/install-mars-skill.sh --skill ask-mars --target /path/to/agent-skills
+bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 ```
 
-安装其他研究 Skill 时，将 `ask-mars` 替换为对应 id，例如
-`market-catalysts-brief`、`market-snapshot`、`instrument-research`、`price-action` 或
-`drive-writeback`。每个 Skill 都可单独安装。
+脚本会在写入前验证全部源目录和目标冲突；若任一同名 Skill 已存在，会停止而不覆盖或部分安装。
 
 安装命令只会写入明确给出的目标目录，且不会覆盖同名 Skill。开发环境使用 `uv`：
 

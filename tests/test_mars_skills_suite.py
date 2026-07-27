@@ -1298,7 +1298,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Python", result.stdout + result.stderr)
 
-    def test_local_installer_rejects_path_traversal(self) -> None:
+    def test_local_installer_rejects_legacy_single_skill_arguments(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             target = Path(temporary) / "target"
             result = subprocess.run(
@@ -1317,7 +1317,102 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             )
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("invalid Mars Skill id", result.stdout + result.stderr)
+        self.assertIn("usage:", result.stdout + result.stderr)
+
+    def test_local_installer_installs_the_full_release_collection_to_an_empty_target(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            target = Path(temporary) / "target"
+            result = subprocess.run(
+                [
+                    "bash",
+                    "scripts/install-mars-skill.sh",
+                    "--target",
+                    str(target),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            installed = {
+                path.name: {
+                    file.relative_to(path): file.read_bytes()
+                    for file in path.rglob("*")
+                    if file.is_file()
+                }
+                for path in target.iterdir()
+                if path.is_dir() and not path.name.startswith(".")
+            }
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(set(installed), {
+            "ask-mars",
+            "market-catalysts-brief",
+            "market-snapshot",
+            "instrument-research",
+            "price-action",
+            "drive-writeback",
+        })
+        for identifier, installed_files in installed.items():
+            self.assertEqual(
+                {
+                    path.relative_to(ROOT / "skills" / identifier): path.read_bytes()
+                    for path in (ROOT / "skills" / identifier).rglob("*")
+                    if path.is_file()
+                },
+                installed_files,
+            )
+        self.assertIn("installed all 6 Mars Skills", result.stdout)
+
+    def test_local_installer_rejects_a_conflicting_destination_without_partial_install(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            target = Path(temporary) / "target"
+            conflict = target / "price-action"
+            conflict.mkdir(parents=True)
+            (conflict / "sentinel.txt").write_text("preserve", encoding="utf-8")
+            result = subprocess.run(
+                [
+                    "bash",
+                    "scripts/install-mars-skill.sh",
+                    "--target",
+                    str(target),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            remaining = sorted(path.name for path in target.iterdir())
+
+        self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
+        self.assertIn("destination already exists", result.stdout + result.stderr)
+        self.assertEqual(remaining, ["price-action"])
+
+    def test_local_installer_rejects_the_legacy_all_argument(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            target = Path(temporary) / "target"
+            result = subprocess.run(
+                [
+                    "bash",
+                    "scripts/install-mars-skill.sh",
+                    "--all",
+                    "--target",
+                    str(target),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+        self.assertIn("usage:", result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

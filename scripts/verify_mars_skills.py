@@ -304,24 +304,23 @@ def _file_bytes(root: Path) -> dict[Path, bytes]:
 def _verify_isolated_copies(skill_directories: dict[str, Path]) -> None:
     with tempfile.TemporaryDirectory(prefix="mars-skills-verify-") as temporary:
         temporary_root = Path(temporary)
+        target = temporary_root / "agents" / "skills"
+        result = subprocess.run(
+            [
+                "bash",
+                str(ROOT / "scripts" / "install-mars-skill.sh"),
+                "--target",
+                str(target),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            _fail(f"isolated collection install failed: {result.stderr.strip()}")
         for identifier, source in skill_directories.items():
-            destination = temporary_root / "agents" / "skills" / identifier
-            result = subprocess.run(
-                [
-                    "bash",
-                    str(ROOT / "scripts" / "install-mars-skill.sh"),
-                    "--skill",
-                    identifier,
-                    "--target",
-                    str(destination.parent),
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if result.returncode != 0:
-                _fail(f"isolated install failed: {identifier} ({result.stderr.strip()})")
+            destination = target / identifier
             if _file_bytes(source) != _file_bytes(destination):
                 _fail(f"isolated copy differs: {identifier}")
 
