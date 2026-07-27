@@ -17,6 +17,8 @@ class PriceActionError(ValueError):
 PROVIDER_KINDS = {"public_best_effort", "fmp_eod", "user_supplied"}
 PROVIDER_STATUSES = {"available", "not_configured", "unauthorized", "rate_limited"}
 FMP_ENTITLEMENT_STATUSES = {"available", "not_entitled", "unavailable"}
+SOURCE_SELECTIONS = {"fmp", "yfinance", "user_supplied"}
+YFINANCE_FALLBACK_CONSENTS = {"not_applicable", "not_needed", "pending", "granted"}
 
 
 @dataclass(frozen=True)
@@ -32,6 +34,24 @@ class Provider:
         if self.kind == "public_best_effort":
             return f"{self.name}（非官方 best-effort）"
         return self.name
+
+
+@dataclass(frozen=True)
+class SourceSelection:
+    selected: str
+    yfinance_fallback_consent: str
+
+    @property
+    def status_line(self) -> str:
+        if self.selected == "user_supplied":
+            return "数据选择：使用用户提供的 OHLCV。"
+        if self.selected == "yfinance":
+            return "数据选择：未使用 FMP；已选择 yfinance。"
+        if self.yfinance_fallback_consent == "pending":
+            return "数据选择：已选择 FMP；切换至 yfinance 需用户确认。"
+        if self.yfinance_fallback_consent == "granted":
+            return "数据选择：已选择 FMP；用户已确认切换至 yfinance。"
+        return "数据选择：已选择 FMP。"
 
 
 def _text(value: object, context: str) -> str:
@@ -64,6 +84,51 @@ def _provider(provider: object) -> Provider:
         as_of=_text(provider.get("as_of"), "provider"),
         status=status,
         entitlement_status=entitlement_status,
+    )
+
+
+def _source_selection(selection: object, provider: Provider) -> SourceSelection:
+    if not isinstance(selection, dict):
+        raise PriceActionError("source selection requires an object")
+    selected = _text(selection.get("selected"), "source selection")
+    if selected not in SOURCE_SELECTIONS:
+        raise PriceActionError(
+            "source selection must be one of: fmp, yfinance, user_supplied"
+        )
+    consent = _text(
+        selection.get("yfinance_fallback_consent"), "yfinance fallback consent"
+    )
+    if consent not in YFINANCE_FALLBACK_CONSENTS:
+        raise PriceActionError(
+            "yfinance fallback consent must be one of: "
+            "not_applicable, not_needed, pending, granted"
+        )
+    if selected == "user_supplied":
+        if consent != "not_applicable" or provider.kind != "user_supplied":
+            raise PriceActionError("user-supplied selection requires a user-supplied provider")
+    elif selected == "yfinance":
+        if consent != "not_applicable" or provider.kind != "public_best_effort":
+            raise PriceActionError("yfinance selection requires a public best-effort provider")
+    elif provider.kind == "public_best_effort":
+        if consent != "granted":
+            raise PriceActionError("FMP to yfinance fallback requires explicit user consent")
+    elif provider.kind == "fmp_eod":
+        if consent == "granted":
+            raise PriceActionError(
+                "granted yfinance fallback requires a yfinance provider"
+            )
+        if consent == "not_applicable":
+            raise PriceActionError("FMP selection requires a fallback consent state")
+        if (
+            provider.status != "available"
+            or provider.entitlement_status != "available"
+        ) and consent != "pending":
+            raise PriceActionError("unavailable FMP requires pending yfinance confirmation")
+    else:
+        raise PriceActionError("FMP selection requires an FMP or yfinance provider")
+    return SourceSelection(
+        selected=selected,
+        yfinance_fallback_consent=consent,
     )
 
 
@@ -100,7 +165,11 @@ def _valid_ohlcv(ohlcv: object, requested_timeframe: str) -> tuple[str, str, str
 
 
 def _unavailable_report(
-    instrument: str, research_as_of: str, provider: Provider, reason: str
+    instrument: str,
+    research_as_of: str,
+    provider: Provider,
+    source_selection: SourceSelection,
+    reason: str,
 ) -> str:
     return "\n".join(
         (
@@ -109,6 +178,7 @@ def _unavailable_report(
             f"研究截至：{research_as_of}",
             "",
             "## 数据状态",
+            f"- {source_selection.status_line}",
             f"- 来源：{provider.label}（as_of：{provider.as_of}）",
             f"- 数据不可用：{reason}",
             "",
@@ -159,11 +229,13 @@ def render_price_action(fixture: dict[str, Any]) -> str:
     timeframe = _text(fixture.get("timeframe"), "fixture")
     research_as_of = _text(fixture.get("research_as_of"), "fixture")
     provider = _provider(fixture.get("provider"))
+    source_selection = _source_selection(fixture.get("source_selection"), provider)
     if provider.status != "available":
         return _unavailable_report(
             instrument,
             research_as_of,
             provider,
+            source_selection,
             f"{provider.name} 暂不可用：{provider.status}。未回显任何凭据。",
         )
     if provider.kind == "fmp_eod" and provider.entitlement_status != "available":
@@ -171,12 +243,26 @@ def render_price_action(fixture: dict[str, Any]) -> str:
             instrument,
             research_as_of,
             provider,
+            source_selection,
             f"{provider.name} 暂不可用：{provider.entitlement_status}。未回显任何凭据。",
         )
     try:
         time_range, timezone, adjustment = _valid_ohlcv(fixture.get("ohlcv"), timeframe)
     except PriceActionError as error:
-        return _unavailable_report(instrument, research_as_of, provider, str(error))
+        return _unavailable_report(
+            instrument, research_as_of, provider, source_selection, str(error)
+        )
+    if (
+        source_selection.selected == "fmp"
+        and source_selection.yfinance_fallback_consent == "pending"
+    ):
+        return _unavailable_report(
+            instrument,
+            research_as_of,
+            provider,
+            source_selection,
+            f"{provider.name} 正等待用户确认是否切换至 yfinance。未回显任何凭据。",
+        )
     structure = _text(fixture.get("structure"), "fixture")
     lines = [
         f"# Price Action：{instrument}",
@@ -185,6 +271,7 @@ def render_price_action(fixture: dict[str, Any]) -> str:
         "",
         "## 数据状态",
         f"- 时间框架：{timeframe}",
+        f"- {source_selection.status_line}",
         f"- 来源：{provider.label}（as_of：{provider.as_of}）",
         f"- 覆盖范围：{time_range}；时区：{timezone}；复权：{adjustment}",
         "",

@@ -381,13 +381,31 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertIn("# Price Action：NVDA", research)
         self.assertIn("## 数据状态", research)
-        self.assertIn("公开 best-effort EOD", research)
+        self.assertIn("yfinance EOD（非官方 best-effort）", research)
+        self.assertIn("数据选择：未使用 FMP；已选择 yfinance。", research)
         self.assertIn("## 价格结构", research)
         self.assertIn("## 关键位", research)
         self.assertIn("## 情景与失效", research)
         self.assertIn("失效条件", research)
         self.assertNotIn("## 基本面", research)
         self.assertNotIn("## 宏观", research)
+
+    def test_price_action_uses_qualified_user_supplied_ohlcv_without_source_prompt(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-user-supplied.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("数据选择：使用用户提供的 OHLCV。", research)
+        self.assertIn("## 价格结构", research)
 
     def test_price_action_fixture_stops_on_timezone_less_ohlcv(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
@@ -422,8 +440,50 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertIn("FMP EOD", research)
         self.assertIn("rate_limited", research)
+        self.assertIn("数据选择：已选择 FMP；切换至 yfinance 需用户确认。", research)
         self.assertIn("未回显任何凭据", research)
         self.assertNotIn("## 价格结构", research)
+
+    def test_price_action_fmp_invalid_ohlcv_requests_yfinance_confirmation(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "price-action.md"
+            result = self._render_price_action_fixture(
+                ROOT,
+                "tests/fixtures/price-action-fmp-invalid-ohlcv.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            research = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("OHLCV bar requires a timezone-aware timestamp", research)
+        self.assertIn("数据选择：已选择 FMP；切换至 yfinance 需用户确认。", research)
+        self.assertNotIn("## 价格结构", research)
+        self.assertNotIn("## 关键位", research)
+
+    def test_price_action_rejects_granted_yfinance_fallback_with_fmp_provider(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = repository / "tests" / "fixtures" / "price-action-fmp-rate-limited.json"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["source_selection"]["yfinance_fallback_consent"] = "granted"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._render_price_action_fixture(
+                repository,
+                "tests/fixtures/price-action-fmp-rate-limited.json",
+                Path(temporary) / "price-action.md",
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("yfinance provider", result.stdout + result.stderr)
 
     def test_price_action_stops_when_ohlcv_timeframe_does_not_match_request(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
@@ -462,6 +522,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertIn("FMP EOD", research)
         self.assertIn("not_entitled", research)
+        self.assertIn("数据选择：已选择 FMP；切换至 yfinance 需用户确认。", research)
         self.assertIn("未回显任何凭据", research)
         self.assertNotIn("## 价格结构", research)
 
@@ -538,6 +599,26 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("optional fmp eod", result.stdout + result.stderr)
+
+    def test_offline_suite_verifier_rejects_price_action_without_explicit_yfinance_consent(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            contract_path = repository / "skills" / "price-action" / "capability.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            contract["data_source_selection"][
+                "fmp_failure_requires_yfinance_confirmation"
+            ] = False
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("data source selection", result.stdout + result.stderr)
 
     def test_instrument_research_fixture_renders_primary_evidence_without_macro_or_price_action(
         self,

@@ -3,12 +3,12 @@
   "timeframe": "1D",
   "research_as_of": "2026-07-26T09:00:00-04:00",
   "source_selection": {
-    "selected": "yfinance",
+    "selected": "user_supplied",
     "yfinance_fallback_consent": "not_applicable"
   },
   "provider": {
-    "name": "yfinance EOD",
-    "kind": "public_best_effort",
+    "name": "用户提供 OHLCV",
+    "kind": "user_supplied",
     "as_of": "2026-07-25T16:00:00-04:00"
   },
   "ohlcv": {
@@ -46,7 +46,7 @@
       }
     ]
   },
-  "structure": "日线维持高低点抬升；这是一项结构观察，不构成交易指令。",
+  "structure": "用户提供的数据满足日线结构观察所需字段。",
   "key_levels": [
     {
       "label": "支撑",
@@ -60,8 +60,5 @@
       "condition": "日线收盘确认突破近期高点",
       "invalidation": "收盘跌回 171.00 下方"
     }
-  ],
-  "data_gaps": [
-    "公开 best-effort 数据不代表实时、官方或可再分发的市场数据。"
   ]
 }
