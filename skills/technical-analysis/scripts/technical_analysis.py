@@ -157,6 +157,10 @@ def _qualified_history(value: object, requested_timeframe: str) -> QualifiedHist
         )
     _data_text(value.get("time_range"), "OHLCV")
     timezone = _data_text(value.get("timezone"), "OHLCV")
+    try:
+        declared_timezone = ZoneInfo(timezone)
+    except ZoneInfoNotFoundError as error:
+        raise DataQualityError("OHLCV timezone must be a valid IANA timezone") from error
     adjustment = _data_text(value.get("adjustment"), "OHLCV")
     if adjustment not in ADJUSTED_METHODS:
         raise DataQualityError("OHLCV adjustment must be adjusted")
@@ -183,6 +187,14 @@ def _qualified_history(value: object, requested_timeframe: str) -> QualifiedHist
     parsed_timestamps = [
         _timestamp(timestamp, "OHLCV bar") for timestamp in timestamps
     ]
+    if any(
+        timestamp.utcoffset()
+        != timestamp.astimezone(declared_timezone).utcoffset()
+        for timestamp in parsed_timestamps
+    ):
+        raise DataQualityError(
+            "OHLCV bar timezone offset does not match declared timezone"
+        )
     if any(
         previous >= current
         for previous, current in zip(parsed_timestamps, parsed_timestamps[1:])

@@ -13,7 +13,7 @@
     "time_range": "2025-04-01 至 2026-06-19",
     "coverage_start": "2025-04-01",
     "coverage_end": "2026-06-19",
-    "timezone": "America/New_York",
+    "timezone": "Etc/GMT+4",
     "adjustment": "split-adjusted",
     "bars": [
       {

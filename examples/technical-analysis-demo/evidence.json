@@ -2,7 +2,7 @@
   "adjustment": "split-adjusted",
   "as_of": "2026-06-19T16:00:00-04:00",
   "bars_used": 319,
-  "evidence_id": "sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1",
+  "evidence_id": "sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002",
   "indicators": {
     "atr14": [
       null,
@@ -3910,6 +3910,6 @@
   "stripped_incomplete_latest_bar": false,
   "symbol": "DEMO",
   "timeframe": "1D",
-  "timezone": "America/New_York",
+  "timezone": "Etc/GMT+4",
   "visible_bars": 120
 }

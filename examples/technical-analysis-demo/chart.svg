@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="100%" role="img" aria-label="DEMO 日线技术面分析图" data-evidence-id="sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="100%" role="img" aria-label="DEMO 日线技术面分析图" data-evidence-id="sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002">
 <title>DEMO 日线技术面分析图</title>
-<desc>最近 120 根已完成日线、成交量、SMA20、SMA50、SMA200 与可追溯关键位；证据标识：sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1；数据来源：yfinance EOD（非官方 best-effort）；timezone：America/New_York；as_of：2026-06-19T16:00:00-04:00；adjustment：split-adjusted；bars_used：319。</desc>
+<desc>最近 120 根已完成日线、成交量、SMA20、SMA50、SMA200 与可追溯关键位；证据标识：sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002；数据来源：yfinance EOD（非官方 best-effort）；timezone：Etc/GMT+4；as_of：2026-06-19T16:00:00-04:00；adjustment：split-adjusted；bars_used：319。</desc>
 <rect width="960" height="560" fill="#ffffff"/>
 <text x="66" y="22" fill="#111827" font-family="system-ui, sans-serif" font-size="14" font-weight="700">DEMO · 日线技术面分析</text>
-<text x="938" y="22" text-anchor="end" fill="#374151" font-family="system-ui, sans-serif" font-size="10">sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1</text>
+<text x="938" y="22" text-anchor="end" fill="#374151" font-family="system-ui, sans-serif" font-size="10">sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002</text>
 <line x1="66" y1="48" x2="938" y2="48" stroke="#cbd5e1" stroke-width="1"/>
 <text x="58" y="48" text-anchor="end" dominant-baseline="middle" fill="#374151" font-family="system-ui, sans-serif" font-size="11">234.23</text>
 <line x1="66" y1="126.5" x2="938" y2="126.5" stroke="#cbd5e1" stroke-width="1"/>

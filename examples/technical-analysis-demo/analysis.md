@@ -1,13 +1,13 @@
 # 技术面分析：DEMO
 
-证据标识：`sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1`
+证据标识：`sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002`
 研究截至：2026-06-22T09:00:00-04:00
 
 ## 数据状态
 - 状态：合格。
 - 数据源：yfinance（非官方、best-effort，唯一官方内置来源）。
 - 来源：yfinance EOD（非官方 best-effort）（as_of：2026-06-19T16:00:00-04:00）
-- 已完成日线：319 根；时区：America/New_York；复权：split-adjusted。
+- 已完成日线：319 根；时区：Etc/GMT+4；复权：split-adjusted。
 - 同源扩大窗口重试：未使用。
 
 ## 技术结构

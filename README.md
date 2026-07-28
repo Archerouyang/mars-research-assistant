@@ -37,7 +37,7 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 ```markdown
 # 技术面分析：DEMO
 
-证据标识：`sha256:30427b2661c0425be11b020845c1a192bdbb804282451f25ec364455b8b2d3f1`
+证据标识：`sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002`
 
 ## 技术结构
 - 当前分类：**多头**。最新收盘 227.82，SMA20 223.42，SMA50 219.49，SMA200 198.93。

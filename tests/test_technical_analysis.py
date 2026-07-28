@@ -281,7 +281,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     "status": "available",
                     "as_of": "2026-06-22T08:30:00-04:00",
                     "source": "市场快照工件",
-                    "timezone": "America/New_York",
+                    "timezone": "Etc/GMT+4",
                     "regime": "risk_on",
                     "summary": "风险偏好改善，但行业广度仍有分化。",
                     "same_run": True,
@@ -333,7 +333,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     "status": "available",
                     "as_of": "2026-06-20T08:00:00-04:00",
                     "source": "市场快照工件",
-                    "timezone": "America/New_York",
+                    "timezone": "Etc/GMT+4",
                     "regime": "neutral",
                     "summary": "该摘要已经过期。",
                     "same_run": False,
@@ -371,6 +371,14 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         def missing_timezone(fixture: dict[str, object]) -> None:
             fixture["ohlcv"].pop("timezone")
 
+        def invalid_timezone(fixture: dict[str, object]) -> None:
+            fixture["ohlcv"]["timezone"] = "Mars/Olympus_Mons"
+
+        def mismatched_timezone_offset(fixture: dict[str, object]) -> None:
+            fixture["ohlcv"]["bars"][-1]["timestamp"] = (
+                "2026-06-19T16:00:00+08:00"
+            )
+
         def unadjusted(fixture: dict[str, object]) -> None:
             fixture["ohlcv"]["adjustment"] = "unadjusted"
 
@@ -398,6 +406,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             (nonpositive_volume, "positive volume"),
             (timezone_less, "timezone-aware timestamp"),
             (missing_timezone, "OHLCV requires text"),
+            (invalid_timezone, "valid IANA timezone"),
+            (mismatched_timezone_offset, "does not match declared timezone"),
             (unadjusted, "adjustment must be adjusted"),
             (out_of_order, "strictly increasing"),
             (invalid_bounds, "inconsistent price bounds"),
@@ -517,6 +527,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         bars = source["ohlcv"]["bars"]
 
         class FakeFrame:
+            timezone = "Etc/GMT+4"
+
             def __init__(self, fixture_bars: list[dict[str, object]]) -> None:
                 self._bars = fixture_bars
                 self.empty = not fixture_bars
@@ -556,6 +568,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         )
         self.assertTrue(all(call["auto_adjust"] is True for call in ticker.calls))
         self.assertTrue(all(call["repair"] is False for call in ticker.calls))
+        self.assertTrue(all(call["end"] == "2026-06-22" for call in ticker.calls))
         self.assertEqual(fixture["provider"]["name"], "yfinance EOD")
         self.assertEqual(fixture["provider"]["kind"], "public_best_effort")
         self.assertEqual(len(fixture["attempts"]), 2)
@@ -578,6 +591,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
         class FakeFrame:
             empty = False
+            timezone = "Etc/GMT+4"
 
             def iterrows(self):
                 for bar in bars:
@@ -627,6 +641,45 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
         self.assertEqual(evidence["source"]["attempts"], 2)
         self.assertTrue(evidence["source"]["expanded_window_retry_used"])
+
+    def test_same_day_bar_is_not_guessed_incomplete_after_download(self) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "run_yfinance_analysis_same_day", YFINANCE_RUNTIME
+        )
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        source = json.loads(QUALIFIED_FIXTURE.read_text(encoding="utf-8"))
+        bars = source["ohlcv"]["bars"]
+        same_day = dict(bars[-1])
+        same_day["timestamp"] = "2026-06-22T16:00:00-04:00"
+
+        class FakeFrame:
+            empty = False
+            timezone = "Etc/GMT+4"
+
+            def iterrows(self):
+                for bar in [*bars[:-1], same_day]:
+                    yield datetime.fromisoformat(bar["timestamp"]), {
+                        "Open": bar["open"],
+                        "High": bar["high"],
+                        "Low": bar["low"],
+                        "Close": bar["close"],
+                        "Volume": bar["volume"],
+                    }
+
+        class FakeTicker:
+            def history(self, **kwargs):
+                return FakeFrame()
+
+        fixture = module.build_yfinance_fixture(
+            "DEMO",
+            ticker_factory=lambda symbol: FakeTicker(),
+            now=datetime.fromisoformat("2026-06-22T18:00:00-04:00"),
+        )
+
+        self.assertNotIn("complete", fixture["attempts"][0]["bars"][-1])
 
     def test_unreadable_market_context_degrades_without_blocking(self) -> None:
         spec = importlib.util.spec_from_file_location(

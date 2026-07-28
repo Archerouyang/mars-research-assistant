@@ -41,13 +41,10 @@ def _frame_payload(frame: Any, now: datetime) -> dict[str, Any]:
         bars.append(bar)
     if bars:
         last_timestamp = datetime.fromisoformat(str(bars[-1]["timestamp"]))
-        if (
-            last_timestamp.tzinfo is not None
-            and last_timestamp.date()
-            >= now.astimezone(last_timestamp.tzinfo).date()
-        ):
-            bars[-1]["complete"] = False
-        timezone_name = str(last_timestamp.tzinfo or "")
+        frame_timezone = getattr(
+            getattr(frame, "index", None), "tz", None
+        ) or getattr(frame, "timezone", None)
+        timezone_name = str(frame_timezone or last_timestamp.tzinfo or "")
         coverage_start = str(bars[0]["timestamp"])[:10]
         completed = [
             bar for bar in bars if bar.get("complete", True) is not False
@@ -96,6 +93,7 @@ def build_yfinance_fixture(
             frame = ticker.history(
                 period=period,
                 interval="1d",
+                end=now.astimezone(timezone.utc).date().isoformat(),
                 auto_adjust=True,
                 actions=False,
                 repair=False,
