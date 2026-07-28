@@ -23,6 +23,11 @@ SECRET_ASSIGNMENT = re.compile(
     re.IGNORECASE,
 )
 LEGACY_TERMS = ("long" + "bridge", "mars" + "-research-assistant")
+RETIRED_TECHNICAL_TERMS = (
+    "price" + "-action",
+    "price" + " action",
+    "al " + "brooks",
+)
 POLICY_BLOCK = re.compile(r"```mars-skill-policy\n(?P<payload>\{.*?\})\n```", re.DOTALL)
 RELEASE_SKILL_IDS = frozenset(
     {
@@ -30,7 +35,7 @@ RELEASE_SKILL_IDS = frozenset(
         "market-catalysts-brief",
         "market-snapshot",
         "instrument-research",
-        "price-action",
+        "technical-analysis",
         "drive-writeback",
     }
 )
@@ -40,7 +45,7 @@ DATA_EVIDENCE_MARKERS = {
     ),
     "market-snapshot": frozenset({"来源：", "as_of："}),
     "instrument-research": frozenset({"来源：", "as_of："}),
-    "price-action": frozenset({"来源：", "as_of："}),
+    "technical-analysis": frozenset({"来源：", "as_of："}),
 }
 
 
@@ -161,6 +166,25 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
             _fail("Ask Mars compound-request first step changed")
         if first.get("sequence") != ["市场催化剂简报", "标的研究"]:
             _fail("Ask Mars compound-request sequence changed")
+    if identifier == "technical-analysis":
+        if contract.get("delivery") != "technical_evidence_package":
+            _fail("technical analysis must deliver an evidence package")
+        if contract.get("yfinance_only") is not True:
+            _fail("technical analysis must remain yfinance only")
+        source = contract.get("data_source")
+        if not isinstance(source, dict) or source.get("fallback_allowed") is not False:
+            _fail("technical analysis data source must not have a fallback")
+        if source.get("expanded_window_retries") != 1:
+            _fail("technical analysis must retry the same source exactly once")
+        package = contract.get("artifact_package")
+        if not isinstance(package, dict) or package.get("qualified") != [
+            "analysis.md",
+            "chart.svg",
+            "evidence.json",
+        ]:
+            _fail("technical analysis artifact package changed")
+        if package.get("atomic_write") is not True:
+            _fail("technical analysis artifact package must be atomic")
     _verify_required_contract_values(contract)
     _verify_fixture_scenarios(
         identifier, contract["scenarios"], contract.get("fixture_validation")
@@ -201,6 +225,7 @@ def _verify_fixture_scenarios(
         _fail("fixture scenarios require fixture validation")
     renderer = _fixture_path(validation.get("renderer"), "fixture renderer")
     artifact_name = validation.get("artifact")
+    output_kind = validation.get("output_kind", "file")
     markers = validation.get("required_markers")
     if not isinstance(artifact_name, str) or Path(artifact_name).name != artifact_name:
         _fail("fixture validation artifact must be a filename")
@@ -218,14 +243,17 @@ def _verify_fixture_scenarios(
     for scenario in fixture_scenarios:
         fixture = _fixture_path(scenario.get("fixture"), "fixture")
         with tempfile.TemporaryDirectory(prefix="mars-skills-fixture-") as temporary:
-            output = Path(temporary) / artifact_name
+            output = Path(temporary) / (
+                "artifacts" if output_kind == "directory" else artifact_name
+            )
+            output_argument = "--output-dir" if output_kind == "directory" else "--output"
             result = subprocess.run(
                 [
                     sys.executable,
                     str(renderer),
                     "--input",
                     str(fixture),
-                    "--output",
+                    output_argument,
                     str(output),
                 ],
                 cwd=ROOT,
@@ -235,9 +263,10 @@ def _verify_fixture_scenarios(
             )
             if result.returncode != 0:
                 _fail(f"fixture render failed: {result.stderr.strip()}")
-            if not output.is_file():
+            artifact = output / artifact_name if output_kind == "directory" else output
+            if not artifact.is_file():
                 _fail("fixture renderer did not create its artifact")
-            rendered = output.read_text(encoding="utf-8")
+            rendered = artifact.read_text(encoding="utf-8")
         for marker in markers:
             if marker not in rendered:
                 _fail(f"fixture missing rendered evidence: {marker}")
@@ -287,6 +316,11 @@ def _verify_public_surface() -> None:
         lowered = text.lower()
         if any(term in lowered for term in LEGACY_TERMS):
             _fail(f"retired public reference: {path.relative_to(ROOT)}")
+        relative = path.relative_to(ROOT)
+        if relative.parts[:2] != ("docs", "adr") and any(
+            term in lowered for term in RETIRED_TECHNICAL_TERMS
+        ):
+            _fail(f"retired technical-analysis reference: {relative}")
     for skill_directory in _skill_directories().values():
         for prohibited in (".env", "auth.json", "credentials.json"):
             if any(path.name == prohibited for path in skill_directory.rglob("*")):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "技术面分析"
+  short_description: "用 yfinance 日线生成 Markdown、可审计 SVG 与 evidence JSON"
+  default_prompt: "使用 $technical-analysis 对一个标的执行日线技术面分析，将三份可审计工件原子写入我提供的 output_dir；数据不合格时整体失败关闭。"

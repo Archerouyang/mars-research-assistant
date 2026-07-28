@@ -15,7 +15,7 @@
   ],
   "forbidden_effects": [
     "macro_analysis",
-    "price_action",
+    "technical_analysis",
     "account_access",
     "broker_write",
     "drive_write",

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from xml.etree import ElementTree
@@ -21,6 +22,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 "UV_CACHE_DIR": str(ROOT / ".scratch" / "uv-cache"),
                 "UV_PROJECT_ENVIRONMENT": str(ROOT / ".scratch" / "uv-venv"),
                 "UV_PYTHON_INSTALL_DIR": str(ROOT / ".scratch" / "uv-python"),
+                "UV_PYTHON": sys.executable,
             }
         )
         return environment
@@ -115,16 +117,6 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             output_path,
         )
 
-    def _render_price_action_fixture(
-        self, repository: Path, fixture: str, output_path: Path
-    ) -> subprocess.CompletedProcess[str]:
-        return self._render_fixture(
-            repository,
-            "scripts/render_price_action_fixture.py",
-            fixture,
-            output_path,
-        )
-
     def _render_drive_writeback_fixture(
         self, repository: Path, fixture: str, output_path: Path
     ) -> subprocess.CompletedProcess[str]:
@@ -169,7 +161,9 @@ class MarsSkillsSuiteTests(unittest.TestCase):
     def test_offline_suite_verifier_requires_evidence_markers_for_data_skills(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             repository = self._copy_repository(Path(temporary))
-            contract_path = repository / "skills" / "price-action" / "capability.json"
+            contract_path = (
+                repository / "skills" / "technical-analysis" / "capability.json"
+            )
             contract = json.loads(contract_path.read_text(encoding="utf-8"))
             markers = contract["fixture_validation"]["required_markers"]
             contract["fixture_validation"]["required_markers"] = [
@@ -185,7 +179,9 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("evidence markers missing", result.stdout + result.stderr)
 
-    def test_readme_describes_yfinance_only_price_action_and_the_single_release_check(self) -> None:
+    def test_readme_describes_yfinance_only_technical_analysis_and_release_checks(
+        self,
+    ) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("只使用 yfinance", readme)
@@ -366,518 +362,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("explicit confirmation required", result.stdout + result.stderr)
 
-    def test_price_action_with_yfinance_daily_history_below_full_sma200_window_withholds_chart_and_conclusion(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-valid.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("# Price Action：NVDA", research)
-        self.assertIn("## 数据状态", research)
-        self.assertIn("yfinance EOD（非官方 best-effort）", research)
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertIn("少于 319 根", research)
-        self.assertNotIn("<svg", research)
-        self.assertNotIn("## 价格结构", research)
-        self.assertNotIn("## 关键位", research)
-        self.assertNotIn("## 情景与失效", research)
-        self.assertNotIn("## 基本面", research)
-        self.assertNotIn("## 宏观", research)
-
-    def test_price_action_renders_static_svg_for_qualified_yfinance_daily_ohlcv(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertIn("yfinance EOD（非官方 best-effort）", research)
-        self.assertIn("## 日线图", research)
-        self.assertIn('<svg', research)
-        self.assertEqual(research.count('data-candle="'), 120)
-        self.assertEqual(research.count('data-volume="'), 120)
-        self.assertIn('data-series="sma-200"', research)
-        self.assertIn("## 价格结构", research)
-
-    def test_price_action_uses_yfinance_without_source_selection_metadata(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = (
-                repository
-                / "tests"
-                / "fixtures"
-                / "price-action-yfinance-daily-chart.json"
-            )
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                output_path,
-            )
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertIn("yfinance EOD（非官方 best-effort）", research)
-        self.assertIn("## 日线图", research)
-        self.assertIn('<svg', research)
-        self.assertIn("## 价格结构", research)
-
-    def test_price_action_with_unqualified_yfinance_outputs_only_data_status_and_gap(
-        self,
-    ) -> None:
-        fixtures = (
-            (
-                "tests/fixtures/price-action-yfinance-missing-field.json",
-                "OHLCV bar requires numeric volume",
-            ),
-            (
-                "tests/fixtures/price-action-invalid-timezone.json",
-                "OHLCV bar requires a timezone-aware timestamp",
-            ),
-            (
-                "tests/fixtures/price-action-yfinance-unavailable.json",
-                "yfinance 暂不可用：rate_limited",
-            ),
-        )
-        for fixture, reason in fixtures:
-            with self.subTest(fixture=fixture), tempfile.TemporaryDirectory(
-                prefix="mars-skills-test-"
-            ) as temporary:
-                output_path = Path(temporary) / "price-action.md"
-                result = self._render_price_action_fixture(ROOT, fixture, output_path)
-                research = output_path.read_text(encoding="utf-8")
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn(reason, research)
-            self.assertIn("## 数据状态", research)
-            self.assertIn("## 数据缺口", research)
-            self.assertNotIn("<svg", research)
-            self.assertNotIn("## 价格结构", research)
-            self.assertNotIn("## 关键位", research)
-            self.assertNotIn("## 情景与失效", research)
-
-    def test_price_action_svg_exposes_yfinance_candles_volumes_and_moving_averages(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("## 日线图", research)
-        self.assertIn('<svg', research)
-        self.assertIn('aria-label="NVDA 日线 Price Action 图"', research)
-        self.assertEqual(research.count('data-candle="'), 120)
-        self.assertEqual(research.count('data-volume="'), 120)
-        self.assertIn('data-series="sma-20"', research)
-        self.assertIn('data-series="sma-50"', research)
-        self.assertIn('data-series="sma-200"', research)
-        self.assertIn('data-legend="sma-20"', research)
-        self.assertIn('data-legend="sma-50"', research)
-        self.assertIn('data-legend="sma-200"', research)
-        self.assertIn('data-key-level="支撑"', research)
-        self.assertIn('data-key-level="阻力"', research)
-        self.assertIn("yfinance EOD（非官方 best-effort）", research)
-        self.assertIn("2026-06-19T16:00:00-04:00", research)
-        svg = research[research.index("<svg") : research.index("</svg>") + 6]
-        root = ElementTree.fromstring(svg)
-        volume_bars = [
-            element for element in root.iter() if "data-volume" in element.attrib
-        ]
-        sma200 = next(
-            element
-            for element in root.iter()
-            if element.attrib.get("data-series") == "sma-200"
-        )
-        self.assertEqual(len(volume_bars), 120)
-        self.assertEqual(len(sma200.attrib["points"].split()), 120)
-        self.assertTrue(
-            all(
-                abs(float(bar.attrib["y"]) + float(bar.attrib["height"]) - 510.0)
-                < 0.02
-                for bar in volume_bars
-            )
-        )
-
-    def test_price_action_with_yfinance_daily_history_below_full_sma200_window_withholds_chart_and_conclusion(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = (
-                repository / "tests" / "fixtures" / "price-action-yfinance-daily-chart.json"
-            )
-            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-            fixture["ohlcv"]["bars"] = fixture["ohlcv"]["bars"][-318:]
-            fixture["ohlcv"]["coverage_start"] = fixture["ohlcv"]["bars"][0][
-                "timestamp"
-            ][:10]
-            fixture_path.write_text(
-                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                output_path,
-            )
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("少于 319 根", research)
-        self.assertNotIn("<svg", research)
-        self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_with_nonpositive_yfinance_volume_withholds_chart_and_conclusion(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = (
-                repository / "tests" / "fixtures" / "price-action-yfinance-daily-chart.json"
-            )
-            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-            for bar in fixture["ohlcv"]["bars"][-120:]:
-                bar["volume"] = 0
-            fixture_path.write_text(
-                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                output_path,
-            )
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("positive volume", research)
-        self.assertNotIn("<svg", research)
-        self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_rejects_unqualified_yfinance_daily_chart_inputs(
-        self,
-    ) -> None:
-        cases = (
-            ("unadjusted", "OHLCV adjustment must be adjusted"),
-            ("out_of_order", "OHLCV timestamps must be strictly increasing"),
-            ("non_finite", "OHLCV bar requires finite close"),
-            ("negative_volume", "OHLCV bar requires positive volume"),
-            ("invalid_candle", "OHLCV bar has inconsistent price bounds"),
-            ("unparseable_level", "key level price must contain a number"),
-        )
-        for case, expected_reason in cases:
-            with self.subTest(case=case), tempfile.TemporaryDirectory(
-                prefix="mars-skills-test-"
-            ) as temporary:
-                repository = self._copy_repository(Path(temporary))
-                fixture_path = (
-                    repository
-                    / "tests"
-                    / "fixtures"
-                    / "price-action-yfinance-daily-chart.json"
-                )
-                fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-                bars = fixture["ohlcv"]["bars"]
-                if case == "unadjusted":
-                    fixture["ohlcv"]["adjustment"] = "unadjusted"
-                elif case == "out_of_order":
-                    bars[-2], bars[-1] = bars[-1], bars[-2]
-                elif case == "non_finite":
-                    bars[-1]["close"] = float("nan")
-                elif case == "negative_volume":
-                    bars[-1]["volume"] = -1
-                elif case == "invalid_candle":
-                    bars[-1]["low"] = bars[-1]["high"] + 1
-                else:
-                    fixture["key_levels"][0]["price"] = "N/A"
-                fixture_path.write_text(
-                    json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8",
-                )
-                output_path = Path(temporary) / "price-action.md"
-                result = self._render_price_action_fixture(
-                    repository,
-                    "tests/fixtures/price-action-yfinance-daily-chart.json",
-                    output_path,
-                )
-                research = output_path.read_text(encoding="utf-8")
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn(expected_reason, research)
-            self.assertNotIn("<svg", research)
-            self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_rejects_non_yfinance_ohlcv_provider(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-user-supplied.json",
-                output_path,
-            )
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("provider must be yfinance public best-effort", result.stdout + result.stderr)
-        self.assertFalse(output_path.exists())
-
-    def test_price_action_fixture_stops_on_timezone_less_ohlcv(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-invalid-timezone.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("数据不可用：OHLCV bar requires a timezone-aware timestamp", research)
-        self.assertIn("## 数据缺口", research)
-        self.assertNotIn("## 价格结构", research)
-        self.assertNotIn("## 关键位", research)
-
-    def test_price_action_fixture_exposes_yfinance_rate_limit_without_a_technical_conclusion(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-yfinance-unavailable.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("yfinance EOD", research)
-        self.assertIn("rate_limited", research)
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_invalid_yfinance_ohlcv_withholds_technical_conclusion(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-invalid-timezone.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("OHLCV bar requires a timezone-aware timestamp", research)
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertNotIn("## 价格结构", research)
-        self.assertNotIn("## 关键位", research)
-
-    def test_price_action_rejects_retired_fmp_provider(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = repository / "tests" / "fixtures" / "price-action-yfinance-daily-chart.json"
-            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-            fixture["provider"]["kind"] = "fmp_eod"
-            fixture_path.write_text(
-                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-yfinance-daily-chart.json",
-                Path(temporary) / "price-action.md",
-            )
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("provider must be yfinance public best-effort", result.stdout + result.stderr)
-
-    def test_price_action_stops_when_ohlcv_timeframe_does_not_match_request(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = repository / "tests" / "fixtures" / "price-action-valid.json"
-            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-            fixture["ohlcv"]["timeframe"] = "1H"
-            fixture_path.write_text(
-                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-            output_path = Path(temporary) / "price-action.md"
-
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-valid.json",
-                output_path,
-            )
-            research = output_path.read_text(encoding="utf-8") if output_path.exists() else ""
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("数据不可用：OHLCV timeframe does not match requested timeframe", research)
-        self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_fixture_stops_when_yfinance_is_unavailable(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            output_path = Path(temporary) / "price-action.md"
-            result = self._render_price_action_fixture(
-                ROOT,
-                "tests/fixtures/price-action-yfinance-unavailable.json",
-                output_path,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            research = output_path.read_text(encoding="utf-8")
-
-        self.assertIn("yfinance EOD", research)
-        self.assertIn("rate_limited", research)
-        self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-        self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_stops_when_yfinance_is_rate_limited_or_unavailable(
-        self,
-    ) -> None:
-        for status in ("rate_limited", "unavailable"):
-            with self.subTest(status=status), tempfile.TemporaryDirectory(
-                prefix="mars-skills-test-"
-            ) as temporary:
-                repository = self._copy_repository(Path(temporary))
-                fixture_path = (
-                    repository
-                    / "tests"
-                    / "fixtures"
-                    / "price-action-yfinance-unavailable.json"
-                )
-                fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-                fixture["provider"]["status"] = status
-                fixture_path.write_text(
-                    json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8",
-                )
-                output_path = Path(temporary) / "price-action.md"
-                result = self._render_price_action_fixture(
-                    repository,
-                    "tests/fixtures/price-action-yfinance-unavailable.json",
-                    output_path,
-                )
-                research = output_path.read_text(encoding="utf-8")
-
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn(status, research)
-            self.assertIn("数据源：yfinance（非官方 best-effort，唯一数据源）。", research)
-            self.assertNotIn("## 价格结构", research)
-
-    def test_price_action_rejects_unknown_provider_status_without_echoing_it(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            fixture_path = repository / "tests" / "fixtures" / "price-action-yfinance-unavailable.json"
-            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-            unknown_status = "secret" + "=fake-test-value"
-            fixture["provider"]["status"] = unknown_status
-            fixture_path.write_text(
-                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            result = self._render_price_action_fixture(
-                repository,
-                "tests/fixtures/price-action-yfinance-unavailable.json",
-                Path(temporary) / "price-action.md",
-            )
-
-        output = result.stdout + result.stderr
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("provider status must be one of", output)
-        self.assertNotIn(unknown_status, output)
-
-    def test_offline_suite_verifier_rejects_price_action_without_yfinance_only_boundary(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            contract_path = repository / "skills" / "price-action" / "capability.json"
-            contract = json.loads(contract_path.read_text(encoding="utf-8"))
-            contract["yfinance_only"] = False
-            contract_path.write_text(
-                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            result = self._run_verifier(repository)
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("yfinance only", result.stdout + result.stderr)
-
-    def test_offline_suite_verifier_rejects_price_action_with_a_fallback_path(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            contract_path = repository / "skills" / "price-action" / "capability.json"
-            contract = json.loads(contract_path.read_text(encoding="utf-8"))
-            contract["data_source"]["fallback_allowed"] = True
-            contract_path.write_text(
-                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            result = self._run_verifier(repository)
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("data source", result.stdout + result.stderr)
-
-    def test_offline_suite_verifier_rejects_price_action_without_yfinance_daily_svg_support(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            repository = self._copy_repository(Path(temporary))
-            contract_path = repository / "skills" / "price-action" / "capability.json"
-            contract = json.loads(contract_path.read_text(encoding="utf-8"))
-            contract["static_daily_svg_chart"]["yfinance_1d"] = False
-            contract_path.write_text(
-                json.dumps(contract, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            result = self._run_verifier(repository)
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("static daily svg chart", result.stdout + result.stderr)
-
-    def test_instrument_research_fixture_renders_primary_evidence_without_macro_or_price_action(
+    def test_instrument_research_fixture_excludes_macro_and_technical_analysis(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
@@ -902,7 +387,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("验证条件：后续季度披露继续确认数据中心需求。", research)
         self.assertIn("## 数据缺口", research)
         self.assertNotIn("## 宏观", research)
-        self.assertNotIn("## Price Action", research)
+        self.assertNotIn("## 技术面分析", research)
 
     def test_instrument_research_fixture_keeps_evidence_gap_visible_without_company_facts(
         self,
@@ -1338,7 +823,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             "market-catalysts-brief",
             "market-snapshot",
             "instrument-research",
-            "price-action",
+            "technical-analysis",
             "drive-writeback",
         })
         for identifier, installed_files in installed.items():
@@ -1357,7 +842,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             target = Path(temporary) / "target"
-            conflict = target / "price-action"
+            conflict = target / "technical-analysis"
             conflict.mkdir(parents=True)
             (conflict / "sentinel.txt").write_text("preserve", encoding="utf-8")
             result = subprocess.run(
@@ -1377,7 +862,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
         self.assertIn("destination already exists", result.stdout + result.stderr)
-        self.assertEqual(remaining, ["price-action"])
+        self.assertEqual(remaining, ["technical-analysis"])
 
     def test_local_installer_rejects_the_legacy_all_argument(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:

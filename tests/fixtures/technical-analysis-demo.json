@@ -1,5 +1,5 @@
 {
-  "instrument": "NVDA",
+  "instrument": "DEMO",
   "timeframe": "1D",
   "research_as_of": "2026-06-22T09:00:00-04:00",
   "provider": {
@@ -2569,31 +2569,5 @@
         "volume": 3724600
       }
     ]
-  },
-  "structure": "日线仍处于上升结构；回踩 205 附近需要观察是否维持更高低点。",
-  "key_levels": [
-    {
-      "label": "支撑",
-      "price": "205.00",
-      "condition": "日线收盘守住后可维持上升结构观察"
-    },
-    {
-      "label": "阻力",
-      "price": "230.00",
-      "condition": "日线收盘突破并保持时观察延续性"
-    }
-  ],
-  "scenarios": [
-    {
-      "label": "延续",
-      "condition": "收盘站上 230.00",
-      "invalidation": "跌回 205.00 下方"
-    },
-    {
-      "label": "回撤",
-      "condition": "205.00 附近获得支撑",
-      "invalidation": "日线收盘跌破 205.00"
-    }
-  ],
-  "data_gaps": []
+  }
 }

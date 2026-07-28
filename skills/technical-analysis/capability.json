@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "skill": "technical-analysis",
+  "delivery": "technical_evidence_package",
+  "single_instrument_required": true,
+  "technical_analysis_only": true,
+  "ohlcv_quality_required": true,
+  "yfinance_only": true,
+  "output_dir_required": true,
+  "artifact_package": {
+    "qualified": [
+      "analysis.md",
+      "chart.svg",
+      "evidence.json"
+    ],
+    "failed": [
+      "analysis.md"
+    ],
+    "shared_evidence_id": true,
+    "atomic_write": true
+  },
+  "data_source": {
+    "provider": "yfinance",
+    "classification": "non_official_best_effort",
+    "credentials_required": false,
+    "fallback_allowed": false,
+    "expanded_window_retries": 1
+  },
+  "daily_chart": {
+    "visible_bars": 120,
+    "minimum_completed_bars": 319,
+    "sma_windows": [
+      20,
+      50,
+      200
+    ],
+    "volume_panel": true,
+    "maximum_support_levels": 2,
+    "maximum_resistance_levels": 2,
+    "format": "deterministic_svg"
+  },
+  "key_level_method": {
+    "confirmed_swing_radius": 2,
+    "cluster_ratio_atr14": 0.5,
+    "ranking": [
+      "touches",
+      "confirmation_recency",
+      "distance_to_latest_close"
+    ],
+    "fallback": "120d_extreme"
+  },
+  "market_context": {
+    "optional": true,
+    "non_blocking": true,
+    "external_max_age_hours": 24,
+    "may_change_technical_evidence": false
+  },
+  "response_fields": [
+    "evidence_id",
+    "data_status",
+    "data_source",
+    "artifacts",
+    "technical_structure",
+    "moving_averages_volume",
+    "key_levels_provenance",
+    "conditional_scenarios",
+    "market_context_status",
+    "data_gap"
+  ],
+  "forbidden_effects": [
+    "fundamentals",
+    "industry_analysis",
+    "account_access",
+    "broker_write",
+    "drive_write",
+    "persistent_state",
+    "provider_fallback"
+  ],
+  "required_contract": {
+    "delivery": "technical_evidence_package",
+    "single_instrument_required": true,
+    "technical_analysis_only": true,
+    "ohlcv_quality_required": true,
+    "yfinance_only": true,
+    "output_dir_required": true,
+    "artifact_package": {
+      "qualified": [
+        "analysis.md",
+        "chart.svg",
+        "evidence.json"
+      ],
+      "failed": [
+        "analysis.md"
+      ],
+      "shared_evidence_id": true,
+      "atomic_write": true
+    },
+    "data_source": {
+      "provider": "yfinance",
+      "classification": "non_official_best_effort",
+      "credentials_required": false,
+      "fallback_allowed": false,
+      "expanded_window_retries": 1
+    }
+  },
+  "fixture_validation": {
+    "renderer": "scripts/render_technical_analysis_fixture.py",
+    "output_kind": "directory",
+    "artifact": "analysis.md",
+    "required_markers": [
+      "# 技术面分析：",
+      "## 数据状态",
+      "数据源：yfinance",
+      "来源：",
+      "as_of："
+    ]
+  },
+  "scenarios": [
+    {
+      "request": "用 yfinance 日线对 DEMO 做技术面分析并输出可审计图表。",
+      "fixture": "tests/fixtures/technical-analysis-demo.json",
+      "expected": {
+        "evidence_id": "shared",
+        "data_status": "qualified",
+        "data_source": "yfinance_only",
+        "artifacts": [
+          "analysis.md",
+          "chart.svg",
+          "evidence.json"
+        ],
+        "technical_structure": "included",
+        "moving_averages_volume": "included",
+        "key_levels_provenance": "included",
+        "conditional_scenarios": "included",
+        "market_context_status": "technical_only",
+        "data_gap": "none"
+      }
+    },
+    {
+      "request": "用 yfinance 日线研究 DEMO，但历史覆盖不足。",
+      "fixture": "tests/fixtures/technical-analysis-short-history.json",
+      "expected": {
+        "evidence_id": "withheld",
+        "data_status": "unavailable",
+        "data_source": "yfinance_only",
+        "artifacts": [
+          "analysis.md"
+        ],
+        "technical_structure": "withheld",
+        "moving_averages_volume": "withheld",
+        "key_levels_provenance": "withheld",
+        "conditional_scenarios": "withheld",
+        "market_context_status": "withheld",
+        "data_gap": "exact"
+      }
+    },
+    {
+      "request": "用 yfinance 日线研究 DEMO，但时间戳没有时区。",
+      "fixture": "tests/fixtures/technical-analysis-invalid-timezone.json",
+      "expected": {
+        "evidence_id": "withheld",
+        "data_status": "unavailable",
+        "data_source": "yfinance_only",
+        "artifacts": [
+          "analysis.md"
+        ],
+        "technical_structure": "withheld",
+        "moving_averages_volume": "withheld",
+        "key_levels_provenance": "withheld",
+        "conditional_scenarios": "withheld",
+        "market_context_status": "withheld",
+        "data_gap": "timezone"
+      }
+    },
+    {
+      "request": "用 yfinance 日线研究 DEMO，但数据源限流。",
+      "fixture": "tests/fixtures/technical-analysis-yfinance-unavailable.json",
+      "expected": {
+        "evidence_id": "withheld",
+        "data_status": "rate_limited",
+        "data_source": "yfinance_only",
+        "artifacts": [
+          "analysis.md"
+        ],
+        "technical_structure": "withheld",
+        "moving_averages_volume": "withheld",
+        "key_levels_provenance": "withheld",
+        "conditional_scenarios": "withheld",
+        "market_context_status": "withheld",
+        "data_gap": "provider"
+      }
+    }
+  ]
+}

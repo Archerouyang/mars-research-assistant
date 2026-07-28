@@ -30,6 +30,19 @@
           "研究时间范围"
         ]
       }
+    },
+    {
+      "request": "分析 NVDA 日线趋势、关键位并给我一张可审计图表。",
+      "expected": {
+        "recommended_skills": [
+          "技术面分析"
+        ],
+        "first_step": "技术面分析",
+        "minimum_input": [
+          "标的",
+          "新的 output_dir"
+        ]
+      }
     }
   ]
 }
