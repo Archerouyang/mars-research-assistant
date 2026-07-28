@@ -23,14 +23,13 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 | 市场催化剂简报 | 已定事件与持续风险的市场催化剂简报 | 不生成交易指令 |
 | 市场快照 | 带来源、时间与数据缺口的市场状态摘要 | 不替代事件日历或技术面分析 |
 | 标的研究 | 基于 SEC 与发行人 IR 的基本面、行业和公司事件研究 | 不自动加入宏观或技术判断 |
-| 技术面分析 | Markdown 分析、可审计 SVG 与 evidence JSON | 不访问账户、不下单 |
+| 技术面分析 | Markdown 分析、evidence JSON 与临时交互图表 | 不访问账户、不下单 |
 | Drive 写入 | 幂等初始化交易研究中心，或归档已完成研究 | 初始化和归档分别确认，未确认时绝不写入 |
 
 ## 技术面分析示例
 
-> 以下为确定性合成 `DEMO` fixture 生成的离线示例，非当前市场数据。
-
-![DEMO 技术面分析离线 SVG 示例](examples/technical-analysis-demo/chart.svg)
+> 以下为确定性合成 `DEMO` fixture 生成的离线示例，非当前市场数据。真实 yfinance
+> 截图与完整摘要将在集成验收任务中更新。
 
 对应的 Markdown 摘要：
 
@@ -47,8 +46,10 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 - **阻力 230.43**：method=120d_extreme_fallback；lookback=120；touches=1。
 ```
 
-完整示例工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
-三份文件共享同一个 `evidence_id`，Markdown 只解释 JSON 中的数字，SVG 只可视化同一证据集。
+持久示例工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
+`analysis.md` 与 `evidence.json` 共享同一个 `evidence_id`。每次合格运行还会生成临时
+`chart.html`，用包内 TradingView Lightweight Charts 可视化同一证据集，并在标准输出
+返回路径与浏览器打开状态；临时图表不写入持久工件目录。
 
 ## 数据与安全边界
 

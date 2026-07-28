@@ -164,6 +164,11 @@ def main() -> int:
     parser.add_argument("--symbol", required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--market-context", type=Path)
+    parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Generate the temporary chart without requesting a browser open.",
+    )
     arguments = parser.parse_args()
     try:
         import yfinance  # type: ignore[import-not-found]
@@ -178,7 +183,12 @@ def main() -> int:
             fixture["market_context"] = load_market_context(
                 arguments.market_context
             )
-        render_fixture(fixture, arguments.output_dir)
+        delivery = render_fixture(
+            fixture,
+            arguments.output_dir,
+            open_chart=not arguments.no_open,
+        )
+        print(json.dumps(delivery, ensure_ascii=False, sort_keys=True))
     except (
         OSError,
         json.JSONDecodeError,

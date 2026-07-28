@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import importlib.util
+from hashlib import sha256
 import os
 from pathlib import Path
 import subprocess
@@ -9,8 +10,7 @@ import sys
 import tempfile
 import unittest
 from datetime import datetime
-from typing import Callable
-from xml.etree import ElementTree
+from typing import Any, Callable
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,21 +26,35 @@ DEMO_ARTIFACTS = ROOT / "examples" / "technical-analysis-demo"
 
 
 class TechnicalAnalysisArtifactTests(unittest.TestCase):
-    def _render(self, fixture: Path, output_dir: Path) -> subprocess.CompletedProcess[str]:
+    def _render(
+        self,
+        fixture: Path,
+        output_dir: Path,
+        *,
+        no_open: bool = True,
+        browser: str | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        environment = os.environ.copy()
+        environment["TMPDIR"] = str(output_dir.parent)
+        if browser is not None:
+            environment["BROWSER"] = browser
+        command = [
+            sys.executable,
+            "scripts/render_technical_analysis_fixture.py",
+            "--input",
+            str(fixture),
+            "--output-dir",
+            str(output_dir),
+        ]
+        if no_open:
+            command.append("--no-open")
         return subprocess.run(
-            [
-                sys.executable,
-                "scripts/render_technical_analysis_fixture.py",
-                "--input",
-                str(fixture),
-                "--output-dir",
-                str(output_dir),
-            ],
+            command,
             cwd=ROOT,
             capture_output=True,
             text=True,
             check=False,
-            env=os.environ.copy(),
+            env=environment,
         )
 
     def _write_fixture(
@@ -55,6 +69,13 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         )
         return fixture_path
 
+    def _delivery(
+        self, result: subprocess.CompletedProcess[str]
+    ) -> dict[str, Any]:
+        parsed = json.loads(result.stdout)
+        self.assertIsInstance(parsed, dict)
+        return parsed
+
     def test_qualified_daily_history_creates_one_consistent_artifact_package(
         self,
     ) -> None:
@@ -66,33 +87,48 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(
                 sorted(path.name for path in output_dir.iterdir()),
-                ["analysis.md", "chart.svg", "evidence.json"],
+                ["analysis.md", "evidence.json"],
             )
+            delivery = json.loads(result.stdout)
+            visualization = delivery["visualization"]
+            self.assertTrue(visualization["generated"])
+            self.assertFalse(visualization["open_attempted"])
+            self.assertFalse(visualization["open_confirmed"])
+            chart_path = Path(visualization["path"])
+            self.assertNotEqual(chart_path.parent, output_dir)
+            self.assertEqual(chart_path.name, "chart.html")
+            self.assertTrue(chart_path.is_file())
             evidence = json.loads(
                 (output_dir / "evidence.json").read_text(encoding="utf-8")
             )
             markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
-            svg = (output_dir / "chart.svg").read_text(encoding="utf-8")
+            html = chart_path.read_text(encoding="utf-8")
 
         evidence_id = evidence["evidence_id"]
         self.assertIn(evidence_id, markdown)
-        self.assertIn(evidence_id, svg)
+        self.assertIn(evidence_id, html)
         self.assertEqual(evidence["source"]["provider"], "yfinance")
         self.assertEqual(evidence["bars_used"], 319)
         self.assertEqual(len(evidence["ohlcv"]), 319)
-        self.assertEqual(svg.count('data-candle="'), 120)
-        self.assertEqual(svg.count('data-volume="'), 120)
+        self.assertIn("LightweightCharts.createChart", html)
+        self.assertIn("LightweightCharts.CandlestickSeries", html)
+        self.assertIn("LightweightCharts.HistogramSeries", html)
+        self.assertNotIn("<script src=", html)
+        self.assertNotIn("localStorage", html)
+        self.assertNotIn("sessionStorage", html)
+        self.assertNotIn("fetch(", html)
+        self.assertIn(
+            'href="https://www.tradingview.com/"',
+            html,
+        )
+        payload_text = html.split(
+            "const chartEvidence = ", maxsplit=1
+        )[1].split(";\n", maxsplit=1)[0]
+        payload = json.loads(payload_text)
+        self.assertEqual(len(payload["candles"]), 120)
+        self.assertEqual(len(payload["volume"]), 120)
         for window in (20, 50, 200):
-            self.assertIn(f'data-series="sma-{window}"', svg)
-        svg_root = ElementTree.fromstring(svg)
-        for element in svg_root.iter():
-            if element.attrib.get("data-series", "").startswith("sma-"):
-                self.assertTrue(
-                    all(
-                        48 <= float(point.split(",")[1]) <= 362
-                        for point in element.attrib["points"].split()
-                    )
-                )
+            self.assertIn(f'"sma-{window}"', html)
         for provenance in (
             evidence["symbol"],
             evidence["source"]["label"],
@@ -101,7 +137,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             evidence["adjustment"],
             str(evidence["bars_used"]),
         ):
-            self.assertIn(provenance, svg)
+            self.assertIn(provenance, html)
 
     def test_short_history_fails_closed_with_an_exact_gap(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
@@ -127,8 +163,28 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 [path.name for path in output_dir.iterdir()],
                 ["analysis.md"],
             )
+            delivery = self._delivery(result)
             markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
+            self.assertFalse(
+                any(
+                    path.name.startswith("mars-technical-chart-")
+                    for path in directory.iterdir()
+                )
+            )
 
+        self.assertEqual(delivery["artifacts"], ["analysis.md"])
+        self.assertEqual(
+            delivery["visualization"],
+            {
+                "generated": False,
+                "kind": "temporary_html",
+                "limitation": "visualization withheld because evidence did not qualify",
+                "expires_after_seconds": None,
+                "open_attempted": False,
+                "open_confirmed": False,
+                "path": None,
+            },
+        )
         self.assertIn("缺少 1 根已完成日线", markdown)
         self.assertIn("## 数据状态", markdown)
         self.assertIn("## 数据缺口", markdown)
@@ -207,7 +263,10 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 (output_dir / "evidence.json").read_text(encoding="utf-8")
             )
             markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
-            svg = (output_dir / "chart.svg").read_text(encoding="utf-8")
+            delivery = self._delivery(result)
+            chart = Path(delivery["visualization"]["path"]).read_text(
+                encoding="utf-8"
+            )
 
         levels = evidence["key_levels"]
         self.assertLessEqual(
@@ -229,8 +288,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertIn(f"method={level['method']}", markdown)
             self.assertIn(f"lookback={level['lookback']}", markdown)
             self.assertIn(f"touches={level['touches']}", markdown)
-            self.assertIn(f'data-level-method="{level["method"]}"', svg)
-            self.assertIn(f'data-level-touches="{level["touches"]}"', svg)
+            self.assertIn(f'"method":"{level["method"]}"', chart)
+            self.assertIn(f'"touches":{level["touches"]}', chart)
 
     def test_artifact_package_is_byte_stable(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
@@ -247,12 +306,22 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertEqual(
                 second_result.returncode, 0, second_result.stdout + second_result.stderr
             )
-            for artifact in ("analysis.md", "chart.svg", "evidence.json"):
+            for artifact in ("analysis.md", "evidence.json"):
                 self.assertEqual(
                     (first / artifact).read_bytes(),
                     (second / artifact).read_bytes(),
                     artifact,
                 )
+            first_delivery = self._delivery(first_result)
+            second_delivery = self._delivery(second_result)
+            self.assertNotEqual(
+                first_delivery["visualization"]["path"],
+                second_delivery["visualization"]["path"],
+            )
+            self.assertEqual(
+                Path(first_delivery["visualization"]["path"]).read_bytes(),
+                Path(second_delivery["visualization"]["path"]).read_bytes(),
+            )
 
     def test_existing_output_directory_is_preserved_on_atomic_write_failure(
         self,
@@ -269,6 +338,98 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertIn("output_dir must not already exist", result.stdout + result.stderr)
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve")
             self.assertEqual([path.name for path in output_dir.iterdir()], ["sentinel.txt"])
+            self.assertFalse(
+                any(
+                    path.name.startswith("mars-technical-chart-")
+                    for path in output_dir.parent.iterdir()
+                )
+            )
+
+    def test_default_delivery_attempts_browser_open_and_reports_confirmation(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            output_dir = Path(temporary) / "artifacts"
+
+            result = self._render(
+                QUALIFIED_FIXTURE,
+                output_dir,
+                no_open=False,
+                browser="/bin/false %s",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            delivery = self._delivery(result)
+
+        visualization = delivery["visualization"]
+        self.assertTrue(visualization["generated"])
+        self.assertTrue(visualization["open_attempted"])
+        self.assertFalse(visualization["open_confirmed"])
+        self.assertIn("did not confirm", visualization["limitation"])
+
+    def test_vendored_lightweight_charts_has_fixed_version_and_license(
+        self,
+    ) -> None:
+        vendor = (
+            ROOT
+            / "skills"
+            / "technical-analysis"
+            / "vendor"
+            / "lightweight-charts"
+            / "5.2.0"
+        )
+
+        script = vendor / "lightweight-charts.standalone.production.js"
+        self.assertTrue(script.is_file())
+        self.assertIn(
+            "Apache License",
+            (vendor / "LICENSE").read_text(encoding="utf-8"),
+        )
+        notice = (vendor / "NOTICE.md").read_text(encoding="utf-8")
+        self.assertIn("lightweight-charts@5.2.0", notice)
+        self.assertIn(
+            "c0992580867c4912cc9385b3c2728315bcc1a76c7f1087dca908430fccdf31d7",
+            notice,
+        )
+        self.assertEqual(
+            sha256(script.read_bytes()).hexdigest(),
+            "c0992580867c4912cc9385b3c2728315bcc1a76c7f1087dca908430fccdf31d7",
+        )
+
+    def test_next_run_cleans_expired_charts_without_removing_fresh_ones(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            directory = Path(temporary)
+            first_output = directory / "first"
+            first_result = self._render(QUALIFIED_FIXTURE, first_output)
+            self.assertEqual(
+                first_result.returncode,
+                0,
+                first_result.stdout + first_result.stderr,
+            )
+            first_delivery = self._delivery(first_result)
+            expired = Path(first_delivery["visualization"]["path"]).parent
+            os.utime(expired, (0, 0))
+            unowned = directory / "mars-technical-chart-unowned"
+            unowned.mkdir()
+            (unowned / "chart.html").write_text("not ours", encoding="utf-8")
+            os.utime(unowned, (0, 0))
+
+            second_output = directory / "second"
+            second_result = self._render(QUALIFIED_FIXTURE, second_output)
+            self.assertEqual(
+                second_result.returncode,
+                0,
+                second_result.stdout + second_result.stderr,
+            )
+            second_delivery = self._delivery(second_result)
+
+            self.assertFalse(expired.exists())
+            self.assertTrue(unowned.is_dir())
+            self.assertTrue(
+                Path(second_delivery["visualization"]["path"]).is_file()
+            )
 
     def test_market_context_never_changes_technical_evidence_or_chart(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
@@ -308,8 +469,14 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             context_markdown = (with_context / "analysis.md").read_text(
                 encoding="utf-8"
             )
-            plain_chart = (without_context / "chart.svg").read_bytes()
-            context_chart = (with_context / "chart.svg").read_bytes()
+            plain_delivery = self._delivery(plain_result)
+            context_delivery = self._delivery(context_result)
+            plain_chart = Path(
+                plain_delivery["visualization"]["path"]
+            ).read_bytes()
+            context_chart = Path(
+                context_delivery["visualization"]["path"]
+            ).read_bytes()
 
         self.assertEqual(
             plain_evidence["evidence_id"], context_evidence["evidence_id"]
@@ -710,7 +877,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             result = self._render(QUALIFIED_FIXTURE, regenerated)
 
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            for artifact in ("analysis.md", "chart.svg", "evidence.json"):
+            for artifact in ("analysis.md", "evidence.json"):
                 self.assertEqual(
                     (regenerated / artifact).read_bytes(),
                     (DEMO_ARTIFACTS / artifact).read_bytes(),
@@ -718,7 +885,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 )
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("离线示例，非当前市场数据", readme)
-        self.assertIn("examples/technical-analysis-demo/chart.svg", readme)
+        self.assertIn("`chart.html`", readme)
+        self.assertNotIn("chart.svg", readme)
         self.assertNotIn("# Mars Skills 1.", readme)
 
 

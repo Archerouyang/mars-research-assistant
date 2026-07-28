@@ -1,6 +1,6 @@
 ---
 name: technical-analysis
-description: 针对单一标的生成基于已完成日线的中文技术面分析，并原子交付 Markdown、可审计 SVG 与 evidence JSON。官方唯一内置 OHLCV 来源为 yfinance；坏数据整体失败关闭。
+description: 针对单一标的生成基于已完成日线的中文技术面分析，持久交付 Markdown 与 evidence JSON，并用临时 Lightweight Charts HTML 展示同一证据。官方唯一内置 OHLCV 来源为 yfinance；坏数据整体失败关闭。
 ---
 
 # 技术面分析
@@ -14,17 +14,19 @@ description: 针对单一标的生成基于已完成日线的中文技术面分�
 ```
 
 只分析一个明确标的的 `1D` 已完成日线。调用方必须提供独立、尚不存在的 `output_dir`。
-合格时在临时目录完成并校验全部内容，再原子落盘：
+合格时在临时目录完成并校验两份持久内容，再原子落盘：
 
 ```text
 analysis.md
-chart.svg
 evidence.json
 ```
 
-三份工件共享同一个 `evidence_id`。`analysis.md` 只解释 `evidence.json` 已有的数字；
-不得新增关键位、指标或价格。`chart.svg` 只渲染同一证据集最近 120 根已完成 K 线、
-成交量、SMA20/50/200 与最多两个支撑、两个阻力。
+两份工件共享同一个 `evidence_id`。`analysis.md` 只解释 `evidence.json` 已有的数字；
+不得新增关键位、指标或价格。每次合格调用还会在操作系统临时目录生成一个
+`chart.html`，使用包内固定版本的 TradingView Lightweight Charts 展示同一证据集最近
+120 根已完成 K 线、成交量、SMA20/50/200 与最多两个支撑、两个阻力。该 HTML 不属于
+持久工件包，不写入安装目录，也不保存浏览器或研究状态。后续调用会尽力清理同一系统临时
+目录下超过 24 小时的旧图表，返回结果同时声明 `expires_after_seconds=86400`。
 
 在包含完整包的受管安装中，通过包内脚本执行：
 
@@ -34,7 +36,12 @@ uv run python scripts/run_yfinance_analysis.py \
   --output-dir /caller/provided/new-directory
 ```
 
-不要绕开包内脚本另写临时下载逻辑；脚本负责唯一数据源、质量门、单次重试与原子落盘。
+脚本默认请求系统浏览器打开临时 HTML，并始终在标准输出返回临时路径以及
+`generated`、`open_attempted`、`open_confirmed` 状态。无法确认打开时仍返回可手动打开
+的路径和限制说明。自动化测试可传 `--no-open`，但仍会生成真实 HTML。
+
+不要绕开包内脚本另写临时下载逻辑；脚本负责唯一数据源、质量门、单次重试、原子落盘与
+临时图表生成。
 
 ## 数据源与质量门
 
@@ -54,7 +61,7 @@ uv run python scripts/run_yfinance_analysis.py \
 - 剔除未完成日线后至少有 319 根。
 
 任一门槛在唯一一次重试后仍失败，只原子交付含“数据状态”和“数据缺口”的
-`analysis.md`。不生成 SVG、evidence JSON、趋势、关键位、情景或失效条件。
+`analysis.md`。不生成临时 HTML、evidence JSON、趋势、关键位、情景或失效条件。
 
 ## 确定性证据
 
@@ -70,18 +77,25 @@ swing high / swing low，按固定 `0.5 × ATR14` 聚类，并依次按触碰次
 - `touches`
 - `price`
 
-纯 Python 直接序列化字节稳定 SVG，不使用浏览器、HTML、matplotlib 或 mplfinance。
-SVG 必须包含 `<title>`、`aria-label`、高对比度配色、`evidence_id` 和关键位 provenance。
+图表使用包内 vendored 的 TradingView Lightweight Charts 5.2.0 standalone 构建；
+运行时不访问 CDN、不要求 Node/npm，也不在 JavaScript 中重新计算分析指标。生成的单文件
+HTML 内嵌库与证据视图数据，包含 `evidence_id`、来源、时区、as_of、复权口径、
+bars_used、TradingView attribution 和完整关键位 provenance。
 
 ## 可选市场背景
 
 市场快照背景是非阻塞输入。与当前组合任务同批产生时直接有效；外部背景按目标市场时区
 默认 24 小时有效。缺失、失败、无效或过期时，明确说明“仅基于技术面证据”并继续交付。
 
-背景只能解释与技术证据的共振或冲突，不能改变 `evidence_id`、图表、指标或关键位。
+背景只能解释与技术证据的共振或冲突，不能改变 `evidence_id`、图表数据、指标或关键位。
 即使用户跳过前置宏观步骤，也要完整阐述多头、震荡、空头的条件和各自失效条件。
 
 ## 边界
 
 不加入基本面、行业分析、账户、仓位、订单、交易执行或 Drive 写入。不创建固定全局目录，
-不向 Skill 安装目录写入，不持久化研究状态。本交付不是实时行情或交易建议。
+不向 Skill 安装目录写入，不使用 `localStorage`，不持久化图表或研究状态，不在打开图表时
+发起网络请求。本交付不是实时行情或交易建议。
+
+仓库内的离线公开验收入口是 `scripts/render_technical_analysis_fixture.py`，它直接执行同一
+包内 runtime，并用 `--no-open` 抑制 GUI 副作用。真实 yfinance 入口仅在发布集成验收时联网
+运行。

@@ -1,5 +1,7 @@
 # 将技术面分析交付为三文件工件包
 
+状态：已被 ADR 0011 取代。
+
 技术面分析以一个工件包交付：`analysis.md` 负责理由分析，`chart.svg` 负责图表可视化，
 `evidence.json` 保存标准化 OHLCV、确定性派生结果和 provenance 以供审计重放；三者共享
 同一个 evidence_id。我们放弃把原始 SVG 内嵌在单个 Markdown 文件中的方案，以换取跨

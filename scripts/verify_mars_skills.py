@@ -179,12 +179,21 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
         package = contract.get("artifact_package")
         if not isinstance(package, dict) or package.get("qualified") != [
             "analysis.md",
-            "chart.svg",
             "evidence.json",
         ]:
             _fail("technical analysis artifact package changed")
         if package.get("atomic_write") is not True:
             _fail("technical analysis artifact package must be atomic")
+        visualization = contract.get("visualization")
+        if (
+            not isinstance(visualization, dict)
+            or visualization.get("qualified_kind") != "temporary_html"
+            or visualization.get("persistent") is not False
+            or visualization.get("cleanup_after_seconds") != 86400
+            or visualization.get("library") != "TradingView Lightweight Charts"
+            or visualization.get("network_at_open_time") is not False
+        ):
+            _fail("technical analysis visualization contract changed")
     _verify_required_contract_values(contract)
     fixture_scenarios = list(contract["scenarios"])
     for operation_contract in contract.values():
@@ -247,6 +256,12 @@ def _verify_fixture_scenarios(
     if not isinstance(validation, dict):
         _fail("fixture scenarios require fixture validation")
     renderer = _fixture_path(validation.get("renderer"), "fixture renderer")
+    renderer_arguments = validation.get("arguments", [])
+    if not isinstance(renderer_arguments, list) or not all(
+        isinstance(argument, str) and argument.startswith("--")
+        for argument in renderer_arguments
+    ):
+        _fail("fixture validation arguments must be option strings")
     artifact_name = validation.get("artifact")
     output_kind = validation.get("output_kind", "file")
     markers = validation.get("required_markers")
@@ -283,6 +298,7 @@ def _verify_fixture_scenarios(
                     str(fixture),
                     output_argument,
                     str(output),
+                    *renderer_arguments,
                 ],
                 cwd=ROOT,
                 capture_output=True,
