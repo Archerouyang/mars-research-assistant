@@ -870,7 +870,7 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
             f"{direction_labels[directions['20']['direction']]}/"
             f"{direction_labels[directions['50']['direction']]}/"
             f"{direction_labels[directions['200']['direction']]}，"
-            "，任一侧突破会削弱震荡解释。"
+            "任一侧突破会削弱震荡解释。"
         ),
         (
             f"- 触发条件：已完成日线持续收在 {nearest_support} 至 "
