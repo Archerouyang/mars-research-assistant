@@ -24,7 +24,9 @@
     "classification": "non_official_best_effort",
     "credentials_required": false,
     "fallback_allowed": false,
-    "expanded_window_retries": 1
+    "expanded_window_retries": 1,
+    "repair_allowed": false,
+    "interpolation_allowed": false
   },
   "daily_chart": {
     "visible_bars": 120,
@@ -37,7 +39,15 @@
     "volume_panel": true,
     "maximum_support_levels": 2,
     "maximum_resistance_levels": 2,
-    "format": "deterministic_svg"
+    "format": "deterministic_svg",
+    "provenance_fields": [
+      "symbol",
+      "source",
+      "timezone",
+      "as_of",
+      "adjustment",
+      "bars_used"
+    ]
   },
   "key_level_method": {
     "confirmed_swing_radius": 2,
@@ -53,7 +63,13 @@
     "optional": true,
     "non_blocking": true,
     "external_max_age_hours": 24,
-    "may_change_technical_evidence": false
+    "may_change_technical_evidence": false,
+    "required_fields": [
+      "as_of",
+      "source",
+      "timezone",
+      "regime"
+    ]
   },
   "response_fields": [
     "evidence_id",
@@ -100,7 +116,9 @@
       "classification": "non_official_best_effort",
       "credentials_required": false,
       "fallback_allowed": false,
-      "expanded_window_retries": 1
+      "expanded_window_retries": 1,
+      "repair_allowed": false,
+      "interpolation_allowed": false
     }
   },
   "fixture_validation": {

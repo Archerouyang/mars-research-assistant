@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from hashlib import sha256
 from html import escape
 import json
@@ -16,6 +16,7 @@ import shutil
 import tempfile
 from typing import Any
 from xml.etree import ElementTree
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 VISIBLE_BARS = 120
@@ -154,6 +155,7 @@ def _qualified_history(value: object, requested_timeframe: str) -> QualifiedHist
         raise DataQualityError(
             "OHLCV time range is not suitable for the requested analysis"
         )
+    _data_text(value.get("time_range"), "OHLCV")
     timezone = _data_text(value.get("timezone"), "OHLCV")
     adjustment = _data_text(value.get("adjustment"), "OHLCV")
     if adjustment not in ADJUSTED_METHODS:
@@ -189,11 +191,18 @@ def _qualified_history(value: object, requested_timeframe: str) -> QualifiedHist
 
     coverage_start = _data_text(value.get("coverage_start"), "OHLCV")
     coverage_end = _data_text(value.get("coverage_end"), "OHLCV")
+    try:
+        coverage_start_date = date.fromisoformat(coverage_start)
+        coverage_end_date = date.fromisoformat(coverage_end)
+    except ValueError as error:
+        raise DataQualityError("OHLCV coverage requires ISO 8601 dates") from error
+    if coverage_start_date > coverage_end_date:
+        raise DataQualityError("OHLCV coverage start must not follow coverage end")
     if bars and (
-        timestamps[0][:10] > coverage_start[:10]
-        or timestamps[-1][:10] < coverage_end[:10]
+        timestamps[0][:10] != coverage_start
+        or timestamps[-1][:10] != coverage_end
     ):
-        raise DataQualityError("OHLCV bars do not cover the declared time range")
+        raise DataQualityError("OHLCV coverage must exactly match actual bars")
     if len(bars) < MINIMUM_HISTORY_BARS:
         missing = MINIMUM_HISTORY_BARS - len(bars)
         raise DataQualityError(
@@ -366,35 +375,73 @@ def _key_levels(
     return levels
 
 
-def _market_context(value: object, research_as_of: str) -> dict[str, Any]:
+def _market_context(
+    value: object, research_as_of: str, target_timezone: str
+) -> dict[str, Any]:
     if value is None:
         return {"status": "not_provided"}
     if not isinstance(value, dict):
         return {"status": "invalid", "reason": "市场背景不是标准工件。"}
     try:
         status = _required_text(value.get("status", "available"), "market context")
+    except TechnicalAnalysisError as error:
+        return {"status": "invalid", "reason": str(error)}
+    if status != "available":
+        reason = value.get("reason")
+        return {
+            "status": "unavailable",
+            "reason": (
+                reason.strip()
+                if isinstance(reason, str) and reason.strip()
+                else f"市场背景状态：{status}"
+            ),
+        }
+    try:
         as_of = _required_text(value.get("as_of"), "market context")
         source = _required_text(value.get("source"), "market context")
+        timezone_name = _required_text(
+            value.get("timezone"), "market context"
+        )
+        regime = _required_text(value.get("regime"), "market context")
         summary = _required_text(value.get("summary"), "market context")
         context_time = _timestamp(as_of, "market context as_of")
         research_time = _timestamp(research_as_of, "research as_of")
-    except (TechnicalAnalysisError, DataQualityError) as error:
+        target_zone = ZoneInfo(target_timezone)
+    except (
+        TechnicalAnalysisError,
+        DataQualityError,
+        ZoneInfoNotFoundError,
+    ) as error:
         return {"status": "invalid", "reason": str(error)}
-    if status != "available":
-        return {"status": "unavailable", "reason": f"市场背景状态：{status}"}
+    if timezone_name != target_timezone:
+        return {
+            "status": "invalid",
+            "reason": "市场背景时区与目标市场时区不一致。",
+        }
     same_run = value.get("same_run") is True
-    age_hours = round((research_time - context_time).total_seconds() / 3600, 3)
+    age_hours = round(
+        (
+            research_time.astimezone(target_zone)
+            - context_time.astimezone(target_zone)
+        ).total_seconds()
+        / 3600,
+        3,
+    )
     if not same_run and (age_hours < 0 or age_hours > 24):
         return {
             "status": "stale",
             "as_of": as_of,
             "source": source,
+            "timezone": timezone_name,
+            "regime": regime,
             "age_hours": age_hours,
         }
     return {
         "status": "valid",
         "as_of": as_of,
         "source": source,
+        "timezone": timezone_name,
+        "regime": regime,
         "summary": summary,
         "same_run": same_run,
         "age_hours": max(age_hours, 0),
@@ -421,6 +468,26 @@ def _canonical_json(value: object) -> str:
         separators=(",", ":"),
         allow_nan=False,
     )
+
+
+def _source_attempt_metadata(
+    fixture: dict[str, Any], default_attempts: int
+) -> tuple[int, bool]:
+    attempts = fixture.get("source_attempts", default_attempts)
+    if isinstance(attempts, bool) or not isinstance(attempts, int):
+        raise TechnicalAnalysisError("source_attempts must be an integer")
+    if attempts not in {1, 2}:
+        raise TechnicalAnalysisError("source_attempts must be one or two")
+    expanded = fixture.get("expanded_window_retry_used", attempts == 2)
+    if not isinstance(expanded, bool):
+        raise TechnicalAnalysisError(
+            "expanded_window_retry_used must be boolean"
+        )
+    if expanded != (attempts == 2):
+        raise TechnicalAnalysisError(
+            "expanded_window_retry_used contradicts source_attempts"
+        )
+    return attempts, expanded
 
 
 def _build_evidence(
@@ -453,6 +520,9 @@ def _build_evidence(
         "volume20_average": round(sum(volumes[-20:]) / 20, 6),
         "atr14": round(latest_atr, 6),
     }
+    source_attempts, expanded_window_retry_used = _source_attempt_metadata(
+        fixture, retry_count + 1
+    )
     evidence: dict[str, Any] = {
         "schema_version": 1,
         "status": "qualified",
@@ -462,8 +532,8 @@ def _build_evidence(
             "label": source.label,
             "classification": "non_official_best_effort",
             "as_of": source.as_of,
-            "attempts": retry_count + 1,
-            "expanded_window_retry_used": retry_count == 1,
+            "attempts": source_attempts,
+            "expanded_window_retry_used": expanded_window_retry_used,
         },
         "timeframe": history.timeframe,
         "timezone": history.timezone,
@@ -485,6 +555,7 @@ def _build_evidence(
         "market_context": _market_context(
             fixture.get("market_context"),
             _required_text(fixture.get("research_as_of"), "fixture"),
+            history.timezone,
         ),
     }
     evidence["regime"] = _technical_regime(latest)
@@ -592,8 +663,9 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
     )
     if context["status"] == "valid":
         lines.append(
-            f"- 已纳入背景：{context['summary']}（来源：{context['source']}；"
-            f"as_of：{context['as_of']}）。背景只用于解释共振或冲突，"
+            f"- 已纳入背景：{context['summary']}（regime：{context['regime']}；"
+            f"来源：{context['source']}；as_of：{context['as_of']}）。"
+            "背景只用于解释共振或冲突，"
             "不改变图表、指标或关键位。"
         )
     else:
@@ -646,6 +718,14 @@ def _chart_svg(evidence: dict[str, Any]) -> str:
     prices = [
         float(bar[field]) for bar in visible for field in ("low", "high")
     ] + [float(level["price"]) for level in levels]
+    for window in SMA_WINDOWS:
+        prices.extend(
+            float(value)
+            for value in evidence["indicators"]["sma"][str(window)][
+                first_visible_index:
+            ]
+            if value is not None
+        )
     lower = min(prices)
     upper = max(prices)
     padding = max((upper - lower) * 0.06, 1.0)
@@ -665,7 +745,10 @@ def _chart_svg(evidence: dict[str, Any]) -> str:
             "<desc>最近 120 根已完成日线、成交量、SMA20、SMA50、SMA200 与"
             f"可追溯关键位；证据标识：{_svg_text(evidence_id)}；"
             f"数据来源：{_svg_text(evidence['source']['label'])}；"
-            f"as_of：{_svg_text(evidence['as_of'])}。</desc>"
+            f"timezone：{_svg_text(evidence['timezone'])}；"
+            f"as_of：{_svg_text(evidence['as_of'])}；"
+            f"adjustment：{_svg_text(evidence['adjustment'])}；"
+            f"bars_used：{evidence['bars_used']}。</desc>"
         ),
         '<rect width="960" height="560" fill="#ffffff"/>',
         (
@@ -860,6 +943,27 @@ def _atomic_write(output_dir: Path, files: dict[str, str]) -> None:
         raise
 
 
+def _write_failure_package(
+    output_dir: Path,
+    symbol: str,
+    research_as_of: str,
+    source: Source,
+    reason: str,
+    attempts: int,
+) -> None:
+    files = {
+        "analysis.md": _failure_markdown(
+            symbol,
+            research_as_of,
+            source,
+            reason,
+            attempts,
+        )
+    }
+    _verify_artifacts(files, None)
+    _atomic_write(output_dir, files)
+
+
 def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
     symbol = _required_text(fixture.get("instrument"), "fixture")
     timeframe = _required_text(fixture.get("timeframe"), "fixture")
@@ -867,13 +971,20 @@ def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
     _timestamp(research_as_of, "research as_of")
     source = _source(fixture.get("provider"))
     if source.status != "available":
-        reason = f"yfinance 暂不可用：{source.status}。"
-        markdown = _failure_markdown(
-            symbol, research_as_of, source, reason, attempts=1
+        source_attempts, _ = _source_attempt_metadata(fixture, 1)
+        source_error = fixture.get("source_error")
+        reason = f"yfinance 暂不可用：{source.status}"
+        if isinstance(source_error, str) and source_error.strip():
+            reason += f"（{source_error.strip()}）"
+        reason += "。"
+        _write_failure_package(
+            output_dir,
+            symbol,
+            research_as_of,
+            source,
+            reason,
+            source_attempts,
         )
-        files = {"analysis.md": markdown}
-        _verify_artifacts(files, None)
-        _atomic_write(output_dir, files)
         return
 
     raw_attempts = fixture.get("attempts")
@@ -895,15 +1006,37 @@ def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
             last_error = error
     if history is None:
         reason = str(last_error or DataQualityError("OHLCV unavailable"))
-        markdown = _failure_markdown(
-            symbol, research_as_of, source, reason, attempts=len(attempts)
+        source_error = fixture.get("source_error")
+        if isinstance(source_error, str) and source_error.strip():
+            reason += f"；同源请求错误：{source_error.strip()}"
+        source_attempts, _ = _source_attempt_metadata(
+            fixture, len(attempts)
         )
-        files = {"analysis.md": markdown}
-        _verify_artifacts(files, None)
-        _atomic_write(output_dir, files)
+        _write_failure_package(
+            output_dir,
+            symbol,
+            research_as_of,
+            source,
+            reason,
+            source_attempts,
+        )
         return
 
-    evidence = _build_evidence(fixture, source, history, retry_count)
+    try:
+        evidence = _build_evidence(fixture, source, history, retry_count)
+    except DataQualityError as error:
+        source_attempts, _ = _source_attempt_metadata(
+            fixture, retry_count + 1
+        )
+        _write_failure_package(
+            output_dir,
+            symbol,
+            research_as_of,
+            source,
+            str(error),
+            source_attempts,
+        )
+        return
     evidence_json = json.dumps(
         evidence, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False
     ) + "\n"

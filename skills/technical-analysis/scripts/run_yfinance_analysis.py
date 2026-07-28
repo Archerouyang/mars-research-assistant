@@ -88,19 +88,23 @@ def build_yfinance_fixture(
     ticker = ticker_factory(normalized_symbol)
     attempts: list[dict[str, Any]] = []
     download_error: Exception | None = None
+    request_count = 0
+    qualified = False
     for period in DOWNLOAD_PERIODS:
+        request_count += 1
         try:
             frame = ticker.history(
                 period=period,
                 interval="1d",
                 auto_adjust=True,
                 actions=False,
-                repair=True,
+                repair=False,
                 raise_errors=False,
             )
             payload = _frame_payload(frame, now)
             attempts.append(payload)
             _qualified_history(payload, "1D")
+            qualified = True
             break
         except (DataQualityError, TechnicalAnalysisError) as error:
             download_error = error
@@ -120,12 +124,36 @@ def build_yfinance_fixture(
             "as_of": as_of,
             "status": "available" if attempts else "unavailable",
         },
+        "source_attempts": request_count,
+        "expanded_window_retry_used": request_count == 2,
     }
     if attempts:
         fixture["attempts"] = attempts
-    elif download_error is not None:
-        fixture["download_status"] = type(download_error).__name__
+    if not qualified and download_error is not None:
+        fixture["source_error"] = type(download_error).__name__
     return fixture
+
+
+def load_market_context(path: Path) -> dict[str, Any]:
+    """Convert unreadable optional context into a non-blocking status."""
+    try:
+        parsed = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        return {
+            "status": "invalid",
+            "reason": type(error).__name__,
+        }
+    except OSError as error:
+        return {
+            "status": "unavailable",
+            "reason": type(error).__name__,
+        }
+    if not isinstance(parsed, dict):
+        return {
+            "status": "invalid",
+            "reason": "market context must be a JSON object",
+        }
+    return parsed
 
 
 def main() -> int:
@@ -149,8 +177,8 @@ def main() -> int:
             now=now,
         )
         if arguments.market_context is not None:
-            fixture["market_context"] = json.loads(
-                arguments.market_context.read_text(encoding="utf-8")
+            fixture["market_context"] = load_market_context(
+                arguments.market_context
             )
         render_fixture(fixture, arguments.output_dir)
     except (

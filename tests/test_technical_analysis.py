@@ -84,7 +84,24 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self.assertEqual(svg.count('data-volume="'), 120)
         for window in (20, 50, 200):
             self.assertIn(f'data-series="sma-{window}"', svg)
-        ElementTree.fromstring(svg)
+        svg_root = ElementTree.fromstring(svg)
+        for element in svg_root.iter():
+            if element.attrib.get("data-series", "").startswith("sma-"):
+                self.assertTrue(
+                    all(
+                        48 <= float(point.split(",")[1]) <= 362
+                        for point in element.attrib["points"].split()
+                    )
+                )
+        for provenance in (
+            evidence["symbol"],
+            evidence["source"]["label"],
+            evidence["timezone"],
+            evidence["as_of"],
+            evidence["adjustment"],
+            str(evidence["bars_used"]),
+        ):
+            self.assertIn(provenance, svg)
 
     def test_short_history_fails_closed_with_an_exact_gap(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
@@ -264,6 +281,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     "status": "available",
                     "as_of": "2026-06-22T08:30:00-04:00",
                     "source": "市场快照工件",
+                    "timezone": "America/New_York",
+                    "regime": "risk_on",
                     "summary": "风险偏好改善，但行业广度仍有分化。",
                     "same_run": True,
                 }
@@ -314,6 +333,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     "status": "available",
                     "as_of": "2026-06-20T08:00:00-04:00",
                     "source": "市场快照工件",
+                    "timezone": "America/New_York",
+                    "regime": "neutral",
                     "summary": "该摘要已经过期。",
                     "same_run": False,
                 }
@@ -364,6 +385,10 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         def uncovered_range(fixture: dict[str, object]) -> None:
             fixture["ohlcv"]["coverage_start"] = "2020-01-01"
 
+        def reversed_range(fixture: dict[str, object]) -> None:
+            fixture["ohlcv"]["coverage_start"] = "2026-06-19"
+            fixture["ohlcv"]["coverage_end"] = "2025-04-01"
+
         def incomplete_middle_bar(fixture: dict[str, object]) -> None:
             fixture["ohlcv"]["bars"][-2]["complete"] = False
 
@@ -376,7 +401,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             (unadjusted, "adjustment must be adjusted"),
             (out_of_order, "strictly increasing"),
             (invalid_bounds, "inconsistent price bounds"),
-            (uncovered_range, "do not cover the declared time range"),
+            (uncovered_range, "must exactly match actual bars"),
+            (reversed_range, "coverage start must not follow coverage end"),
             (incomplete_middle_bar, "only the latest OHLCV bar may be incomplete"),
         )
         for mutate, reason in cases:
@@ -448,6 +474,36 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertIn("provider must be yfinance EOD", result.stdout + result.stderr)
             self.assertFalse(output_dir.exists())
 
+    def test_zero_atr_fails_closed_instead_of_aborting_without_a_report(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            directory = Path(temporary)
+
+            def flatten_prices(fixture: dict[str, object]) -> None:
+                for bar in fixture["ohlcv"]["bars"]:
+                    bar.update(
+                        {
+                            "open": 100,
+                            "high": 100,
+                            "low": 100,
+                            "close": 100,
+                        }
+                    )
+
+            fixture_path = self._write_fixture(directory, flatten_prices)
+            output_dir = directory / "artifacts"
+
+            result = self._render(fixture_path, output_dir)
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(
+                [path.name for path in output_dir.iterdir()],
+                ["analysis.md"],
+            )
+            markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
+
+        self.assertIn("ATR14 requires positive price ranges", markdown)
+        self.assertNotIn("## 技术结构", markdown)
+
     def test_yfinance_adapter_retries_once_with_a_larger_window(self) -> None:
         spec = importlib.util.spec_from_file_location(
             "run_yfinance_analysis", YFINANCE_RUNTIME
@@ -499,12 +555,100 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             ["18mo", "3y"],
         )
         self.assertTrue(all(call["auto_adjust"] is True for call in ticker.calls))
+        self.assertTrue(all(call["repair"] is False for call in ticker.calls))
         self.assertEqual(fixture["provider"]["name"], "yfinance EOD")
         self.assertEqual(fixture["provider"]["kind"], "public_best_effort")
         self.assertEqual(len(fixture["attempts"]), 2)
         self.assertEqual(len(fixture["attempts"][0]["bars"]), 318)
         self.assertEqual(len(fixture["attempts"][1]["bars"]), 319)
         self.assertNotIn("api_key", json.dumps(fixture).lower())
+
+    def test_yfinance_network_failure_is_counted_before_a_successful_retry(
+        self,
+    ) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "run_yfinance_analysis_retry", YFINANCE_RUNTIME
+        )
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        source = json.loads(QUALIFIED_FIXTURE.read_text(encoding="utf-8"))
+        bars = source["ohlcv"]["bars"]
+
+        class FakeFrame:
+            empty = False
+
+            def iterrows(self):
+                for bar in bars:
+                    yield datetime.fromisoformat(bar["timestamp"]), {
+                        "Open": bar["open"],
+                        "High": bar["high"],
+                        "Low": bar["low"],
+                        "Close": bar["close"],
+                        "Volume": bar["volume"],
+                    }
+
+        class FlakyTicker:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def history(self, **kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    raise TimeoutError("first request timed out")
+                return FakeFrame()
+
+        ticker = FlakyTicker()
+        fixture = module.build_yfinance_fixture(
+            "DEMO",
+            ticker_factory=lambda symbol: ticker,
+            now=datetime.fromisoformat("2026-06-22T09:00:00-04:00"),
+        )
+
+        self.assertEqual(ticker.calls, 2)
+        self.assertEqual(fixture["source_attempts"], 2)
+        self.assertTrue(fixture["expanded_window_retry_used"])
+        self.assertEqual(len(fixture["attempts"]), 1)
+
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            directory = Path(temporary)
+            fixture_path = directory / "fixture.json"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_dir = directory / "artifacts"
+            result = self._render(fixture_path, output_dir)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            evidence = json.loads(
+                (output_dir / "evidence.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(evidence["source"]["attempts"], 2)
+        self.assertTrue(evidence["source"]["expanded_window_retry_used"])
+
+    def test_unreadable_market_context_degrades_without_blocking(self) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "run_yfinance_analysis_context", YFINANCE_RUNTIME
+        )
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            missing = Path(temporary) / "missing.json"
+            invalid = Path(temporary) / "invalid.json"
+            invalid.write_text("{not-json", encoding="utf-8")
+
+            missing_context = module.load_market_context(missing)
+            invalid_context = module.load_market_context(invalid)
+
+        self.assertEqual(missing_context["status"], "unavailable")
+        self.assertIn("FileNotFoundError", missing_context["reason"])
+        self.assertEqual(invalid_context["status"], "invalid")
+        self.assertIn("JSONDecodeError", invalid_context["reason"])
 
     def test_readme_demo_is_generated_from_the_offline_fixture(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
