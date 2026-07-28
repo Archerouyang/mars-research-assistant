@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -22,7 +23,7 @@ SECRET_ASSIGNMENT = re.compile(
     r"(?:api[_-]?key|access[_-]?token|secret|password)\s*[:=]\s*['\"]?\S+",
     re.IGNORECASE,
 )
-LEGACY_TERMS = ("long" + "bridge", "mars" + "-research-assistant")
+LEGACY_TERMS = ("long" + "bridge",)
 RETIRED_TECHNICAL_TERMS = (
     "price" + "-action",
     "price" + " action",
@@ -376,13 +377,20 @@ def _file_bytes(root: Path) -> dict[Path, bytes]:
         path.relative_to(root): path.read_bytes()
         for path in root.rglob("*")
         if path.is_file()
+        and path.suffix != ".pyc"
+        and "__pycache__" not in path.parts
     }
 
 
 def _verify_isolated_copies(skill_directories: dict[str, Path]) -> None:
     with tempfile.TemporaryDirectory(prefix="mars-skills-verify-") as temporary:
         temporary_root = Path(temporary)
-        target = temporary_root / "agents" / "skills"
+        target = temporary_root / "agents" / "skills" / "mars-research-assistant"
+        environment = os.environ.copy()
+        environment["UV_OFFLINE"] = "1"
+        environment["UV_NO_PYTHON_DOWNLOADS"] = "1"
+        environment["UV_PYTHON"] = sys.executable
+        environment.pop("UV_PROJECT_ENVIRONMENT", None)
         result = subprocess.run(
             [
                 "bash",
@@ -394,16 +402,38 @@ def _verify_isolated_copies(skill_directories: dict[str, Path]) -> None:
             capture_output=True,
             text=True,
             check=False,
+            env=environment,
         )
         if result.returncode != 0:
             _fail(f"isolated collection install failed: {result.stderr.strip()}")
         for identifier, source in skill_directories.items():
-            destination = target / identifier
+            destination = target / "skills" / identifier
             if _file_bytes(source) != _file_bytes(destination):
                 _fail(f"isolated copy differs: {identifier}")
 
 
+def _verify_root_package() -> None:
+    root_skill = ROOT / "SKILL.md"
+    if not root_skill.is_file():
+        _fail("root Skill is missing")
+    root_text = root_skill.read_text(encoding="utf-8")
+    if "name: mars-research-assistant" not in root_text:
+        _fail("root Skill identity mismatch")
+    for identifier in RELEASE_SKILL_IDS:
+        if f"`skills/{identifier}/SKILL.md`" not in root_text:
+            _fail(f"root Skill does not expose child Skill: {identifier}")
+    for script in (
+        "install-mars-skill.sh",
+        "managed_package.py",
+        "verify_installed_package.py",
+        "build_red_upload_bundle.py",
+    ):
+        if not (ROOT / "scripts" / script).is_file():
+            _fail(f"managed package script missing: {script}")
+
+
 def main() -> int:
+    _verify_root_package()
     manifest_skills = _manifest_skills()
     if set(manifest_skills) != RELEASE_SKILL_IDS:
         _fail("six release Skills are required")

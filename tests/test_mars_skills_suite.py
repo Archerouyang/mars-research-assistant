@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 import json
 import os
 from pathlib import Path
@@ -8,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from xml.etree import ElementTree
 
 
@@ -1262,32 +1264,72 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Python", result.stdout + result.stderr)
 
-    def test_local_installer_rejects_legacy_single_skill_arguments(self) -> None:
+    def _fake_uv_environment(
+        self,
+        directory: Path,
+        *,
+        exit_code: int = 0,
+    ) -> dict[str, str]:
+        binary_directory = directory / "bin"
+        binary_directory.mkdir(parents=True)
+        log_path = directory / "uv.log"
+        fake_uv = binary_directory / "uv"
+        fake_uv.write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            'printf "%s\\n" "$*" >> "$MARS_TEST_UV_LOG"\n'
+            'if [[ "${1:-} ${2:-}" == "python find" ]]; then\n'
+            '  printf "%s\\n" "$MARS_TEST_PYTHON"\n'
+            "  exit 0\n"
+            "fi\n"
+            f"if [[ {exit_code} -ne 0 ]]; then exit {exit_code}; fi\n"
+            'environment_root="${UV_PROJECT_ENVIRONMENT:-$PWD/.venv}"\n'
+            'mkdir -p "$environment_root/bin"\n'
+            'ln -sf "$MARS_TEST_PYTHON" "$environment_root/bin/python"\n',
+            encoding="utf-8",
+        )
+        fake_uv.chmod(0o755)
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "PATH": f"{binary_directory}:{environment['PATH']}",
+                "MARS_TEST_UV_LOG": str(log_path),
+                "MARS_TEST_PYTHON": sys.executable,
+            }
+        )
+        return environment
+
+    def test_local_installer_rejects_legacy_argument_shapes(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             target = Path(temporary) / "target"
-            result = subprocess.run(
-                [
-                    "bash",
-                    "scripts/install-mars-skill.sh",
-                    "--skill",
-                    "../skills/ask-mars",
-                    "--target",
-                    str(target),
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("usage:", result.stdout + result.stderr)
+            for legacy_arguments in (
+                ["--skill", "../skills/ask-mars", "--target", str(target)],
+                ["--all", "--target", str(target)],
+            ):
+                with self.subTest(arguments=legacy_arguments):
+                    result = subprocess.run(
+                        [
+                            "bash",
+                            "scripts/install-mars-skill.sh",
+                            *legacy_arguments,
+                        ],
+                        cwd=ROOT,
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 64)
+                    self.assertIn("usage:", result.stdout + result.stderr)
 
     def test_local_installer_installs_the_full_release_collection_to_an_empty_target(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            target = Path(temporary) / "target"
+            directory = Path(temporary)
+            target = directory / "mars-research-assistant"
+            outside_environment = directory / "outside-environment"
+            environment = self._fake_uv_environment(directory)
+            environment["UV_PROJECT_ENVIRONMENT"] = str(outside_environment)
             result = subprocess.run(
                 [
                     "bash",
@@ -1299,46 +1341,57 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 check=False,
+                env=environment,
             )
-
-            installed = {
-                path.name: {
-                    file.relative_to(path): file.read_bytes()
-                    for file in path.rglob("*")
-                    if file.is_file()
-                }
-                for path in target.iterdir()
-                if path.is_dir() and not path.name.startswith(".")
+            marker = json.loads(
+                (target / ".mars-managed.json").read_text(encoding="utf-8")
+            )
+            uv_log = (directory / "uv.log").read_text(encoding="utf-8")
+            root_skill_installed = (target / "SKILL.md").is_file()
+            root_skill = (target / "SKILL.md").read_text(encoding="utf-8")
+            environment_installed = (target / ".venv" / "bin" / "python").exists()
+            environment_leaked = outside_environment.exists()
+            child_skills = {
+                path.name
+                for path in (target / "skills").iterdir()
+                if path.is_dir()
             }
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(set(installed), {
-            "ask-mars",
-            "market-catalysts-brief",
-            "market-snapshot",
-            "instrument-research",
-            "technical-analysis",
-            "drive-writeback",
-        })
-        for identifier, installed_files in installed.items():
-            self.assertEqual(
-                {
-                    path.relative_to(ROOT / "skills" / identifier): path.read_bytes()
-                    for path in (ROOT / "skills" / identifier).rglob("*")
-                    if path.is_file()
-                },
-                installed_files,
-            )
-        self.assertIn("installed all 6 Mars Skills", result.stdout)
+        self.assertTrue(root_skill_installed)
+        self.assertTrue(environment_installed)
+        self.assertFalse(environment_leaked)
+        self.assertIn("name: mars-research-assistant", root_skill)
+        self.assertIn("公开网络", root_skill)
+        self.assertIn("uv sync --locked", root_skill)
+        self.assertEqual(
+            child_skills,
+            {
+                "ask-mars",
+                "market-catalysts-brief",
+                "market-snapshot",
+                "instrument-research",
+                "technical-analysis",
+                "drive-writeback",
+            },
+        )
+        self.assertEqual(marker["managed_install_schema"], 1)
+        self.assertIn("source_integrity", marker)
+        self.assertIn("uv_lock_sha256", marker)
+        self.assertIn("sync --project", uv_log)
+        self.assertIn("--locked", uv_log)
+        self.assertIn("installed managed Mars Research Assistant package", result.stdout)
 
     def test_local_installer_rejects_a_conflicting_destination_without_partial_install(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            target = Path(temporary) / "target"
-            conflict = target / "technical-analysis"
-            conflict.mkdir(parents=True)
-            (conflict / "sentinel.txt").write_text("preserve", encoding="utf-8")
+            directory = Path(temporary)
+            target = directory / "target"
+            target.mkdir()
+            sentinel = target / "sentinel.txt"
+            sentinel.write_text("preserve", encoding="utf-8")
+            environment = self._fake_uv_environment(directory)
             result = subprocess.run(
                 [
                     "bash",
@@ -1350,22 +1403,23 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 check=False,
+                env=environment,
             )
-
-            remaining = sorted(path.name for path in target.iterdir())
+            sentinel_content = sentinel.read_text(encoding="utf-8")
 
         self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
-        self.assertIn("destination already exists", result.stdout + result.stderr)
-        self.assertEqual(remaining, ["technical-analysis"])
+        self.assertIn("destination already exists and is not managed", result.stdout + result.stderr)
+        self.assertEqual(sentinel_content, "preserve")
 
-    def test_local_installer_rejects_the_legacy_all_argument(self) -> None:
+    def test_local_installer_preserves_a_managed_install_on_sync_failure(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
-            target = Path(temporary) / "target"
-            result = subprocess.run(
+            directory = Path(temporary)
+            target = directory / "target"
+            first_environment = self._fake_uv_environment(directory)
+            first = subprocess.run(
                 [
                     "bash",
                     "scripts/install-mars-skill.sh",
-                    "--all",
                     "--target",
                     str(target),
                 ],
@@ -1373,11 +1427,227 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 check=False,
+                env=first_environment,
+            )
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            sentinel = target / "preserved.txt"
+            sentinel.write_text("customized", encoding="utf-8")
+            failing = self._fake_uv_environment(directory / "failure", exit_code=42)
+            second = subprocess.run(
+                [
+                    "bash",
+                    "scripts/install-mars-skill.sh",
+                    "--target",
+                    str(target),
+                    "--force",
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=failing,
+            )
+            sentinel_content = sentinel.read_text(encoding="utf-8")
+
+        self.assertEqual(second.returncode, 42, second.stdout + second.stderr)
+        self.assertEqual(sentinel_content, "customized")
+
+    def test_local_installer_reuses_an_unchanged_managed_environment(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            directory = Path(temporary)
+            target = directory / "target"
+            environment = self._fake_uv_environment(directory)
+            first = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+
+            second = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            uv_log = (directory / "uv.log").read_text(encoding="utf-8")
+
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertIn("--locked --offline --no-python-downloads", uv_log)
+
+    def test_local_installer_never_executes_a_customized_target_verifier(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            directory = Path(temporary)
+            target = directory / "target"
+            executed = directory / "untrusted-code-executed"
+            environment = self._fake_uv_environment(directory)
+            first = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            (target / "scripts" / "managed_package.py").write_text(
+                "from pathlib import Path\n"
+                f"Path({str(executed)!r}).write_text('executed')\n",
+                encoding="utf-8",
             )
 
-        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
-        self.assertIn("usage:", result.stdout + result.stderr)
+            result = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            untrusted_code_executed = executed.exists()
 
+        self.assertEqual(result.returncode, 74, result.stdout + result.stderr)
+        self.assertFalse(untrusted_code_executed)
+
+    def test_local_installer_rejects_a_tampered_managed_environment(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            directory = Path(temporary)
+            target = directory / "target"
+            environment = self._fake_uv_environment(directory)
+            first = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            (target / ".venv" / "tampered.py").write_text(
+                "raise RuntimeError('tampered')\n",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+
+        self.assertEqual(result.returncode, 74, result.stdout + result.stderr)
+        self.assertIn("customized", result.stdout + result.stderr)
+
+    def test_local_installer_requires_force_to_replace_a_customized_managed_install(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            directory = Path(temporary)
+            target = directory / "target"
+            environment = self._fake_uv_environment(directory)
+            first = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            customization = target / "custom-note.md"
+            customization.write_text("user customization", encoding="utf-8")
+
+            rejected = subprocess.run(
+                ["bash", "scripts/install-mars-skill.sh", "--target", str(target)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            preserved_after_rejection = customization.is_file()
+            forced = subprocess.run(
+                [
+                    "bash",
+                    "scripts/install-mars-skill.sh",
+                    "--target",
+                    str(target),
+                    "--force",
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+            removed_after_force = not customization.exists()
+
+        self.assertEqual(rejected.returncode, 74, rejected.stdout + rejected.stderr)
+        self.assertTrue(preserved_after_rejection)
+        self.assertEqual(forced.returncode, 0, forced.stdout + forced.stderr)
+        self.assertTrue(removed_after_force)
+
+    def test_red_upload_bundle_is_hash_manifested_and_filters_private_surface(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output = Path(temporary) / "mars-red-upload.zip"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build_red_upload_bundle.py",
+                    "--output",
+                    str(output),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            manifest_path = output.with_suffix(".manifest.json")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            with zipfile.ZipFile(output) as archive:
+                names = set(archive.namelist())
+            archive_digest = sha256(output.read_bytes()).hexdigest()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("mars-research-assistant/SKILL.md", names)
+        self.assertIn(
+            "mars-research-assistant/skills/technical-analysis/SKILL.md",
+            names,
+        )
+        for prohibited in (
+            "/.git/",
+            "/.venv/",
+            "/tests/",
+            "/docs/",
+            "/examples/",
+            "/AGENTS.md",
+            "__pycache__",
+            ".pyc",
+            "credentials.json",
+        ):
+            self.assertFalse(any(prohibited in name for name in names), prohibited)
+        self.assertEqual(
+            manifest["archive_sha256"],
+            archive_digest,
+        )
+        self.assertEqual(
+            set(manifest["permissions"]),
+            {
+                "public_network_research",
+                "managed_uv_install",
+                "user_selected_local_artifact_write",
+                "explicitly_confirmed_google_drive_write",
+            },
+        )
 
 if __name__ == "__main__":
     unittest.main()

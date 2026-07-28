@@ -113,6 +113,18 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self.assertIn("LightweightCharts.createChart", html)
         self.assertIn("LightweightCharts.CandlestickSeries", html)
         self.assertIn("LightweightCharts.HistogramSeries", html)
+        self.assertIn('id="chart-legend"', html)
+        self.assertIn('id="crosshair-tooltip"', html)
+        self.assertIn("subscribeCrosshairMove", html)
+        self.assertIn("handleScroll", html)
+        self.assertIn("handleScale", html)
+        self.assertIn("smaLineStyles", html)
+        self.assertIn("LightweightCharts.LineStyle.Dotted", html)
+        self.assertIn("lastValueVisible: true", html)
+        self.assertIn("@media (max-width: 640px)", html)
+        self.assertIn("当前价", html)
+        self.assertIn("支撑", html)
+        self.assertIn("阻力", html)
         self.assertNotIn("<script src=", html)
         self.assertNotIn("localStorage", html)
         self.assertNotIn("sessionStorage", html)
@@ -290,6 +302,145 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             self.assertIn(f"touches={level['touches']}", markdown)
             self.assertIn(f'"method":"{level["method"]}"', chart)
             self.assertIn(f'"touches":{level["touches"]}', chart)
+
+    def test_summary_is_derived_from_normalized_evidence_metrics(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            output_dir = Path(temporary) / "artifacts"
+
+            result = self._render(QUALIFIED_FIXTURE, output_dir)
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            evidence = json.loads(
+                (output_dir / "evidence.json").read_text(encoding="utf-8")
+            )
+            markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
+
+        metrics = evidence["derived_metrics"]
+        self.assertEqual(
+            metrics["price_vs_sma_pct"],
+            {"20": 1.968929, "50": 3.794499, "200": 14.521603},
+        )
+        self.assertEqual(
+            metrics["sma_direction"],
+            {
+                "20": {
+                    "lookback_bars": 5,
+                    "change_pct": 1.242299,
+                    "direction": "rising",
+                },
+                "50": {
+                    "lookback_bars": 5,
+                    "change_pct": 0.608441,
+                    "direction": "rising",
+                },
+                "200": {
+                    "lookback_bars": 5,
+                    "change_pct": 0.717134,
+                    "direction": "rising",
+                },
+            },
+        )
+        self.assertEqual(
+            metrics["completed_bar_returns_pct"],
+            {"20": 5.379527, "60": 10.522486, "120": 17.803402},
+        )
+        self.assertEqual(metrics["atr14_pct_of_close"], 2.19691)
+        self.assertEqual(metrics["volume_vs_20d_average_ratio"], 1.042714)
+        self.assertEqual(metrics["drawdown_from_120d_high_pct"], 1.132665)
+        self.assertEqual(metrics["distance_to_nearest_support_pct"], 5.9468)
+        self.assertEqual(metrics["distance_to_nearest_resistance_pct"], 1.145641)
+        self.assertEqual(
+            evidence["priority_scenario"],
+            {
+                "name": "bull",
+                "label": "多头",
+                "basis": "technical_regime",
+            },
+        )
+
+        conclusion = markdown.index("## 当前结论")
+        explanation = markdown.index("## 趋势、位置与确认")
+        self.assertLess(conclusion, explanation)
+        self.assertIn("当前优先情景：**多头**", markdown)
+        self.assertIn("较 SMA20 高 1.97%", markdown)
+        self.assertIn("20/60/120 根收益分别为 5.38% / 10.52% / 17.8%", markdown)
+        self.assertIn("ATR14 占收盘价 2.2%", markdown)
+        self.assertIn("最新量为 20 日均量的 1.04 倍", markdown)
+        self.assertIn("距 120 日高点回撤 1.13%", markdown)
+        for scenario in ("多头情景", "震荡情景", "空头情景"):
+            self.assertIn(f"### {scenario}", markdown)
+        for dimension in ("支持条件", "有利表现", "不利表现", "触发条件", "失效条件"):
+            self.assertEqual(markdown.count(f"- {dimension}："), 3)
+        self.assertNotIn("概率", markdown)
+        self.assertNotIn("置信度", markdown)
+
+    def test_bear_and_range_summaries_never_invert_signed_evidence(self) -> None:
+        def make_bear(fixture: dict[str, object]) -> None:
+            ohlcv = fixture["ohlcv"]
+            assert isinstance(ohlcv, dict)
+            bars = ohlcv["bars"]
+            assert isinstance(bars, list)
+            for raw_bar in bars:
+                assert isinstance(raw_bar, dict)
+                old_open = float(raw_bar["open"])
+                old_high = float(raw_bar["high"])
+                old_low = float(raw_bar["low"])
+                old_close = float(raw_bar["close"])
+                raw_bar.update(
+                    {
+                        "open": 400 - old_open,
+                        "high": 400 - old_low,
+                        "low": 400 - old_high,
+                        "close": 400 - old_close,
+                    }
+                )
+
+        def make_range(fixture: dict[str, object]) -> None:
+            ohlcv = fixture["ohlcv"]
+            assert isinstance(ohlcv, dict)
+            bars = ohlcv["bars"]
+            assert isinstance(bars, list)
+            for index, raw_bar in enumerate(bars):
+                assert isinstance(raw_bar, dict)
+                close = 200 + ((index % 10) - 5) / 10
+                raw_bar.update(
+                    {
+                        "open": close - 0.05,
+                        "high": close + 0.75,
+                        "low": close - 0.75,
+                        "close": close,
+                    }
+                )
+
+        for expected_regime, mutate in (("空头", make_bear), ("震荡", make_range)):
+            with self.subTest(regime=expected_regime), tempfile.TemporaryDirectory(
+                prefix="technical-analysis-test-"
+            ) as temporary:
+                directory = Path(temporary)
+                fixture_path = self._write_fixture(directory, mutate)
+                output_dir = directory / "artifacts"
+
+                result = self._render(fixture_path, output_dir)
+
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                evidence = json.loads(
+                    (output_dir / "evidence.json").read_text(encoding="utf-8")
+                )
+                markdown = (output_dir / "analysis.md").read_text(encoding="utf-8")
+
+            self.assertEqual(evidence["regime"], expected_regime)
+            self.assertIn(
+                f"当前技术结构为**{expected_regime}**",
+                markdown,
+            )
+            self.assertNotRegex(markdown, r"较 SMA(?:20|50|200) 高 -")
+            if expected_regime == "空头":
+                self.assertIn("较 SMA20 低", markdown)
+                self.assertIn("当前满足空头支持条件", markdown)
+                self.assertNotIn("当前趋势证据不支持空头优先", markdown)
+            else:
+                self.assertIn("均线次序分化", markdown)
+                self.assertIn("当前满足震荡支持条件", markdown)
 
     def test_artifact_package_is_byte_stable(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
@@ -489,6 +640,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         )
         self.assertEqual(plain_chart, context_chart)
         self.assertIn("风险偏好改善，但行业广度仍有分化", context_markdown)
+        self.assertIn("与当前多头优先情景形成共振", context_markdown)
         self.assertIn("不改变图表、指标或关键位", context_markdown)
 
     def test_stale_market_context_degrades_to_technical_only_analysis(self) -> None:

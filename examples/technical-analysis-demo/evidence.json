@@ -2,7 +2,41 @@
   "adjustment": "split-adjusted",
   "as_of": "2026-06-19T16:00:00-04:00",
   "bars_used": 319,
-  "evidence_id": "sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002",
+  "derived_metrics": {
+    "atr14_pct_of_close": 2.19691,
+    "completed_bar_returns_pct": {
+      "120": 17.803402,
+      "20": 5.379527,
+      "60": 10.522486
+    },
+    "distance_to_nearest_resistance_pct": 1.145641,
+    "distance_to_nearest_support_pct": 5.9468,
+    "drawdown_from_120d_high_pct": 1.132665,
+    "price_vs_sma_pct": {
+      "20": 1.968929,
+      "200": 14.521603,
+      "50": 3.794499
+    },
+    "sma_direction": {
+      "20": {
+        "change_pct": 1.242299,
+        "direction": "rising",
+        "lookback_bars": 5
+      },
+      "200": {
+        "change_pct": 0.717134,
+        "direction": "rising",
+        "lookback_bars": 5
+      },
+      "50": {
+        "change_pct": 0.608441,
+        "direction": "rising",
+        "lookback_bars": 5
+      }
+    },
+    "volume_vs_20d_average_ratio": 1.042714
+  },
+  "evidence_id": "sha256:c4721a503676168daebe905ab56c9e006b8fd71812eacd3dc6e560ba07a53292",
   "indicators": {
     "atr14": [
       null,
@@ -3895,6 +3929,11 @@
       "volume": 3724600
     }
   ],
+  "priority_scenario": {
+    "basis": "technical_regime",
+    "label": "多头",
+    "name": "bull"
+  },
   "regime": "多头",
   "research_as_of": "2026-06-22T09:00:00-04:00",
   "schema_version": 1,

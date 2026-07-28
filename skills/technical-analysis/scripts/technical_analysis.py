@@ -7,17 +7,26 @@ import argparse
 from dataclasses import dataclass
 from datetime import date, datetime
 from hashlib import sha256
-from html import escape
 import json
 import math
 import os
 from pathlib import Path
 import shutil
+import sys
 import tempfile
-import time
 from typing import Any
-import webbrowser
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+if str(SCRIPT_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIRECTORY))
+
+from technical_chart import (  # noqa: E402
+    chart_html,
+    temporary_chart,
+    visualization_result,
+)
 
 
 VISIBLE_BARS = 120
@@ -26,29 +35,12 @@ MINIMUM_HISTORY_BARS = VISIBLE_BARS + max(SMA_WINDOWS) - 1
 SWING_RADIUS = 2
 ATR_WINDOW = 14
 ATR_CLUSTER_RATIO = 0.5
+SMA_DIRECTION_LOOKBACK = 5
 ADJUSTED_METHODS = {
     "adjusted",
     "dividend-adjusted",
     "split-adjusted",
     "total-return-adjusted",
-}
-LIGHTWEIGHT_CHARTS_VERSION = "5.2.0"
-LIGHTWEIGHT_CHARTS_DIRECTORY = (
-    Path(__file__).resolve().parents[1]
-    / "vendor"
-    / "lightweight-charts"
-    / LIGHTWEIGHT_CHARTS_VERSION
-)
-LIGHTWEIGHT_CHARTS_SCRIPT = (
-    LIGHTWEIGHT_CHARTS_DIRECTORY
-    / "lightweight-charts.standalone.production.js"
-)
-TEMPORARY_CHART_MAX_AGE_SECONDS = 24 * 60 * 60
-TEMPORARY_CHART_MARKER_NAME = ".mars-technical-chart.json"
-TEMPORARY_CHART_MARKER = {
-    "schema_version": 1,
-    "owner": "mars-skills/technical-analysis",
-    "kind": "temporary-lightweight-chart",
 }
 
 
@@ -521,6 +513,83 @@ def _source_attempt_metadata(
     return attempts, expanded
 
 
+def _percentage_change(current: float, reference: float) -> float:
+    if reference == 0:
+        raise DataQualityError("derived percentage metric requires non-zero reference")
+    return round((current / reference - 1) * 100, 6)
+
+
+def _derived_metrics(
+    bars: list[dict[str, int | float | str]],
+    closes: list[float],
+    volumes: list[float],
+    moving_averages: dict[str, list[float | None]],
+    latest: dict[str, float],
+    key_levels: list[dict[str, Any]],
+) -> dict[str, Any]:
+    close = latest["close"]
+    price_vs_sma_pct = {
+        str(window): _percentage_change(close, latest[f"sma{window}"])
+        for window in SMA_WINDOWS
+    }
+    sma_direction: dict[str, dict[str, int | float | str]] = {}
+    for window in SMA_WINDOWS:
+        values = moving_averages[str(window)]
+        current = values[-1]
+        previous = values[-1 - SMA_DIRECTION_LOOKBACK]
+        if current is None or previous is None:
+            raise DataQualityError(
+                f"SMA{window} direction requires complete fixed-window values"
+            )
+        change_pct = _percentage_change(current, previous)
+        direction = "rising" if change_pct > 0 else "falling"
+        if change_pct == 0:
+            direction = "flat"
+        sma_direction[str(window)] = {
+            "lookback_bars": SMA_DIRECTION_LOOKBACK,
+            "change_pct": change_pct,
+            "direction": direction,
+        }
+
+    returns = {
+        str(window): _percentage_change(close, closes[-1 - window])
+        for window in (20, 60, 120)
+    }
+    high_120 = max(float(bar["high"]) for bar in bars[-VISIBLE_BARS:])
+    support = min(
+        (
+            level
+            for level in key_levels
+            if level["side"] == "support"
+        ),
+        key=lambda level: abs(float(level["price"]) - close),
+    )
+    resistance = min(
+        (
+            level
+            for level in key_levels
+            if level["side"] == "resistance"
+        ),
+        key=lambda level: abs(float(level["price"]) - close),
+    )
+    return {
+        "price_vs_sma_pct": price_vs_sma_pct,
+        "sma_direction": sma_direction,
+        "completed_bar_returns_pct": returns,
+        "atr14_pct_of_close": round(latest["atr14"] / close * 100, 6),
+        "volume_vs_20d_average_ratio": round(
+            latest["volume"] / latest["volume20_average"], 6
+        ),
+        "drawdown_from_120d_high_pct": round((high_120 - close) / high_120 * 100, 6),
+        "distance_to_nearest_support_pct": round(
+            (close - float(support["price"])) / close * 100, 6
+        ),
+        "distance_to_nearest_resistance_pct": round(
+            (float(resistance["price"]) - close) / close * 100, 6
+        ),
+    }
+
+
 def _build_evidence(
     fixture: dict[str, Any],
     source: Source,
@@ -551,6 +620,16 @@ def _build_evidence(
         "volume20_average": round(sum(volumes[-20:]) / 20, 6),
         "atr14": round(latest_atr, 6),
     }
+    key_levels = _key_levels(bars, latest_atr)
+    derived_metrics = _derived_metrics(
+        bars,
+        closes,
+        volumes,
+        moving_averages,
+        latest,
+        key_levels,
+    )
+    regime = _technical_regime(latest)
     source_attempts, expanded_window_retry_used = _source_attempt_metadata(
         fixture, retry_count + 1
     )
@@ -582,14 +661,20 @@ def _build_evidence(
             "atr14": atr14,
             "latest": latest,
         },
-        "key_levels": _key_levels(bars, latest_atr),
+        "derived_metrics": derived_metrics,
+        "key_levels": key_levels,
+        "regime": regime,
+        "priority_scenario": {
+            "name": {"多头": "bull", "震荡": "range", "空头": "bear"}[regime],
+            "label": regime,
+            "basis": "technical_regime",
+        },
         "market_context": _market_context(
             fixture.get("market_context"),
             _required_text(fixture.get("research_as_of"), "fixture"),
             history.timezone,
         ),
     }
-    evidence["regime"] = _technical_regime(latest)
     technical_identity = {
         key: value for key, value in evidence.items() if key != "market_context"
     }
@@ -612,11 +697,59 @@ def _nearest_level(
     return min(levels, key=lambda level: abs(float(level["price"]) - close))
 
 
+def _relative_sma_phrase(window: str, value: float) -> str:
+    relation = "高" if value >= 0 else "低"
+    return f"较 SMA{window} {relation} {_format_number(abs(value))}%"
+
+
+def _context_relationship(technical_regime: str, context_regime: str) -> str:
+    normalized = context_regime.strip().lower()
+    matching = {
+        "多头": {"多头", "bull", "bullish", "risk_on", "risk-on"},
+        "震荡": {"震荡", "range", "neutral", "sideways"},
+        "空头": {"空头", "bear", "bearish", "risk_off", "risk-off"},
+    }
+    return "共振" if normalized in matching[technical_regime] else "冲突"
+
+
 def _analysis_markdown(evidence: dict[str, Any]) -> str:
     latest = evidence["indicators"]["latest"]
+    metrics = evidence["derived_metrics"]
     support = _nearest_level(evidence, "support")
     resistance = _nearest_level(evidence, "resistance")
     context = evidence["market_context"]
+    price_vs_sma = metrics["price_vs_sma_pct"]
+    directions = metrics["sma_direction"]
+    returns = metrics["completed_bar_returns_pct"]
+    priority = evidence["priority_scenario"]["label"]
+    direction_labels = {
+        "rising": "上行",
+        "falling": "下行",
+        "flat": "走平",
+    }
+    nearest_support = _format_number(support["price"])
+    nearest_resistance = _format_number(resistance["price"])
+    regime = evidence["regime"]
+    regime_basis = {
+        "多头": "价格位于三组均线上方，且均线次序由短到长依次走高",
+        "震荡": "价格与均线次序分化，尚未形成一致趋势",
+        "空头": "价格位于三组均线下方，且均线次序由短到长依次走低",
+    }[regime]
+    bull_support = (
+        "当前满足多头支持条件"
+        if regime == "多头"
+        else f"当前不满足多头支持条件（当前分类为{regime}）"
+    )
+    range_support = (
+        "当前满足震荡支持条件"
+        if regime == "震荡"
+        else f"当前不满足震荡优先条件（当前分类为{regime}）"
+    )
+    bear_support = (
+        "当前满足空头支持条件"
+        if regime == "空头"
+        else f"当前不满足空头支持条件（当前分类为{regime}）"
+    )
     lines = [
         f"# 技术面分析：{evidence['symbol']}",
         "",
@@ -639,21 +772,137 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
             + ("已使用一次。" if evidence["source"]["expanded_window_retry_used"] else "未使用。")
         ),
         "",
-        "## 技术结构",
+        "## 当前结论",
         (
-            f"- 当前分类：**{evidence['regime']}**。最新收盘 "
-            f"{_format_number(latest['close'])}，SMA20 "
-            f"{_format_number(latest['sma20'])}，SMA50 "
-            f"{_format_number(latest['sma50'])}，SMA200 "
-            f"{_format_number(latest['sma200'])}。"
+            f"当前技术结构为**{evidence['regime']}**，当前优先情景："
+            f"**{priority}**。{regime_basis}；最近阻力在 "
+            f"{nearest_resistance}，距现价 "
+            f"{_format_number(metrics['distance_to_nearest_resistance_pct'])}%，"
+            "应以已完成日线是否突破或失守关键位作为下一步验证。"
         ),
-        "- 该分类只基于已完成日线与确定性均线次序，不包含基本面或交易指令。",
         "",
-        "## 均线与成交量",
+        "## 趋势、位置与确认",
         (
-            f"- 最新成交量 {_format_number(latest['volume'])}；20 日均量 "
-            f"{_format_number(latest['volume20_average'])}；ATR14 "
-            f"{_format_number(latest['atr14'])}。"
+            f"- **趋势**：最新收盘 {_format_number(latest['close'])}，"
+            f"{_relative_sma_phrase('20', price_vs_sma['20'])}，"
+            f"{_relative_sma_phrase('50', price_vs_sma['50'])}，"
+            f"{_relative_sma_phrase('200', price_vs_sma['200'])}。"
+        ),
+        (
+            f"- **均线方向**：固定回看 {SMA_DIRECTION_LOOKBACK} 根已完成日线，"
+            f"SMA20/50/200 分别{direction_labels[directions['20']['direction']]}/"
+            f"{direction_labels[directions['50']['direction']]}/"
+            f"{direction_labels[directions['200']['direction']]}，"
+            f"变化 {_format_number(directions['20']['change_pct'])}% / "
+            f"{_format_number(directions['50']['change_pct'])}% / "
+            f"{_format_number(directions['200']['change_pct'])}%。"
+        ),
+        (
+            "- **动量**：20/60/120 根收益分别为 "
+            f"{_format_number(returns['20'])}% / "
+            f"{_format_number(returns['60'])}% / "
+            f"{_format_number(returns['120'])}%；"
+            f"距 120 日高点回撤 "
+            f"{_format_number(metrics['drawdown_from_120d_high_pct'])}%。"
+        ),
+        (
+            f"- **参与度**：最新量为 20 日均量的 "
+            f"{_format_number(metrics['volume_vs_20d_average_ratio'])} 倍"
+            f"（{_format_number(latest['volume'])} / "
+            f"{_format_number(latest['volume20_average'])}）。"
+        ),
+        (
+            f"- **波动**：ATR14 占收盘价 "
+            f"{_format_number(metrics['atr14_pct_of_close'])}%；"
+            f"距最近支撑 {nearest_support} 为 "
+            f"{_format_number(metrics['distance_to_nearest_support_pct'])}%，"
+            f"距最近阻力 {nearest_resistance} 为 "
+            f"{_format_number(metrics['distance_to_nearest_resistance_pct'])}%。"
+        ),
+        "- 以上判断只基于已完成日线的技术面证据，不包含基本面或交易指令。",
+        "",
+        "## 当前优先情景",
+        (
+            f"- **{priority}**。优先级来自确定性的均线次序分类；"
+            "它是待关键位验证的工作情景，不是胜率、评分或承诺。"
+        ),
+        "",
+        "## 情景路径",
+        "",
+        "### 多头情景",
+        (
+            f"- 支持条件：{bull_support}；多头成立要求收盘位于 "
+            "SMA20/50/200 上方，"
+            f"20/60/120 根收益为 {_format_number(returns['20'])}% / "
+            f"{_format_number(returns['60'])}% / "
+            f"{_format_number(returns['120'])}%。"
+        ),
+        (
+            f"- 有利表现：已完成日线收于阻力 {nearest_resistance} 上方，"
+            "且成交量不低于其 20 日平均。"
+        ),
+        (
+            f"- 不利表现：当前分类为{regime}；现价距离阻力 "
+            f"{_format_number(metrics['distance_to_nearest_resistance_pct'])}%，"
+            f"ATR14 占收盘价 {_format_number(metrics['atr14_pct_of_close'])}%，"
+            "突破前仍有阻力与波动约束。"
+        ),
+        (
+            f"- 触发条件：已完成日线突破 {nearest_resistance}，"
+            f"并保持在 SMA20 {_format_number(latest['sma20'])} 上方。"
+        ),
+        (
+            f"- 失效条件：已完成日线跌破支撑 {nearest_support}。"
+        ),
+        "",
+        "### 震荡情景",
+        (
+            f"- 支持条件：{range_support}；价格仍处于支撑 "
+            f"{nearest_support} 与阻力 "
+            f"{nearest_resistance} 的可审计区间内。"
+        ),
+        (
+            f"- 有利表现：已完成日线继续守住 {nearest_support}，"
+            f"但未能收于 {nearest_resistance} 上方。"
+        ),
+        (
+            f"- 不利表现：当前分类为{regime}；三组均线方向为"
+            f"{direction_labels[directions['20']['direction']]}/"
+            f"{direction_labels[directions['50']['direction']]}/"
+            f"{direction_labels[directions['200']['direction']]}，"
+            "，任一侧突破会削弱震荡解释。"
+        ),
+        (
+            f"- 触发条件：已完成日线持续收在 {nearest_support} 至 "
+            f"{nearest_resistance} 之间。"
+        ),
+        (
+            f"- 失效条件：已完成日线收于 {nearest_resistance} 上方"
+            f"或 {nearest_support} 下方。"
+        ),
+        "",
+        "### 空头情景",
+        (
+            f"- 支持条件：{bear_support}；距 120 日高点已有 "
+            f"{_format_number(metrics['drawdown_from_120d_high_pct'])}% 回撤，"
+            "下破关键位时可作为风险验证。"
+        ),
+        (
+            f"- 有利表现：已完成日线跌破支撑 {nearest_support}，"
+            f"并收于 SMA20 {_format_number(latest['sma20'])} 下方。"
+        ),
+        (
+            f"- 不利表现：当前分类为{regime}；"
+            f"{_relative_sma_phrase('20', price_vs_sma['20'])}、"
+            f"{_relative_sma_phrase('50', price_vs_sma['50'])}、"
+            f"{_relative_sma_phrase('200', price_vs_sma['200'])}；"
+            f"若收于阻力 {nearest_resistance} 上方，将削弱空头解释。"
+        ),
+        (
+            f"- 触发条件：已完成日线跌破 {nearest_support}。"
+        ),
+        (
+            f"- 失效条件：已完成日线收于阻力 {nearest_resistance} 上方。"
         ),
         "",
         "## 关键位",
@@ -662,40 +911,21 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
         side_label = "支撑" if level["side"] == "support" else "阻力"
         lines.append(
             f"- **{side_label} {_format_number(level['price'])}**："
-            f"method={level['method']}；lookback={level['lookback']}；"
-            f"anchor_dates={','.join(level['anchor_dates'])}；"
-            f"touches={level['touches']}。"
+            f"{level['touches']} 次确认，锚点日期 "
+            f"{'、'.join(level['anchor_dates'])}。"
         )
     lines.extend(
         [
-            "",
-            "## 条件情景与失效",
-            (
-                f"- **多头情景**：已完成日线收盘站上阻力 "
-                f"{_format_number(resistance['price'])}，并维持 SMA20 "
-                f"{_format_number(latest['sma20'])} 上方；失效条件为收盘跌破支撑 "
-                f"{_format_number(support['price'])}。"
-            ),
-            (
-                f"- **震荡情景**：收盘维持在支撑 "
-                f"{_format_number(support['price'])} 与阻力 "
-                f"{_format_number(resistance['price'])} 之间；任一侧已完成日线"
-                "收盘有效突破后，该情景失效。"
-            ),
-            (
-                f"- **空头情景**：已完成日线收盘跌破支撑 "
-                f"{_format_number(support['price'])}，并位于 SMA20 "
-                f"{_format_number(latest['sma20'])} 下方；失效条件为收盘重新站上阻力 "
-                f"{_format_number(resistance['price'])}。"
-            ),
             "",
             "## 市场背景",
         ]
     )
     if context["status"] == "valid":
+        relationship = _context_relationship(regime, context["regime"])
         lines.append(
             f"- 已纳入背景：{context['summary']}（regime：{context['regime']}；"
             f"来源：{context['source']}；as_of：{context['as_of']}）。"
+            f"该背景与当前{priority}优先情景形成{relationship}；"
             "背景只用于解释共振或冲突，"
             "不改变图表、指标或关键位。"
         )
@@ -710,6 +940,19 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## 审计明细",
+        ]
+    )
+    for level in evidence["key_levels"]:
+        lines.append(
+            f"- {_format_number(level['price'])}："
+            f"method={level['method']}；lookback={level['lookback']}；"
+            f"anchor_dates={','.join(level['anchor_dates'])}；"
+            f"touches={level['touches']}。"
+        )
+    lines.extend(
+        [
+            "",
             "## 数据限制",
             "- yfinance 为非官方、best-effort 数据源；本工件不构成实时行情或交易建议。",
         ]
@@ -717,276 +960,6 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
     if evidence["stripped_incomplete_latest_bar"]:
         lines.append("- 已安全剔除一根未完成的最新日线。")
     return "\n".join(lines).rstrip() + "\n"
-
-
-def _safe_inline_json(value: object) -> str:
-    return (
-        json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
-        .replace("<", "\\u003c")
-        .replace(">", "\\u003e")
-        .replace("&", "\\u0026")
-        .replace("\u2028", "\\u2028")
-        .replace("\u2029", "\\u2029")
-    )
-
-
-def _chart_payload(evidence: dict[str, Any]) -> dict[str, Any]:
-    bars = evidence["ohlcv"]
-    first_visible_index = max(0, len(bars) - VISIBLE_BARS)
-    visible = bars[first_visible_index:]
-    candles = [
-        {
-            "time": str(bar["timestamp"])[:10],
-            "open": bar["open"],
-            "high": bar["high"],
-            "low": bar["low"],
-            "close": bar["close"],
-        }
-        for bar in visible
-    ]
-    volume = [
-        {
-            "time": str(bar["timestamp"])[:10],
-            "value": bar["volume"],
-            "color": (
-                "rgba(38, 166, 154, 0.45)"
-                if float(bar["close"]) >= float(bar["open"])
-                else "rgba(239, 83, 80, 0.45)"
-            ),
-        }
-        for bar in visible
-    ]
-    moving_averages: dict[str, list[dict[str, Any]]] = {}
-    for window in SMA_WINDOWS:
-        values = evidence["indicators"]["sma"][str(window)]
-        moving_averages[f"sma-{window}"] = [
-            {
-                "time": str(bars[index]["timestamp"])[:10],
-                "value": value,
-            }
-            for index, value in enumerate(values[first_visible_index:], first_visible_index)
-            if value is not None
-        ]
-    return {
-        "metadata": {
-            "symbol": evidence["symbol"],
-            "evidence_id": evidence["evidence_id"],
-            "source": evidence["source"]["label"],
-            "timezone": evidence["timezone"],
-            "as_of": evidence["as_of"],
-            "adjustment": evidence["adjustment"],
-            "bars_used": evidence["bars_used"],
-            "visible_bars": len(visible),
-            "library": f"TradingView Lightweight Charts {LIGHTWEIGHT_CHARTS_VERSION}",
-        },
-        "candles": candles,
-        "volume": volume,
-        "moving_averages": moving_averages,
-        "key_levels": evidence["key_levels"],
-    }
-
-
-def _chart_html(evidence: dict[str, Any]) -> str:
-    library = LIGHTWEIGHT_CHARTS_SCRIPT.read_text(encoding="utf-8")
-    payload = _safe_inline_json(_chart_payload(evidence))
-    title = escape(f"{evidence['symbol']} · 技术面分析", quote=True)
-    return f"""<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{title}</title>
-  <style>
-    :root {{ color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }}
-    * {{ box-sizing: border-box; }}
-    body {{ margin: 0; background: #0b0e11; color: #d1d4dc; }}
-    main {{ min-height: 100vh; padding: 20px; display: grid; grid-template-rows: auto minmax(520px, 1fr) auto; gap: 14px; }}
-    header {{ display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }}
-    h1 {{ margin: 0; color: #f0f3fa; font-size: 20px; }}
-    .meta {{ color: #787b86; font-size: 12px; overflow-wrap: anywhere; }}
-    #chart {{ min-height: 520px; border: 1px solid #2a2e39; border-radius: 8px; overflow: hidden; }}
-    footer {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #787b86; font-size: 12px; }}
-    a {{ color: #2962ff; }}
-  </style>
-</head>
-<body>
-  <main data-evidence-id="{escape(str(evidence['evidence_id']), quote=True)}">
-    <header>
-      <h1 id="title"></h1>
-      <div class="meta" id="provenance"></div>
-    </header>
-    <div id="chart" role="img" aria-label="{title} K 线、成交量、均线与关键位"></div>
-    <footer>
-      <span id="identity"></span>
-      <span>Powered by
-        <a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer">TradingView Lightweight Charts™</a>
-        {LIGHTWEIGHT_CHARTS_VERSION}
-      </span>
-    </footer>
-  </main>
-  <script>{library}</script>
-  <script>
-    const chartEvidence = {payload};
-    const metadata = chartEvidence.metadata;
-    document.getElementById('title').textContent = `${{metadata.symbol}} · 技术面分析`;
-    document.getElementById('provenance').textContent =
-      `${{metadata.source}} · ${{metadata.timezone}} · as_of ${{metadata.as_of}} · ${{metadata.adjustment}} · ${{metadata.bars_used}} bars`;
-    document.getElementById('identity').textContent = metadata.evidence_id;
-
-    const container = document.getElementById('chart');
-    const chart = LightweightCharts.createChart(container, {{
-      width: container.clientWidth,
-      height: container.clientHeight,
-      layout: {{ background: {{ color: '#0b0e11' }}, textColor: '#d1d4dc' }},
-      grid: {{
-        vertLines: {{ color: '#1f232d' }},
-        horzLines: {{ color: '#1f232d' }}
-      }},
-      rightPriceScale: {{ borderColor: '#2a2e39' }},
-      timeScale: {{ borderColor: '#2a2e39', timeVisible: false }}
-    }});
-    const candles = chart.addSeries(LightweightCharts.CandlestickSeries, {{
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350'
-    }});
-    candles.setData(chartEvidence.candles);
-
-    const volume = chart.addSeries(LightweightCharts.HistogramSeries, {{
-      priceFormat: {{ type: 'volume' }},
-      priceScaleId: 'volume'
-    }});
-    chart.priceScale('volume').applyOptions({{
-      scaleMargins: {{ top: 0.82, bottom: 0 }}
-    }});
-    volume.setData(chartEvidence.volume);
-
-    const smaColors = {{ 'sma-20': '#2962ff', 'sma-50': '#ab47bc', 'sma-200': '#ff9800' }};
-    for (const [name, points] of Object.entries(chartEvidence.moving_averages)) {{
-      const line = chart.addSeries(LightweightCharts.LineSeries, {{
-        color: smaColors[name],
-        lineWidth: 2,
-        title: name.toUpperCase(),
-        priceLineVisible: false,
-        lastValueVisible: false
-      }});
-      line.setData(points);
-    }}
-    for (const level of chartEvidence.key_levels) {{
-      candles.createPriceLine({{
-        price: level.price,
-        color: level.side === 'support' ? '#26a69a' : '#ef5350',
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-        axisLabelVisible: true,
-        title: `${{level.side}} · ${{level.touches}} touches`
-      }});
-    }}
-    chart.timeScale().fitContent();
-    new ResizeObserver(entries => {{
-      const box = entries[0].contentRect;
-      chart.resize(box.width, box.height);
-    }}).observe(container);
-  </script>
-</body>
-</html>
-"""
-
-
-def _cleanup_expired_charts() -> None:
-    temporary_root = Path(tempfile.gettempdir())
-    cutoff = time.time() - TEMPORARY_CHART_MAX_AGE_SECONDS
-    for candidate in temporary_root.glob("mars-technical-chart-*"):
-        try:
-            candidate_stat = candidate.stat()
-            if candidate.is_symlink() or not candidate.is_dir():
-                continue
-            if hasattr(os, "getuid") and candidate_stat.st_uid != os.getuid():
-                continue
-            if candidate_stat.st_mtime >= cutoff:
-                continue
-            marker = candidate / TEMPORARY_CHART_MARKER_NAME
-            chart = candidate / "chart.html"
-            if marker.is_symlink() or chart.is_symlink():
-                continue
-            if not marker.is_file() or not chart.is_file():
-                continue
-            if {path.name for path in candidate.iterdir()} != {
-                TEMPORARY_CHART_MARKER_NAME,
-                "chart.html",
-            }:
-                continue
-            if json.loads(marker.read_text(encoding="utf-8")) != TEMPORARY_CHART_MARKER:
-                continue
-            shutil.rmtree(candidate)
-        except (json.JSONDecodeError, OSError):
-            continue
-
-
-def _temporary_chart(html: str) -> Path:
-    _cleanup_expired_charts()
-    directory = Path(tempfile.mkdtemp(prefix="mars-technical-chart-"))
-    chart_path = directory / "chart.html"
-    try:
-        chart_path.write_text(html, encoding="utf-8", newline="\n")
-        (directory / TEMPORARY_CHART_MARKER_NAME).write_text(
-            json.dumps(
-                TEMPORARY_CHART_MARKER,
-                ensure_ascii=False,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
-    except Exception:
-        shutil.rmtree(directory, ignore_errors=True)
-        raise
-    return chart_path
-
-
-def _visualization_result(
-    chart_path: Path | None,
-    *,
-    open_chart: bool,
-) -> dict[str, Any]:
-    if chart_path is None:
-        return {
-            "kind": "temporary_html",
-            "path": None,
-            "generated": False,
-            "open_attempted": False,
-            "open_confirmed": False,
-            "limitation": "visualization withheld because evidence did not qualify",
-            "expires_after_seconds": None,
-        }
-    open_attempted = False
-    open_confirmed = False
-    limitation: str | None = None
-    if open_chart:
-        open_attempted = True
-        try:
-            configured_browser = os.environ.get("BROWSER")
-            if configured_browser:
-                browser = webbrowser.get(configured_browser)
-                open_confirmed = bool(browser.open(chart_path.as_uri()))
-            else:
-                open_confirmed = bool(webbrowser.open(chart_path.as_uri()))
-            if not open_confirmed:
-                limitation = "browser did not confirm accepting the open request"
-        except Exception as error:  # browser/desktop integration boundary
-            limitation = f"browser open failed: {type(error).__name__}"
-    return {
-        "kind": "temporary_html",
-        "path": str(chart_path.resolve()),
-        "generated": True,
-        "open_attempted": open_attempted,
-        "open_confirmed": open_confirmed,
-        "limitation": limitation,
-        "expires_after_seconds": TEMPORARY_CHART_MAX_AGE_SECONDS,
-    }
 
 
 def _failure_markdown(
@@ -1096,7 +1069,7 @@ def render_fixture(
         )
         return {
             "artifacts": ["analysis.md"],
-            "visualization": _visualization_result(None, open_chart=open_chart),
+            "visualization": visualization_result(None, open_chart=open_chart),
         }
 
     raw_attempts = fixture.get("attempts")
@@ -1134,7 +1107,7 @@ def render_fixture(
         )
         return {
             "artifacts": ["analysis.md"],
-            "visualization": _visualization_result(None, open_chart=open_chart),
+            "visualization": visualization_result(None, open_chart=open_chart),
         }
 
     try:
@@ -1153,7 +1126,7 @@ def render_fixture(
         )
         return {
             "artifacts": ["analysis.md"],
-            "visualization": _visualization_result(None, open_chart=open_chart),
+            "visualization": visualization_result(None, open_chart=open_chart),
         }
     evidence_json = json.dumps(
         evidence, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False
@@ -1163,7 +1136,7 @@ def render_fixture(
         "evidence.json": evidence_json,
     }
     _verify_artifacts(files, evidence["evidence_id"])
-    chart_path = _temporary_chart(_chart_html(evidence))
+    chart_path = temporary_chart(chart_html(evidence))
     try:
         _atomic_write(output_dir, files)
     except Exception:
@@ -1171,7 +1144,7 @@ def render_fixture(
         raise
     return {
         "artifacts": ["analysis.md", "evidence.json"],
-        "visualization": _visualization_result(
+        "visualization": visualization_result(
             chart_path,
             open_chart=open_chart,
         ),

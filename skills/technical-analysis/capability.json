@@ -26,7 +26,21 @@
     "cleanup_after_seconds": 86400,
     "library": "TradingView Lightweight Charts",
     "library_version": "5.2.0",
-    "network_at_open_time": false
+    "network_at_open_time": false,
+    "interactions": [
+      "zoom",
+      "pan",
+      "crosshair",
+      "ohlcv_sma_hover"
+    ],
+    "responsive_widths": [
+      "desktop",
+      "narrow"
+    ],
+    "human_visual_review_required": true,
+    "browser_console_errors_allowed": false,
+    "external_requests_allowed": false,
+    "browser_state_persistence": false
   },
   "data_source": {
     "provider": "yfinance",
@@ -67,6 +81,42 @@
       "distance_to_latest_close"
     ],
     "fallback": "120d_extreme"
+  },
+  "derived_metrics": {
+    "evidence_first": true,
+    "percentage_precision": 6,
+    "sma_direction_lookback_bars": 5,
+    "completed_bar_return_windows": [
+      20,
+      60,
+      120
+    ],
+    "fields": [
+      "price_vs_sma_pct",
+      "sma_direction",
+      "completed_bar_returns_pct",
+      "atr14_pct_of_close",
+      "volume_vs_20d_average_ratio",
+      "drawdown_from_120d_high_pct",
+      "distance_to_nearest_support_pct",
+      "distance_to_nearest_resistance_pct"
+    ]
+  },
+  "scenario_contract": {
+    "priority_is_deterministic": true,
+    "probabilities_allowed": false,
+    "required_scenarios": [
+      "bull",
+      "range",
+      "bear"
+    ],
+    "required_dimensions": [
+      "support",
+      "favorable",
+      "unfavorable",
+      "trigger",
+      "invalidation"
+    ]
   },
   "market_context": {
     "optional": true,
@@ -128,7 +178,21 @@
       "cleanup_after_seconds": 86400,
       "library": "TradingView Lightweight Charts",
       "library_version": "5.2.0",
-      "network_at_open_time": false
+      "network_at_open_time": false,
+      "interactions": [
+        "zoom",
+        "pan",
+        "crosshair",
+        "ohlcv_sma_hover"
+      ],
+      "responsive_widths": [
+        "desktop",
+        "narrow"
+      ],
+      "human_visual_review_required": true,
+      "browser_console_errors_allowed": false,
+      "external_requests_allowed": false,
+      "browser_state_persistence": false
     },
     "data_source": {
       "provider": "yfinance",

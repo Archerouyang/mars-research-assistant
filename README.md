@@ -5,13 +5,19 @@
 
 ## 快速开始
 
-在仓库根目录一次安装全部六个 Skills：
+先安装 [uv](https://docs.astral.sh/uv/)，再在仓库根目录安装完整组合包：
 
 ```bash
-bash scripts/install-mars-skill.sh --target /path/to/agent-skills
+bash scripts/install-mars-skill.sh \
+  --target /path/to/agent-skills/mars-research-assistant
 ```
 
-安装器只提供完整安装方式。安装后可以先询问 Ask Mars：
+安装器是唯一受支持的受管入口。它先在目标目录旁构建完整候选包，运行
+`uv sync --locked` 创建包内 `.venv`，通过离线自检后再整体替换目标；失败不会破坏旧安装。
+锁文件未变的升级会复用已有环境。已定制的受管安装默认停止，确认愿意覆盖后才使用
+`--force`。不回退到 pip，也不污染用户项目或全局 Python。
+
+安装后可从根 `SKILL.md` 组合调用，也可直接调用任一子 Skill。可以先询问 Ask Mars：
 
 > 下周美股有哪些值得关注的宏观和地缘政治催化剂？之后对 GOOGL 做日线技术面分析。
 
@@ -36,20 +42,37 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 ```markdown
 # 技术面分析：DEMO
 
-证据标识：`sha256:67f7f3a53e6aadb0a12c5bceabfff3dd98c92471902d277a31a8434906379002`
+证据标识：`sha256:c4721a503676168daebe905ab56c9e006b8fd71812eacd3dc6e560ba07a53292`
 
-## 技术结构
-- 当前分类：**多头**。最新收盘 227.82，SMA20 223.42，SMA50 219.49，SMA200 198.93。
+## 当前结论
+当前技术结构为**多头**，当前优先情景：**多头**。价格位于三组均线上方，且均线次序
+由短到长依次走高；最近阻力在 230.43，距现价 1.15%，应以已完成日线是否突破或失守
+关键位作为下一步验证。
 
-## 关键位
-- **支撑 214.27**：method=confirmed_swing_atr14_cluster；lookback=120；touches=5。
-- **阻力 230.43**：method=120d_extreme_fallback；lookback=120；touches=1。
+## 趋势、位置与确认
+- **趋势**：最新收盘 227.82，较 SMA20 高 1.97%，较 SMA50 高 3.79%，较 SMA200 高 14.52%。
+- **动量**：20/60/120 根收益分别为 5.38% / 10.52% / 17.8%；距 120 日高点回撤 1.13%。
+- **参与度**：最新量为 20 日均量的 1.04 倍。
+- **波动**：ATR14 占收盘价 2.2%；距最近支撑 214.27 为 5.95%，距最近阻力 230.43 为 1.15%。
 ```
 
 持久示例工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
 `analysis.md` 与 `evidence.json` 共享同一个 `evidence_id`。每次合格运行还会生成临时
 `chart.html`，用包内 TradingView Lightweight Charts 可视化同一证据集，并在标准输出
 返回路径与浏览器打开状态；临时图表不写入持久工件目录。
+
+## RED Skill 上传
+
+根 `SKILL.md` 是 RED 的 Markdown 入口。如果平台只保留 Markdown，它只做能力发现和受管
+GitHub 安装引导，不会假装脚本或环境已经安装。需要上传完整包时生成过滤后的确定性 ZIP
+和独立哈希清单：
+
+```bash
+python3 scripts/build_red_upload_bundle.py \
+  --output /tmp/mars-research-assistant-red.zip
+```
+
+包中不包含 `.git`、`.venv`、测试、开发文档、示例研究、凭据或本地开发配置。
 
 ## 数据与安全边界
 
