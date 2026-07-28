@@ -47,6 +47,30 @@ class DriveItem:
     parent_id: str
 
 
+@dataclass(frozen=True)
+class CreationOutcome:
+    status: str
+    detail: str
+    item_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ResearchCenterState:
+    my_drive_id: str
+    roots: tuple[DriveItem, ...]
+    root: DriveItem | None
+    index: DriveItem | None
+    directories: dict[str, DriveItem]
+
+    @property
+    def complete(self) -> bool:
+        return bool(
+            self.root
+            and self.index
+            and len(self.directories) == len(RESEARCH_DIRECTORIES)
+        )
+
+
 def _drive_items(value: object) -> list[DriveItem]:
     if not isinstance(value, list):
         raise DriveWritebackError("Drive snapshot items require a list")
@@ -77,6 +101,78 @@ def _matching_items(
     ]
 
 
+def _research_center_state(snapshot: object) -> ResearchCenterState:
+    if not isinstance(snapshot, dict):
+        raise DriveWritebackError("Drive snapshot requires an object")
+    my_drive_id = _text(snapshot.get("my_drive_id"), "My Drive ID")
+    items = _drive_items(snapshot.get("items"))
+    roots = tuple(
+        _matching_items(
+            items,
+            name=RESEARCH_CENTER_NAME,
+            mime_type=FOLDER_MIME_TYPE,
+            parent_id=my_drive_id,
+        )
+    )
+    root = roots[0] if len(roots) == 1 else None
+    if root is None:
+        return ResearchCenterState(my_drive_id, roots, None, None, {})
+
+    index_matches = _matching_items(
+        items,
+        name=INDEX_NAME,
+        mime_type=DOCUMENT_MIME_TYPE,
+        parent_id=root.item_id,
+    )
+    directories: dict[str, DriveItem] = {}
+    for directory in RESEARCH_DIRECTORIES:
+        matches = _matching_items(
+            items,
+            name=directory,
+            mime_type=FOLDER_MIME_TYPE,
+            parent_id=root.item_id,
+        )
+        if matches:
+            directories[directory] = matches[0]
+    return ResearchCenterState(
+        my_drive_id=my_drive_id,
+        roots=roots,
+        root=root,
+        index=index_matches[0] if index_matches else None,
+        directories=directories,
+    )
+
+
+def _creation_outcome(
+    *,
+    name: str,
+    mime_type: str,
+    parent_id: str,
+    raw_result: object,
+) -> CreationOutcome:
+    if not isinstance(raw_result, dict):
+        return CreationOutcome("pending", f"{name}（未执行）")
+    if raw_result.get("status") == "failed":
+        reason = _text(raw_result.get("reason"), f"{name} failure reason")
+        return CreationOutcome("failed", f"{name}（{reason}）")
+    if raw_result.get("status") != "created":
+        return CreationOutcome("pending", f"{name}（未执行）")
+
+    item_id = _text(raw_result.get("id"), f"{name} created ID")
+    readback = raw_result.get("readback")
+    expected = {
+        "id": item_id,
+        "name": name,
+        "mime_type": mime_type,
+        "parent_id": parent_id,
+    }
+    if not isinstance(readback, dict) or any(
+        readback.get(field) != value for field, value in expected.items()
+    ):
+        return CreationOutcome("pending", f"{name}（读回验证失败）")
+    return CreationOutcome("created", f"{name}（{item_id}）", item_id)
+
+
 def _render_initialization_execution(
     *,
     fixture: dict[str, Any],
@@ -100,21 +196,19 @@ def _render_initialization_execution(
     unresolved_directories = False
     resolved_root_id = root_id
     if RESEARCH_CENTER_NAME in missing_names:
-        root_result = create_results.get(RESEARCH_CENTER_NAME)
-        if isinstance(root_result, dict) and root_result.get("status") == "created":
-            candidate_id = _text(root_result.get("id"), "research center created ID")
-            if root_result.get("readback_verified") is True:
-                resolved_root_id = candidate_id
-                created.append(f"{RESEARCH_CENTER_NAME}（{candidate_id}）")
-            else:
-                pending.append(f"{RESEARCH_CENTER_NAME}（读回未验证）")
-        elif isinstance(root_result, dict) and root_result.get("status") == "failed":
-            failed.append(
-                f"{RESEARCH_CENTER_NAME}（"
-                f"{_text(root_result.get('reason'), 'research center failure reason')}）"
-            )
+        root_outcome = _creation_outcome(
+            name=RESEARCH_CENTER_NAME,
+            mime_type=FOLDER_MIME_TYPE,
+            parent_id=my_drive_id,
+            raw_result=create_results.get(RESEARCH_CENTER_NAME),
+        )
+        if root_outcome.status == "created":
+            resolved_root_id = root_outcome.item_id
+            created.append(root_outcome.detail)
+        elif root_outcome.status == "failed":
+            failed.append(root_outcome.detail)
         else:
-            pending.append(f"{RESEARCH_CENTER_NAME}（未执行）")
+            pending.append(root_outcome.detail)
 
     if resolved_root_id is None:
         unresolved_directories = True
@@ -127,27 +221,22 @@ def _render_initialization_execution(
         for name in RESEARCH_DIRECTORIES:
             if name not in missing_names:
                 continue
-            result = create_results.get(name)
-            if not isinstance(result, dict):
-                pending.append(f"{name}（未执行）")
-                unresolved_directories = True
-                continue
-            status = result.get("status")
-            if status == "created":
-                item_id = _text(result.get("id"), f"{name} created ID")
-                if result.get("readback_verified") is not True:
-                    pending.append(f"{name}（读回未验证）")
-                    unresolved_directories = True
-                else:
-                    created.append(f"{name}（{item_id}）")
-                    directory_ids[name] = item_id
-            elif status == "failed":
-                failed.append(
-                    f"{name}（{_text(result.get('reason'), f'{name} failure reason')}）"
-                )
+            outcome = _creation_outcome(
+                name=name,
+                mime_type=FOLDER_MIME_TYPE,
+                parent_id=resolved_root_id,
+                raw_result=create_results.get(name),
+            )
+            if outcome.status == "created":
+                created.append(outcome.detail)
+                if outcome.item_id is None:
+                    raise DriveWritebackError("created directory ID is unavailable")
+                directory_ids[name] = outcome.item_id
+            elif outcome.status == "failed":
+                failed.append(outcome.detail)
                 unresolved_directories = True
             else:
-                pending.append(f"{name}（未执行）")
+                pending.append(outcome.detail)
                 unresolved_directories = True
 
     index_created = False
@@ -155,20 +244,19 @@ def _render_initialization_execution(
         if unresolved_directories:
             pending.insert(0, f"{INDEX_NAME}（等待六个目录完整后创建）")
         else:
-            result = create_results.get(INDEX_NAME)
-            if isinstance(result, dict) and result.get("status") == "created":
-                item_id = _text(result.get("id"), "index created ID")
-                if result.get("readback_verified") is True:
-                    created.append(f"{INDEX_NAME}（{item_id}）")
-                    index_created = True
-                else:
-                    pending.append(f"{INDEX_NAME}（读回未验证）")
-            elif isinstance(result, dict) and result.get("status") == "failed":
-                failed.append(
-                    f"{INDEX_NAME}（{_text(result.get('reason'), 'index failure reason')}）"
-                )
+            index_outcome = _creation_outcome(
+                name=INDEX_NAME,
+                mime_type=DOCUMENT_MIME_TYPE,
+                parent_id=resolved_root_id,
+                raw_result=create_results.get(INDEX_NAME),
+            )
+            if index_outcome.status == "created":
+                created.append(index_outcome.detail)
+                index_created = True
+            elif index_outcome.status == "failed":
+                failed.append(index_outcome.detail)
             else:
-                pending.append(f"{INDEX_NAME}（未执行）")
+                pending.append(index_outcome.detail)
 
     partial = bool(failed or pending)
     lines = [
@@ -244,26 +332,69 @@ def _render_index_template(
 
 
 def _render_archive_after_initialization(fixture: dict[str, Any]) -> str:
-    initialization_fixture = {
-        "operation": "initialize",
-        "drive_snapshot": fixture.get("drive_snapshot"),
-        "confirmation": fixture.get("initialization_confirmation"),
-        "execution": fixture.get("execution"),
-    }
-    initialization = _render_initialization_proposal(initialization_fixture)
-    if "- 初始化结果：已完整初始化" not in initialization:
-        return initialization
+    snapshot = fixture.get("drive_snapshot")
+    center = _research_center_state(snapshot)
+    if len(center.roots) > 1:
+        return _render_initialization_proposal(
+            {
+                "operation": "initialize",
+                "drive_snapshot": snapshot,
+                "confirmation": fixture.get("initialization_confirmation"),
+            }
+        )
 
-    execution = fixture.get("execution")
-    if not isinstance(execution, dict):
-        raise DriveWritebackError("initialization execution requires an object")
-    create_results = execution.get("create_results")
-    if not isinstance(create_results, dict):
-        raise DriveWritebackError("initialization create results require an object")
-    root_result = create_results.get(RESEARCH_CENTER_NAME)
-    if not isinstance(root_result, dict) or root_result.get("status") != "created":
-        raise DriveWritebackError("initialized research center ID is unavailable")
-    root_id = _text(root_result.get("id"), "initialized research center ID")
+    root_id = center.root.item_id if center.root else None
+    existing_directory_ids = {
+        name: item.item_id for name, item in center.directories.items()
+    }
+    structure_complete = center.complete
+    initialization = ""
+    if not structure_complete:
+        initialization = _render_initialization_proposal(
+            {
+                "operation": "initialize",
+                "drive_snapshot": snapshot,
+                "confirmation": fixture.get("initialization_confirmation"),
+                "execution": fixture.get("execution"),
+            }
+        )
+        if "- 初始化结果：已完整初始化" not in initialization:
+            return initialization
+
+    create_results: dict[str, object] = {}
+    if not structure_complete:
+        execution = fixture.get("execution")
+        if not isinstance(execution, dict) or not isinstance(
+            execution.get("create_results"), dict
+        ):
+            raise DriveWritebackError("initialization create results require an object")
+        create_results = execution["create_results"]
+        if root_id is None:
+            root_outcome = _creation_outcome(
+                name=RESEARCH_CENTER_NAME,
+                mime_type=FOLDER_MIME_TYPE,
+                parent_id=center.my_drive_id,
+                raw_result=create_results.get(RESEARCH_CENTER_NAME),
+            )
+            if root_outcome.status != "created" or root_outcome.item_id is None:
+                raise DriveWritebackError("initialized research center ID is unavailable")
+            root_id = root_outcome.item_id
+    if root_id is None:
+        raise DriveWritebackError("research center ID is unavailable")
+
+    directory_ids = dict(existing_directory_ids)
+    for directory in RESEARCH_DIRECTORIES:
+        if directory in directory_ids:
+            continue
+        outcome = _creation_outcome(
+            name=directory,
+            mime_type=FOLDER_MIME_TYPE,
+            parent_id=root_id,
+            raw_result=create_results.get(directory),
+        )
+        if outcome.status != "created" or outcome.item_id is None:
+            raise DriveWritebackError(f"initialized directory ID is unavailable: {directory}")
+        directory_ids[directory] = outcome.item_id
 
     research = fixture.get("research")
     if not isinstance(research, dict):
@@ -274,40 +405,85 @@ def _render_archive_after_initialization(fixture: dict[str, Any]) -> str:
     title = _text(research.get("title"), "research title")
     _text(research.get("content"), "research content")
     plan = _archive_plan(research, research_type, title)
-    archive_proposal_id = (
-        f"archive:{research_type}:{root_id}:{plan.destination}"
-    )
+    target_id = directory_ids[plan.label]
+    archive_proposal_id = f"archive:{research_type}:{target_id}:{plan.destination}"
     archive_confirmation = fixture.get("archive_confirmation")
     reused_initialization_confirmation = (
         isinstance(archive_confirmation, dict)
         and str(archive_confirmation.get("proposal_id", "")).startswith("initialize:")
     )
-    confirmation_status = (
-        "初始化确认不能授权研究归档"
-        if reused_initialization_confirmation
-        else "等待用户对新的归档提议明确确认"
+    archive_confirmation_matches = (
+        isinstance(archive_confirmation, dict)
+        and archive_confirmation.get("explicit") is True
+        and archive_confirmation.get("proposal_id") == archive_proposal_id
+        and archive_confirmation.get("target_id") == target_id
     )
-    archive_proposal = "\n".join(
-        [
+    base_lines = [
+        "## 已完成研究",
+        f"- 标题：{title}",
+        f"- 类型：{plan.label}",
+        "",
+        "## 归档提议",
+        f"- 归档提议标识：{archive_proposal_id}",
+        f"- 归档目标 Drive ID：{target_id}",
+        f"- 目标位置：{plan.destination}",
+        f"- 计划操作：{plan.operation}",
+    ]
+    if not archive_confirmation_matches:
+        confirmation_status = (
+            "初始化确认不能授权研究归档"
+            if reused_initialization_confirmation
+            else "等待用户对新的归档提议明确确认"
+        )
+        archive_lines = [
             "# Drive 写入提议",
             "",
-            "## 已完成研究",
-            f"- 标题：{title}",
-            f"- 类型：{plan.label}",
-            "",
-            "## 归档提议",
-            f"- 归档提议标识：{archive_proposal_id}",
-            f"- 归档目标 Drive ID：{root_id}",
-            f"- 目标位置：{plan.destination}",
-            f"- 计划操作：{plan.operation}",
+            *base_lines,
             f"- 总索引：{'更新' if plan.updates_index else '不更新'}",
             "",
             "## 确认状态",
             f"- 确认状态：{confirmation_status}",
             "- 写入结果：未执行",
         ]
-    )
-    return initialization + "\n" + archive_proposal + "\n"
+        return (initialization + "\n" if initialization else "") + "\n".join(
+            archive_lines
+        ) + "\n"
+
+    archive_execution = fixture.get("archive_execution")
+    if not isinstance(archive_execution, dict):
+        raise DriveWritebackError("confirmed archive requires execution results")
+    archive_status = archive_execution.get("status")
+    if archive_status not in {"created", "updated"}:
+        raise DriveWritebackError("archive execution did not succeed")
+    archived_id = _text(archive_execution.get("id"), "archived document ID")
+    readback = archive_execution.get("readback")
+    expected_readback = {
+        "id": archived_id,
+        "name": plan.destination.rsplit(" / ", maxsplit=1)[-1],
+        "mime_type": DOCUMENT_MIME_TYPE,
+        "parent_id": target_id,
+    }
+    if not isinstance(readback, dict) or any(
+        readback.get(field) != value for field, value in expected_readback.items()
+    ):
+        raise DriveWritebackError("archived document readback verification failed")
+    expected_index_update = "updated" if plan.updates_index else "not_updated"
+    if archive_execution.get("index_update") != expected_index_update:
+        raise DriveWritebackError("archive index result contradicts the route")
+    result_lines = [
+        "# Drive 写入结果",
+        "",
+        *base_lines,
+        f"- 总索引：{'已更新' if plan.updates_index else '不更新'}",
+        "",
+        "## 确认状态",
+        "- 确认状态：已明确确认",
+        f"- 写入结果：已{archive_status.replace('created', '创建').replace('updated', '更新')} "
+        f"{archived_id} 并读回验证",
+    ]
+    return (initialization + "\n" if initialization else "") + "\n".join(
+        result_lines
+    ) + "\n"
 
 
 def _render_initialization_proposal(fixture: dict[str, Any]) -> str:
@@ -325,18 +501,9 @@ def _render_initialization_proposal(fixture: dict[str, Any]) -> str:
             )
             + "\n"
         )
-    snapshot = fixture.get("drive_snapshot")
-    if not isinstance(snapshot, dict):
-        raise DriveWritebackError("Drive snapshot requires an object")
-    my_drive_id = _text(snapshot.get("my_drive_id"), "My Drive ID")
-    items = _drive_items(snapshot.get("items"))
-    roots = _matching_items(
-        items,
-        name=RESEARCH_CENTER_NAME,
-        mime_type=FOLDER_MIME_TYPE,
-        parent_id=my_drive_id,
-    )
-    if len(roots) > 1:
+    center = _research_center_state(fixture.get("drive_snapshot"))
+    my_drive_id = center.my_drive_id
+    if len(center.roots) > 1:
         return (
             "\n".join(
                 [
@@ -344,14 +511,14 @@ def _render_initialization_proposal(fixture: dict[str, Any]) -> str:
                     "",
                     f"- My Drive ID：{my_drive_id}",
                     "- 解析状态：发现多个 My Drive 同名根目录，不能猜测目标",
-                    f"- 候选 Drive ID：{'、'.join(root.item_id for root in roots)}",
+                    f"- 候选 Drive ID：{'、'.join(root.item_id for root in center.roots)}",
                     "- 选择状态：等待用户明确选择",
                     "- 初始化结果：未执行",
                 ]
             )
             + "\n"
         )
-    root = roots[0] if roots else None
+    root = center.root
     root_id = root.item_id if root else None
     target_id = root_id or my_drive_id
     proposal_id = (
@@ -370,27 +537,16 @@ def _render_initialization_proposal(fixture: dict[str, Any]) -> str:
     missing_names = [] if root_id else [RESEARCH_CENTER_NAME]
     directory_ids: dict[str, str] = {}
     if root_id:
-        index_items = _matching_items(
-            items,
-            name=INDEX_NAME,
-            mime_type=DOCUMENT_MIME_TYPE,
-            parent_id=root_id,
-        )
-        if index_items:
-            existing.append(f"{INDEX_NAME}（{index_items[0].item_id}）")
+        if center.index:
+            existing.append(f"{INDEX_NAME}（{center.index.item_id}）")
         else:
             proposed.append(f"{INDEX_NAME}（Google Doc）")
             missing_names.append(INDEX_NAME)
         for directory in RESEARCH_DIRECTORIES:
-            directory_items = _matching_items(
-                items,
-                name=directory,
-                mime_type=FOLDER_MIME_TYPE,
-                parent_id=root_id,
-            )
-            if directory_items:
-                existing.append(f"{directory}（{directory_items[0].item_id}）")
-                directory_ids[directory] = directory_items[0].item_id
+            directory_item = center.directories.get(directory)
+            if directory_item:
+                existing.append(f"{directory}（{directory_item.item_id}）")
+                directory_ids[directory] = directory_item.item_id
             else:
                 proposed.append(f"{directory}（文件夹）")
                 missing_names.append(directory)

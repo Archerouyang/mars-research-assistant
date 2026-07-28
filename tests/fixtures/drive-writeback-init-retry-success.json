@@ -53,12 +53,22 @@
       "交易计划": {
         "status": "created",
         "id": "plan-003",
-        "readback_verified": true
+        "readback": {
+          "id": "plan-003",
+          "name": "交易计划",
+          "mime_type": "application/vnd.google-apps.folder",
+          "parent_id": "center-001"
+        }
       },
       "总索引": {
         "status": "created",
         "id": "index-003",
-        "readback_verified": true
+        "readback": {
+          "id": "index-003",
+          "name": "总索引",
+          "mime_type": "application/vnd.google-apps.document",
+          "parent_id": "center-001"
+        }
       }
     }
   }

@@ -27,7 +27,12 @@
       "每日市场思考": {
         "status": "created",
         "id": "daily-002",
-        "readback_verified": true
+        "readback": {
+          "id": "daily-002",
+          "name": "每日市场思考",
+          "mime_type": "application/vnd.google-apps.folder",
+          "parent_id": "center-001"
+        }
       },
       "交易计划": {
         "status": "failed",
@@ -36,17 +41,32 @@
       "专题研究": {
         "status": "created",
         "id": "topic-002",
-        "readback_verified": true
+        "readback": {
+          "id": "topic-002",
+          "name": "专题研究",
+          "mime_type": "application/vnd.google-apps.folder",
+          "parent_id": "center-001"
+        }
       },
       "周度复盘": {
         "status": "created",
         "id": "weekly-002",
-        "readback_verified": true
+        "readback": {
+          "id": "weekly-002",
+          "name": "周度复盘",
+          "mime_type": "application/vnd.google-apps.folder",
+          "parent_id": "center-001"
+        }
       },
       "案例复盘": {
         "status": "created",
         "id": "case-002",
-        "readback_verified": true
+        "readback": {
+          "id": "case-002",
+          "name": "案例复盘",
+          "mime_type": "application/vnd.google-apps.folder",
+          "parent_id": "center-001"
+        }
       }
     }
   }
