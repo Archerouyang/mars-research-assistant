@@ -2,6 +2,13 @@
   "schema_version": 1,
   "skill": "technical-analysis",
   "delivery": "technical_evidence_package",
+  "default_market": {
+    "when_unspecified": "US equities",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "user_timezone_does_not_select_market": true,
+    "explicit_market_overrides": true
+  },
   "single_instrument_required": true,
   "technical_analysis_only": true,
   "ohlcv_quality_required": true,

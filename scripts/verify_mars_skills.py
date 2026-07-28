@@ -160,7 +160,13 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
         expected_forbidden = {"research", "market_data", "drive_write"}
         if contract.get("delivery") != "recommendation" or set(forbidden) != expected_forbidden:
             _fail("Ask Mars must remain recommendation-only")
-        if response_fields != ["recommended_skills", "first_step", "minimum_input"]:
+        if response_fields != [
+            "recommended_skills",
+            "first_step",
+            "minimum_input",
+            "assumptions",
+            "quick_replies",
+        ]:
             _fail("Ask Mars response fields changed")
         first = scenarios[0]["expected"]
         if first.get("first_step") != "市场催化剂简报":

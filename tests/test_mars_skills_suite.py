@@ -131,9 +131,54 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
     def test_offline_suite_verifier_accepts_the_public_collection(self) -> None:
         result = self._run_verifier(ROOT)
+        defaulted_skills = (
+            "ask-mars",
+            "market-catalysts-brief",
+            "market-snapshot",
+            "instrument-research",
+            "technical-analysis",
+        )
+        contracts = {
+            identifier: json.loads(
+                (
+                    ROOT / "skills" / identifier / "capability.json"
+                ).read_text(encoding="utf-8")
+            )
+            for identifier in defaulted_skills
+        }
+        ask_scenarios = {
+            scenario["request"]: scenario["expected"]
+            for scenario in contracts["ask-mars"]["scenarios"]
+        }
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Mars Skills contract ok: ask-mars", result.stdout)
+        for identifier, contract in contracts.items():
+            with self.subTest(identifier=identifier):
+                self.assertEqual(
+                    contract["default_market"],
+                    {
+                        "when_unspecified": "US equities",
+                        "currency": "USD",
+                        "timezone": "America/New_York",
+                        "user_timezone_does_not_select_market": True,
+                        "explicit_market_overrides": True,
+                        **(
+                            {"default_daily_window": "next 7 calendar days"}
+                            if identifier == "market-catalysts-brief"
+                            else {}
+                        ),
+                    },
+                )
+        for request in ("/ask mars", "开始今天的交易研究"):
+            with self.subTest(request=request):
+                expected = ask_scenarios[request]
+                self.assertEqual(expected["first_step"], "市场快照")
+                self.assertEqual(expected["minimum_input"], [])
+                self.assertEqual(
+                    expected["quick_replies"],
+                    ["开始", "只看市场快照", "添加 ticker"],
+                )
 
     def test_offline_suite_verifier_accepts_market_catalysts_brief_fixture(self) -> None:
         result = self._run_verifier(ROOT)

@@ -11,6 +11,9 @@ description: 在用户要求当前市场状态、宏观快照、风险偏好或�
 {"delivery":"markdown_snapshot","forbidden_effects":["account_access","broker_write","drive_write","persistent_state"]}
 ```
 
+用户未指定市场时，默认研究美国股票市场，使用 USD 和 `America/New_York`；明确指定其他
+市场时覆盖默认值。用户位置或系统时区只能改变时间展示，不能选择目标市场。
+
 交付一次性中文 Markdown。默认使用以下骨架；用户明确要求不同表达时可以调整版式，但保留
 “当前状态、核心指标、情景与触发、风险暴露、数据缺口”及逐项来源/`as_of`。
 

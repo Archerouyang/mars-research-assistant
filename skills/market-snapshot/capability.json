@@ -2,6 +2,13 @@
   "schema_version": 1,
   "skill": "market-snapshot",
   "delivery": "markdown_snapshot",
+  "default_market": {
+    "when_unspecified": "US equities",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "user_timezone_does_not_select_market": true,
+    "explicit_market_overrides": true
+  },
   "explicit_request_required": true,
   "response_fields": [
     "research_as_of",

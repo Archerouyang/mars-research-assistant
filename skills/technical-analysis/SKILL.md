@@ -13,7 +13,9 @@ description: 针对单一标的生成基于已完成日线的中文技术面分�
 {"delivery":"technical_evidence_package","forbidden_effects":["fundamentals","industry_analysis","account_access","broker_write","drive_write","persistent_state","provider_fallback"]}
 ```
 
-只分析一个明确标的的 `1D` 已完成日线。调用方必须提供独立、尚不存在的 `output_dir`。
+只分析一个明确标的的 `1D` 已完成日线。未指定市场时，不带市场后缀的 symbol 默认按美国
+上市标的解释；明确的交易所或 yfinance 市场后缀覆盖默认值。不得根据用户位置或系统时区
+改写 symbol。调用方必须提供独立、尚不存在的 `output_dir`。
 合格时在临时目录完成并校验两份持久内容，再原子落盘：
 
 ```text
