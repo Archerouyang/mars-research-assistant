@@ -1415,6 +1415,8 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(root_skill_installed)
         self.assertTrue(environment_installed)
+        self.assertFalse((target / "README.md").exists())
+        self.assertFalse((target / "assets").exists())
         self.assertFalse(environment_leaked)
         self.assertIn("name: mars-research-assistant", root_skill)
         self.assertIn("公开网络", root_skill)
@@ -1679,6 +1681,10 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn(
             "mars-research-assistant/skills/technical-analysis/SKILL.md",
             names,
+        )
+        self.assertNotIn("mars-research-assistant/README.md", names)
+        self.assertFalse(
+            any(name.startswith("mars-research-assistant/assets/") for name in names)
         )
         for prohibited in (
             "/.git/",

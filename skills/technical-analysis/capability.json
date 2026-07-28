@@ -44,8 +44,6 @@
       "desktop",
       "narrow"
     ],
-    "human_visual_review_required": true,
-    "browser_console_errors_allowed": false,
     "external_requests_allowed": false,
     "browser_state_persistence": false
   },
@@ -157,7 +155,8 @@
     "broker_write",
     "drive_write",
     "persistent_state",
-    "provider_fallback"
+    "provider_fallback",
+    "browser_acceptance"
   ],
   "required_contract": {
     "delivery": "technical_evidence_package",
@@ -196,8 +195,6 @@
         "desktop",
         "narrow"
       ],
-      "human_visual_review_required": true,
-      "browser_console_errors_allowed": false,
       "external_requests_allowed": false,
       "browser_state_persistence": false
     },

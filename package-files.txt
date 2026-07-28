@@ -1,11 +1,11 @@
 SKILL.md
-README.md
 LICENSE
 pyproject.toml
 uv.lock
 mars-skills.json
 package-files.txt
 scripts/install-mars-skill.sh
+scripts/install-from-github.sh
 scripts/managed_package.py
 scripts/verify_installed_package.py
 scripts/build_red_upload_bundle.py

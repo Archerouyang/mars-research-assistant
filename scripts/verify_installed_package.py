@@ -22,7 +22,6 @@ SKILLS = {
 def verify(root: Path) -> None:
     required = (
         "SKILL.md",
-        "README.md",
         "LICENSE",
         "pyproject.toml",
         "uv.lock",
@@ -71,7 +70,15 @@ def verify(root: Path) -> None:
         vendor / "lightweight-charts.standalone.production.js"
     ).is_file():
         raise ValueError("Lightweight Charts vendor or license is missing")
-    for prohibited in (".git", "tests", "AGENTS.md", "credentials.json", ".env"):
+    for prohibited in (
+        ".git",
+        "tests",
+        "README.md",
+        "assets",
+        "AGENTS.md",
+        "credentials.json",
+        ".env",
+    ):
         if (root / prohibited).exists():
             raise ValueError(f"development or private item leaked into package: {prohibited}")
 

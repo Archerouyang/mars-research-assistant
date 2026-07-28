@@ -1,124 +1,139 @@
-# Mars Skills
+# Mars Research Assistant
 
-面向中文交易研究的独立 Skill 集合。每个 Skill 只交付一种明确结果：研究、建议或经确认后的归档；
-不读取账户、不执行交易，也不把多个研究任务混成一次自动操作。
+**交易者自己的研究 Harness。**
 
-未指定目标市场时默认进行美股投研，采用 USD、`America/New_York` 和 NYSE/Nasdaq
-语境；用户位置与系统时区不会改变目标市场。用户明确指定其他市场时以用户输入为准。
+Mars Research Assistant 把你的 AI Agent 变成一套可控的个人交易研究工作台：接住模糊问题，
+选择合适的研究能力，在步骤之间传递上下文，并把结论、证据和图表交还给你。
 
-## 快速开始
+它不是自动交易机器人，也不是替你做决定的黑盒。你决定研究什么、采用哪些证据、是否继续
+下一步，以及要不要归档。Skill 负责把重复的研究流程组织起来。
 
-先安装 [uv](https://docs.astral.sh/uv/)。使用通用 Skills CLI 时，必须选择根组合 Skill，
-让六个子 Skill、脚本和锁文件作为一个目录安装：
+- **为交易者而生**：默认围绕美股、USD 和 `America/New_York` 展开，也可以明确切换市场。
+- **由你掌控**：六个独立 Skill 可以组合使用，也可以只调用其中一个。
+- **证据优先**：研究标记来源、`as_of`、数据缺口；技术面结论与 evidence JSON 使用同一证据。
+- **本地优先**：不读取券商账户、不下单、不运行后台监控；Drive 写入必须单独确认。
 
-```bash
-DISABLE_TELEMETRY=1 npx skills add archerthegoat/mars-research-assistant \
-  --skill mars-research-assistant \
-  --agent codex \
-  --global \
-  --copy \
-  --yes
-```
+## 60 秒开始
 
-通用 CLI 负责复制 Skill，不执行仓库脚本。首次调用技术面分析时，该 Skill 会先运行自己的
-幂等环境门，自动让 uv 准备 Python 3.12、包内 `.venv` 和锁定的 yfinance；其他五个 Skill
-不触发 uv。不要只安装 `technical-analysis` 子目录，因为它需要根锁文件。
+### 1. 一条命令安装
 
-从 Git 仓库拉取时，可在仓库根目录立即完成同一环境准备和受管安装：
+在 macOS、Linux 或 WSL 终端运行：
 
 ```bash
-bash scripts/install-mars-skill.sh \
-  --target /path/to/agent-skills/mars-research-assistant
+curl -LsSf https://raw.githubusercontent.com/archerthegoat/mars-research-assistant/master/scripts/install-from-github.sh | bash
 ```
 
-仓库安装器是支持原子升级与定制保护的完整包受管入口。它先在目标目录旁构建完整候选包，再调用技术面
-分析 Skill 自带的环境门：缺少 Python 3.12 时由 uv 安装受管解释器，并按锁文件创建包内
-`.venv`。通过离线自检后才整体替换目标；失败不会破坏旧安装。锁文件未变的升级会复用
-已有环境。已定制的受管安装默认停止，确认愿意覆盖后才使用 `--force`。不回退到 pip，
-也不污染用户项目或全局 Python。
+安装脚本只复制发布白名单中的根 Skill、六个子 Skill、脚本和锁文件，默认安装到
+`~/.codex/skills/mars-research-assistant`。如果电脑还没有 [uv](https://docs.astral.sh/uv/)，
+它会先调用 uv 官方安装器；随后由 uv 准备隔离的 Python 3.12 和 yfinance 环境。不会使用
+pip，也不会把依赖装进你的项目或全局 Python。
 
-安装后可从根 `SKILL.md` 组合调用，也可直接调用任一子 Skill。可以先询问 Ask Mars：
+> 想安装到其他位置？在命令前设置
+> `MARS_SKILL_TARGET=/your/agent/skills/mars-research-assistant`。
 
-> 下周美股有哪些值得关注的宏观和地缘政治催化剂？之后对 GOOGL 做日线技术面分析。
+### 2. 直接开始
 
-## 包含的 Skills
+在新的 Agent 会话中输入：
 
-| Skill | 交付 | 不会做什么 |
+```text
+/ask mars
+```
+
+Ask Mars 会主动给出今天的研究起点和可直接回复的下一步。你也可以直接说：
+
+```text
+开始今天的交易研究
+```
+
+未指定市场时，Harness 默认先做美股市场快照和未来 7 个日历日的催化剂简报；不会因为你
+身处其他时区而擅自切换到 A 股或港股。
+
+## 你的研究 Harness
+
+Harness 的作用不是把六个工具堆在一起，而是让每一步保持清晰边界：
+
+| 你想解决的问题 | 使用的 Skill | 交付 |
 | --- | --- | --- |
-| Ask Mars | 推荐最小 Skill 序列、第一步与所需输入 | 不自动研究或写入 |
-| 市场催化剂简报 | 已定事件与持续风险的市场催化剂简报 | 不生成交易指令 |
-| 市场快照 | 带来源、时间与数据缺口的市场状态摘要 | 不替代事件日历或技术面分析 |
-| 标的研究 | 基于 SEC 与发行人 IR 的基本面、行业和公司事件研究 | 不自动加入宏观或技术判断 |
-| 技术面分析 | Markdown 分析、evidence JSON 与临时交互图表 | 不访问账户、不下单 |
-| Drive 写入 | 幂等初始化交易研究中心，或归档已完成研究 | 初始化和归档分别确认，未确认时绝不写入 |
+| “我今天应该先研究什么？” | **Ask Mars** | 最小研究流程、第一步、默认假设和快捷选项 |
+| “现在的市场环境如何？” | **市场快照** | 利率、通胀、风险偏好、美元与大宗商品快照 |
+| “接下来有哪些重要事件？” | **市场催化剂简报** | 已定事件、发展中风险及未来传导路径 |
+| “这家公司值得继续研究吗？” | **标的研究** | 发行人身份、基本面、行业与公司事件证据 |
+| “趋势、关键位和条件路径是什么？” | **技术面分析** | Markdown、evidence JSON 与临时交互图表 |
+| “把完成的研究整理起来” | **Drive 写入** | 经确认后初始化或归档到交易研究中心 |
 
-## 技术面分析示例
+典型流程是先理解市场，再研究标的，最后由你决定是否归档。没有上游上下文时，每个子 Skill
+仍能独立工作，不会假装已经取得不存在的证据。
 
-> 以下为确定性合成 `DEMO` fixture 生成的离线示例，非当前市场数据。真实 yfinance
-> 截图与完整摘要将在集成验收任务中更新。
+## 技术面分析
 
-对应的 Markdown 摘要：
+只需说：
 
-```markdown
-# 技术面分析：DEMO
-
-证据标识：`sha256:c4721a503676168daebe905ab56c9e006b8fd71812eacd3dc6e560ba07a53292`
-
-## 当前结论
-当前技术结构为**多头**，当前优先情景：**多头**。价格位于三组均线上方，且均线次序
-由短到长依次走高；最近阻力在 230.43，距现价 1.15%，应以已完成日线是否突破或失守
-关键位作为下一步验证。
-
-## 趋势、位置与确认
-- **趋势**：最新收盘 227.82，较 SMA20 高 1.97%，较 SMA50 高 3.79%，较 SMA200 高 14.52%。
-- **动量**：20/60/120 根收益分别为 5.38% / 10.52% / 17.8%；距 120 日高点回撤 1.13%。
-- **参与度**：最新量为 20 日均量的 1.04 倍。
-- **波动**：ATR14 占收盘价 2.2%；距最近支撑 214.27 为 5.95%，距最近阻力 230.43 为 1.15%。
+```text
+我想看 GOOGL 的 1D 技术面分析
 ```
 
-持久示例工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
-`analysis.md` 与 `evidence.json` 共享同一个 `evidence_id`。每次合格运行还会生成临时
-`chart.html`，用包内 TradingView Lightweight Charts 可视化同一证据集，并在标准输出
-返回路径与浏览器打开状态；临时图表不写入持久工件目录。它展示一次下载后内嵌的固定
-行情快照，缩放、平移、十字光标和悬停都只发生在本地，不会动态刷新行情。
+技术面分析会用 yfinance 下载一次已完成日线快照，生成中文摘要、可审计的 `evidence.json`
+和临时 Lightweight Charts HTML。图表支持缩放、平移、十字光标和悬停，但不会在后台刷新
+行情，也不会连接实时交易服务。
 
-## RED Skill 上传
+![GOOGL 技术面分析摘要与 Lightweight Charts 交互图表](assets/technical-analysis-showcase.png)
 
-根 `SKILL.md` 是 RED 的 Markdown 入口。如果平台只保留 Markdown，它只做能力发现和受管
-GitHub 安装引导，不会假装脚本或环境已经安装。需要上传完整包时生成过滤后的确定性 ZIP
-和独立哈希清单：
+<p align="center"><em>真实体验截图：左侧为研究摘要与条件路径，右侧为同一证据集生成的交互图表。画面中的数据仅代表生成时点，不构成投资建议。</em></p>
+
+第一次运行技术面分析时，Skill 会自动让 uv 准备 Python 3.12、包内 `.venv` 和锁定版本的
+yfinance。后续运行复用同一环境，不污染你的项目或全局 Python。数据不满足质量门时只说明
+数据缺口，不生成趋势、关键位或图表。
+
+离线演示工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
+
+## 默认行为与安全边界
+
+- 未指定市场时默认美股；明确指定港股、A 股或其他市场时，以你的输入为准。
+- 用户位置与系统时区只影响时间展示，不能决定研究市场。
+- 技术面分析唯一内置 OHLCV 来源是 yfinance（非官方、best-effort），没有隐藏回退来源。
+- 研究能力只读取公开信息；不会读取券商账户、持仓、订单或 API key。
+- 所有输出都是研究材料和条件情景，不是交易指令。
+- Drive 初始化与研究归档分别请求确认；一次确认不会授权后续写入。
+- 不创建每日任务、后台监控、隐式缓存或遥测。
+
+## 从仓库安装或参与开发
+
+如果你希望检查源码、定制 Skill，或使用支持原子升级和定制保护的受管安装器：
 
 ```bash
-python3 scripts/build_red_upload_bundle.py \
-  --output /tmp/mars-research-assistant-red.zip
+git clone https://github.com/archerthegoat/mars-research-assistant.git
+cd mars-research-assistant
+bash scripts/install-mars-skill.sh \
+  --target ~/.codex/skills/mars-research-assistant
 ```
 
-包中不包含 `.git`、`.venv`、测试、开发文档、示例研究、凭据或本地开发配置。
+安装器会在目标目录旁准备完整候选包，通过锁定依赖和离线结构校验后再整体替换旧安装。
+锁文件未变时复用环境；发现用户定制时默认停止，不回退到 pip。
 
-## 数据与安全边界
+通用 `npx skills add` 能发现根 Skill，但目前不会遵循本项目的发布白名单。为避免把测试和
+开发文档一起复制到用户环境，普通用户请使用上方的一键安装命令。
 
-- 技术面分析只使用 yfinance 的非官方、best-effort OHLCV；不需要 API key，也没有其他数据源或回退路径。
-- 日线结论要求带时区、复权 OHLCV、正成交量与合适覆盖范围；少于 319 根已完成日线时整体失败关闭。
-- 第一次取数不合格时最多进行一次 yfinance 同源扩大窗口重试，不插值、不合成、不切换来源。
-- 所有研究都标记来源、`as_of` 与数据缺口；不把任何凭据放入仓库、Skill、fixture、文档或日志。
-- Drive 写入每次从 My Drive 精确解析交易研究中心，只补缺项且不缓存 Drive ID；重复根目录由
-  用户选择，不移动、覆盖、重命名或删除已有内容。
-
-## 开发与验证
-
-使用锁定的 `uv` 环境：
+开发验证：
 
 ```bash
 uv sync --locked
 bash scripts/verify-mars-skills.sh
 ```
 
-离线验收只使用 fixture 与临时目录，不请求市场数据、读取账户或写入 Drive。
+离线验收只使用 fixture 和临时目录，不请求真实市场数据、读取账户或写入 Drive。真实
+yfinance 契约测试只在发布验收时运行一次，不创建定时任务。
 
-发布前只运行一次真实 yfinance 契约测试，不创建每日任务：
+<details>
+<summary>RED Skill 上传包</summary>
+
+根 `SKILL.md` 是 RED 的 Markdown 入口。需要上传完整包时生成过滤后的确定性 ZIP 和独立
+哈希清单：
 
 ```bash
-uv run python scripts/run_yfinance_contract_test.py \
-  --symbol SPY \
-  --output-dir /tmp/mars-yfinance-release-check
+python3 scripts/build_red_upload_bundle.py \
+  --output /tmp/mars-research-assistant-red.zip
 ```
+
+上传包不包含 `.git`、`.venv`、测试、开发文档、凭据或本地开发配置。
+
+</details>

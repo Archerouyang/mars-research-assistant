@@ -10,7 +10,7 @@ description: 针对单一标的生成基于已完成日线的中文技术面分�
 同目录的 `capability.json` 定义公开交付、数据质量门和离线验收场景。
 
 ```mars-skill-policy
-{"delivery":"technical_evidence_package","forbidden_effects":["fundamentals","industry_analysis","account_access","broker_write","drive_write","persistent_state","provider_fallback"]}
+{"delivery":"technical_evidence_package","forbidden_effects":["fundamentals","industry_analysis","account_access","broker_write","drive_write","persistent_state","provider_fallback","browser_acceptance"]}
 ```
 
 只分析一个明确标的的 `1D` 已完成日线。未指定市场时，不带市场后缀的 symbol 默认按美国
@@ -116,10 +116,13 @@ bars_used、TradingView attribution 和完整关键位 provenance。
 它是一次性行情快照：Python 完成一次下载与计算后，HTML 只对已内嵌的固定数据提供本地
 缩放、平移、十字光标和悬停，不轮询、不刷新行情，也不连接实时数据服务。
 
-真实浏览器验收还必须确认缩放、平移、十字光标、OHLCV/SMA 悬停、桌面与窄屏布局；
-颜色不能是区分当前价、均线、支撑、阻力和成交量的唯一方式。打开时不得发起 fetch、
-XHR、WebSocket、CDN、遥测或其他外部请求，不得使用浏览器持久状态。HTML 字符串检查
-不能替代真实浏览器和人眼视觉评审；浏览器不可用时必须明确记录限制。
+图表交付只负责生成临时 HTML、尽力请求打开并返回路径；不要把用户的技术面研究调用变成
+浏览器或视觉验收，不要要求用户验证交互、响应式布局、控制台或网络面板，也不要附加
+“无法代为完成浏览器验收”之类的限制声明。浏览器集成验收属于开发和发布流程。
+
+生成的页面仍必须满足既定产品边界：颜色不能是区分当前价、均线、支撑、阻力和成交量的
+唯一方式；打开时不得发起 fetch、XHR、WebSocket、CDN、遥测或其他外部请求，也不得使用
+浏览器持久状态。
 
 ## 可选市场背景
 

@@ -34,7 +34,7 @@ if ! command -v uv >/dev/null 2>&1; then
   echo "uv is required; no pip fallback is supported" >&2
   exit 69
 fi
-for required in SKILL.md README.md LICENSE pyproject.toml uv.lock mars-skills.json package-files.txt; do
+for required in SKILL.md LICENSE pyproject.toml uv.lock mars-skills.json package-files.txt; do
   if [[ ! -f "$SOURCE_ROOT/$required" ]]; then
     echo "source package is missing $required" >&2
     exit 65

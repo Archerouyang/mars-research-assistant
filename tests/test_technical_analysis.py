@@ -1036,8 +1036,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     artifact,
                 )
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("离线示例，非当前市场数据", readme)
-        self.assertIn("`chart.html`", readme)
+        self.assertIn("assets/technical-analysis-showcase.png", readme)
+        self.assertIn("临时 Lightweight Charts HTML", readme)
         self.assertNotIn("chart.svg", readme)
         self.assertNotIn("# Mars Skills 1.", readme)
 
