@@ -24,7 +24,7 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 | 市场快照 | 带来源、时间与数据缺口的市场状态摘要 | 不替代事件日历或技术面分析 |
 | 标的研究 | 基于 SEC 与发行人 IR 的基本面、行业和公司事件研究 | 不自动加入宏观或技术判断 |
 | 技术面分析 | Markdown 分析、可审计 SVG 与 evidence JSON | 不访问账户、不下单 |
-| Drive 写入 | 先展示归档提议，确认后写入交易研究中心 | 未确认时绝不写入 |
+| Drive 写入 | 幂等初始化交易研究中心，或归档已完成研究 | 初始化和归档分别确认，未确认时绝不写入 |
 
 ## 技术面分析示例
 
@@ -56,6 +56,8 @@ bash scripts/install-mars-skill.sh --target /path/to/agent-skills
 - 日线结论要求带时区、复权 OHLCV、正成交量与合适覆盖范围；少于 319 根已完成日线时整体失败关闭。
 - 第一次取数不合格时最多进行一次 yfinance 同源扩大窗口重试，不插值、不合成、不切换来源。
 - 所有研究都标记来源、`as_of` 与数据缺口；不把任何凭据放入仓库、Skill、fixture、文档或日志。
+- Drive 写入每次从 My Drive 精确解析交易研究中心，只补缺项且不缓存 Drive ID；重复根目录由
+  用户选择，不移动、覆盖、重命名或删除已有内容。
 
 ## 开发与验证
 

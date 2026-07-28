@@ -1,0 +1,69 @@
+{
+  "operation": "archive",
+  "research": {
+    "status": "completed",
+    "type": "topic_research",
+    "title": "双确认测试",
+    "content": "已完成的专题研究。"
+  },
+  "drive_snapshot": {
+    "my_drive_id": "my-drive-001",
+    "items": []
+  },
+  "initialization_confirmation": {
+    "proposal_id": "initialize:parent:my-drive-001:交易研究中心",
+    "target_id": "my-drive-001",
+    "explicit": true
+  },
+  "archive_confirmation": {
+    "proposal_id": "initialize:parent:my-drive-001:交易研究中心",
+    "target_id": "my-drive-001",
+    "explicit": true
+  },
+  "execution": {
+    "as_of": "2026-07-28T11:30:00+08:00",
+    "data_gaps": "初始化未扫描或回填历史文档。",
+    "create_results": {
+      "交易研究中心": {
+        "status": "created",
+        "id": "center-020",
+        "readback_verified": true
+      },
+      "收件箱": {
+        "status": "created",
+        "id": "inbox-020",
+        "readback_verified": true
+      },
+      "每日市场思考": {
+        "status": "created",
+        "id": "daily-020",
+        "readback_verified": true
+      },
+      "交易计划": {
+        "status": "created",
+        "id": "plan-020",
+        "readback_verified": true
+      },
+      "专题研究": {
+        "status": "created",
+        "id": "topic-020",
+        "readback_verified": true
+      },
+      "周度复盘": {
+        "status": "created",
+        "id": "weekly-020",
+        "readback_verified": true
+      },
+      "案例复盘": {
+        "status": "created",
+        "id": "case-020",
+        "readback_verified": true
+      },
+      "总索引": {
+        "status": "created",
+        "id": "index-020",
+        "readback_verified": true
+      }
+    }
+  }
+}

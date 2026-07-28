@@ -1,0 +1,7 @@
+{
+  "operation": "initialize",
+  "drive_error": {
+    "code": "unavailable",
+    "reason": "Google Drive 工具不可用"
+  }
+}
