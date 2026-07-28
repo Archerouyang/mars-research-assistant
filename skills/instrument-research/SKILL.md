@@ -1,6 +1,6 @@
 ---
 name: instrument-research
-description: 针对用户指定的单一股票或其他可识别标的，生成中文 Markdown 基本面、行业与公司事件研究。需要核对发行人身份并优先使用 SEC 披露和发行人 IR；不用于宏观判断、市场快照或 Price Action。
+description: 针对用户指定的单一股票或其他可识别标的，生成中文 Markdown 基本面、行业与公司事件研究。需要核对发行人身份并优先使用 SEC 披露和发行人 IR；不用于宏观判断、市场快照或技术面分析。
 ---
 
 # 标的研究
@@ -8,7 +8,7 @@ description: 针对用户指定的单一股票或其他可识别标的，生成�
 同目录的 `capability.json` 定义本 Skill 的公开交付边界与离线验收场景。
 
 ```mars-skill-policy
-{"delivery":"markdown_research","forbidden_effects":["macro_analysis","price_action","account_access","broker_write","drive_write","persistent_state"]}
+{"delivery":"markdown_research","forbidden_effects":["macro_analysis","technical_analysis","account_access","broker_write","drive_write","persistent_state"]}
 ```
 
 只研究一个明确的标的。先确认 ticker、交易所和发行人身份；对适用的美国发行人，优先使用

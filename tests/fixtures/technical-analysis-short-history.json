@@ -1,5 +1,5 @@
 {
-  "instrument": "NVDA",
+  "instrument": "DEMO",
   "timeframe": "1D",
   "research_as_of": "2026-07-26T09:00:00-04:00",
   "provider": {
@@ -12,12 +12,12 @@
     "time_range_suitable": true,
     "time_range": "2026-07-22 至 2026-07-25",
     "coverage_start": "2026-07-22",
-    "coverage_end": "2026-07-23",
-    "timezone": "未声明",
+    "coverage_end": "2026-07-25",
+    "timezone": "America/New_York",
     "adjustment": "split-adjusted",
     "bars": [
       {
-        "timestamp": "2026-07-22T16:00:00",
+        "timestamp": "2026-07-22T16:00:00-04:00",
         "open": 170.0,
         "high": 174.0,
         "low": 168.0,
@@ -25,12 +25,20 @@
         "volume": 1000000
       },
       {
-        "timestamp": "2026-07-23T16:00:00",
+        "timestamp": "2026-07-23T16:00:00-04:00",
         "open": 172.0,
         "high": 176.0,
         "low": 171.0,
         "close": 175.0,
         "volume": 1100000
+      },
+      {
+        "timestamp": "2026-07-25T16:00:00-04:00",
+        "open": 175.0,
+        "high": 177.0,
+        "low": 173.0,
+        "close": 176.0,
+        "volume": 1200000
       }
     ]
   }

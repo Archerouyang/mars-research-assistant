@@ -1,4 +1,0 @@
-interface:
-  display_name: "Price Action"
-  short_description: "基于合格 yfinance OHLCV 研究价格结构、关键位与失效条件"
-  default_prompt: "使用 $price-action 通过 yfinance 研究一个标的在指定时间框架的价格结构与失效条件。"
