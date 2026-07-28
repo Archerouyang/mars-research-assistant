@@ -31,9 +31,9 @@ _Avoid_：独立安装 Skill、插件
 包含基本面或行业叙事，也不绑定特定作者的专属方法论。
 _Avoid_：旧能力名称、人物品牌化命名、技术分析报告
 
-**技术面分析工件包**：一次技术面分析的完整交付，由承载理由分析的 `analysis.md`、承载
-可视化证据的 `chart.svg` 和用于审计重放的 `evidence.json` 组成；三者共享同一个
-evidence_id。
+**技术面分析工件包**：一次技术面分析的持久交付，由承载理由分析的 `analysis.md` 和用于
+审计重放的 `evidence.json` 组成；两者共享同一个 evidence_id。每次合格调用另生成临时
+`chart.html` 作为交互视图，但它不属于持久工件包。
 _Avoid_：技术面分析报告、单文件报告
 
 **技术面证据集**：一次分析中唯一的标准化 OHLCV、来源信息和确定性派生结果集合。
@@ -52,11 +52,12 @@ method、lookback、anchor_dates、touches 和 price。某一侧没有合格摆�
 明确标记的 120 日最高或最低价。
 _Avoid_：模型关键位、手动画线
 
-**技术面图表**：技术面分析工件包中的静态 SVG 可视化；以同一份至少 319 根已完成历史日线
-展示最近 120 根 K 线、成交量、SMA20/50/200 与可追溯关键位，并标记 symbol、source、
-timezone、as_of、adjustment 和 bars_used。yfinance 必须标为非官方 best-effort。
-它不保存浏览器或研究状态。
-_Avoid_：旧版内嵌图表、交互式行情图
+**技术面图表**：每次合格技术面分析调用生成的临时单文件 HTML；使用包内固定版本的
+TradingView Lightweight Charts，以同一份至少 319 根已完成历史日线展示最近 120 根
+K 线、成交量、SMA20/50/200 与可追溯关键位，并标记 symbol、source、timezone、as_of、
+adjustment 和 bars_used。yfinance 必须标为非官方 best-effort。它不写入持久工件包、
+安装目录或浏览器存储，打开时不请求网络资源。
+_Avoid_：静态 SVG、持久图表工件、在线行情图
 
 **免费基础能力**：不要求用户提供 API key 也能完成的公开/官方来源研究；
 数据不足时如实呈现缺口。

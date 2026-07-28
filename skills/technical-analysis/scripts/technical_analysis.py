@@ -14,8 +14,9 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
+import time
 from typing import Any
-from xml.etree import ElementTree
+import webbrowser
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
@@ -30,6 +31,24 @@ ADJUSTED_METHODS = {
     "dividend-adjusted",
     "split-adjusted",
     "total-return-adjusted",
+}
+LIGHTWEIGHT_CHARTS_VERSION = "5.2.0"
+LIGHTWEIGHT_CHARTS_DIRECTORY = (
+    Path(__file__).resolve().parents[1]
+    / "vendor"
+    / "lightweight-charts"
+    / LIGHTWEIGHT_CHARTS_VERSION
+)
+LIGHTWEIGHT_CHARTS_SCRIPT = (
+    LIGHTWEIGHT_CHARTS_DIRECTORY
+    / "lightweight-charts.standalone.production.js"
+)
+TEMPORARY_CHART_MAX_AGE_SECONDS = 24 * 60 * 60
+TEMPORARY_CHART_MARKER_NAME = ".mars-technical-chart.json"
+TEMPORARY_CHART_MARKER = {
+    "schema_version": 1,
+    "owner": "mars-skills/technical-analysis",
+    "kind": "temporary-lightweight-chart",
 }
 
 
@@ -700,202 +719,274 @@ def _analysis_markdown(evidence: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _svg_text(value: object) -> str:
-    return escape(str(value), quote=True)
-
-
-def _svg_number(value: float) -> str:
-    return f"{value:.2f}".rstrip("0").rstrip(".")
-
-
-def _price_y(value: float, lower: float, upper: float, top: float, height: float) -> float:
-    return top + (upper - value) * height / (upper - lower)
-
-
-def _chart_svg(evidence: dict[str, Any]) -> str:
-    bars = evidence["ohlcv"]
-    visible = bars[-VISIBLE_BARS:]
-    first_visible_index = len(bars) - VISIBLE_BARS
-    levels = evidence["key_levels"]
-    width = 960.0
-    chart_left = 66.0
-    chart_end = 938.0
-    chart_width = chart_end - chart_left
-    price_top = 48.0
-    price_height = 314.0
-    volume_top = 422.0
-    volume_height = 88.0
-    step = chart_width / VISIBLE_BARS
-    body_width = max(2.0, min(5.4, step * 0.62))
-    prices = [
-        float(bar[field]) for bar in visible for field in ("low", "high")
-    ] + [float(level["price"]) for level in levels]
-    for window in SMA_WINDOWS:
-        prices.extend(
-            float(value)
-            for value in evidence["indicators"]["sma"][str(window)][
-                first_visible_index:
-            ]
-            if value is not None
-        )
-    lower = min(prices)
-    upper = max(prices)
-    padding = max((upper - lower) * 0.06, 1.0)
-    lower -= padding
-    upper += padding
-    maximum_volume = max(float(bar["volume"]) for bar in visible)
-    evidence_id = evidence["evidence_id"]
-
-    parts = [
-        (
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" '
-            'width="100%" role="img" aria-label="{} 日线技术面分析图" '
-            'data-evidence-id="{}">'
-        ).format(_svg_text(evidence["symbol"]), _svg_text(evidence_id)),
-        f"<title>{_svg_text(evidence['symbol'])} 日线技术面分析图</title>",
-        (
-            "<desc>最近 120 根已完成日线、成交量、SMA20、SMA50、SMA200 与"
-            f"可追溯关键位；证据标识：{_svg_text(evidence_id)}；"
-            f"数据来源：{_svg_text(evidence['source']['label'])}；"
-            f"timezone：{_svg_text(evidence['timezone'])}；"
-            f"as_of：{_svg_text(evidence['as_of'])}；"
-            f"adjustment：{_svg_text(evidence['adjustment'])}；"
-            f"bars_used：{evidence['bars_used']}。</desc>"
-        ),
-        '<rect width="960" height="560" fill="#ffffff"/>',
-        (
-            '<text x="66" y="22" fill="#111827" font-family="system-ui, sans-serif" '
-            f'font-size="14" font-weight="700">{_svg_text(evidence["symbol"])}'
-            " · 日线技术面分析</text>"
-        ),
-        (
-            '<text x="938" y="22" text-anchor="end" fill="#374151" '
-            'font-family="system-ui, sans-serif" font-size="10">'
-            f"{_svg_text(evidence_id)}</text>"
-        ),
-    ]
-    for fraction in range(5):
-        y = price_top + price_height * fraction / 4
-        price = upper - (upper - lower) * fraction / 4
-        parts.extend(
-            [
-                (
-                    f'<line x1="66" y1="{_svg_number(y)}" x2="938" '
-                    f'y2="{_svg_number(y)}" stroke="#cbd5e1" stroke-width="1"/>'
-                ),
-                (
-                    f'<text x="58" y="{_svg_number(y)}" text-anchor="end" '
-                    'dominant-baseline="middle" fill="#374151" '
-                    'font-family="system-ui, sans-serif" font-size="11">'
-                    f"{_svg_number(price)}</text>"
-                ),
-            ]
-        )
-    for level in levels:
-        y = _price_y(float(level["price"]), lower, upper, price_top, price_height)
-        label = "支撑" if level["side"] == "support" else "阻力"
-        color = "#166534" if level["side"] == "support" else "#9f1239"
-        parts.extend(
-            [
-                (
-                    f'<line data-key-level="{label}" '
-                    f'data-level-side="{level["side"]}" '
-                    f'data-level-method="{level["method"]}" '
-                    f'data-level-lookback="{level["lookback"]}" '
-                    f'data-level-anchor-dates="{_svg_text(",".join(level["anchor_dates"]))}" '
-                    f'data-level-touches="{level["touches"]}" '
-                    f'data-level-price="{_svg_number(float(level["price"]))}" '
-                    f'x1="66" y1="{_svg_number(y)}" x2="938" y2="{_svg_number(y)}" '
-                    f'stroke="{color}" stroke-width="1.4" stroke-dasharray="6 4"/>'
-                ),
-                (
-                    f'<text x="934" y="{_svg_number(y - 3)}" text-anchor="end" '
-                    f'fill="{color}" font-family="system-ui, sans-serif" '
-                    f'font-size="11">{label} {_svg_number(float(level["price"]))}'
-                    f" · {level['method']} · {level['touches']} touches</text>"
-                ),
-            ]
-        )
-    styles = {20: "#0057b8", 50: "#6d28d9", 200: "#b91c1c"}
-    for legend_index, window in enumerate(SMA_WINDOWS):
-        legend_x = 660 + legend_index * 92
-        parts.append(
-            f'<g data-legend="sma-{window}"><line x1="{legend_x}" y1="397" '
-            f'x2="{legend_x + 16}" y2="397" stroke="{styles[window]}" stroke-width="2"/>'
-            f'<text x="{legend_x + 20}" y="401" fill="#374151" '
-            f'font-family="system-ui, sans-serif" font-size="11">SMA{window}</text></g>'
-        )
-        points = []
-        series = evidence["indicators"]["sma"][str(window)]
-        for index in range(first_visible_index, len(bars)):
-            average = series[index]
-            if average is None:
-                continue
-            x_point = chart_left + (index - first_visible_index + 0.5) * step
-            y_point = _price_y(
-                float(average), lower, upper, price_top, price_height
-            )
-            points.append(f"{_svg_number(x_point)},{_svg_number(y_point)}")
-        parts.append(
-            f'<polyline data-series="sma-{window}" fill="none" '
-            f'stroke="{styles[window]}" stroke-width="1.6" '
-            f'points="{" ".join(points)}"/>'
-        )
-    for index, bar in enumerate(visible, start=1):
-        candle_x = chart_left + (index - 0.5) * step
-        open_price = float(bar["open"])
-        close_price = float(bar["close"])
-        high = float(bar["high"])
-        low = float(bar["low"])
-        color = "#047857" if close_price >= open_price else "#be123c"
-        wick_top = _price_y(high, lower, upper, price_top, price_height)
-        wick_bottom = _price_y(low, lower, upper, price_top, price_height)
-        body_top = _price_y(
-            max(open_price, close_price), lower, upper, price_top, price_height
-        )
-        body_bottom = _price_y(
-            min(open_price, close_price), lower, upper, price_top, price_height
-        )
-        bar_volume_height = float(bar["volume"]) * volume_height / maximum_volume
-        parts.extend(
-            [
-                (
-                    f'<line x1="{_svg_number(candle_x)}" y1="{_svg_number(wick_top)}" '
-                    f'x2="{_svg_number(candle_x)}" y2="{_svg_number(wick_bottom)}" '
-                    f'stroke="{color}" stroke-width="1"/>'
-                ),
-                (
-                    f'<rect data-candle="{index}" x="{_svg_number(candle_x - body_width / 2)}" '
-                    f'y="{_svg_number(body_top)}" width="{_svg_number(body_width)}" '
-                    f'height="{_svg_number(max(body_bottom - body_top, 1.2))}" '
-                    f'fill="{color}" rx="0.6"/>'
-                ),
-                (
-                    f'<rect data-volume="{index}" x="{_svg_number(candle_x - body_width / 2)}" '
-                    f'y="{_svg_number(volume_top + volume_height - bar_volume_height)}" '
-                    f'width="{_svg_number(body_width)}" '
-                    f'height="{_svg_number(bar_volume_height)}" fill="{color}" '
-                    'fill-opacity="0.42"/>'
-                ),
-            ]
-        )
-    parts.extend(
-        [
-            '<text x="66" y="402" fill="#374151" font-family="system-ui, sans-serif" '
-            'font-size="11">成交量</text>',
-            (
-                '<text x="66" y="536" fill="#374151" font-family="system-ui, sans-serif" '
-                f'font-size="11">{_svg_text(str(visible[0]["timestamp"])[:10])}</text>'
-            ),
-            (
-                '<text x="938" y="536" text-anchor="end" fill="#374151" '
-                f'font-family="system-ui, sans-serif" font-size="11">'
-                f'{_svg_text(str(visible[-1]["timestamp"])[:10])}</text>'
-            ),
-            "</svg>",
-        ]
+def _safe_inline_json(value: object) -> str:
+    return (
+        json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
     )
-    return "\n".join(parts) + "\n"
+
+
+def _chart_payload(evidence: dict[str, Any]) -> dict[str, Any]:
+    bars = evidence["ohlcv"]
+    first_visible_index = max(0, len(bars) - VISIBLE_BARS)
+    visible = bars[first_visible_index:]
+    candles = [
+        {
+            "time": str(bar["timestamp"])[:10],
+            "open": bar["open"],
+            "high": bar["high"],
+            "low": bar["low"],
+            "close": bar["close"],
+        }
+        for bar in visible
+    ]
+    volume = [
+        {
+            "time": str(bar["timestamp"])[:10],
+            "value": bar["volume"],
+            "color": (
+                "rgba(38, 166, 154, 0.45)"
+                if float(bar["close"]) >= float(bar["open"])
+                else "rgba(239, 83, 80, 0.45)"
+            ),
+        }
+        for bar in visible
+    ]
+    moving_averages: dict[str, list[dict[str, Any]]] = {}
+    for window in SMA_WINDOWS:
+        values = evidence["indicators"]["sma"][str(window)]
+        moving_averages[f"sma-{window}"] = [
+            {
+                "time": str(bars[index]["timestamp"])[:10],
+                "value": value,
+            }
+            for index, value in enumerate(values[first_visible_index:], first_visible_index)
+            if value is not None
+        ]
+    return {
+        "metadata": {
+            "symbol": evidence["symbol"],
+            "evidence_id": evidence["evidence_id"],
+            "source": evidence["source"]["label"],
+            "timezone": evidence["timezone"],
+            "as_of": evidence["as_of"],
+            "adjustment": evidence["adjustment"],
+            "bars_used": evidence["bars_used"],
+            "visible_bars": len(visible),
+            "library": f"TradingView Lightweight Charts {LIGHTWEIGHT_CHARTS_VERSION}",
+        },
+        "candles": candles,
+        "volume": volume,
+        "moving_averages": moving_averages,
+        "key_levels": evidence["key_levels"],
+    }
+
+
+def _chart_html(evidence: dict[str, Any]) -> str:
+    library = LIGHTWEIGHT_CHARTS_SCRIPT.read_text(encoding="utf-8")
+    payload = _safe_inline_json(_chart_payload(evidence))
+    title = escape(f"{evidence['symbol']} · 技术面分析", quote=True)
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <style>
+    :root {{ color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; background: #0b0e11; color: #d1d4dc; }}
+    main {{ min-height: 100vh; padding: 20px; display: grid; grid-template-rows: auto minmax(520px, 1fr) auto; gap: 14px; }}
+    header {{ display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }}
+    h1 {{ margin: 0; color: #f0f3fa; font-size: 20px; }}
+    .meta {{ color: #787b86; font-size: 12px; overflow-wrap: anywhere; }}
+    #chart {{ min-height: 520px; border: 1px solid #2a2e39; border-radius: 8px; overflow: hidden; }}
+    footer {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #787b86; font-size: 12px; }}
+    a {{ color: #2962ff; }}
+  </style>
+</head>
+<body>
+  <main data-evidence-id="{escape(str(evidence['evidence_id']), quote=True)}">
+    <header>
+      <h1 id="title"></h1>
+      <div class="meta" id="provenance"></div>
+    </header>
+    <div id="chart" role="img" aria-label="{title} K 线、成交量、均线与关键位"></div>
+    <footer>
+      <span id="identity"></span>
+      <span>Powered by
+        <a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer">TradingView Lightweight Charts™</a>
+        {LIGHTWEIGHT_CHARTS_VERSION}
+      </span>
+    </footer>
+  </main>
+  <script>{library}</script>
+  <script>
+    const chartEvidence = {payload};
+    const metadata = chartEvidence.metadata;
+    document.getElementById('title').textContent = `${{metadata.symbol}} · 技术面分析`;
+    document.getElementById('provenance').textContent =
+      `${{metadata.source}} · ${{metadata.timezone}} · as_of ${{metadata.as_of}} · ${{metadata.adjustment}} · ${{metadata.bars_used}} bars`;
+    document.getElementById('identity').textContent = metadata.evidence_id;
+
+    const container = document.getElementById('chart');
+    const chart = LightweightCharts.createChart(container, {{
+      width: container.clientWidth,
+      height: container.clientHeight,
+      layout: {{ background: {{ color: '#0b0e11' }}, textColor: '#d1d4dc' }},
+      grid: {{
+        vertLines: {{ color: '#1f232d' }},
+        horzLines: {{ color: '#1f232d' }}
+      }},
+      rightPriceScale: {{ borderColor: '#2a2e39' }},
+      timeScale: {{ borderColor: '#2a2e39', timeVisible: false }}
+    }});
+    const candles = chart.addSeries(LightweightCharts.CandlestickSeries, {{
+      upColor: '#26a69a',
+      downColor: '#ef5350',
+      borderVisible: false,
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350'
+    }});
+    candles.setData(chartEvidence.candles);
+
+    const volume = chart.addSeries(LightweightCharts.HistogramSeries, {{
+      priceFormat: {{ type: 'volume' }},
+      priceScaleId: 'volume'
+    }});
+    chart.priceScale('volume').applyOptions({{
+      scaleMargins: {{ top: 0.82, bottom: 0 }}
+    }});
+    volume.setData(chartEvidence.volume);
+
+    const smaColors = {{ 'sma-20': '#2962ff', 'sma-50': '#ab47bc', 'sma-200': '#ff9800' }};
+    for (const [name, points] of Object.entries(chartEvidence.moving_averages)) {{
+      const line = chart.addSeries(LightweightCharts.LineSeries, {{
+        color: smaColors[name],
+        lineWidth: 2,
+        title: name.toUpperCase(),
+        priceLineVisible: false,
+        lastValueVisible: false
+      }});
+      line.setData(points);
+    }}
+    for (const level of chartEvidence.key_levels) {{
+      candles.createPriceLine({{
+        price: level.price,
+        color: level.side === 'support' ? '#26a69a' : '#ef5350',
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: `${{level.side}} · ${{level.touches}} touches`
+      }});
+    }}
+    chart.timeScale().fitContent();
+    new ResizeObserver(entries => {{
+      const box = entries[0].contentRect;
+      chart.resize(box.width, box.height);
+    }}).observe(container);
+  </script>
+</body>
+</html>
+"""
+
+
+def _cleanup_expired_charts() -> None:
+    temporary_root = Path(tempfile.gettempdir())
+    cutoff = time.time() - TEMPORARY_CHART_MAX_AGE_SECONDS
+    for candidate in temporary_root.glob("mars-technical-chart-*"):
+        try:
+            candidate_stat = candidate.stat()
+            if candidate.is_symlink() or not candidate.is_dir():
+                continue
+            if hasattr(os, "getuid") and candidate_stat.st_uid != os.getuid():
+                continue
+            if candidate_stat.st_mtime >= cutoff:
+                continue
+            marker = candidate / TEMPORARY_CHART_MARKER_NAME
+            chart = candidate / "chart.html"
+            if marker.is_symlink() or chart.is_symlink():
+                continue
+            if not marker.is_file() or not chart.is_file():
+                continue
+            if {path.name for path in candidate.iterdir()} != {
+                TEMPORARY_CHART_MARKER_NAME,
+                "chart.html",
+            }:
+                continue
+            if json.loads(marker.read_text(encoding="utf-8")) != TEMPORARY_CHART_MARKER:
+                continue
+            shutil.rmtree(candidate)
+        except (json.JSONDecodeError, OSError):
+            continue
+
+
+def _temporary_chart(html: str) -> Path:
+    _cleanup_expired_charts()
+    directory = Path(tempfile.mkdtemp(prefix="mars-technical-chart-"))
+    chart_path = directory / "chart.html"
+    try:
+        chart_path.write_text(html, encoding="utf-8", newline="\n")
+        (directory / TEMPORARY_CHART_MARKER_NAME).write_text(
+            json.dumps(
+                TEMPORARY_CHART_MARKER,
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+    except Exception:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    return chart_path
+
+
+def _visualization_result(
+    chart_path: Path | None,
+    *,
+    open_chart: bool,
+) -> dict[str, Any]:
+    if chart_path is None:
+        return {
+            "kind": "temporary_html",
+            "path": None,
+            "generated": False,
+            "open_attempted": False,
+            "open_confirmed": False,
+            "limitation": "visualization withheld because evidence did not qualify",
+            "expires_after_seconds": None,
+        }
+    open_attempted = False
+    open_confirmed = False
+    limitation: str | None = None
+    if open_chart:
+        open_attempted = True
+        try:
+            configured_browser = os.environ.get("BROWSER")
+            if configured_browser:
+                browser = webbrowser.get(configured_browser)
+                open_confirmed = bool(browser.open(chart_path.as_uri()))
+            else:
+                open_confirmed = bool(webbrowser.open(chart_path.as_uri()))
+            if not open_confirmed:
+                limitation = "browser did not confirm accepting the open request"
+        except Exception as error:  # browser/desktop integration boundary
+            limitation = f"browser open failed: {type(error).__name__}"
+    return {
+        "kind": "temporary_html",
+        "path": str(chart_path.resolve()),
+        "generated": True,
+        "open_attempted": open_attempted,
+        "open_confirmed": open_confirmed,
+        "limitation": limitation,
+        "expires_after_seconds": TEMPORARY_CHART_MAX_AGE_SECONDS,
+    }
 
 
 def _failure_markdown(
@@ -928,13 +1019,14 @@ def _verify_artifacts(files: dict[str, str], evidence_id: str | None) -> None:
         if set(files) != {"analysis.md"}:
             raise TechnicalAnalysisError("failed analysis may only contain analysis.md")
         return
-    if set(files) != {"analysis.md", "chart.svg", "evidence.json"}:
-        raise TechnicalAnalysisError("qualified analysis requires three artifacts")
+    if set(files) != {"analysis.md", "evidence.json"}:
+        raise TechnicalAnalysisError(
+            "qualified analysis requires analysis.md and evidence.json"
+        )
     parsed = json.loads(files["evidence.json"])
-    ElementTree.fromstring(files["chart.svg"])
     if parsed.get("evidence_id") != evidence_id:
         raise TechnicalAnalysisError("evidence JSON identity mismatch")
-    if evidence_id not in files["analysis.md"] or evidence_id not in files["chart.svg"]:
+    if evidence_id not in files["analysis.md"]:
         raise TechnicalAnalysisError("artifact evidence identities do not match")
 
 
@@ -976,7 +1068,12 @@ def _write_failure_package(
     _atomic_write(output_dir, files)
 
 
-def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
+def render_fixture(
+    fixture: dict[str, Any],
+    output_dir: Path,
+    *,
+    open_chart: bool = True,
+) -> dict[str, Any]:
     symbol = _required_text(fixture.get("instrument"), "fixture")
     timeframe = _required_text(fixture.get("timeframe"), "fixture")
     research_as_of = _required_text(fixture.get("research_as_of"), "fixture")
@@ -997,7 +1094,10 @@ def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
             reason,
             source_attempts,
         )
-        return
+        return {
+            "artifacts": ["analysis.md"],
+            "visualization": _visualization_result(None, open_chart=open_chart),
+        }
 
     raw_attempts = fixture.get("attempts")
     if raw_attempts is None:
@@ -1032,7 +1132,10 @@ def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
             reason,
             source_attempts,
         )
-        return
+        return {
+            "artifacts": ["analysis.md"],
+            "visualization": _visualization_result(None, open_chart=open_chart),
+        }
 
     try:
         evidence = _build_evidence(fixture, source, history, retry_count)
@@ -1048,29 +1151,53 @@ def render_fixture(fixture: dict[str, Any], output_dir: Path) -> None:
             str(error),
             source_attempts,
         )
-        return
+        return {
+            "artifacts": ["analysis.md"],
+            "visualization": _visualization_result(None, open_chart=open_chart),
+        }
     evidence_json = json.dumps(
         evidence, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False
     ) + "\n"
     files = {
         "analysis.md": _analysis_markdown(evidence),
-        "chart.svg": _chart_svg(evidence),
         "evidence.json": evidence_json,
     }
     _verify_artifacts(files, evidence["evidence_id"])
-    _atomic_write(output_dir, files)
+    chart_path = _temporary_chart(_chart_html(evidence))
+    try:
+        _atomic_write(output_dir, files)
+    except Exception:
+        shutil.rmtree(chart_path.parent, ignore_errors=True)
+        raise
+    return {
+        "artifacts": ["analysis.md", "evidence.json"],
+        "visualization": _visualization_result(
+            chart_path,
+            open_chart=open_chart,
+        ),
+    }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Generate the temporary chart without requesting a browser open.",
+    )
     arguments = parser.parse_args()
     try:
         fixture = json.loads(arguments.input.read_text(encoding="utf-8"))
         if not isinstance(fixture, dict):
             raise TechnicalAnalysisError("fixture must be a JSON object")
-        render_fixture(fixture, arguments.output_dir)
+        delivery = render_fixture(
+            fixture,
+            arguments.output_dir,
+            open_chart=not arguments.no_open,
+        )
+        print(json.dumps(delivery, ensure_ascii=False, sort_keys=True))
     except (
         OSError,
         json.JSONDecodeError,
