@@ -211,6 +211,423 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("写入结果：未执行", proposal)
         self.assertIn("总索引：不更新", proposal)
 
+    def test_drive_writeback_proposes_complete_initialization_without_writing(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-empty.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            proposal = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化提议", proposal)
+        self.assertIn("My Drive ID：my-drive-001", proposal)
+        self.assertIn("交易研究中心 Drive ID：尚未创建", proposal)
+        self.assertIn("交易研究中心/", proposal)
+        self.assertIn("├── 总索引（Google Doc）", proposal)
+        for directory in (
+            "收件箱",
+            "每日市场思考",
+            "交易计划",
+            "专题研究",
+            "周度复盘",
+            "案例复盘",
+        ):
+            self.assertIn(directory, proposal)
+        self.assertIn(
+            "初始化提议标识：initialize:parent:my-drive-001:交易研究中心",
+            proposal,
+        )
+        self.assertIn("确认状态：等待用户明确确认", proposal)
+        self.assertIn("初始化结果：未执行", proposal)
+        self.assertNotIn("已创建", proposal)
+
+    def test_drive_writeback_initialization_proposes_only_missing_children(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-partial.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            proposal = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化提议", proposal)
+        self.assertIn("交易研究中心 Drive ID：center-001", proposal)
+        self.assertIn("初始化提议标识：initialize:root:center-001", proposal)
+        self.assertIn(
+            "已存在项：交易研究中心（center-001）、总索引（index-001）、"
+            "收件箱（inbox-001）、专题研究（topic-001）",
+            proposal,
+        )
+        self.assertIn(
+            "拟创建项：每日市场思考（文件夹）、交易计划（文件夹）、"
+            "周度复盘（文件夹）、案例复盘（文件夹）",
+            proposal,
+        )
+        self.assertNotIn("拟创建项：交易研究中心", proposal)
+        self.assertNotIn("拟创建项：总索引", proposal)
+
+    def test_drive_writeback_initialization_is_a_no_change_success_when_complete(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-complete.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化结果", result_markdown)
+        self.assertIn("交易研究中心 Drive ID：center-001", result_markdown)
+        self.assertIn("拟创建项：无", result_markdown)
+        self.assertIn("确认状态：无需确认（无写入）", result_markdown)
+        self.assertIn("初始化结果：无变更，目录结构已完整", result_markdown)
+        self.assertNotIn("等待用户明确确认", result_markdown)
+        self.assertNotIn("已模拟创建", result_markdown)
+
+    def test_drive_writeback_initialization_stops_for_duplicate_roots(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-duplicate-roots.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            selection = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心根目录选择", selection)
+        self.assertIn("发现多个 My Drive 同名根目录", selection)
+        self.assertIn("候选 Drive ID：center-001、center-002", selection)
+        self.assertIn("选择状态：等待用户明确选择", selection)
+        self.assertIn("初始化结果：未执行", selection)
+        self.assertNotIn("初始化提议标识：", selection)
+        self.assertNotIn("拟创建项：", selection)
+
+    def test_drive_writeback_initialization_rejects_a_confirmation_for_another_target(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-confirmation-mismatch.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            proposal = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化提议", proposal)
+        self.assertIn("初始化提议标识：initialize:root:center-001", proposal)
+        self.assertIn("目标 Drive ID：center-001", proposal)
+        self.assertIn("确认状态：确认与当前初始化提议或目标不匹配", proposal)
+        self.assertIn("初始化结果：未执行", proposal)
+        self.assertNotIn("# 交易研究中心初始化结果", proposal)
+
+    def test_drive_writeback_initialization_reports_partial_failure_per_item(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-partial-failure.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化结果", result_markdown)
+        self.assertIn("目标 parent ID：center-001", result_markdown)
+        self.assertIn(
+            "created：每日市场思考（daily-002）、专题研究（topic-002）、"
+            "周度复盘（weekly-002）、案例复盘（case-002）",
+            result_markdown,
+        )
+        self.assertIn(
+            "existing：交易研究中心（center-001）、收件箱（inbox-001）",
+            result_markdown,
+        )
+        self.assertIn("failed：交易计划（权限不足）", result_markdown)
+        self.assertIn("pending：总索引（等待六个目录完整后创建）", result_markdown)
+        self.assertIn("读回验证：created 项均已验证", result_markdown)
+        self.assertIn("初始化结果：部分失败；再次运行只补缺失项", result_markdown)
+        self.assertNotIn("已完整初始化", result_markdown)
+
+    def test_drive_writeback_initialization_retry_only_fills_gaps_and_builds_index(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-retry-success.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("created：交易计划（plan-003）、总索引（index-003）", result_markdown)
+        self.assertIn("failed：无", result_markdown)
+        self.assertIn("pending：无", result_markdown)
+        self.assertIn("初始化结果：已完整初始化", result_markdown)
+        self.assertIn("## 总索引模板", result_markdown)
+        self.assertIn("交易研究中心用于归档已完成的交易研究", result_markdown)
+        for directory_id, directory in (
+            ("inbox-001", "收件箱"),
+            ("daily-002", "每日市场思考"),
+            ("plan-003", "交易计划"),
+            ("topic-002", "专题研究"),
+            ("weekly-002", "周度复盘"),
+            ("case-002", "案例复盘"),
+        ):
+            self.assertIn(
+                f"[{directory}](https://drive.google.com/drive/folders/{directory_id})",
+                result_markdown,
+            )
+        for section in ("交易计划", "专题研究", "周度复盘", "案例复盘"):
+            self.assertIn(f"### {section}索引", result_markdown)
+        self.assertNotIn("### 收件箱索引", result_markdown)
+        self.assertNotIn("### 每日市场思考索引", result_markdown)
+        self.assertIn("最近更新时间：2026-07-28T10:30:00+08:00", result_markdown)
+        self.assertIn("数据缺口：初始化未扫描或回填历史文档。", result_markdown)
+
+    def test_drive_writeback_does_not_accept_a_created_item_with_wrong_readback_parent(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = (
+                repository
+                / "tests"
+                / "fixtures"
+                / "drive-writeback-init-retry-success.json"
+            )
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["execution"]["create_results"]["交易计划"]["readback"] = {
+                "id": "plan-003",
+                "name": "交易计划",
+                "mime_type": "application/vnd.google-apps.folder",
+                "parent_id": "wrong-parent",
+            }
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                repository,
+                "tests/fixtures/drive-writeback-init-retry-success.json",
+                output_path,
+            )
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("created：交易计划（plan-003）", result_markdown)
+        self.assertIn("交易计划（读回验证失败）", result_markdown)
+        self.assertIn("pending：总索引（等待六个目录完整后创建）", result_markdown)
+        self.assertNotIn("初始化结果：已完整初始化", result_markdown)
+
+    def test_drive_writeback_initialization_creates_full_skeleton_with_locked_parent_ids(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-empty-confirmed.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化结果", result_markdown)
+        self.assertIn("交易研究中心 Drive ID：center-010", result_markdown)
+        self.assertIn(
+            "目标 parent ID：根目录→my-drive-001；子项→center-010",
+            result_markdown,
+        )
+        self.assertIn("created：交易研究中心（center-010）", result_markdown)
+        for item_id, item in (
+            ("inbox-010", "收件箱"),
+            ("daily-010", "每日市场思考"),
+            ("plan-010", "交易计划"),
+            ("topic-010", "专题研究"),
+            ("weekly-010", "周度复盘"),
+            ("case-010", "案例复盘"),
+            ("index-010", "总索引"),
+        ):
+            self.assertIn(f"{item}（{item_id}）", result_markdown)
+        self.assertIn("existing：无", result_markdown)
+        self.assertIn("failed：无", result_markdown)
+        self.assertIn("pending：无", result_markdown)
+        self.assertIn("初始化结果：已完整初始化", result_markdown)
+        self.assertNotIn("日期文档", result_markdown)
+        self.assertNotIn("周次文档", result_markdown)
+        self.assertNotIn("研究内容文档", result_markdown)
+
+    def test_drive_writeback_requires_a_second_confirmation_after_initialization(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-dual-confirmation.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化结果", result_markdown)
+        self.assertIn(
+            "初始化提议标识：initialize:parent:my-drive-001:交易研究中心",
+            result_markdown,
+        )
+        self.assertIn("# Drive 写入提议", result_markdown)
+        self.assertIn(
+            "归档提议标识：archive:topic_research:topic-020:"
+            "专题研究 / 双确认测试",
+            result_markdown,
+        )
+        self.assertIn("归档目标 Drive ID：topic-020", result_markdown)
+        self.assertIn("确认状态：初始化确认不能授权研究归档", result_markdown)
+        self.assertIn("写入结果：未执行", result_markdown)
+        self.assertNotIn("# Drive 写入结果", result_markdown)
+
+    def test_drive_writeback_executes_after_a_fresh_second_confirmation(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-archive-second-confirmation.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertNotIn("# 交易研究中心初始化", result_markdown)
+        self.assertIn("# Drive 写入结果", result_markdown)
+        self.assertIn(
+            "归档提议标识：archive:topic_research:topic-001:"
+            "专题研究 / 第二次确认",
+            result_markdown,
+        )
+        self.assertIn("归档目标 Drive ID：topic-001", result_markdown)
+        self.assertIn("确认状态：已明确确认", result_markdown)
+        self.assertIn("写入结果：已创建 research-001 并读回验证", result_markdown)
+        self.assertIn("总索引：已更新", result_markdown)
+
+    def test_drive_writeback_proposes_archive_after_completing_an_existing_root(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = (
+                repository / "tests" / "fixtures" / "drive-writeback-init-partial.json"
+            )
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture.update(
+                {
+                    "operation": "archive",
+                    "research": {
+                        "status": "completed",
+                        "type": "topic_research",
+                        "title": "已有根目录",
+                        "content": "已完成的专题研究。",
+                    },
+                    "initialization_confirmation": {
+                        "proposal_id": "initialize:root:center-001",
+                        "target_id": "center-001",
+                        "explicit": True,
+                    },
+                    "execution": {
+                        "create_results": {
+                            name: {
+                                "status": "created",
+                                "id": item_id,
+                                "readback": {
+                                    "id": item_id,
+                                    "name": name,
+                                    "mime_type": "application/vnd.google-apps.folder",
+                                    "parent_id": "center-001",
+                                },
+                            }
+                            for name, item_id in (
+                                ("每日市场思考", "daily-004"),
+                                ("交易计划", "plan-004"),
+                                ("周度复盘", "weekly-004"),
+                                ("案例复盘", "case-004"),
+                            )
+                        }
+                    },
+                    "archive_confirmation": None,
+                }
+            )
+            fixture.pop("confirmation", None)
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                repository,
+                "tests/fixtures/drive-writeback-init-partial.json",
+                output_path,
+            )
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("# 交易研究中心初始化结果", result_markdown)
+        self.assertIn("初始化结果：已完整初始化", result_markdown)
+        self.assertIn("# Drive 写入提议", result_markdown)
+        self.assertIn("归档目标 Drive ID：topic-001", result_markdown)
+        self.assertIn("写入结果：未执行", result_markdown)
+
+    def test_drive_writeback_initialization_preserves_drive_failure_reason(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            output_path = Path(temporary) / "drive-writeback.md"
+            result = self._render_drive_writeback_fixture(
+                ROOT,
+                "tests/fixtures/drive-writeback-init-drive-unavailable.json",
+                output_path,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result_markdown = output_path.read_text(encoding="utf-8")
+
+        self.assertIn("# 交易研究中心初始化失败", result_markdown)
+        self.assertIn("失败代码：unavailable", result_markdown)
+        self.assertIn("失败原因：Google Drive 工具不可用", result_markdown)
+        self.assertIn("初始化结果：未执行", result_markdown)
+        self.assertNotIn("已完整初始化", result_markdown)
+        self.assertNotIn("created：", result_markdown)
+
     def test_drive_writeback_allows_confirmed_topic_creation_and_index_update(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
             output_path = Path(temporary) / "drive-writeback.md"
@@ -361,6 +778,83 @@ class MarsSkillsSuiteTests(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("explicit confirmation required", result.stdout + result.stderr)
+
+    def test_drive_writeback_public_contract_describes_idempotent_initialization(
+        self,
+    ) -> None:
+        skill_text = (ROOT / "skills" / "drive-writeback" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        contract = json.loads(
+            (ROOT / "skills" / "drive-writeback" / "capability.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+        self.assertIn("目录初始化", skill_text)
+        self.assertIn("My Drive", skill_text)
+        self.assertIn("不在本地持久化 Drive ID", skill_text)
+        self.assertIn("created / existing / failed / pending", skill_text)
+        self.assertIn("初始化确认不能授权研究归档", skill_text)
+        self.assertIn("初始化成功后不得自动继续归档", skill_text)
+        self.assertIn("初始化和归档分别确认", readme)
+        self.assertEqual(
+            contract["supported_operations"],
+            ["archive_completed_research", "initialize_research_center"],
+        )
+        self.assertFalse(contract["completed_research_required"])
+        self.assertTrue(contract["archive_contract"]["completed_research_required"])
+        initialization = contract["initialization_contract"]
+        self.assertTrue(initialization["idempotent"])
+        self.assertTrue(initialization["stateless_drive_id_resolution"])
+        self.assertEqual(
+            initialization["directories"],
+            [
+                "收件箱",
+                "每日市场思考",
+                "交易计划",
+                "专题研究",
+                "周度复盘",
+                "案例复盘",
+            ],
+        )
+        self.assertEqual(
+            set(initialization["offline_fixtures"]),
+            {
+                "tests/fixtures/drive-writeback-init-empty.json",
+                "tests/fixtures/drive-writeback-init-empty-confirmed.json",
+                "tests/fixtures/drive-writeback-init-partial.json",
+                "tests/fixtures/drive-writeback-init-complete.json",
+                "tests/fixtures/drive-writeback-init-duplicate-roots.json",
+                "tests/fixtures/drive-writeback-init-confirmation-mismatch.json",
+                "tests/fixtures/drive-writeback-init-partial-failure.json",
+                "tests/fixtures/drive-writeback-init-retry-success.json",
+                "tests/fixtures/drive-writeback-dual-confirmation.json",
+                "tests/fixtures/drive-writeback-init-drive-unavailable.json",
+            },
+        )
+
+    def test_offline_verifier_discovers_drive_initialization_fixtures(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:
+            repository = self._copy_repository(Path(temporary))
+            fixture_path = (
+                repository
+                / "tests"
+                / "fixtures"
+                / "drive-writeback-init-drive-unavailable.json"
+            )
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["operation"] = "unsupported"
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = self._run_verifier(repository)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("fixture render failed", result.stdout + result.stderr)
 
     def test_instrument_research_fixture_excludes_macro_and_technical_analysis(
         self,

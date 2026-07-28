@@ -2,8 +2,78 @@
   "schema_version": 1,
   "skill": "drive-writeback",
   "delivery": "drive_writeback",
-  "completed_research_required": true,
+  "completed_research_required": false,
   "explicit_confirmation_required": true,
+  "supported_operations": [
+    "archive_completed_research",
+    "initialize_research_center"
+  ],
+  "archive_contract": {
+    "completed_research_required": true,
+    "explicit_confirmation_required": true
+  },
+  "initialization_contract": {
+    "root_name": "交易研究中心",
+    "root_scope": "my_drive",
+    "root_mime_type": "application/vnd.google-apps.folder",
+    "index_name": "总索引",
+    "index_mime_type": "application/vnd.google-apps.document",
+    "directories": [
+      "收件箱",
+      "每日市场思考",
+      "交易计划",
+      "专题研究",
+      "周度复盘",
+      "案例复盘"
+    ],
+    "indexed_categories": [
+      "交易计划",
+      "专题研究",
+      "周度复盘",
+      "案例复盘"
+    ],
+    "idempotent": true,
+    "stateless_drive_id_resolution": true,
+    "exact_name_and_parent_resolution": true,
+    "duplicate_roots_require_user_selection": true,
+    "initialization_confirmation_separate_from_archive": true,
+    "readback_verification_required": true,
+    "readback_fields": [
+      "id",
+      "name",
+      "mime_type",
+      "parent_id"
+    ],
+    "result_statuses": [
+      "created",
+      "existing",
+      "failed",
+      "pending"
+    ],
+    "forbidden_mutations": [
+      "move",
+      "overwrite",
+      "rename",
+      "delete"
+    ],
+    "history_backfill": false,
+    "precreate_research_documents": false,
+    "fixture_required_markers": [
+      "初始化结果："
+    ],
+    "offline_fixtures": [
+      "tests/fixtures/drive-writeback-init-empty.json",
+      "tests/fixtures/drive-writeback-init-empty-confirmed.json",
+      "tests/fixtures/drive-writeback-init-partial.json",
+      "tests/fixtures/drive-writeback-init-complete.json",
+      "tests/fixtures/drive-writeback-init-duplicate-roots.json",
+      "tests/fixtures/drive-writeback-init-confirmation-mismatch.json",
+      "tests/fixtures/drive-writeback-init-partial-failure.json",
+      "tests/fixtures/drive-writeback-init-retry-success.json",
+      "tests/fixtures/drive-writeback-dual-confirmation.json",
+      "tests/fixtures/drive-writeback-init-drive-unavailable.json"
+    ]
+  },
   "response_fields": [
     "research_status",
     "proposed_destination",
@@ -65,8 +135,12 @@
   },
   "required_contract": {
     "delivery": "drive_writeback",
-    "completed_research_required": true,
-    "explicit_confirmation_required": true
+    "completed_research_required": false,
+    "explicit_confirmation_required": true,
+    "supported_operations": [
+      "archive_completed_research",
+      "initialize_research_center"
+    ]
   },
   "fixture_validation": {
     "renderer": "scripts/render_drive_writeback_fixture.py",
@@ -101,6 +175,18 @@
         "index_update": "simulated_updated",
         "confirmation_status": "confirmed",
         "write_result": "simulated_created"
+      }
+    },
+    {
+      "request": "在目录初始化完成后，第二次确认归档该专题研究。",
+      "fixture": "tests/fixtures/drive-writeback-archive-second-confirmation.json",
+      "expected": {
+        "research_status": "completed",
+        "proposed_destination": "included",
+        "proposed_operation": "included",
+        "index_update": "updated",
+        "confirmation_status": "confirmed",
+        "write_result": "created_and_verified"
       }
     }
   ]

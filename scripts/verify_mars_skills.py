@@ -186,8 +186,31 @@ def _verify_skill_contract(identifier: str, directory: Path) -> None:
         if package.get("atomic_write") is not True:
             _fail("technical analysis artifact package must be atomic")
     _verify_required_contract_values(contract)
+    fixture_scenarios = list(contract["scenarios"])
+    for operation_contract in contract.values():
+        if not isinstance(operation_contract, dict):
+            continue
+        offline_fixtures = operation_contract.get("offline_fixtures")
+        if offline_fixtures is None:
+            continue
+        operation_markers = operation_contract.get("fixture_required_markers")
+        if not isinstance(offline_fixtures, list) or not all(
+            isinstance(fixture, str) and fixture for fixture in offline_fixtures
+        ):
+            _fail("operation fixture paths must be a non-empty string list")
+        if not isinstance(operation_markers, list) or not all(
+            isinstance(marker, str) and marker for marker in operation_markers
+        ):
+            _fail("operation fixtures require rendered evidence markers")
+        fixture_scenarios.extend(
+            {
+                "fixture": fixture,
+                "required_markers": operation_markers,
+            }
+            for fixture in offline_fixtures
+        )
     _verify_fixture_scenarios(
-        identifier, contract["scenarios"], contract.get("fixture_validation")
+        identifier, fixture_scenarios, contract.get("fixture_validation")
     )
 
 
@@ -242,6 +265,11 @@ def _verify_fixture_scenarios(
         )
     for scenario in fixture_scenarios:
         fixture = _fixture_path(scenario.get("fixture"), "fixture")
+        scenario_markers = scenario.get("required_markers", markers)
+        if not isinstance(scenario_markers, list) or not all(
+            isinstance(marker, str) and marker for marker in scenario_markers
+        ):
+            _fail("fixture scenario requires rendered evidence markers")
         with tempfile.TemporaryDirectory(prefix="mars-skills-fixture-") as temporary:
             output = Path(temporary) / (
                 "artifacts" if output_kind == "directory" else artifact_name
@@ -267,7 +295,7 @@ def _verify_fixture_scenarios(
             if not artifact.is_file():
                 _fail("fixture renderer did not create its artifact")
             rendered = artifact.read_text(encoding="utf-8")
-        for marker in markers:
+        for marker in scenario_markers:
             if marker not in rendered:
                 _fail(f"fixture missing rendered evidence: {marker}")
 
