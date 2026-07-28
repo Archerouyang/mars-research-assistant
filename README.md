@@ -122,18 +122,3 @@ bash scripts/verify-mars-skills.sh
 
 离线验收只使用 fixture 和临时目录，不请求真实市场数据、读取账户或写入 Drive。真实
 yfinance 契约测试只在发布验收时运行一次，不创建定时任务。
-
-<details>
-<summary>RED Skill 上传包</summary>
-
-根 `SKILL.md` 是 RED 的 Markdown 入口。需要上传完整包时生成过滤后的确定性 ZIP 和独立
-哈希清单：
-
-```bash
-python3 scripts/build_red_upload_bundle.py \
-  --output /tmp/mars-research-assistant-red.zip
-```
-
-上传包不包含 `.git`、`.venv`、测试、开发文档、凭据或本地开发配置。
-
-</details>
