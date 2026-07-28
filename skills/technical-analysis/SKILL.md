@@ -28,10 +28,27 @@ evidence.json
 持久工件包，不写入安装目录，也不保存浏览器或研究状态。后续调用会尽力清理同一系统临时
 目录下超过 24 小时的旧图表，返回结果同时声明 `expires_after_seconds=86400`。
 
-在包含完整包的受管安装中，通过包内脚本执行：
+## 运行前环境门
+
+只有本技术面分析 Skill 需要 Python 行情环境；其他五个 Skill 不得因此运行 uv。每次执行
+前，先从当前 Skill 目录运行幂等环境门：
 
 ```bash
-uv run python scripts/run_yfinance_analysis.py \
+bash scripts/ensure_yfinance_environment.sh
+```
+
+环境门要求安装的是完整 Mars Skill 包，并从包根 `pyproject.toml` 与 `uv.lock` 读取唯一
+依赖契约。它只使用 uv：优先复用可用的 Python 3.12 与包根 `.venv`；缺少 3.12 时让 uv
+安装受管解释器；随后执行锁定同步并验证 yfinance 版本。锁与环境均已满足时仍可安全重复
+运行，不使用 pip，不写入用户项目或全局 Python。
+
+若当前平台只复制了本 `SKILL.md` 或技术面子目录，缺少完整包的锁文件与脚本，必须停止并
+提示用户安装完整仓库包，不得临时拼装未锁定环境。
+
+环境就绪后，通过包内 Python 执行：
+
+```bash
+../../.venv/bin/python scripts/analyze_with_yfinance.py \
   --symbol SYMBOL \
   --output-dir /caller/provided/new-directory
 ```
@@ -94,6 +111,9 @@ swing high / swing low，按固定 `0.5 × ATR14` 聚类，并依次按触碰次
 HTML 内嵌库与证据视图数据，包含 `evidence_id`、来源、时区、as_of、复权口径、
 bars_used、TradingView attribution 和完整关键位 provenance。
 
+它是一次性行情快照：Python 完成一次下载与计算后，HTML 只对已内嵌的固定数据提供本地
+缩放、平移、十字光标和悬停，不轮询、不刷新行情，也不连接实时数据服务。
+
 真实浏览器验收还必须确认缩放、平移、十字光标、OHLCV/SMA 悬停、桌面与窄屏布局；
 颜色不能是区分当前价、均线、支撑、阻力和成交量的唯一方式。打开时不得发起 fetch、
 XHR、WebSocket、CDN、遥测或其他外部请求，不得使用浏览器持久状态。HTML 字符串检查
@@ -114,5 +134,5 @@ XHR、WebSocket、CDN、遥测或其他外部请求，不得使用浏览器持�
 发起网络请求。本交付不是实时行情或交易建议。
 
 仓库内的离线公开验收入口是 `scripts/render_technical_analysis_fixture.py`，它直接执行同一
-包内 runtime，并用 `--no-open` 抑制 GUI 副作用。真实 yfinance 入口仅在发布集成验收时联网
-运行。
+套一次性分析逻辑，并用 `--no-open` 抑制 GUI 副作用。真实 yfinance 数据适配器仅在发布集成
+验收时联网运行一次。

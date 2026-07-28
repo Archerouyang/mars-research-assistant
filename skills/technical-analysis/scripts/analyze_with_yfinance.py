@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch yfinance daily history and build a technical-analysis artifact package."""
+"""Fetch one yfinance history snapshot and build a technical-analysis package."""
 
 from __future__ import annotations
 
@@ -157,8 +157,8 @@ def load_market_context(path: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Release-time yfinance contract runner. It performs no scheduled or "
-            "background checks."
+            "One-shot yfinance technical analysis. It performs no live, scheduled, "
+            "or background updates."
         )
     )
     parser.add_argument("--symbol", required=True)

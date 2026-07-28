@@ -1279,13 +1279,21 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             "set -euo pipefail\n"
             'printf "%s\\n" "$*" >> "$MARS_TEST_UV_LOG"\n'
             'if [[ "${1:-} ${2:-}" == "python find" ]]; then\n'
+            '  if [[ "${MARS_TEST_UV_FAIL_FIRST_FIND:-0}" == "1"'
+            ' && ! -f "$MARS_TEST_UV_FIND_STATE" ]]; then\n'
+            '    touch "$MARS_TEST_UV_FIND_STATE"\n'
+            "    exit 1\n"
+            "  fi\n"
             '  printf "%s\\n" "$MARS_TEST_PYTHON"\n'
             "  exit 0\n"
             "fi\n"
+            'if [[ "${1:-} ${2:-}" == "python install" ]]; then exit 0; fi\n'
             f"if [[ {exit_code} -ne 0 ]]; then exit {exit_code}; fi\n"
             'environment_root="${UV_PROJECT_ENVIRONMENT:-$PWD/.venv}"\n'
             'mkdir -p "$environment_root/bin"\n'
-            'ln -sf "$MARS_TEST_PYTHON" "$environment_root/bin/python"\n',
+            "printf '#!/usr/bin/env bash\\nexec \"%s\" \"$@\"\\n'"
+            ' "$MARS_TEST_PYTHON" > "$environment_root/bin/python"\n'
+            'chmod 755 "$environment_root/bin/python"\n',
             encoding="utf-8",
         )
         fake_uv.chmod(0o755)
@@ -1295,6 +1303,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
                 "PATH": f"{binary_directory}:{environment['PATH']}",
                 "MARS_TEST_UV_LOG": str(log_path),
                 "MARS_TEST_PYTHON": sys.executable,
+                "MARS_TEST_UV_FIND_STATE": str(directory / "uv-find.state"),
             }
         )
         return environment
@@ -1330,6 +1339,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             outside_environment = directory / "outside-environment"
             environment = self._fake_uv_environment(directory)
             environment["UV_PROJECT_ENVIRONMENT"] = str(outside_environment)
+            environment["MARS_TEST_UV_FAIL_FIRST_FIND"] = "1"
             result = subprocess.run(
                 [
                     "bash",
@@ -1363,7 +1373,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertFalse(environment_leaked)
         self.assertIn("name: mars-research-assistant", root_skill)
         self.assertIn("公开网络", root_skill)
-        self.assertIn("uv sync --locked", root_skill)
+        self.assertIn("其他五个 Skill 不触发 uv", root_skill)
         self.assertEqual(
             child_skills,
             {
@@ -1380,6 +1390,7 @@ class MarsSkillsSuiteTests(unittest.TestCase):
         self.assertIn("uv_lock_sha256", marker)
         self.assertIn("sync --project", uv_log)
         self.assertIn("--locked", uv_log)
+        self.assertIn("python install 3.12", uv_log)
         self.assertIn("installed managed Mars Research Assistant package", result.stdout)
 
     def test_local_installer_rejects_a_conflicting_destination_without_partial_install(
@@ -1478,7 +1489,8 @@ class MarsSkillsSuiteTests(unittest.TestCase):
             uv_log = (directory / "uv.log").read_text(encoding="utf-8")
 
         self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
-        self.assertIn("--locked --offline --no-python-downloads", uv_log)
+        self.assertIn("--locked --python", uv_log)
+        self.assertIn("--offline --no-python-downloads", uv_log)
 
     def test_local_installer_never_executes_a_customized_target_verifier(self) -> None:
         with tempfile.TemporaryDirectory(prefix="mars-skills-test-") as temporary:

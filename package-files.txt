@@ -25,7 +25,8 @@ skills/instrument-research/capability.json
 skills/technical-analysis/SKILL.md
 skills/technical-analysis/agents/openai.yaml
 skills/technical-analysis/capability.json
-skills/technical-analysis/scripts/run_yfinance_analysis.py
+skills/technical-analysis/scripts/analyze_with_yfinance.py
+skills/technical-analysis/scripts/ensure_yfinance_environment.sh
 skills/technical-analysis/scripts/technical_chart.py
 skills/technical-analysis/scripts/technical_analysis.py
 skills/technical-analysis/vendor/lightweight-charts/5.2.0/LICENSE

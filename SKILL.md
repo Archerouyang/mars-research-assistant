@@ -12,16 +12,28 @@ Skill，子 Skill 不得假设根入口或前置步骤已经运行。
 ## 权限与降级
 
 - 研究能力会读取公开网络；技术面分析的唯一内置行情源是 yfinance（非官方、best-effort）。
-- 受管安装器会在目标包内写入文件，并执行 `uv sync --locked` 创建包内 `.venv`。
+- 只有技术面分析需要 Python 行情环境；它的环境门用 uv 按锁文件创建包内 `.venv`。
+  完整包受管安装器复用同一环境门，其他五个 Skill 不触发 uv。
 - 研究工件只写入用户指定目录；不读取券商账户、持仓或订单，不交易，不读取 API key，
   不运行后台任务、每日检测、隐式缓存或遥测。
 - Google Drive 写入是可选能力。只有用户对当前初始化或归档提议单独明确确认后才可写入；
   两种确认互不授权。
 - 权限或数据不足时，明确失败或降级，不切换隐藏来源，也不扩大权限。
 
-如果上传平台只保留本 Markdown，当前入口只能帮助用户识别能力和给出受管安装指引；不得
-声称 `scripts/`、`.venv` 或六个子 Skill 已经可用。完整能力需从
-`https://github.com/archerthegoat/mars-research-assistant` 获取仓库后运行：
+如果上传平台只保留本 Markdown，当前入口只能帮助用户识别能力和给出安装指引；不得声称
+`scripts/`、`.venv` 或六个子 Skill 已经可用。支持完整目录的 Skills CLI 必须安装根组合
+Skill，不能只复制 `technical-analysis` 子目录：
+
+```bash
+DISABLE_TELEMETRY=1 npx skills add archerthegoat/mars-research-assistant \
+  --skill mars-research-assistant \
+  --copy \
+  --yes
+```
+
+通用 CLI 只复制文件；首次调用技术面分析时由该 Skill 的环境门准备 uv 环境。从
+`https://github.com/archerthegoat/mars-research-assistant` 获取仓库时，也可以立即运行
+受管安装：
 
 ```bash
 git clone https://github.com/archerthegoat/mars-research-assistant.git
@@ -30,7 +42,7 @@ bash scripts/install-mars-skill.sh \
   --target /path/to/agent-skills/mars-research-assistant
 ```
 
-不支持以 pip、手工复制或第三方下载器冒充受管安装。
+不支持以 pip 或手工复制技术面子目录冒充完整安装。
 
 ## 六个可直接调用的 Skill
 

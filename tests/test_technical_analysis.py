@@ -15,12 +15,12 @@ from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[1]
 QUALIFIED_FIXTURE = ROOT / "tests" / "fixtures" / "technical-analysis-demo.json"
-YFINANCE_RUNTIME = (
+YFINANCE_ENTRYPOINT = (
     ROOT
     / "skills"
     / "technical-analysis"
     / "scripts"
-    / "run_yfinance_analysis.py"
+    / "analyze_with_yfinance.py"
 )
 DEMO_ARTIFACTS = ROOT / "examples" / "technical-analysis-demo"
 
@@ -835,7 +835,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
     def test_yfinance_adapter_retries_once_with_a_larger_window(self) -> None:
         spec = importlib.util.spec_from_file_location(
-            "run_yfinance_analysis", YFINANCE_RUNTIME
+            "analyze_with_yfinance", YFINANCE_ENTRYPOINT
         )
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.loader)
@@ -899,7 +899,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self,
     ) -> None:
         spec = importlib.util.spec_from_file_location(
-            "run_yfinance_analysis_retry", YFINANCE_RUNTIME
+            "analyze_with_yfinance_retry", YFINANCE_ENTRYPOINT
         )
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.loader)
@@ -963,7 +963,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
     def test_same_day_bar_is_not_guessed_incomplete_after_download(self) -> None:
         spec = importlib.util.spec_from_file_location(
-            "run_yfinance_analysis_same_day", YFINANCE_RUNTIME
+            "analyze_with_yfinance_same_day", YFINANCE_ENTRYPOINT
         )
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.loader)
@@ -1002,7 +1002,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
     def test_unreadable_market_context_degrades_without_blocking(self) -> None:
         spec = importlib.util.spec_from_file_location(
-            "run_yfinance_analysis_context", YFINANCE_RUNTIME
+            "analyze_with_yfinance_context", YFINANCE_ENTRYPOINT
         )
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.loader)

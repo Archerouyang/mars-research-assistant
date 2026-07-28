@@ -44,10 +44,14 @@ if find "$SOURCE_ROOT/scripts" "$SOURCE_ROOT/skills" -type l -print -quit | grep
   echo "source package contains a symbolic link" >&2
   exit 65
 fi
+TRUSTED_PYTHON=""
 if [[ -n "${UV_PYTHON:-}" && -x "${UV_PYTHON}" ]]; then
   TRUSTED_PYTHON="$UV_PYTHON"
-else
-  TRUSTED_PYTHON="$(uv python find --no-project '>=3.12,<3.13')"
+elif ! TRUSTED_PYTHON="$(uv python find --no-project '>=3.12,<3.13' 2>/dev/null)"; then
+  uv python install 3.12
+  TRUSTED_PYTHON="$(
+    uv python find --managed-python --no-project '>=3.12,<3.13'
+  )"
 fi
 if [[ -z "$TRUSTED_PYTHON" || ! -x "$TRUSTED_PYTHON" ]]; then
   echo "uv could not provide a trusted Python 3.12 interpreter" >&2
@@ -128,19 +132,12 @@ if [[ "$MANAGED_INSTALL_VALID" == true ]]; then
 fi
 
 if [[ "$REUSE_ENVIRONMENT" == true ]]; then
-  (
-    cd "$STAGING_ROOT"
-    env -u VIRTUAL_ENV -u UV_PROJECT -u UV_WORKING_DIR \
-      UV_PROJECT_ENVIRONMENT="$STAGING_ROOT/.venv" \
-      uv sync --project "$STAGING_ROOT" --locked --offline --no-python-downloads
-  )
+  bash \
+    "$STAGING_ROOT/skills/technical-analysis/scripts/ensure_yfinance_environment.sh" \
+    --offline
 else
-  (
-    cd "$STAGING_ROOT"
-    env -u VIRTUAL_ENV -u UV_PROJECT -u UV_WORKING_DIR \
-      UV_PROJECT_ENVIRONMENT="$STAGING_ROOT/.venv" \
-      uv sync --project "$STAGING_ROOT" --locked
-  )
+  bash \
+    "$STAGING_ROOT/skills/technical-analysis/scripts/ensure_yfinance_environment.sh"
 fi
 
 if [[ ! -x "$STAGING_ROOT/.venv/bin/python" ]]; then

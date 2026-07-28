@@ -5,14 +5,14 @@ from pathlib import Path
 import runpy
 
 
-RUNTIME = (
+ANALYSIS_ENTRYPOINT = (
     Path(__file__).resolve().parents[1]
     / "skills"
     / "technical-analysis"
     / "scripts"
-    / "run_yfinance_analysis.py"
+    / "analyze_with_yfinance.py"
 )
 
 
 if __name__ == "__main__":
-    runpy.run_path(str(RUNTIME), run_name="__main__")
+    runpy.run_path(str(ANALYSIS_ENTRYPOINT), run_name="__main__")

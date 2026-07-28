@@ -5,17 +5,34 @@
 
 ## 快速开始
 
-先安装 [uv](https://docs.astral.sh/uv/)，再在仓库根目录安装完整组合包：
+先安装 [uv](https://docs.astral.sh/uv/)。使用通用 Skills CLI 时，必须选择根组合 Skill，
+让六个子 Skill、脚本和锁文件作为一个目录安装：
+
+```bash
+DISABLE_TELEMETRY=1 npx skills add archerthegoat/mars-research-assistant \
+  --skill mars-research-assistant \
+  --agent codex \
+  --global \
+  --copy \
+  --yes
+```
+
+通用 CLI 负责复制 Skill，不执行仓库脚本。首次调用技术面分析时，该 Skill 会先运行自己的
+幂等环境门，自动让 uv 准备 Python 3.12、包内 `.venv` 和锁定的 yfinance；其他五个 Skill
+不触发 uv。不要只安装 `technical-analysis` 子目录，因为它需要根锁文件。
+
+从 Git 仓库拉取时，可在仓库根目录立即完成同一环境准备和受管安装：
 
 ```bash
 bash scripts/install-mars-skill.sh \
   --target /path/to/agent-skills/mars-research-assistant
 ```
 
-安装器是唯一受支持的受管入口。它先在目标目录旁构建完整候选包，运行
-`uv sync --locked` 创建包内 `.venv`，通过离线自检后再整体替换目标；失败不会破坏旧安装。
-锁文件未变的升级会复用已有环境。已定制的受管安装默认停止，确认愿意覆盖后才使用
-`--force`。不回退到 pip，也不污染用户项目或全局 Python。
+仓库安装器是支持原子升级与定制保护的完整包受管入口。它先在目标目录旁构建完整候选包，再调用技术面
+分析 Skill 自带的环境门：缺少 Python 3.12 时由 uv 安装受管解释器，并按锁文件创建包内
+`.venv`。通过离线自检后才整体替换目标；失败不会破坏旧安装。锁文件未变的升级会复用
+已有环境。已定制的受管安装默认停止，确认愿意覆盖后才使用 `--force`。不回退到 pip，
+也不污染用户项目或全局 Python。
 
 安装后可从根 `SKILL.md` 组合调用，也可直接调用任一子 Skill。可以先询问 Ask Mars：
 
@@ -59,7 +76,8 @@ bash scripts/install-mars-skill.sh \
 持久示例工件位于 [`examples/technical-analysis-demo/`](examples/technical-analysis-demo/)。
 `analysis.md` 与 `evidence.json` 共享同一个 `evidence_id`。每次合格运行还会生成临时
 `chart.html`，用包内 TradingView Lightweight Charts 可视化同一证据集，并在标准输出
-返回路径与浏览器打开状态；临时图表不写入持久工件目录。
+返回路径与浏览器打开状态；临时图表不写入持久工件目录。它展示一次下载后内嵌的固定
+行情快照，缩放、平移、十字光标和悬停都只发生在本地，不会动态刷新行情。
 
 ## RED Skill 上传
 
