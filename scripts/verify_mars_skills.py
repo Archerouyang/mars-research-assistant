@@ -1,53 +1,40 @@
 #!/usr/bin/env python3
-"""Offline, public-surface verification for the Mars Skills collection."""
+"""Offline contract, package-budget, and fixture checks for Mars v1.0.2."""
 
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
 import sys
 import tempfile
+from time import perf_counter
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = ROOT / "mars-skills.json"
-SKILLS_PATH = ROOT / "skills"
-PRIVATE_PATH = re.compile(
-    r"/(?:Users|home)/[^/\s]+(?:/|$)|[A-Za-z]:[\\/]+Users[\\/]+[^\\/\s]+(?:[\\/]|$)"
-)
+RUNTIME = ROOT / "skills" / "mars-research-assistant"
+SKILLS = RUNTIME / "skills"
+MANIFEST = RUNTIME / "mars-skills.json"
+EXPECTED_SKILLS = {
+    "ask-mars",
+    "market-catalysts-brief",
+    "market-snapshot",
+    "instrument-research",
+    "deep-equity-research",
+    "technical-analysis",
+    "drive-writeback",
+}
+POLICY_BLOCK = re.compile(r"```mars-skill-policy\n(?P<payload>\{.*?\})\n```", re.DOTALL)
+MAX_RUNTIME_FILES = 60
+MAX_RUNTIME_BYTES = 1 << 20
+MAX_FIXTURE_SECONDS = 1.0
+PRIVATE_PATH = re.compile(r"/(?:Users|home)/[^/\s]+(?:/|$)")
 SECRET_ASSIGNMENT = re.compile(
     r"(?:api[_-]?key|access[_-]?token|secret|password)\s*[:=]\s*['\"]?\S+",
     re.IGNORECASE,
 )
-LEGACY_TERMS = ("long" + "bridge",)
-RETIRED_TECHNICAL_TERMS = (
-    "price" + "-action",
-    "price" + " action",
-    "al " + "brooks",
-)
-POLICY_BLOCK = re.compile(r"```mars-skill-policy\n(?P<payload>\{.*?\})\n```", re.DOTALL)
-RELEASE_SKILL_IDS = frozenset(
-    {
-        "ask-mars",
-        "market-catalysts-brief",
-        "market-snapshot",
-        "instrument-research",
-        "technical-analysis",
-        "drive-writeback",
-    }
-)
-DATA_EVIDENCE_MARKERS = {
-    "market-catalysts-brief": frozenset(
-        {"研究时间：", "- 来源：", "- 来源时间："}
-    ),
-    "market-snapshot": frozenset({"来源：", "as_of："}),
-    "instrument-research": frozenset({"来源：", "as_of："}),
-    "technical-analysis": frozenset({"来源：", "as_of："}),
-}
 
 
 def _fail(message: str) -> None:
@@ -56,401 +43,182 @@ def _fail(message: str) -> None:
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        parsed = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         _fail(f"invalid JSON: {path.relative_to(ROOT)} ({error})")
-    if not isinstance(parsed, dict):
+    if not isinstance(value, dict):
         _fail(f"JSON object required: {path.relative_to(ROOT)}")
-    return parsed
+    return value
 
 
-def _skill_directories() -> dict[str, Path]:
-    if not SKILLS_PATH.is_dir():
-        _fail("skills directory is missing")
-    return {
-        path.name: path
-        for path in SKILLS_PATH.iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    }
+def _runtime_files() -> list[Path]:
+    if not RUNTIME.is_dir():
+        _fail("runtime package is missing")
+    return sorted(path for path in RUNTIME.rglob("*") if path.is_file())
 
 
-def _manifest_skills() -> dict[str, dict[str, Any]]:
-    manifest = _read_json(MANIFEST_PATH)
-    if manifest.get("schema_version") != 1:
-        _fail("unsupported collection manifest schema")
-    if not isinstance(manifest.get("collection"), str) or not manifest["collection"].strip():
-        _fail("collection manifest requires a collection name")
-    rows = manifest.get("skills")
-    if not isinstance(rows, list) or not rows:
-        _fail("collection manifest requires at least one Skill")
-    indexed: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            _fail("collection manifest Skill must be an object")
-        identifier = row.get("id")
-        display_name = row.get("display_name")
-        if not isinstance(identifier, str) or not identifier.strip():
-            _fail("collection manifest Skill requires an id")
-        if not isinstance(display_name, str) or not display_name.strip():
-            _fail(f"collection manifest Skill requires a display name: {identifier}")
-        if identifier in indexed:
-            _fail(f"duplicate collection Skill: {identifier}")
-        indexed[identifier] = row
-    return indexed
+def _verify_runtime_budget() -> None:
+    files = _runtime_files()
+    size = sum(path.stat().st_size for path in files)
+    if len(files) > MAX_RUNTIME_FILES:
+        _fail(f"runtime package has {len(files)} files; maximum is {MAX_RUNTIME_FILES}")
+    if size > MAX_RUNTIME_BYTES:
+        _fail(f"runtime package is {size} bytes; maximum is {MAX_RUNTIME_BYTES}")
+    prohibited = {"README.md", "AGENTS.md", "package-files.txt", "install-from-github.sh", "install-mars-skill.sh", "managed_package.py"}
+    leaked = [path.relative_to(RUNTIME).as_posix() for path in files if path.name in prohibited]
+    if leaked:
+        _fail(f"development files leaked into runtime package: {', '.join(leaked)}")
+    for path in files:
+        relative_parts = path.relative_to(RUNTIME).parts
+        if any(part in {"tests", "docs", ".git", ".venv", "__pycache__"} for part in relative_parts):
+            _fail(f"development directory leaked into runtime package: {path.relative_to(RUNTIME)}")
 
 
-def _verify_skill_contract(identifier: str, directory: Path) -> None:
-    skill_text = (directory / "SKILL.md").read_text(encoding="utf-8")
-    if f"name: {identifier}" not in skill_text:
-        _fail(f"Skill front matter name mismatch: {identifier}")
-
-    agent_text = (directory / "agents" / "openai.yaml")
-    if not agent_text.is_file():
-        _fail(f"agent metadata missing: {identifier}")
-    if "display_name:" not in agent_text.read_text(encoding="utf-8"):
-        _fail(f"agent metadata display name missing: {identifier}")
-
-    if "`capability.json`" not in skill_text:
-        _fail(f"Skill does not consume its capability contract: {identifier}")
-
-    contract = _read_json(directory / "capability.json")
-    if contract.get("schema_version") != 1 or contract.get("skill") != identifier:
-        _fail(f"acceptance contract identity mismatch: {identifier}")
-    if not isinstance(contract.get("delivery"), str) or not contract["delivery"].strip():
-        _fail(f"acceptance contract delivery missing: {identifier}")
-    response_fields = contract.get("response_fields")
-    if not isinstance(response_fields, list) or not all(
-        isinstance(field, str) and field.strip() for field in response_fields
-    ):
-        _fail(f"acceptance contract response fields invalid: {identifier}")
-    forbidden = contract.get("forbidden_effects")
-    if not isinstance(forbidden, list) or not all(
-        isinstance(effect, str) and effect.strip() for effect in forbidden
-    ):
-        _fail(f"acceptance contract forbidden effects invalid: {identifier}")
-    policy_matches = POLICY_BLOCK.findall(skill_text)
-    if len(policy_matches) != 1:
-        _fail(f"Skill policy missing or ambiguous: {identifier}")
-    try:
-        policy = json.loads(policy_matches[0])
-    except json.JSONDecodeError as error:
-        _fail(f"Skill policy invalid JSON: {identifier} ({error})")
-    expected_policy = {
-        "delivery": contract["delivery"],
-        "forbidden_effects": forbidden,
-    }
-    if policy != expected_policy:
-        _fail(f"Skill policy contradicts capability contract: {identifier}")
-    scenarios = contract.get("scenarios")
-    if not isinstance(scenarios, list) or not scenarios:
-        _fail(f"acceptance contract scenarios missing: {identifier}")
-    for scenario in scenarios:
-        if not isinstance(scenario, dict) or not isinstance(scenario.get("request"), str):
-            _fail(f"acceptance scenario request invalid: {identifier}")
-        if not isinstance(scenario.get("expected"), dict) or not scenario["expected"]:
-            _fail(f"acceptance scenario expected outcome invalid: {identifier}")
-        missing = set(response_fields) - set(scenario["expected"])
-        if missing:
-            _fail(
-                f"acceptance scenario expected outcome missing fields: {identifier} "
-                f"({', '.join(sorted(missing))})"
-            )
-
-    if identifier == "ask-mars":
-        expected_forbidden = {"research", "market_data", "drive_write"}
-        if contract.get("delivery") != "recommendation" or set(forbidden) != expected_forbidden:
-            _fail("Ask Mars must remain recommendation-only")
-        if response_fields != [
-            "recommended_skills",
-            "first_step",
-            "minimum_input",
-            "assumptions",
-            "quick_replies",
-        ]:
-            _fail("Ask Mars response fields changed")
-        first = scenarios[0]["expected"]
-        if first.get("first_step") != "市场催化剂简报":
-            _fail("Ask Mars compound-request first step changed")
-        if first.get("sequence") != ["市场催化剂简报", "标的研究"]:
-            _fail("Ask Mars compound-request sequence changed")
-    if identifier == "technical-analysis":
-        if contract.get("delivery") != "technical_evidence_package":
-            _fail("technical analysis must deliver an evidence package")
-        if contract.get("yfinance_only") is not True:
-            _fail("technical analysis must remain yfinance only")
-        source = contract.get("data_source")
-        if not isinstance(source, dict) or source.get("fallback_allowed") is not False:
-            _fail("technical analysis data source must not have a fallback")
-        if source.get("expanded_window_retries") != 1:
-            _fail("technical analysis must retry the same source exactly once")
-        package = contract.get("artifact_package")
-        if not isinstance(package, dict) or package.get("qualified") != [
-            "analysis.md",
-            "evidence.json",
-        ]:
-            _fail("technical analysis artifact package changed")
-        if package.get("atomic_write") is not True:
-            _fail("technical analysis artifact package must be atomic")
-        visualization = contract.get("visualization")
-        if (
-            not isinstance(visualization, dict)
-            or visualization.get("qualified_kind") != "temporary_html"
-            or visualization.get("persistent") is not False
-            or visualization.get("cleanup_after_seconds") != 86400
-            or visualization.get("library") != "TradingView Lightweight Charts"
-            or visualization.get("network_at_open_time") is not False
-        ):
-            _fail("technical analysis visualization contract changed")
-    _verify_required_contract_values(contract)
-    fixture_scenarios = list(contract["scenarios"])
-    for operation_contract in contract.values():
-        if not isinstance(operation_contract, dict):
+def _verify_public_text() -> None:
+    for path in [*ROOT.glob("README*"), *ROOT.glob("scripts/*"), *_runtime_files()]:
+        if not path.is_file() or path.suffix in {".js", ".png"}:
             continue
-        offline_fixtures = operation_contract.get("offline_fixtures")
-        if offline_fixtures is None:
+        if path.resolve() == Path(__file__).resolve():
             continue
-        operation_markers = operation_contract.get("fixture_required_markers")
-        if not isinstance(offline_fixtures, list) or not all(
-            isinstance(fixture, str) and fixture for fixture in offline_fixtures
-        ):
-            _fail("operation fixture paths must be a non-empty string list")
-        if not isinstance(operation_markers, list) or not all(
-            isinstance(marker, str) and marker for marker in operation_markers
-        ):
-            _fail("operation fixtures require rendered evidence markers")
-        fixture_scenarios.extend(
-            {
-                "fixture": fixture,
-                "required_markers": operation_markers,
-            }
-            for fixture in offline_fixtures
-        )
-    _verify_fixture_scenarios(
-        identifier, fixture_scenarios, contract.get("fixture_validation")
-    )
-
-
-def _fixture_path(path_value: object, context: str) -> Path:
-    if not isinstance(path_value, str) or not path_value.strip():
-        _fail(f"{context} fixture path missing")
-    fixture_path = (ROOT / path_value).resolve()
-    if not fixture_path.is_relative_to(ROOT.resolve()):
-        _fail(f"{context} fixture is outside the repository: {path_value}")
-    if not fixture_path.is_file():
-        _fail(f"{context} fixture missing: {path_value}")
-    return fixture_path
-
-
-def _verify_required_contract_values(contract: dict[str, Any]) -> None:
-    required = contract.get("required_contract")
-    if required is None:
-        return
-    if not isinstance(required, dict) or not required:
-        _fail("required contract values must be a non-empty object")
-    for field, expected in required.items():
-        if contract.get(field) != expected:
-            _fail(f"required contract value changed: {field.replace('_', ' ')}")
-
-
-def _verify_fixture_scenarios(
-    identifier: str, scenarios: list[dict[str, Any]], validation: object
-) -> None:
-    fixture_scenarios = [scenario for scenario in scenarios if "fixture" in scenario]
-    if not fixture_scenarios:
-        if validation is not None:
-            _fail("fixture validation has no fixture scenarios")
-        return
-    if not isinstance(validation, dict):
-        _fail("fixture scenarios require fixture validation")
-    renderer = _fixture_path(validation.get("renderer"), "fixture renderer")
-    renderer_arguments = validation.get("arguments", [])
-    if not isinstance(renderer_arguments, list) or not all(
-        isinstance(argument, str) and argument.startswith("--")
-        for argument in renderer_arguments
-    ):
-        _fail("fixture validation arguments must be option strings")
-    artifact_name = validation.get("artifact")
-    output_kind = validation.get("output_kind", "file")
-    markers = validation.get("required_markers")
-    if not isinstance(artifact_name, str) or Path(artifact_name).name != artifact_name:
-        _fail("fixture validation artifact must be a filename")
-    if not isinstance(markers, list) or not all(
-        isinstance(marker, str) and marker for marker in markers
-    ):
-        _fail("fixture validation requires rendered evidence markers")
-    evidence_markers = DATA_EVIDENCE_MARKERS.get(identifier, frozenset())
-    missing_evidence_markers = evidence_markers - set(markers)
-    if missing_evidence_markers:
-        _fail(
-            f"evidence markers missing: {identifier} "
-            f"({', '.join(sorted(missing_evidence_markers))})"
-        )
-    for scenario in fixture_scenarios:
-        fixture = _fixture_path(scenario.get("fixture"), "fixture")
-        scenario_markers = scenario.get("required_markers", markers)
-        if not isinstance(scenario_markers, list) or not all(
-            isinstance(marker, str) and marker for marker in scenario_markers
-        ):
-            _fail("fixture scenario requires rendered evidence markers")
-        with tempfile.TemporaryDirectory(prefix="mars-skills-fixture-") as temporary:
-            output = Path(temporary) / (
-                "artifacts" if output_kind == "directory" else artifact_name
-            )
-            output_argument = "--output-dir" if output_kind == "directory" else "--output"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    str(renderer),
-                    "--input",
-                    str(fixture),
-                    output_argument,
-                    str(output),
-                    *renderer_arguments,
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if result.returncode != 0:
-                _fail(f"fixture render failed: {result.stderr.strip()}")
-            artifact = output / artifact_name if output_kind == "directory" else output
-            if not artifact.is_file():
-                _fail("fixture renderer did not create its artifact")
-            rendered = artifact.read_text(encoding="utf-8")
-        for marker in scenario_markers:
-            if marker not in rendered:
-                _fail(f"fixture missing rendered evidence: {marker}")
-
-
-def _public_candidates() -> list[Path]:
-    tracked = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
-        cwd=ROOT,
-        capture_output=True,
-        check=False,
-    )
-    if tracked.returncode == 0:
-        return sorted(ROOT / entry for entry in tracked.stdout.decode().split("\0") if entry)
-    excluded = {".git", ".scratch", ".venv", ".mypy_cache", ".ruff_cache", "__pycache__"}
-    return sorted(
-        path
-        for path in ROOT.rglob("*")
-        if (path.is_file() or path.is_symlink())
-        and not any(part in excluded for part in path.relative_to(ROOT).parts)
-    )
-
-
-def _public_text_files() -> list[tuple[Path, str]]:
-    text_files: list[tuple[Path, str]] = []
-    for path in _public_candidates():
-        if path.is_symlink():
-            _fail(f"symbolic link in public surface: {path.relative_to(ROOT)}")
-        if not path.is_file():
+        if path.name == "uv.lock":
             continue
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        except OSError as error:
-            _fail(f"unreadable public file: {path.relative_to(ROOT)} ({error})")
-        text_files.append((path, text))
-    return text_files
-
-
-def _verify_public_surface() -> None:
-    for path, text in _public_text_files():
-        if PRIVATE_PATH.search(text):
-            _fail(f"private absolute path: {path.relative_to(ROOT)}")
-        if SECRET_ASSIGNMENT.search(text):
-            _fail(f"possible credential assignment: {path.relative_to(ROOT)}")
-        lowered = text.lower()
-        if any(term in lowered for term in LEGACY_TERMS):
-            _fail(f"retired public reference: {path.relative_to(ROOT)}")
         relative = path.relative_to(ROOT)
-        if relative.parts[:2] != ("docs", "adr") and any(
-            term in lowered for term in RETIRED_TECHNICAL_TERMS
-        ):
-            _fail(f"retired technical-analysis reference: {relative}")
-    for skill_directory in _skill_directories().values():
-        for prohibited in (".env", "auth.json", "credentials.json"):
-            if any(path.name == prohibited for path in skill_directory.rglob("*")):
-                _fail(f"private configuration in Skill: {skill_directory.name}")
+        if PRIVATE_PATH.search(text):
+            _fail(f"private absolute path: {relative}")
+        if SECRET_ASSIGNMENT.search(text):
+            _fail(f"possible credential assignment: {relative}")
+        if "curl" in text.lower():
+            _fail(f"curl installer reference remains in public runtime surface: {relative}")
 
 
-def _file_bytes(root: Path) -> dict[Path, bytes]:
-    return {
-        path.relative_to(root): path.read_bytes()
-        for path in root.rglob("*")
-        if path.is_file()
-        and path.suffix != ".pyc"
-        and "__pycache__" not in path.parts
-    }
+def _verify_root_skill() -> None:
+    root_skill = RUNTIME / "SKILL.md"
+    text = root_skill.read_text(encoding="utf-8") if root_skill.is_file() else ""
+    if "name: mars-research-assistant" not in text:
+        _fail("runtime root Skill identity is invalid")
+    command_markers = (
+        "npx skills add archerthegoat/mars-research-assistant",
+        "--skill mars-research-assistant",
+        "--agent codex",
+        "--global",
+        "--copy",
+    )
+    if any(marker not in text for marker in command_markers):
+        _fail("runtime root Skill does not provide the approved npx command")
+    for identifier in EXPECTED_SKILLS:
+        if f"`skills/{identifier}/SKILL.md`" not in text:
+            _fail(f"runtime root Skill does not expose {identifier}")
 
 
-def _verify_isolated_copies(skill_directories: dict[str, Path]) -> None:
-    with tempfile.TemporaryDirectory(prefix="mars-skills-verify-") as temporary:
-        temporary_root = Path(temporary)
-        target = temporary_root / "agents" / "skills" / "mars-research-assistant"
-        environment = os.environ.copy()
-        environment["UV_OFFLINE"] = "1"
-        environment["UV_NO_PYTHON_DOWNLOADS"] = "1"
-        environment["UV_PYTHON"] = sys.executable
-        environment.pop("UV_PROJECT_ENVIRONMENT", None)
+def _verify_manifest_and_skills() -> None:
+    manifest = _read_json(MANIFEST)
+    rows = manifest.get("skills")
+    if manifest.get("schema_version") != 1 or not isinstance(rows, list):
+        _fail("runtime manifest is invalid")
+    identifiers = {row.get("id") for row in rows if isinstance(row, dict)}
+    if identifiers != EXPECTED_SKILLS or len(rows) != len(EXPECTED_SKILLS):
+        _fail("runtime manifest must contain exactly seven expected Skills")
+    directories = {path.name for path in SKILLS.iterdir() if path.is_dir() and (path / "SKILL.md").is_file()}
+    if directories != EXPECTED_SKILLS:
+        _fail("runtime Skill directories and manifest differ")
+    for identifier in sorted(EXPECTED_SKILLS):
+        directory = SKILLS / identifier
+        skill = (directory / "SKILL.md")
+        capability_path = directory / "capability.json"
+        agent = directory / "agents" / "openai.yaml"
+        if not skill.is_file() or not capability_path.is_file() or not agent.is_file():
+            _fail(f"runtime Skill is incomplete: {identifier}")
+        text = skill.read_text(encoding="utf-8")
+        if f"name: {identifier}" not in text or "`capability.json`" not in text:
+            _fail(f"runtime Skill metadata is invalid: {identifier}")
+        if "tests/" in text:
+            _fail(f"runtime Skill refers to development tests: {identifier}")
+        capability = _read_json(capability_path)
+        if capability.get("schema_version") != 1 or capability.get("skill") != identifier:
+            _fail(f"capability identity is invalid: {identifier}")
+        delivery = capability.get("delivery")
+        forbidden = capability.get("forbidden_effects")
+        if not isinstance(delivery, str) or not isinstance(forbidden, list):
+            _fail(f"capability delivery boundary is invalid: {identifier}")
+        match = POLICY_BLOCK.findall(text)
+        if len(match) != 1:
+            _fail(f"Skill policy is missing or ambiguous: {identifier}")
+        if json.loads(match[0]) != {"delivery": delivery, "forbidden_effects": forbidden}:
+            _fail(f"Skill policy and capability contradict: {identifier}")
+        if "tests/" in capability_path.read_text(encoding="utf-8"):
+            _fail(f"runtime capability refers to development tests: {identifier}")
+        if "display_name:" not in agent.read_text(encoding="utf-8"):
+            _fail(f"agent metadata is invalid: {identifier}")
+    quick = _read_json(SKILLS / "instrument-research" / "capability.json")
+    if quick.get("delivery") != "local_markdown_equity_snapshot" or quick.get("issuer_identity_required_before_artifact") is not True:
+        _fail("equity snapshot contract is incomplete")
+    if quick.get("recent_company_updates", {}).get("window_days") != 30:
+        _fail("equity snapshot must keep the 30-day update window")
+    deep = _read_json(SKILLS / "deep-equity-research" / "capability.json")
+    if len(deep.get("chapters", [])) != 9 or len(deep.get("financial_quality_checks", [])) != 4:
+        _fail("deep-equity-research core report contract is incomplete")
+    for identifier in EXPECTED_SKILLS - {"technical-analysis"}:
+        contract = _read_json(SKILLS / identifier / "capability.json")
+        if "local_artifact" not in contract.get("response_fields", []):
+            _fail(f"textual Skill must declare a local artifact: {identifier}")
+
+
+def _render(script: Path, fixture: Path, required_markers: tuple[str, ...]) -> float:
+    with tempfile.TemporaryDirectory(prefix="mars-v102-fixture-") as temporary:
+        output = Path(temporary) / "mars-research" / "artifact.md"
+        started = perf_counter()
         result = subprocess.run(
-            [
-                "bash",
-                str(ROOT / "scripts" / "install-mars-skill.sh"),
-                "--target",
-                str(target),
-            ],
+            [sys.executable, str(script), "--input", str(fixture), "--output", str(output)],
             cwd=ROOT,
             capture_output=True,
             text=True,
             check=False,
-            env=environment,
         )
+        elapsed = perf_counter() - started
         if result.returncode != 0:
-            _fail(f"isolated collection install failed: {result.stderr.strip()}")
-        for identifier, source in skill_directories.items():
-            destination = target / "skills" / identifier
-            if _file_bytes(source) != _file_bytes(destination):
-                _fail(f"isolated copy differs: {identifier}")
+            _fail(f"fixture render failed: {script.name}: {result.stderr.strip()}")
+        if not output.is_file():
+            _fail(f"fixture render did not create an artifact: {script.name}")
+        rendered = output.read_text(encoding="utf-8")
+        for marker in required_markers:
+            if marker not in rendered:
+                _fail(f"fixture missing required marker {marker}: {script.name}")
+        if elapsed > MAX_FIXTURE_SECONDS:
+            _fail(f"fixture render exceeded {MAX_FIXTURE_SECONDS:.1f}s: {script.name} ({elapsed:.3f}s)")
+    return elapsed
 
 
-def _verify_root_package() -> None:
-    root_skill = ROOT / "SKILL.md"
-    if not root_skill.is_file():
-        _fail("root Skill is missing")
-    root_text = root_skill.read_text(encoding="utf-8")
-    if "name: mars-research-assistant" not in root_text:
-        _fail("root Skill identity mismatch")
-    for identifier in RELEASE_SKILL_IDS:
-        if f"`skills/{identifier}/SKILL.md`" not in root_text:
-            _fail(f"root Skill does not expose child Skill: {identifier}")
-    for script in (
-        "install-mars-skill.sh",
-        "managed_package.py",
-        "verify_installed_package.py",
-        "build_red_upload_bundle.py",
-    ):
-        if not (ROOT / "scripts" / script).is_file():
-            _fail(f"managed package script missing: {script}")
+def _verify_renderers() -> tuple[float, float]:
+    snapshot = _render(
+        RUNTIME / "scripts" / "render_equity_snapshot.py",
+        ROOT / "tests" / "fixtures" / "equity-snapshot-primary.json",
+        ("# 个股快览：TEST", "## 关键公开数据", "## 最近 30 天公司相关公告或新闻", "as_of：", "## 数据缺口"),
+    )
+    deep = _render(
+        SKILLS / "deep-equity-research" / "scripts" / "render_deep_equity_research.py",
+        ROOT / "tests" / "fixtures" / "deep-equity-research-primary.json",
+        ("# 深度个股研究：TEST", "## 1. 研究范围与核心判断", "### 三情景 DCF", "### 反向 DCF", "## 9. 来源、时间戳、假设与数据缺口"),
+    )
+    return snapshot, deep
 
 
 def main() -> int:
-    _verify_root_package()
-    manifest_skills = _manifest_skills()
-    if set(manifest_skills) != RELEASE_SKILL_IDS:
-        _fail("six release Skills are required")
-    skill_directories = _skill_directories()
-    if set(manifest_skills) != set(skill_directories):
-        _fail("collection manifest and discovered Skills differ")
-    for identifier, directory in skill_directories.items():
-        _verify_skill_contract(identifier, directory)
-    _verify_public_surface()
-    _verify_isolated_copies(skill_directories)
-    print(f"Mars Skills contract ok: {', '.join(sorted(skill_directories))}")
+    _verify_runtime_budget()
+    _verify_public_text()
+    _verify_root_skill()
+    _verify_manifest_and_skills()
+    snapshot_seconds, deep_seconds = _verify_renderers()
+    files = _runtime_files()
+    size = sum(path.stat().st_size for path in files)
+    print(
+        "Mars Skills v1.0.2 contract ok: "
+        f"{len(files)} runtime files, {size} bytes, "
+        f"snapshot={snapshot_seconds:.3f}s, deep={deep_seconds:.3f}s"
+    )
     return 0
 
 

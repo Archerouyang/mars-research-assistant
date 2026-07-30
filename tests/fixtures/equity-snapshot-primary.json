@@ -1,0 +1,87 @@
+{
+  "instrument": "TEST",
+  "research_as_of": "2026-07-30T12:00:00Z",
+  "identity": {
+    "status": "verified",
+    "issuer": "Example Issuer Inc.",
+    "source": {
+      "name": "Example Exchange listing",
+      "kind": "exchange",
+      "as_of": "2026-07-30T12:00:00Z",
+      "url": "https://example.com/exchange/test"
+    }
+  },
+  "key_public_data": [
+    {
+      "kind": "price",
+      "label": "收盘价",
+      "value": "123.45 USD",
+      "source": {
+        "name": "Example public quote",
+        "kind": "public_quote",
+        "as_of": "2026-07-30T12:00:00Z",
+        "url": "https://example.com/quote/test"
+      }
+    },
+    {
+      "kind": "market_scale_or_valuation_anchor",
+      "label": "市值",
+      "value": "12.3bn USD",
+      "source": {
+        "name": "Example public quote",
+        "kind": "public_quote",
+        "as_of": "2026-07-30T12:00:00Z",
+        "url": "https://example.com/quote/test"
+      }
+    },
+    {
+      "kind": "latest_financial_summary",
+      "label": "最新季度收入",
+      "value": "离线验收示例：100m USD",
+      "source": {
+        "name": "Example Issuer results",
+        "kind": "issuer_ir",
+        "as_of": "2026-07-25",
+        "url": "https://example.com/ir/results"
+      }
+    }
+  ],
+  "recent_company_updates": [
+    {
+      "title": "离线验收公告一",
+      "summary": "用于验证公司直接相关公告的渲染。",
+      "published_on": "2026-07-25",
+      "source": {
+        "name": "Example Issuer announcement",
+        "kind": "issuer_announcement",
+        "as_of": "2026-07-25",
+        "url": "https://example.com/ir/a1"
+      }
+    },
+    {
+      "title": "离线验收公告二",
+      "summary": "用于验证 30 天窗口。",
+      "published_on": "2026-07-18",
+      "source": {
+        "name": "Example Issuer announcement",
+        "kind": "issuer_announcement",
+        "as_of": "2026-07-18",
+        "url": "https://example.com/ir/a2"
+      }
+    },
+    {
+      "title": "离线验收公告三",
+      "summary": "用于验证来源与时间戳。",
+      "published_on": "2026-07-05",
+      "source": {
+        "name": "Example Issuer announcement",
+        "kind": "issuer_announcement",
+        "as_of": "2026-07-05",
+        "url": "https://example.com/ir/a3"
+      }
+    }
+  ],
+  "data_gaps": [
+    "离线 fixture 不代表真实证券或实时市场数据。"
+  ]
+}

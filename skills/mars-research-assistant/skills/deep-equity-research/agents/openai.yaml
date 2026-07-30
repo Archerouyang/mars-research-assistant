@@ -1,0 +1,4 @@
+interface:
+  display_name: "深度个股研究"
+  short_description: "用公开来源完成九章基本面研究与可复算估值"
+  default_prompt: "使用 $deep-equity-research 为一个明确的发行人生成可追溯的九章深度研究。"

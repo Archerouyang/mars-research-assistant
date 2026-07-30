@@ -1,4 +1,0 @@
-interface:
-  display_name: "标的研究"
-  short_description: "基于一手证据研究单一标的的基本面、行业与公司事件"
-  default_prompt: "使用 $instrument-research 研究一个标的的基本面、行业背景与公司事件。"

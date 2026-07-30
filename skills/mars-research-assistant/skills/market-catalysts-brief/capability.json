@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "skill": "market-catalysts-brief",
+  "delivery": "local_markdown_catalyst_brief",
+  "default_market": {
+    "when_unspecified": "US equities",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "user_timezone_does_not_select_market": true,
+    "explicit_market_overrides": true,
+    "default_daily_window": "next 7 calendar days"
+  },
+  "response_fields": [
+    "research_as_of",
+    "scheduled_events",
+    "developing_risks",
+    "data_gap",
+    "local_artifact"
+  ],
+  "forbidden_effects": [
+    "account_access",
+    "broker_write",
+    "drive_write"
+  ],
+  "scenarios": [
+    {
+      "request": "整理下周美股需要关注的宏观、财报和地缘政治催化剂。",
+      "expected": {
+        "research_as_of": "2026-07-26T09:00:00-04:00",
+        "scheduled_events": "included",
+        "developing_risks": "included",
+        "data_gap": "included",
+        "local_artifact": "markdown_created"
+      }
+    }
+  ]
+}

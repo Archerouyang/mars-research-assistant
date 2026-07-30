@@ -8,6 +8,8 @@ import runpy
 RUNTIME = (
     Path(__file__).resolve().parents[1]
     / "skills"
+    / "mars-research-assistant"
+    / "skills"
     / "technical-analysis"
     / "scripts"
     / "technical_analysis.py"

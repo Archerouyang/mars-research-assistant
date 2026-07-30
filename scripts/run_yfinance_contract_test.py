@@ -8,6 +8,8 @@ import runpy
 ANALYSIS_ENTRYPOINT = (
     Path(__file__).resolve().parents[1]
     / "skills"
+    / "mars-research-assistant"
+    / "skills"
     / "technical-analysis"
     / "scripts"
     / "analyze_with_yfinance.py"

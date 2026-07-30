@@ -11,7 +11,14 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ROUTES_PATH = ROOT / "skills" / "drive-writeback" / "capability.json"
+ROUTES_PATH = (
+    ROOT
+    / "skills"
+    / "mars-research-assistant"
+    / "skills"
+    / "drive-writeback"
+    / "capability.json"
+)
 RESEARCH_CENTER_NAME = "交易研究中心"
 INDEX_NAME = "总索引"
 FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"

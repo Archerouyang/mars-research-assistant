@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "skill": "deep-equity-research",
+  "delivery": "local_markdown_deep_equity_research",
+  "single_instrument_required": true,
+  "issuer_identity_required_before_artifact": true,
+  "response_fields": [
+    "research_as_of",
+    "issuer_identity",
+    "nine_chapter_report",
+    "financial_quality_checks",
+    "valuation_status",
+    "sources_and_timestamps",
+    "data_gap",
+    "local_artifact"
+  ],
+  "chapters": [
+    "研究范围与核心判断",
+    "公司与商业模式",
+    "行业与竞争格局",
+    "管理层、治理与资本配置",
+    "财务表现与质量核查",
+    "预期差、催化剂与关键跟踪项",
+    "三情景 DCF/反向 DCF",
+    "风险、反方论点与可证伪条件",
+    "来源、时间戳、假设与数据缺口"
+  ],
+  "financial_quality_checks": [
+    "revenue_profit_operating_cash_flow_consistency",
+    "cash_conversion_and_accrual_quality",
+    "receivables_and_deferred_revenue_relative_to_revenue",
+    "dilution_sbc_audit_and_governance_red_flags"
+  ],
+  "valuation_input_contract": {
+    "required": [
+      "price",
+      "shares_outstanding",
+      "net_debt",
+      "wacc",
+      "terminal_growth",
+      "bear_base_bull_free_cash_flow_paths"
+    ],
+    "source_traceability_required": true,
+    "missing_input_behavior": "skip_valuation_and_record_data_gap"
+  },
+  "forbidden_effects": [
+    "trade_recommendation",
+    "position_sizing",
+    "technical_analysis",
+    "account_access",
+    "broker_write",
+    "drive_write",
+    "persistent_state"
+  ],
+  "scenarios": [
+    {
+      "request": "为 NVDA 做一份深度研究和估值。",
+      "expected": {
+        "research_as_of": "included",
+        "issuer_identity": "verified",
+        "nine_chapter_report": "included",
+        "financial_quality_checks": "four_checks_with_sources_or_gaps",
+        "valuation_status": "run_only_when_input_contract_is_met",
+        "sources_and_timestamps": "included",
+        "data_gap": "included",
+        "local_artifact": "markdown_created"
+      }
+    }
+  ]
+}

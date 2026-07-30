@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "collection": "Mars Skills",
+  "skills": [
+    {
+      "id": "ask-mars",
+      "display_name": "Ask Mars"
+    },
+    {
+      "id": "market-catalysts-brief",
+      "display_name": "市场催化剂简报"
+    },
+    {
+      "id": "market-snapshot",
+      "display_name": "市场快照"
+    },
+    {
+      "id": "instrument-research",
+      "display_name": "个股快览"
+    },
+    {
+      "id": "deep-equity-research",
+      "display_name": "深度个股研究"
+    },
+    {
+      "id": "technical-analysis",
+      "display_name": "技术面分析"
+    },
+    {
+      "id": "drive-writeback",
+      "display_name": "Drive 写入"
+    }
+  ]
+}

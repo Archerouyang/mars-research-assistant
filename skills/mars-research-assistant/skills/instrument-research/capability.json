@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "skill": "instrument-research",
+  "delivery": "local_markdown_equity_snapshot",
+  "single_instrument_required": true,
+  "issuer_identity_required_before_artifact": true,
+  "default_market": {
+    "when_unspecified": "US equities",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "user_timezone_does_not_select_market": true,
+    "explicit_market_overrides": true
+  },
+  "response_fields": [
+    "research_as_of",
+    "issuer_identity",
+    "key_public_data",
+    "recent_company_updates",
+    "sources_and_timestamps",
+    "data_gap",
+    "local_artifact"
+  ],
+  "required_key_data": [
+    "price_as_of",
+    "market_scale_or_valuation_anchor",
+    "latest_financial_summary"
+  ],
+  "recent_company_updates": {
+    "window_days": 30,
+    "minimum": 3,
+    "maximum": 5,
+    "direct_company_relation_required": true
+  },
+  "forbidden_effects": [
+    "valuation",
+    "technical_analysis",
+    "macro_analysis",
+    "account_access",
+    "broker_write",
+    "drive_write",
+    "persistent_state"
+  ],
+  "scenarios": [
+    {
+      "request": "快速了解 NVDA 的最新情况。",
+      "expected": {
+        "research_as_of": "included",
+        "issuer_identity": "verified",
+        "key_public_data": "included_with_as_of",
+        "recent_company_updates": "3_to_5_within_30_days",
+        "sources_and_timestamps": "included",
+        "data_gap": "included",
+        "local_artifact": "markdown_created"
+      }
+    },
+    {
+      "request": "研究 UNKNOWN 的最新情况。",
+      "expected": {
+        "research_as_of": "not_started",
+        "issuer_identity": "clarification_required",
+        "key_public_data": "not_collected",
+        "recent_company_updates": "not_collected",
+        "sources_and_timestamps": "not_collected",
+        "data_gap": "identity_ambiguity_explained",
+        "local_artifact": "not_created"
+      }
+    }
+  ]
+}

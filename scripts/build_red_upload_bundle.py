@@ -12,30 +12,22 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RUNTIME = ROOT / "skills" / "mars-research-assistant"
 PREFIX = "mars-research-assistant"
-PACKAGE_FILE_LIST = ROOT / "package-files.txt"
 PERMISSIONS = (
     "public_network_research",
-    "managed_uv_install",
+    "on_demand_uv_environment",
     "user_selected_local_artifact_write",
     "explicitly_confirmed_google_drive_write",
 )
 
 
 def _included_files() -> list[Path]:
-    relative_paths = [
-        line.strip()
-        for line in PACKAGE_FILE_LIST.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    if len(relative_paths) != len(set(relative_paths)):
-        raise ValueError("package file list contains duplicates")
-    files: list[Path] = []
-    for relative in relative_paths:
-        path = ROOT / relative
-        if path.is_symlink() or not path.is_file():
-            raise ValueError(f"package file is missing or symbolic: {relative}")
-        files.append(path)
+    if not RUNTIME.is_dir():
+        raise ValueError("runtime package is missing")
+    files = sorted(path for path in RUNTIME.rglob("*") if path.is_file())
+    if any(path.is_symlink() for path in files):
+        raise ValueError("runtime package contains a symbolic link")
     return files
 
 
@@ -53,7 +45,7 @@ def build(output: Path) -> Path:
     entries: list[tuple[str, bytes, bool]] = []
     file_hashes: dict[str, str] = {}
     for path in _included_files():
-        relative = path.relative_to(ROOT).as_posix()
+        relative = path.relative_to(RUNTIME).as_posix()
         name = f"{PREFIX}/{relative}"
         content = path.read_bytes()
         executable = bool(path.stat().st_mode & stat.S_IXUSR)
@@ -65,8 +57,8 @@ def build(output: Path) -> Path:
         "permissions": list(PERMISSIONS),
         "file_sha256": file_hashes,
         "markdown_only_degradation": (
-            "Use root SKILL.md for discovery and managed GitHub install guidance; "
-            "do not claim scripts or the uv environment are installed."
+            "Use SKILL.md for discovery and the npx skills add command; do not "
+            "claim scripts or the on-demand uv environment are installed."
         ),
     }
     internal_bytes = (

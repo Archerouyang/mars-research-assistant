@@ -13,10 +13,14 @@ from datetime import datetime
 from typing import Any, Callable
 
 
+sys.dont_write_bytecode = True
+
 ROOT = Path(__file__).resolve().parents[1]
 QUALIFIED_FIXTURE = ROOT / "tests" / "fixtures" / "technical-analysis-demo.json"
 YFINANCE_ENTRYPOINT = (
     ROOT
+    / "skills"
+    / "mars-research-assistant"
     / "skills"
     / "technical-analysis"
     / "scripts"
@@ -523,6 +527,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
     ) -> None:
         vendor = (
             ROOT
+            / "skills"
+            / "mars-research-assistant"
             / "skills"
             / "technical-analysis"
             / "vendor"
