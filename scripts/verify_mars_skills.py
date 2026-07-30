@@ -30,6 +30,15 @@ POLICY_BLOCK = re.compile(r"```mars-skill-policy\n(?P<payload>\{.*?\})\n```", re
 MAX_RUNTIME_FILES = 60
 MAX_RUNTIME_BYTES = 1 << 20
 MAX_FIXTURE_SECONDS = 1.0
+LOCAL_ARTIFACT_CONTRACT = {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": True,
+    "overwrite": "forbidden",
+}
+IDENTITY_REQUEST_FIELDS = ["company_name", "ticker", "exchange"]
+IDENTITY_VERIFIED_FIELDS = [*IDENTITY_REQUEST_FIELDS, "issuer"]
+PRIMARY_SOURCE_KINDS = ["sec_filing", "regulatory_filing", "issuer_ir", "exchange"]
 PRIVATE_PATH = re.compile(r"/(?:Users|home)/[^/\s]+(?:/|$)")
 SECRET_ASSIGNMENT = re.compile(
     r"(?:api[_-]?key|access[_-]?token|secret|password)\s*[:=]\s*['\"]?\S+",
@@ -119,6 +128,8 @@ def _verify_manifest_and_skills() -> None:
     rows = manifest.get("skills")
     if manifest.get("schema_version") != 1 or not isinstance(rows, list):
         _fail("runtime manifest is invalid")
+    if manifest.get("collection") != "Mars Research Assistant":
+        _fail("runtime manifest collection is invalid")
     identifiers = {row.get("id") for row in rows if isinstance(row, dict)}
     if identifiers != EXPECTED_SKILLS or len(rows) != len(EXPECTED_SKILLS):
         _fail("runtime manifest must contain exactly seven expected Skills")
@@ -153,14 +164,48 @@ def _verify_manifest_and_skills() -> None:
             _fail(f"runtime capability refers to development tests: {identifier}")
         if "display_name:" not in agent.read_text(encoding="utf-8"):
             _fail(f"agent metadata is invalid: {identifier}")
+        if capability.get("local_artifact_contract") != LOCAL_ARTIFACT_CONTRACT:
+            _fail(f"textual Skill local artifact contract is invalid: {identifier}")
     quick = _read_json(SKILLS / "instrument-research" / "capability.json")
     if quick.get("delivery") != "local_markdown_equity_snapshot" or quick.get("issuer_identity_required_before_artifact") is not True:
         _fail("equity snapshot contract is incomplete")
     if quick.get("recent_company_updates", {}).get("window_days") != 30:
         _fail("equity snapshot must keep the 30-day update window")
+    if quick.get("issuer_identity_contract") != {
+        "request_fields": IDENTITY_REQUEST_FIELDS,
+        "verified_fields": IDENTITY_VERIFIED_FIELDS,
+        "exact_match_fields": IDENTITY_REQUEST_FIELDS,
+    }:
+        _fail("equity snapshot issuer identity contract is incomplete")
+    if quick.get("source_hierarchy") != {
+        "identity_and_financials": PRIMARY_SOURCE_KINDS,
+        "price_and_valuation_anchor": ["public_quote"],
+        "company_updates": ["issuer_announcement", "credible_media"],
+    }:
+        _fail("equity snapshot source hierarchy is invalid")
     deep = _read_json(SKILLS / "deep-equity-research" / "capability.json")
     if len(deep.get("chapters", [])) != 9 or len(deep.get("financial_quality_checks", [])) != 4:
         _fail("deep-equity-research core report contract is incomplete")
+    if deep.get("issuer_identity_contract") != {
+        "request_fields": IDENTITY_REQUEST_FIELDS,
+        "verified_fields": IDENTITY_VERIFIED_FIELDS,
+        "exact_match_fields": IDENTITY_REQUEST_FIELDS,
+    }:
+        _fail("deep-equity-research issuer identity contract is incomplete")
+    if deep.get("source_hierarchy") != {
+        "primary": PRIMARY_SOURCE_KINDS,
+        "research_evidence": ["issuer_announcement", "credible_media"],
+        "price": ["public_quote"],
+        "valuation_assumption": ["valuation_assumption"],
+        "forbidden": ["search_summary"],
+    }:
+        _fail("deep-equity-research source hierarchy is invalid")
+    if deep.get("reverse_dcf_input_contract") != {
+        "required": ["current_free_cash_flow", "horizon_years"],
+        "source_traceability_required": True,
+        "horizon_years": {"whole_number": True, "minimum": 1, "maximum": 20},
+    }:
+        _fail("deep-equity-research reverse DCF input contract is incomplete")
     for identifier in EXPECTED_SKILLS - {"technical-analysis"}:
         contract = _read_json(SKILLS / identifier / "capability.json")
         if "local_artifact" not in contract.get("response_fields", []):

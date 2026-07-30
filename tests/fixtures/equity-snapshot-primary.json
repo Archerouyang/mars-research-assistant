@@ -3,7 +3,17 @@
   "research_as_of": "2026-07-30T12:00:00Z",
   "identity": {
     "status": "verified",
-    "issuer": "Example Issuer Inc.",
+    "request": {
+      "company_name": "Example Issuer Inc.",
+      "ticker": "TEST",
+      "exchange": "Example Exchange"
+    },
+    "verified": {
+      "company_name": "Example Issuer Inc.",
+      "ticker": "TEST",
+      "exchange": "Example Exchange",
+      "issuer": "Example Issuer Inc."
+    },
     "source": {
       "name": "Example Exchange listing",
       "kind": "exchange",
@@ -41,7 +51,7 @@
       "source": {
         "name": "Example Issuer results",
         "kind": "issuer_ir",
-        "as_of": "2026-07-25",
+        "as_of": "2026-07-25T00:00:00Z",
         "url": "https://example.com/ir/results"
       }
     }
@@ -49,34 +59,37 @@
   "recent_company_updates": [
     {
       "title": "离线验收公告一",
+      "issuer": "Example Issuer Inc.",
       "summary": "用于验证公司直接相关公告的渲染。",
       "published_on": "2026-07-25",
       "source": {
         "name": "Example Issuer announcement",
         "kind": "issuer_announcement",
-        "as_of": "2026-07-25",
+        "as_of": "2026-07-25T00:00:00Z",
         "url": "https://example.com/ir/a1"
       }
     },
     {
       "title": "离线验收公告二",
+      "issuer": "Example Issuer Inc.",
       "summary": "用于验证 30 天窗口。",
       "published_on": "2026-07-18",
       "source": {
         "name": "Example Issuer announcement",
         "kind": "issuer_announcement",
-        "as_of": "2026-07-18",
+        "as_of": "2026-07-18T00:00:00Z",
         "url": "https://example.com/ir/a2"
       }
     },
     {
       "title": "离线验收公告三",
+      "issuer": "Example Issuer Inc.",
       "summary": "用于验证来源与时间戳。",
       "published_on": "2026-07-05",
       "source": {
         "name": "Example Issuer announcement",
         "kind": "issuer_announcement",
-        "as_of": "2026-07-05",
+        "as_of": "2026-07-05T00:00:00Z",
         "url": "https://example.com/ir/a3"
       }
     }

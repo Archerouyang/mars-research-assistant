@@ -1003,6 +1003,13 @@ def _verify_artifacts(files: dict[str, str], evidence_id: str | None) -> None:
         raise TechnicalAnalysisError("artifact evidence identities do not match")
 
 
+def _validate_output_dir(output_dir: Path) -> None:
+    resolved = output_dir.resolve()
+    runtime_root = Path(__file__).resolve().parents[3]
+    if runtime_root == resolved or runtime_root in resolved.parents:
+        raise TechnicalAnalysisError("output_dir must not be inside the Skill runtime package")
+
+
 def _atomic_write(output_dir: Path, files: dict[str, str]) -> None:
     if output_dir.exists():
         raise TechnicalAnalysisError("output_dir must not already exist")
@@ -1047,6 +1054,7 @@ def render_fixture(
     *,
     open_chart: bool = True,
 ) -> dict[str, Any]:
+    _validate_output_dir(output_dir)
     symbol = _required_text(fixture.get("instrument"), "fixture")
     timeframe = _required_text(fixture.get("timeframe"), "fixture")
     research_as_of = _required_text(fixture.get("research_as_of"), "fixture")

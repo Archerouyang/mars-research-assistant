@@ -39,7 +39,9 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         browser: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
         environment["TMPDIR"] = str(output_dir.parent)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
         if browser is not None:
             environment["BROWSER"] = browser
         command = [
@@ -84,7 +86,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
-            output_dir = Path(temporary) / "artifacts"
+            output_dir = Path(temporary) / "mars-research" / "artifacts"
 
             result = self._render(QUALIFIED_FIXTURE, output_dir)
 
@@ -123,6 +125,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self.assertIn("handleScroll", html)
         self.assertIn("handleScale", html)
         self.assertIn("smaLineStyles", html)
+
         self.assertIn("LightweightCharts.LineStyle.Dotted", html)
         self.assertIn("lastValueVisible: true", html)
         self.assertIn("@media (max-width: 640px)", html)
@@ -155,6 +158,29 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         ):
             self.assertIn(provenance, html)
 
+    def test_output_directory_allows_a_custom_local_directory_and_rejects_runtime(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
+            output_dir = Path(temporary) / "custom-research" / "artifacts"
+            result = self._render(QUALIFIED_FIXTURE, output_dir)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((output_dir / "analysis.md").is_file())
+
+        runtime_output = (
+            ROOT
+            / "skills"
+            / "mars-research-assistant"
+            / "skills"
+            / "technical-analysis"
+            / "blocked-technical-analysis"
+        )
+        try:
+            result = self._render(QUALIFIED_FIXTURE, runtime_output)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Skill runtime package", result.stderr)
+            self.assertFalse(runtime_output.exists())
+        finally:
+            runtime_output.unlink(missing_ok=True)
+
     def test_short_history_fails_closed_with_an_exact_gap(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
             directory = Path(temporary)
@@ -170,7 +196,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 ohlcv["coverage_start"] = str(first["timestamp"])[:10]
 
             fixture_path = self._write_fixture(directory, shorten)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -223,7 +249,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 fixture.pop("ohlcv")
 
             fixture_path = self._write_fixture(directory, add_retry)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -245,7 +271,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 fixture["attempts"] = [qualified, qualified, qualified]
 
             fixture_path = self._write_fixture(directory, add_three_attempts)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -270,7 +296,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 ]
 
             fixture_path = self._write_fixture(directory, inject_untrusted_levels)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -309,7 +335,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
     def test_summary_is_derived_from_normalized_evidence_metrics(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
-            output_dir = Path(temporary) / "artifacts"
+            output_dir = Path(temporary) / "mars-research" / "artifacts"
 
             result = self._render(QUALIFIED_FIXTURE, output_dir)
 
@@ -422,7 +448,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             ) as temporary:
                 directory = Path(temporary)
                 fixture_path = self._write_fixture(directory, mutate)
-                output_dir = directory / "artifacts"
+                output_dir = directory / "mars-research" / "artifacts"
 
                 result = self._render(fixture_path, output_dir)
 
@@ -449,8 +475,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
     def test_artifact_package_is_byte_stable(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
             directory = Path(temporary)
-            first = directory / "first"
-            second = directory / "second"
+            first = directory / "mars-research" / "first"
+            second = directory / "mars-research" / "second"
 
             first_result = self._render(QUALIFIED_FIXTURE, first)
             second_result = self._render(QUALIFIED_FIXTURE, second)
@@ -482,8 +508,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
-            output_dir = Path(temporary) / "artifacts"
-            output_dir.mkdir()
+            output_dir = Path(temporary) / "mars-research" / "artifacts"
+            output_dir.mkdir(parents=True)
             sentinel = output_dir / "sentinel.txt"
             sentinel.write_text("preserve", encoding="utf-8")
 
@@ -504,7 +530,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
-            output_dir = Path(temporary) / "artifacts"
+            output_dir = Path(temporary) / "mars-research" / "artifacts"
 
             result = self._render(
                 QUALIFIED_FIXTURE,
@@ -558,7 +584,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
             directory = Path(temporary)
-            first_output = directory / "first"
+            first_output = directory / "mars-research" / "first"
             first_result = self._render(QUALIFIED_FIXTURE, first_output)
             self.assertEqual(
                 first_result.returncode,
@@ -568,12 +594,12 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             first_delivery = self._delivery(first_result)
             expired = Path(first_delivery["visualization"]["path"]).parent
             os.utime(expired, (0, 0))
-            unowned = directory / "mars-technical-chart-unowned"
+            unowned = directory / "mars-research" / "mars-technical-chart-unowned"
             unowned.mkdir()
             (unowned / "chart.html").write_text("not ours", encoding="utf-8")
             os.utime(unowned, (0, 0))
 
-            second_output = directory / "second"
+            second_output = directory / "mars-research" / "second"
             second_result = self._render(QUALIFIED_FIXTURE, second_output)
             self.assertEqual(
                 second_result.returncode,
@@ -591,8 +617,8 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
     def test_market_context_never_changes_technical_evidence_or_chart(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
             directory = Path(temporary)
-            without_context = directory / "without-context"
-            with_context = directory / "with-context"
+            without_context = directory / "mars-research" / "without-context"
+            with_context = directory / "mars-research" / "with-context"
 
             def add_context(fixture: dict[str, object]) -> None:
                 fixture["market_context"] = {
@@ -665,7 +691,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 }
 
             fixture_path = self._write_fixture(directory, add_stale_context)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -746,7 +772,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
             ) as temporary:
                 directory = Path(temporary)
                 fixture_path = self._write_fixture(directory, mutate)
-                output_dir = directory / "artifacts"
+                output_dir = directory / "mars-research" / "artifacts"
 
                 result = self._render(fixture_path, output_dir)
 
@@ -774,7 +800,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 fixture["ohlcv"]["coverage_end"] = "2026-06-19"
 
             fixture_path = self._write_fixture(directory, add_incomplete_latest_bar)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -801,7 +827,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 }
 
             fixture_path = self._write_fixture(directory, change_provider)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -825,7 +851,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                     )
 
             fixture_path = self._write_fixture(directory, flatten_prices)
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
 
             result = self._render(fixture_path, output_dir)
 
@@ -957,7 +983,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
                 json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
-            output_dir = directory / "artifacts"
+            output_dir = directory / "mars-research" / "artifacts"
             result = self._render(fixture_path, output_dir)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             evidence = json.loads(
@@ -1030,7 +1056,7 @@ class TechnicalAnalysisArtifactTests(unittest.TestCase):
 
     def test_readme_demo_is_generated_from_the_offline_fixture(self) -> None:
         with tempfile.TemporaryDirectory(prefix="technical-analysis-test-") as temporary:
-            regenerated = Path(temporary) / "regenerated"
+            regenerated = Path(temporary) / "mars-research" / "regenerated"
 
             result = self._render(QUALIFIED_FIXTURE, regenerated)
 

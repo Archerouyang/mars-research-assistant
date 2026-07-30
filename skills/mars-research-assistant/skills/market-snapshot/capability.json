@@ -2,6 +2,12 @@
   "schema_version": 1,
   "skill": "market-snapshot",
   "delivery": "local_markdown_snapshot",
+  "local_artifact_contract": {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": true,
+    "overwrite": "forbidden"
+  },
   "default_market": {
     "when_unspecified": "US equities",
     "currency": "USD",

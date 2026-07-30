@@ -2,8 +2,26 @@
   "schema_version": 1,
   "skill": "deep-equity-research",
   "delivery": "local_markdown_deep_equity_research",
+  "local_artifact_contract": {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": true,
+    "overwrite": "forbidden"
+  },
   "single_instrument_required": true,
   "issuer_identity_required_before_artifact": true,
+  "issuer_identity_contract": {
+    "request_fields": ["company_name", "ticker", "exchange"],
+    "verified_fields": ["company_name", "ticker", "exchange", "issuer"],
+    "exact_match_fields": ["company_name", "ticker", "exchange"]
+  },
+  "source_hierarchy": {
+    "primary": ["sec_filing", "regulatory_filing", "issuer_ir", "exchange"],
+    "research_evidence": ["issuer_announcement", "credible_media"],
+    "price": ["public_quote"],
+    "valuation_assumption": ["valuation_assumption"],
+    "forbidden": ["search_summary"]
+  },
   "response_fields": [
     "research_as_of",
     "issuer_identity",
@@ -42,6 +60,15 @@
     ],
     "source_traceability_required": true,
     "missing_input_behavior": "skip_valuation_and_record_data_gap"
+  },
+  "reverse_dcf_input_contract": {
+    "required": ["current_free_cash_flow", "horizon_years"],
+    "source_traceability_required": true,
+    "horizon_years": {
+      "whole_number": true,
+      "minimum": 1,
+      "maximum": 20
+    }
   },
   "forbidden_effects": [
     "trade_recommendation",

@@ -20,8 +20,17 @@ bash scripts/verify-mars-skills.sh
 ```
 
 它验证运行包大小/文件数、Skill 合同、公开安装指令、来源边界以及快览和深度研究的确定性
-Markdown fixture。测试只在临时目录写入，不调用市场数据、新闻、Google Drive、浏览器、
+Markdown fixture；还会从空的临时虚拟环境执行 `uv sync --locked --offline` 并导入 yfinance，验证
+技术面分析的锁定依赖可按需同步。测试只在临时目录写入，不调用市场数据、新闻、Google Drive、浏览器、
 经纪商或任何需要凭据的服务。
+
+Skills CLI 复制行为是显式的本地集成检查；它在临时 Git 工作区调用 `npx skills add`，确认只
+复制运行包，不使用 `--global`，因此不会修改用户的全局 Skill 安装。首次执行可能下载 npm CLI，
+但 npm 缓存同样位于本次验证的临时目录，故不纳入默认离线组合验收：
+
+```bash
+MARS_RUN_NPX_INTEGRATION=1 bash scripts/verify-mars-skills.sh
+```
 
 新增 Skill 必须有明确的触发描述、100 行以内的 `SKILL.md`、`capability.json` 和可离线验证的
 交付契约。需要重复且确定性的计算时，脚本应位于运行包内；复杂或罕见的说明应放到一层引用

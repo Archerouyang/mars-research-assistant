@@ -2,6 +2,12 @@
   "schema_version": 1,
   "skill": "drive-writeback",
   "delivery": "drive_writeback_with_local_receipt",
+  "local_artifact_contract": {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": true,
+    "overwrite": "forbidden"
+  },
   "completed_research_required": false,
   "explicit_confirmation_required": true,
   "supported_operations": [

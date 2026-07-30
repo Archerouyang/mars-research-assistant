@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "collection": "Mars Skills",
+  "collection": "Mars Research Assistant",
   "skills": [
     {
       "id": "ask-mars",

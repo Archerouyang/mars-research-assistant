@@ -2,8 +2,24 @@
   "schema_version": 1,
   "skill": "instrument-research",
   "delivery": "local_markdown_equity_snapshot",
+  "local_artifact_contract": {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": true,
+    "overwrite": "forbidden"
+  },
   "single_instrument_required": true,
   "issuer_identity_required_before_artifact": true,
+  "issuer_identity_contract": {
+    "request_fields": ["company_name", "ticker", "exchange"],
+    "verified_fields": ["company_name", "ticker", "exchange", "issuer"],
+    "exact_match_fields": ["company_name", "ticker", "exchange"]
+  },
+  "source_hierarchy": {
+    "identity_and_financials": ["sec_filing", "regulatory_filing", "issuer_ir", "exchange"],
+    "price_and_valuation_anchor": ["public_quote"],
+    "company_updates": ["issuer_announcement", "credible_media"]
+  },
   "default_market": {
     "when_unspecified": "US equities",
     "currency": "USD",

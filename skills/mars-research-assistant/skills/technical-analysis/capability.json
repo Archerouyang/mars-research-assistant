@@ -2,6 +2,12 @@
   "schema_version": 1,
   "skill": "technical-analysis",
   "delivery": "technical_evidence_package",
+  "local_artifact_contract": {
+    "directory": "mars-research",
+    "format": "markdown",
+    "unique_name_required": true,
+    "overwrite": "forbidden"
+  },
   "default_market": {
     "when_unspecified": "US equities",
     "currency": "USD",
