@@ -11,8 +11,9 @@ _Avoid_：Mars Skills 集合、七个独立安装包
 _Avoid_：第七个研究 Skill、Matt 风格根 Skill
 
 **Skill 运行包**：面向终端用户安装的 Mars Research Assistant 最小完整文件集，包含根
-入口、六个子 Skill、运行期脚本、锁文件和必要的内置资源；不包含测试、开发文档、源码仓库
-元数据或人类阅读的 README。
+入口、七个子 Skill、运行期脚本、锁文件和必要的内置资源；不包含测试、开发文档、源码仓库
+元数据或人类阅读的 README。它位于开发仓库的
+`skills/mars-research-assistant/`，而不是开发仓库根目录。
 _Avoid_：完整仓库、开发副本、发布 ZIP
 
 **公开安装入口**：通过 `npx skills add archerthegoat/mars-research-assistant --skill

@@ -1,6 +1,6 @@
 # 通过 npx skills 分发 Skill 运行包
 
-Mars Research Assistant 的唯一公开安装入口定为 `npx skills add archerthegoat/mars-research-assistant --skill mars-research-assistant --agent codex --global --copy`。仓库将向该入口提供仅包含运行期文件的 Skill 运行包，替代 curl 下载并执行自定义安装器；技术面分析的 Python 与 yfinance 环境继续在首次实际调用时按需初始化。
+Mars Research Assistant 的唯一公开安装入口定为 `npx skills add archerthegoat/mars-research-assistant --skill mars-research-assistant --agent codex --global --copy`。运行包位于开发仓库的 `skills/mars-research-assistant/`，仅包含运行期文件；它替代 curl 下载并执行自定义安装器，技术面分析的 Python 与 yfinance 环境继续在首次实际调用时按需初始化。
 
 ## Considered Options
 
@@ -10,4 +10,4 @@ Mars Research Assistant 的唯一公开安装入口定为 `npx skills add archer
 
 ## Consequences
 
-公开安装不再预建 Python 环境，也不承诺自定义安装器的原子升级和完整性标记。默认安装到 Codex 的全局 Skill 目录，运行包必须保持自包含，根 Skill 与子 Skill 的相对引用不得依赖测试或开发文档。
+公开安装不再预建 Python 环境，也不承诺自定义安装器的原子升级和完整性标记。默认安装到 Codex 的全局 Skill 目录，运行包必须保持自包含，根 Skill 与子 Skill 的相对引用不得依赖测试或开发文档。开发仓库根目录只保留开发、测试和人类文档，RED 打包也以运行包目录为根。
