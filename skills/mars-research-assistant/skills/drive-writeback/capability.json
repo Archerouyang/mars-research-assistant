@@ -12,7 +12,8 @@
   "explicit_confirmation_required": true,
   "supported_operations": [
     "archive_completed_research",
-    "initialize_research_center"
+    "initialize_research_center",
+    "workbench_write"
   ],
   "archive_contract": {
     "completed_research_required": true,
@@ -131,7 +132,8 @@
     "explicit_confirmation_required": true,
     "supported_operations": [
       "archive_completed_research",
-      "initialize_research_center"
+      "initialize_research_center",
+      "workbench_write"
     ]
   },
   "scenarios": [
@@ -171,5 +173,21 @@
         "local_artifact": "markdown_created"
       }
     }
-  ]
+  ],
+  "workbench_contract": {
+    "master_doc_per_case": true,
+    "sections": [
+      "idea_log",
+      "current_plan",
+      "decision_log",
+      "review_log"
+    ],
+    "plan_versioning": "stable_plan_id_incrementing_revision",
+    "conflict": "explicit_user_choice_keep_merge_or_new_plan",
+    "outbox": "visible_local_pending_sync_recheck_parent_revision",
+    "full_research_copy_to_drive": "forbidden",
+    "local_simulation_script": "scripts/drive_workbench.py",
+    "real_drive_write_requires_explicit_confirmation": true,
+    "user_sections_preserved": true
+  }
 }

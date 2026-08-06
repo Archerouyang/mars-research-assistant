@@ -16,11 +16,11 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "skills" / "mars-research-assistant"
 SNAPSHOT_RENDERER = RUNTIME / "scripts" / "render_equity_snapshot.py"
-DEEP_RENDERER = (
-    RUNTIME / "skills" / "deep-equity-research" / "scripts" / "render_deep_equity_research.py"
+UNDERWRITING_RENDERER = (
+    RUNTIME / "skills" / "deep-equity-research" / "scripts" / "render_underwriting.py"
 )
 SNAPSHOT_FIXTURE = ROOT / "tests" / "fixtures" / "equity-snapshot-primary.json"
-DEEP_FIXTURE = ROOT / "tests" / "fixtures" / "deep-equity-research-primary.json"
+UNDERWRITING_FIXTURE = ROOT / "tests" / "fixtures" / "underwriting-inputs-initial.json"
 EXPECTED_SKILLS = {
     "ask-mars",
     "market-catalysts-brief",
@@ -28,14 +28,73 @@ EXPECTED_SKILLS = {
     "instrument-research",
     "deep-equity-research",
     "technical-analysis",
+    "investment-analysis",
     "drive-writeback",
 }
+UNDERWRITING_CHAPTERS = (
+    "研究范围、预注册命题与交易结论",
+    "公司、业务模式与价值驱动",
+    "行业结构、竞争与行业专属反证",
+    "管理层、治理与资本配置",
+    "财务、分部/KPI 与财报质量",
+    "预期差、催化剂、基准率与跟踪清单",
+    "可复算估值与“现价定价了什么”",
+    "反方论证、事前风险预演与可证伪条件",
+    "来源、数据对账、时间戳、假设与数据缺口",
+)
+DEVELOPMENT_DIR_PARTS = {"tests", "docs", ".git", ".venv", "__pycache__"}
 
 
-class MarsV102SkillTests(unittest.TestCase):
+def runtime_files() -> list[Path]:
+    return sorted(
+        path
+        for path in RUNTIME.rglob("*")
+        if path.is_file()
+        and not any(
+            part in DEVELOPMENT_DIR_PARTS
+            for part in path.relative_to(RUNTIME).parts
+        )
+    )
+
+
+class MarsUnderwritingSkillTests(unittest.TestCase):
     def _render(
         self, renderer: Path, fixture: Path, output: Path
     ) -> subprocess.CompletedProcess[str]:
+        if renderer == UNDERWRITING_RENDERER:
+            # The renderer resolves portable evidence paths next to its input.
+            # Stage both input and its referenced artifact so tests that mutate
+            # a fixture in a temporary directory exercise the same contract as
+            # a real case bundle without writing into tests/fixtures.
+            with tempfile.TemporaryDirectory(prefix="mars-underwriting-input-") as staging:
+                staging_path = Path(staging)
+                staged_fixture = json.loads(fixture.read_text(encoding="utf-8"))
+                staged_input = staging_path / fixture.name
+                staged_input.write_text(
+                    json.dumps(staged_fixture, ensure_ascii=False), encoding="utf-8"
+                )
+                evidence_ref = staged_fixture.get("technical_evidence_ref")
+                evidence_name = "technical-evidence.json"
+                if isinstance(evidence_ref, dict) and isinstance(
+                    evidence_ref.get("artifact_path"), str
+                ):
+                    evidence_name = Path(evidence_ref["artifact_path"]).name
+                source_evidence = fixture.parent / evidence_name
+                if not source_evidence.is_file():
+                    source_evidence = ROOT / "tests" / "fixtures" / "technical-evidence.json"
+                evidence = json.loads(source_evidence.read_text(encoding="utf-8"))
+                if isinstance(evidence_ref, dict) and isinstance(evidence_ref.get("as_of"), str):
+                    evidence["as_of"] = evidence_ref["as_of"]
+                (staging_path / evidence_name).write_text(
+                    json.dumps(evidence, ensure_ascii=False), encoding="utf-8"
+                )
+                return subprocess.run(
+                    [sys.executable, str(renderer), "--input", str(staged_input), "--output", str(output)],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
         return subprocess.run(
             [sys.executable, str(renderer), "--input", str(fixture), "--output", str(output)],
             cwd=ROOT,
@@ -49,9 +108,12 @@ class MarsV102SkillTests(unittest.TestCase):
         manifest = json.loads((RUNTIME / "mars-skills.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest.get("collection"), "Mars Research Assistant")
         self.assertEqual({item["id"] for item in manifest["skills"]}, EXPECTED_SKILLS)
-        files = [path for path in RUNTIME.rglob("*") if path.is_file()]
-        self.assertLessEqual(len(files), 60)
-        self.assertLessEqual(sum(path.stat().st_size for path in files), 1 << 20)
+        display_names = {item["id"]: item["display_name"] for item in manifest["skills"]}
+        self.assertEqual(display_names["deep-equity-research"], "深度研究")
+        self.assertEqual(display_names["investment-analysis"], "投研分析")
+        files = runtime_files()
+        self.assertLessEqual(len(files), 80)
+        self.assertLessEqual(sum(path.stat().st_size for path in files), 3 << 19)
         root_skill = (RUNTIME / "SKILL.md").read_text(encoding="utf-8")
         for marker in (
             "npx skills add archerthegoat/mars-research-assistant",
@@ -91,7 +153,7 @@ class MarsV102SkillTests(unittest.TestCase):
                 self.assertEqual(capability.get("local_artifact_contract"), expected)
 
     def test_equity_snapshot_renders_required_data_and_recent_updates(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
             output = Path(temporary) / "mars-research" / "snapshot.md"
             started = perf_counter()
             result = self._render(SNAPSHOT_RENDERER, SNAPSHOT_FIXTURE, output)
@@ -110,7 +172,7 @@ class MarsV102SkillTests(unittest.TestCase):
             self.assertIn(marker, rendered)
 
     def test_equity_snapshot_never_overwrites_and_requires_identity(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
             temporary_path = Path(temporary)
             output = temporary_path / "mars-research" / "snapshot.md"
             first = self._render(SNAPSHOT_RENDERER, SNAPSHOT_FIXTURE, output)
@@ -168,9 +230,9 @@ class MarsV102SkillTests(unittest.TestCase):
         cases = (
             (SNAPSHOT_RENDERER, SNAPSHOT_FIXTURE, RUNTIME / "blocked-snapshot.md"),
             (
-                DEEP_RENDERER,
-                DEEP_FIXTURE,
-                RUNTIME / "skills" / "deep-equity-research" / "blocked-deep-research.md",
+                UNDERWRITING_RENDERER,
+                UNDERWRITING_FIXTURE,
+                RUNTIME / "skills" / "deep-equity-research" / "blocked-underwriting.md",
             ),
         )
         for renderer, fixture, output in cases:
@@ -183,121 +245,68 @@ class MarsV102SkillTests(unittest.TestCase):
                 finally:
                     output.unlink(missing_ok=True)
 
-    def test_deep_research_renders_nine_chapters_and_reproducible_valuation(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
-            output = Path(temporary) / "mars-research" / "deep.md"
+    def test_underwriting_renders_nine_chapters_identity_and_trade_conclusion(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
+            output = Path(temporary) / "mars-research" / "underwriting.md"
             started = perf_counter()
-            result = self._render(DEEP_RENDERER, DEEP_FIXTURE, output)
+            result = self._render(UNDERWRITING_RENDERER, UNDERWRITING_FIXTURE, output)
             elapsed = perf_counter() - started
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertLessEqual(elapsed, 1.0)
             rendered = output.read_text(encoding="utf-8")
-        for number, title in enumerate(
-            (
-                "研究范围与核心判断",
-                "公司与商业模式",
-                "行业与竞争格局",
-                "管理层、治理与资本配置",
-                "财务表现与质量核查",
-                "预期差、催化剂与关键跟踪项",
-                "三情景 DCF/反向 DCF",
-                "风险、反方论点与可证伪条件",
-                "来源、时间戳、假设与数据缺口",
-            ),
-            1,
-        ):
+        self.assertIn("# 深度研究：CLEAN.US", rendered)
+        for number, title in enumerate(UNDERWRITING_CHAPTERS, 1):
             self.assertIn(f"## {number}. {title}", rendered)
-        self.assertIn("### 四项最小财报质量检查", rendered)
-        self.assertIn("### 三情景 DCF", rendered)
-        self.assertIn("### 反向 DCF", rendered)
-        self.assertIn("预测期：5 年（来源：", rendered)
-        self.assertNotIn("买入", rendered)
-        self.assertNotIn("卖出", rendered)
-        capability = json.loads(
-            (RUNTIME / "skills" / "deep-equity-research" / "capability.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        self.assertEqual(
-            capability.get("reverse_dcf_input_contract"),
-            {
-                "required": ["current_free_cash_flow", "horizon_years"],
-                "source_traceability_required": True,
-                "horizon_years": {
-                    "whole_number": True,
-                    "minimum": 1,
-                    "maximum": 20,
-                },
-            },
-        )
+        for marker in (
+            "issuer-cleanco",
+            "case-underwriting-001",
+            "首次承保",
+        ):
+            self.assertIn(marker, rendered)
+        for directive in ("买入", "卖出", "增持", "减持", "加仓", "减仓", "做空"):
+            self.assertNotIn(directive, rendered)
 
-    def test_deep_research_keeps_valuation_gap_when_required_input_is_missing(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
-            temporary_path = Path(temporary)
-            fixture = json.loads(DEEP_FIXTURE.read_text(encoding="utf-8"))
-            del fixture["valuation"]["price"]
-            path = temporary_path / "missing-input.json"
-            path.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
-            output = temporary_path / "mars-research" / "deep.md"
-            result = self._render(DEEP_RENDERER, path, output)
+    def test_underwriting_records_baseline_gap_instead_of_fabricating(self) -> None:
+        fixture_path = ROOT / "tests" / "fixtures" / "underwriting-inputs-short-baseline.json"
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
+            output = Path(temporary) / "mars-research" / "underwriting.md"
+            result = self._render(UNDERWRITING_RENDERER, fixture_path, output)
             self.assertEqual(result.returncode, 0, result.stderr)
             rendered = output.read_text(encoding="utf-8")
-        self.assertIn("估值未运行：缺少必要输入：price。", rendered)
-        self.assertIn("## 9. 来源、时间戳、假设与数据缺口", rendered)
+        self.assertIn("## 9. 来源、数据对账、时间戳、假设与数据缺口", rendered)
+        self.assertIn("基线", rendered)
 
-    def test_deep_research_rejects_mismatched_identity_unsupported_sources_and_trade_directives(self) -> None:
+    def test_underwriting_earnings_update_without_prior_model_degrades(self) -> None:
+        fixture_path = ROOT / "tests" / "fixtures" / "underwriting-inputs-earnings-no-prior.json"
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
+            output = Path(temporary) / "mars-research" / "underwriting.md"
+            result = self._render(UNDERWRITING_RENDERER, fixture_path, output)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            rendered = output.read_text(encoding="utf-8")
+        self.assertIn("自动降级为首次承保", rendered)
+
+    def test_underwriting_rejects_mismatched_identity_sources_and_directives(self) -> None:
         cases = (
-            ("identity", lambda fixture: fixture["identity"]["verified"].update({"ticker": "OTHER"}), "does not match"),
-            ("source", lambda fixture: fixture["sections"]["company_and_business_model"][0]["source"].update({"kind": "search_summary"}), "not allowed"),
-            ("directive", lambda fixture: fixture["sections"]["research_scope_and_core_view"][0].update({"statement": "建议买入该股票。"}), "trade directive"),
-            ("directive-label", lambda fixture: fixture["sections"]["research_scope_and_core_view"][0].update({"label": "建议卖出"}), "trade directive"),
-            ("directive-gap", lambda fixture: fixture["data_gaps"].append("应当加仓。"), "trade directive"),
-            ("directive-rating", lambda fixture: fixture["sections"]["research_scope_and_core_view"][0].update({"statement": "建议增持该股票。"}), "trade directive"),
-            ("invalid-as-of", lambda fixture: fixture["sections"]["company_and_business_model"][0]["source"].update({"as_of": "not-a-timestamp"}), "complete timestamp"),
-            ("future-as-of", lambda fixture: fixture["sections"]["company_and_business_model"][0]["source"].update({"as_of": "2026-07-31T00:00:00Z"}), "after research as_of"),
+            ("identity", lambda fixture: fixture["issuer_identity"]["verified"].update({"ticker": "OTHER"}), "does not match"),
+            ("directive", lambda fixture: fixture["sections"]["research_scope_hypothesis_trade_conclusion"][0].update({"statement": "建议买入该股票。"}), "trade directive"),
+            ("future-as-of", lambda fixture: fixture["sections"]["company_business_model_value_drivers"][0]["source"].update({"as_of": "2026-08-02T00:00:00Z"}), "after research as_of"),
+            ("case-mismatch", lambda fixture: fixture["valuation"]["identity"].update({"case_id": "other-case"}), "case_id"),
         )
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
             temporary_path = Path(temporary)
             for name, mutate, expected_error in cases:
                 with self.subTest(name=name):
-                    fixture = json.loads(DEEP_FIXTURE.read_text(encoding="utf-8"))
+                    fixture = json.loads(UNDERWRITING_FIXTURE.read_text(encoding="utf-8"))
                     mutate(fixture)
                     path = temporary_path / f"{name}.json"
                     path.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
                     output = temporary_path / "mars-research" / f"{name}.md"
-                    result = self._render(DEEP_RENDERER, path, output)
+                    result = self._render(UNDERWRITING_RENDERER, path, output)
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn(expected_error, result.stderr)
                     self.assertFalse(output.exists())
 
-    def test_deep_research_skips_dcf_when_scenarios_are_not_bear_base_bull(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
-            temporary_path = Path(temporary)
-            fixture = json.loads(DEEP_FIXTURE.read_text(encoding="utf-8"))
-            fixture["valuation"]["scenarios"][0]["name"] = "downside"
-            path = temporary_path / "bad-scenarios.json"
-            path.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
-            output = temporary_path / "mars-research" / "deep.md"
-            result = self._render(DEEP_RENDERER, path, output)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            rendered = output.read_text(encoding="utf-8")
-        self.assertIn("估值未运行：valuation scenarios must be bear, base, and bull", rendered)
-
-    def test_deep_research_records_a_gap_when_reverse_dcf_has_no_solution_in_range(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
-            temporary_path = Path(temporary)
-            fixture = json.loads(DEEP_FIXTURE.read_text(encoding="utf-8"))
-            fixture["valuation"]["price"]["value"] = 10_000_000.0
-            path = temporary_path / "reverse-dcf-outside-range.json"
-            path.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
-            output = temporary_path / "mars-research" / "deep.md"
-            result = self._render(DEEP_RENDERER, path, output)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            rendered = output.read_text(encoding="utf-8")
-        self.assertIn("反向 DCF 无法在", rendered)
-        self.assertNotIn("以当前股价隐含", rendered)
-
-    def test_offline_verifier_accepts_v102_contract(self) -> None:
+    def test_offline_verifier_accepts_the_runtime_contract(self) -> None:
         result = subprocess.run(
             [sys.executable, "scripts/verify_mars_skills.py"],
             cwd=ROOT,
@@ -306,10 +315,10 @@ class MarsV102SkillTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Mars Skills v1.0.2 contract ok", result.stdout)
+        self.assertIn("Mars Skills contract ok", result.stdout)
 
     def test_red_bundle_contains_only_the_runtime_package(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mars-v102-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="mars-test-") as temporary:
             bundle = Path(temporary) / "mars.zip"
             result = subprocess.run(
                 [sys.executable, "scripts/build_red_upload_bundle.py", "--output", str(bundle)],
@@ -325,6 +334,9 @@ class MarsV102SkillTests(unittest.TestCase):
         self.assertIn(
             "mars-research-assistant/skills/deep-equity-research/SKILL.md", names
         )
+        self.assertIn(
+            "mars-research-assistant/skills/investment-analysis/SKILL.md", names
+        )
         self.assertNotIn("mars-research-assistant/tests/test_mars_skills_suite.py", names)
         self.assertNotIn("mars-research-assistant/README.md", names)
 
@@ -335,7 +347,7 @@ class MarsV102SkillTests(unittest.TestCase):
     def test_skills_cli_copies_only_the_runtime_package_into_a_local_project(self) -> None:
         npx = shutil.which("npx")
         self.assertIsNotNone(npx, "npx is required for the public Skills CLI entrypoint")
-        with tempfile.TemporaryDirectory(prefix="mars-v102-npx-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="mars-npx-") as temporary:
             project = Path(temporary) / "consumer"
             setup = subprocess.run(
                 ["git", "init", "--quiet", str(project)],
@@ -378,9 +390,7 @@ class MarsV102SkillTests(unittest.TestCase):
             installed = project / ".agents" / "skills" / "mars-research-assistant"
             self.assertTrue(installed.is_dir())
             expected_files = {
-                path.relative_to(RUNTIME).as_posix()
-                for path in RUNTIME.rglob("*")
-                if path.is_file()
+                path.relative_to(RUNTIME).as_posix() for path in runtime_files()
             }
             actual_files = {
                 path.relative_to(installed).as_posix()
