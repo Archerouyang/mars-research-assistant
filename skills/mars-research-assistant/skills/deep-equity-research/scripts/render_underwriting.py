@@ -490,6 +490,152 @@ def _validate_terminal_checks(valuation: dict[str, Any], trade_plan: dict[str, A
         )
 
 
+def _finite_number(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    result = float(value)
+    return result if isfinite(result) else None
+
+
+def _provenance_record(provenance: object, field: str) -> dict[str, Any] | None:
+    if not isinstance(provenance, dict):
+        return None
+    record = provenance.get(field)
+    return record if isinstance(record, dict) else None
+
+
+def _provenance_scalar(record: dict[str, Any] | None) -> float | None:
+    return _finite_number(record.get("value")) if isinstance(record, dict) else None
+
+
+def _provenance_list(record: dict[str, Any] | None) -> list[float] | None:
+    value = record.get("value") if isinstance(record, dict) else None
+    if not isinstance(value, list) or not value:
+        return None
+    numbers = [_finite_number(item) for item in value]
+    if any(item is None for item in numbers):
+        return None
+    return [item for item in numbers if item is not None]
+
+
+def _provenance_source_text(record: dict[str, Any] | None, context: str) -> str:
+    """Render a provenance source via the shared source whitelist; incomplete
+    or absent metadata fails closed to 未获取到 instead of being invented."""
+    source = record.get("source") if isinstance(record, dict) else None
+    if not isinstance(source, dict):
+        return "未获取到"
+    if any(
+        not isinstance(source.get(field), str) or not str(source.get(field)).strip()
+        for field in ("name", "kind", "as_of", "url")
+    ):
+        return "未获取到"
+    return _source(source, context, ALL_SOURCE_KINDS)
+
+
+def _provenance_meta_text(
+    record: dict[str, Any] | None, field: str, context: str
+) -> str:
+    value = record.get(field) if isinstance(record, dict) else None
+    if not isinstance(value, str) or not value.strip():
+        return "未获取到"
+    return _statement(value, context)
+
+
+DCF_PROVENANCE_SCALAR_FIELDS = (
+    ("price", "现价"),
+    ("shares_outstanding", "总股本"),
+    ("net_debt", "净债务"),
+    ("wacc", "WACC"),
+    ("terminal_growth", "永续增长率"),
+    ("long_run_growth_cap", "长期增长上限"),
+    ("mature_margin_benchmark", "成熟期利润率基准"),
+)
+DCF_PROVENANCE_PERCENT_FIELDS = {
+    "wacc",
+    "terminal_growth",
+    "long_run_growth_cap",
+    "mature_margin_benchmark",
+}
+DCF_PROVENANCE_SCENARIO_NAMES = ("bear", "base", "bull")
+DCF_PROVENANCE_SCENARIO_FIELDS = (
+    ("probability", "概率"),
+    ("free_cash_flows", "FCF 路径"),
+    ("margins", "利润率路径"),
+    ("reinvestment_rate", "再投资率"),
+    ("roic", "ROIC"),
+)
+
+
+def _dcf_inputs_lines(dcf: dict[str, Any], currency: str) -> list[str]:
+    """Render DCF key inputs and scenario assumptions read verbatim from the
+    valuation artifact's ``inputs_provenance`` — value plus source (name/URL/
+    as_of), derivation and accounting_period per field. Missing values or
+    metadata fail closed to 未获取到; nothing is recomputed or invented."""
+    provenance = dcf.get("inputs_provenance")
+    lines = [
+        "### DCF 关键输入与情景假设",
+        "以下数值与来源逐项读自估值工件 inputs_provenance（渲染器不重算）；缺失字段或元数据明示未获取到。",
+    ]
+    for field, label in DCF_PROVENANCE_SCALAR_FIELDS:
+        record = _provenance_record(provenance, field)
+        number = _provenance_scalar(record)
+        if number is None:
+            text = "未获取到"
+        elif field in DCF_PROVENANCE_PERCENT_FIELDS:
+            text = _pct(number, f"dcf inputs_provenance {field}")
+        elif field == "price":
+            text = f"{_fmt(number, 'dcf inputs_provenance price')} {currency}"
+        else:
+            text = _fmt(number, f"dcf inputs_provenance {field}")
+        lines.append(
+            f"- {label}（{field}）：{text}"
+            f"；来源：{_provenance_source_text(record, f'dcf inputs_provenance {field}')}"
+            f"；推导：{_provenance_meta_text(record, 'derivation', f'dcf {field} derivation')}"
+            f"；会计期：{_provenance_meta_text(record, 'accounting_period', f'dcf {field} accounting_period')}"
+        )
+    scenarios = provenance.get("scenarios") if isinstance(provenance, dict) else None
+    lines.extend([
+        "",
+        "| 情景 | 概率 | FCF 路径 | 利润率路径 | 再投资率 | ROIC |",
+        "| --- | ---: | --- | --- | ---: | ---: |",
+    ])
+    scenario_meta: list[str] = []
+    for name in DCF_PROVENANCE_SCENARIO_NAMES:
+        record = scenarios.get(name) if isinstance(scenarios, dict) else None
+        cells: list[str] = []
+        for field, _label in DCF_PROVENANCE_SCENARIO_FIELDS:
+            field_record = _provenance_record(record, field)
+            if field in {"free_cash_flows", "margins"}:
+                numbers = _provenance_list(field_record)
+                if numbers is None:
+                    cells.append("未获取到")
+                elif field == "margins":
+                    cells.append(
+                        ", ".join(_pct(item, f"dcf {name} margins") for item in numbers)
+                    )
+                else:
+                    cells.append(
+                        ", ".join(
+                            _fmt(item, f"dcf {name} free_cash_flows") for item in numbers
+                        )
+                    )
+            else:
+                number = _provenance_scalar(field_record)
+                cells.append(
+                    _pct(number, f"dcf {name} {field}") if number is not None else "未获取到"
+                )
+            scenario_meta.append(
+                f"- {name}.{field}：来源：{_provenance_source_text(field_record, f'dcf {name} {field}')}"
+                f"；推导：{_provenance_meta_text(field_record, 'derivation', f'dcf {name} {field} derivation')}"
+                f"；会计期：{_provenance_meta_text(field_record, 'accounting_period', f'dcf {name} {field} accounting_period')}"
+            )
+        lines.append(f"| {name} | " + " | ".join(cells) + " |")
+    lines.extend(["", "情景假设来源与推导（逐项读自 inputs_provenance.scenarios，不重算）："])
+    lines.extend(scenario_meta)
+    lines.append("")
+    return lines
+
+
 def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
     results = valuation.get("results")
     if not isinstance(results, dict):
@@ -547,6 +693,10 @@ def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
                         f"{_statement(check.get('detail'), f'terminal check {check_name}')}"
                     )
         lines.append("")
+    # DCF 关键输入节无论 dcf 状态（computed/missing_inputs/no_solution 等）
+    # 都出现；无 inputs_provenance 时逐项“未获取到”。
+    if isinstance(dcf, dict):
+        lines.extend(_dcf_inputs_lines(dcf, currency))
     reverse = results.get("reverse_dcf")
     pvgo = results.get("pvgo")
     priced_in: list[str] = ["### 现价定价了什么"]
@@ -1177,6 +1327,56 @@ def _md_lines_to_html(lines: list[str], collapsible: set[str]) -> str:
     return "\n".join(out)
 
 
+def _watch_valuation_cards(
+    valuation: dict[str, Any], currency: str
+) -> list[tuple[str, str]]:
+    """Valuation reference cards for a watch trade plan.
+
+    Reads only values already computed in the valuation artifact and shows
+    every finite value verbatim — the renderer adds no positivity or ordering
+    rules of its own; only missing or non-finite values fail closed to
+    未计算. A computed DCF shows the probability-weighted anchor and its
+    value_zone; otherwise the first computed EPV/EVA/SOTP point estimate is
+    shown as the anchor and no range is constructed. Labels stay
+    non-actionable in every branch."""
+    results = valuation.get("results")
+    results = results if isinstance(results, dict) else {}
+    dcf = results.get("dcf")
+    if isinstance(dcf, dict) and dcf.get("status") == "computed":
+        anchor = _finite_number(dcf.get("probability_weighted_per_share"))
+        zone = dcf.get("value_zone")
+        low = _finite_number(zone.get("low")) if isinstance(zone, dict) else None
+        high = _finite_number(zone.get("high")) if isinstance(zone, dict) else None
+        return [
+            (
+                "基本面估值锚",
+                f"{_fmt(anchor)} {currency}" if anchor is not None else "未计算",
+            ),
+            (
+                "DCF 估值参考区间",
+                f"{_fmt(low)} – {_fmt(high)} {currency}"
+                if low is not None and high is not None
+                else "未计算",
+            ),
+        ]
+    for model, key in (
+        ("epv", "epv_per_share"),
+        ("eva", "residual_income_per_share"),
+        ("sotp", "per_share"),
+    ):
+        entry = results.get(model)
+        if not isinstance(entry, dict) or entry.get("status") != "computed":
+            continue
+        anchor = _finite_number(entry.get(key))
+        if anchor is None:
+            continue
+        return [
+            ("基本面估值锚", f"{_fmt(anchor)} {currency}"),
+            ("估值参考区间", "未计算"),
+        ]
+    return [("基本面估值锚", "未计算"), ("估值参考区间", "未计算")]
+
+
 def render_html(fixture: dict[str, Any], markdown: str) -> str:
     """Build the single-file offline reading view from the rendered Markdown."""
     symbol = _text(fixture.get("symbol"), "fixture symbol")
@@ -1201,20 +1401,29 @@ def render_html(fixture: dict[str, Any], markdown: str) -> str:
     entry_plan = trade_plan.get("entry_plan")
     value_band = entry_plan.get("value_band") if isinstance(entry_plan, dict) else None
 
+    if status == "watch":
+        # watch 不产出可执行价位；摘要卡仅展示估值 artifact 已计算的
+        # 非行动性参考值（估值锚 / DCF 估值参考区间），无有效估值则未计算。
+        valuation_cards = _watch_valuation_cards(fixture["valuation"], currency)
+    else:
+        valuation_cards = [
+            (
+                fundamental_label,
+                f"{_fmt(fundamental_level)} {currency}"
+                if fundamental_level is not None
+                else "未计算",
+            ),
+            (
+                "价值区间",
+                f"{_fmt(value_band.get('low'))} – {_fmt(value_band.get('high'))} {currency}"
+                if isinstance(value_band, dict) and value_band.get("low") is not None
+                else "未计算",
+            ),
+        ]
+
     cards = [
         ("财报质量级别", f"{grade}{'（暂定）' if provisional else ''}"),
-        (
-            fundamental_label,
-            f"{_fmt(fundamental_level)} {currency}"
-            if fundamental_level is not None
-            else "未计算",
-        ),
-        (
-            "价值区间",
-            f"{_fmt(value_band.get('low'))} – {_fmt(value_band.get('high'))} {currency}"
-            if isinstance(value_band, dict) and value_band.get("low") is not None
-            else "未计算",
-        ),
+        *valuation_cards,
         ("方案状态", status),
     ]
     card_html = "".join(

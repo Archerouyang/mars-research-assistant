@@ -175,6 +175,267 @@ class UnderwritingRenderTests(unittest.TestCase):
         for word in TRADE_DIRECTIVE_WORDS:
             self.assertNotIn(word, markdown)
 
+    def test_watch_computed_dcf_html_shows_valuation_anchor_and_zone(self) -> None:
+        # watch + 已计算 DCF：摘要卡展示估值 artifact 已有的非行动性参考值，
+        # 不得再显示“未计算”，也不得标注为交易目标或入场价值带。
+        fixture, _ = self.render("underwriting-inputs-watch.json", html=True)
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        dcf = fixture["valuation"]["results"]["dcf"]
+        weighted = f"{dcf['probability_weighted_per_share']:.6f}".rstrip("0").rstrip(".")
+        zone_low = f"{dcf['value_zone']['low']:.6f}".rstrip("0").rstrip(".")
+        zone_high = f"{dcf['value_zone']['high']:.6f}".rstrip("0").rstrip(".")
+        self.assertIn('<div class="card-title">基本面估值锚</div>', html_view)
+        self.assertIn(
+            f'<div class="card-value">{weighted} USD</div>', html_view
+        )
+        self.assertIn('<div class="card-title">DCF 估值参考区间</div>', html_view)
+        self.assertIn(
+            f'<div class="card-value">{zone_low} – {zone_high} USD</div>', html_view
+        )
+        # 四张卡无一为“未计算”，且不使用交易目标类措辞。
+        self.assertNotIn('<div class="card-value">未计算</div>', html_view)
+        self.assertNotIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertNotIn('<div class="card-title">价值区间</div>', html_view)
+        self.assertNotIn("入场价值带", html_view)
+
+    def test_watch_html_shows_finite_values_without_renderer_thresholds(self) -> None:
+        # 渲染层不设 >0 / low<=high 之类新规则：有限数值一律原样展示，
+        # 仅缺失或非有限才“未计算”。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        dcf = fixture["valuation"]["results"]["dcf"]
+        dcf["probability_weighted_per_share"] = 0
+        dcf["value_zone"] = {"low": 16.560666, "high": 13.097573}
+        result = run_renderer(fixture, self.workdir, html=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        self.assertIn('<div class="card-value">0 USD</div>', html_view)
+        self.assertIn(
+            '<div class="card-value">16.560666 – 13.097573 USD</div>', html_view
+        )
+        self.assertNotIn('<div class="card-value">未计算</div>', html_view)
+
+    def test_watch_fallback_uses_non_actionable_labels(self) -> None:
+        # DCF 不可用、EPV/EVA/SOTP 各自 computed 的 fallback：只显示该模型
+        # 有限点估值锚、不构造区间（恰一张“估值参考区间”未计算卡），标签仍为
+        # 非行动性的“基本面估值锚 / 估值参考区间”，无交易化措辞。
+        for model, key in (
+            ("epv", "epv_per_share"),
+            ("eva", "residual_income_per_share"),
+            ("sotp", "per_share"),
+        ):
+            with self.subTest(model=model), tempfile.TemporaryDirectory() as directory:
+                workdir = Path(directory)
+                fixture = load_fixture("underwriting-inputs-watch.json")
+                fixture["valuation"]["results"]["dcf"] = {
+                    "status": "missing_inputs",
+                    "missing": ["price"],
+                }
+                for other, _ in (
+                    ("epv", "epv_per_share"),
+                    ("eva", "residual_income_per_share"),
+                    ("sotp", "per_share"),
+                ):
+                    if other != model:
+                        fixture["valuation"]["results"][other] = {
+                            "status": "missing_inputs",
+                            "missing": ["price"],
+                        }
+                result = run_renderer(fixture, workdir, html=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                html_view = (workdir / "underwriting.html").read_text(encoding="utf-8")
+                anchor = fixture["valuation"]["results"][model][key]
+                anchor_text = f"{anchor:.6f}".rstrip("0").rstrip(".")
+                self.assertIn('<div class="card-title">基本面估值锚</div>', html_view)
+                self.assertIn(
+                    f'<div class="card-value">{anchor_text} USD</div>', html_view
+                )
+                self.assertIn('<div class="card-title">估值参考区间</div>', html_view)
+                self.assertEqual(
+                    html_view.count('<div class="card-value">未计算</div>'), 1
+                )
+                self.assertNotIn('<div class="card-title">基本面目标</div>', html_view)
+                self.assertNotIn('<div class="card-title">价值区间</div>', html_view)
+                self.assertNotIn("DCF 估值参考区间", html_view)
+                self.assertNotIn("入场价值带", html_view)
+
+    def test_watch_markdown_trade_conclusion_has_no_executable_prices(self) -> None:
+        # watch 的 Markdown 交易结论仍不得出现入场/目标/失效价格。
+        _, markdown = self.render("underwriting-inputs-watch.json")
+        conclusion = markdown.split("### 交易结论", 1)[1].split("## 2. ", 1)[0]
+        self.assertIn("方案状态：watch", conclusion)
+        self.assertIn("不产生方案", conclusion)
+        self.assertNotIn("入场区间：", conclusion)
+        self.assertNotIn("目标区间", conclusion)
+        self.assertNotIn("失效条件", conclusion)
+        self.assertNotIn("13.097573", conclusion)
+        self.assertNotIn("16.560666", conclusion)
+
+    def test_dcf_key_inputs_and_scenario_paths_visible_in_markdown(self) -> None:
+        # 第 7 章展示 DCF 关键输入与三情景 FCF 路径，数值、来源（名称/URL/
+        # as_of）、推导与会计期逐项来自 fixture 的 inputs_provenance，不重算。
+        fixture, markdown = self.render("underwriting-inputs-watch.json")
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn("### DCF 关键输入与情景假设", chapter_seven)
+        provenance = fixture["valuation"]["results"]["dcf"]["inputs_provenance"]
+        price = provenance["price"]
+        self.assertIn(
+            f"现价（price）：{price['value']} USD；"
+            f"来源：[CLEAN.US 收盘行情](https://example.com/quote/CLEAN)"
+            f"（as_of：{price['source']['as_of']}）；推导：未获取到；会计期：未获取到",
+            chapter_seven,
+        )
+        shares = provenance["shares_outstanding"]
+        self.assertIn(
+            f"总股本（shares_outstanding）：{shares['value']}；"
+            f"来源：[CLEAN.US 10-K](https://example.com/sec/cleanco-10k)"
+            f"（as_of：{shares['source']['as_of']}）；推导：未获取到；会计期：FY2025",
+            chapter_seven,
+        )
+        net_debt = provenance["net_debt"]
+        self.assertIn(
+            f"净债务（net_debt）：{net_debt['value']}；"
+            f"来源：[CLEAN.US 10-K](https://example.com/sec/cleanco-10k)"
+            f"（as_of：{net_debt['source']['as_of']}）；"
+            f"推导：总债务减现金及等价物。；会计期：FY2025",
+            chapter_seven,
+        )
+        self.assertIn(f"WACC（wacc）：{provenance['wacc']['value']:.2%}", chapter_seven)
+        self.assertIn(
+            f"永续增长率（terminal_growth）：{provenance['terminal_growth']['value']:.2%}",
+            chapter_seven,
+        )
+        self.assertIn(
+            f"长期增长上限（long_run_growth_cap）："
+            f"{provenance['long_run_growth_cap']['value']:.2%}",
+            chapter_seven,
+        )
+        self.assertIn(
+            f"成熟期利润率基准（mature_margin_benchmark）："
+            f"{provenance['mature_margin_benchmark']['value']:.2%}",
+            chapter_seven,
+        )
+        for name in ("bear", "base", "bull"):
+            scenario = provenance["scenarios"][name]
+            flows = ", ".join(f"{value:g}" for value in scenario["free_cash_flows"]["value"])
+            margins = ", ".join(
+                f"{value:.2%}" for value in scenario["margins"]["value"]
+            )
+            row = (
+                f"| {name} | {scenario['probability']['value']:.2%} | {flows} "
+                f"| {margins} | {scenario['reinvestment_rate']['value']:.2%} "
+                f"| {scenario['roic']['value']:.2%} |"
+            )
+            self.assertIn(row, chapter_seven)
+            source_text = (
+                f"[分析师估值假设：CLEAN {name} 情景]"
+                f"(https://example.com/assumptions/clean-{name})"
+                f"（as_of：{scenario['probability']['source']['as_of']}）"
+            )
+            for field in (
+                "probability",
+                "free_cash_flows",
+                "margins",
+                "reinvestment_rate",
+                "roic",
+            ):
+                self.assertIn(f"- {name}.{field}：来源：{source_text}", chapter_seven)
+            # 有推导的字段原样展示，无推导/会计期的字段明示未获取到。
+            self.assertIn(
+                f"- {name}.reinvestment_rate：来源：{source_text}；"
+                "推导：终值期再投资率按 terminal_growth / ROIC 约束。；会计期：未获取到",
+                chapter_seven,
+            )
+            self.assertIn(
+                f"- {name}.roic：来源：{source_text}；"
+                "推导：终值期资本回报率假设。；会计期：未获取到",
+                chapter_seven,
+            )
+            self.assertIn(
+                f"- {name}.probability：来源：{source_text}；"
+                "推导：未获取到；会计期：未获取到",
+                chapter_seven,
+            )
+
+    def test_dcf_inputs_missing_metadata_marked_unavailable(self) -> None:
+        # 来源/推导/会计期缺元数据时逐项明示“未获取到”，不伪造。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        provenance = fixture["valuation"]["results"]["dcf"]["inputs_provenance"]
+        provenance["net_debt"]["source"] = None
+        provenance["net_debt"]["derivation"] = None
+        provenance["net_debt"]["accounting_period"] = None
+        provenance["scenarios"]["base"]["roic"]["source"] = None
+        result = run_renderer(fixture, self.workdir)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        markdown = (self.workdir / "underwriting.md").read_text(encoding="utf-8")
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn(
+            "净债务（net_debt）：200；来源：未获取到；推导：未获取到；会计期：未获取到",
+            chapter_seven,
+        )
+        self.assertIn(
+            "- base.roic：来源：未获取到；推导：终值期资本回报率假设。；会计期：未获取到",
+            chapter_seven,
+        )
+
+    def test_watch_without_computed_valuation_html_cards_fail_closed(self) -> None:
+        # 无任何已计算适用模型时，两项估值卡 fail closed 显示“未计算”，
+        # 且统一使用非行动标签，不出现“基本面目标 / 价值区间”。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        for model in ("dcf", "epv", "eva", "sotp"):
+            fixture["valuation"]["results"][model] = {
+                "status": "missing_inputs",
+                "missing": ["price"],
+            }
+        result = run_renderer(fixture, self.workdir, html=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        self.assertEqual(html_view.count('<div class="card-value">未计算</div>'), 2)
+        self.assertIn('<div class="card-title">基本面估值锚</div>', html_view)
+        self.assertIn('<div class="card-title">估值参考区间</div>', html_view)
+        self.assertNotIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertNotIn('<div class="card-title">价值区间</div>', html_view)
+        self.assertNotIn("DCF 估值参考区间", html_view)
+
+    def test_dcf_inputs_section_shows_for_noncomputed_status(self) -> None:
+        # dcf 非 computed（missing_inputs）时关键输入节仍出现；无
+        # inputs_provenance 时逐项“未获取到”，不伪造、不重算。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        fixture["valuation"]["results"]["dcf"] = {
+            "status": "missing_inputs",
+            "missing": ["price"],
+        }
+        result = run_renderer(fixture, self.workdir)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        markdown = (self.workdir / "underwriting.md").read_text(encoding="utf-8")
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn("### DCF 关键输入与情景假设", chapter_seven)
+        for label in (
+            "现价（price）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "总股本（shares_outstanding）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "净债务（net_debt）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "WACC（wacc）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "永续增长率（terminal_growth）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "长期增长上限（long_run_growth_cap）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+            "成熟期利润率基准（mature_margin_benchmark）：未获取到；来源：未获取到；推导：未获取到；会计期：未获取到",
+        ):
+            self.assertIn(label, chapter_seven)
+        for name in ("bear", "base", "bull"):
+            self.assertIn(
+                f"| {name} | 未获取到 | 未获取到 | 未获取到 | 未获取到 | 未获取到 |",
+                chapter_seven,
+            )
+            for field in (
+                "probability",
+                "free_cash_flows",
+                "margins",
+                "reinvestment_rate",
+                "roic",
+            ):
+                self.assertIn(
+                    f"- {name}.{field}：来源：未获取到；推导：未获取到；会计期：未获取到",
+                    chapter_seven,
+                )
+
     def test_baseline_annual_years_alias_accepted(self) -> None:
         fixture = load_fixture("underwriting-inputs-short-baseline.json")
         baseline = fixture["accounting_baseline"]

@@ -625,6 +625,280 @@
         "value_zone": {
           "low": 13.097573,
           "high": 16.560666
+        },
+        "inputs_provenance": {
+          "price": {
+            "value": 18.5,
+            "source": {
+              "name": "CLEAN.US 收盘行情",
+              "kind": "public_quote",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/quote/CLEAN"
+            },
+            "currency": "USD",
+            "derivation": null,
+            "accounting_period": null
+          },
+          "shares_outstanding": {
+            "value": 100,
+            "source": {
+              "name": "CLEAN.US 10-K",
+              "kind": "sec_filing",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/sec/cleanco-10k"
+            },
+            "currency": null,
+            "derivation": null,
+            "accounting_period": "FY2025"
+          },
+          "net_debt": {
+            "value": 200,
+            "source": {
+              "name": "CLEAN.US 10-K",
+              "kind": "sec_filing",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/sec/cleanco-10k"
+            },
+            "currency": "USD",
+            "derivation": "总债务减现金及等价物。",
+            "accounting_period": "FY2025"
+          },
+          "wacc": {
+            "value": 0.1,
+            "source": {
+              "name": "分析师估值假设：CLEAN WACC",
+              "kind": "valuation_assumption",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/assumptions/clean-wacc"
+            },
+            "currency": null,
+            "derivation": null,
+            "accounting_period": null
+          },
+          "terminal_growth": {
+            "value": 0.03,
+            "source": {
+              "name": "分析师估值假设：CLEAN 永续增长",
+              "kind": "valuation_assumption",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/assumptions/clean-terminal"
+            },
+            "currency": null,
+            "derivation": null,
+            "accounting_period": null
+          },
+          "long_run_growth_cap": {
+            "value": 0.04,
+            "source": {
+              "name": "分析师估值假设：CLEAN 长期增长上限",
+              "kind": "valuation_assumption",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/assumptions/clean-growth-cap"
+            },
+            "currency": null,
+            "derivation": null,
+            "accounting_period": null
+          },
+          "mature_margin_benchmark": {
+            "value": 0.18,
+            "source": {
+              "name": "分析师估值假设：CLEAN 成熟利润率基准",
+              "kind": "valuation_assumption",
+              "as_of": "2026-07-30T11:00:00Z",
+              "url": "https://example.com/assumptions/clean-margin-benchmark"
+            },
+            "currency": null,
+            "derivation": null,
+            "accounting_period": null
+          },
+          "scenarios": {
+            "bear": {
+              "probability": {
+                "value": 0.25,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bear 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bear"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "free_cash_flows": {
+                "value": [80, 85, 90, 92, 95],
+                "source": {
+                  "name": "分析师估值假设：CLEAN bear 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bear"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "margins": {
+                "value": [0.15, 0.16, 0.17, 0.18, 0.18],
+                "source": {
+                  "name": "分析师估值假设：CLEAN bear 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bear"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "reinvestment_rate": {
+                "value": 0.2,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bear 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bear"
+                },
+                "currency": null,
+                "derivation": "终值期再投资率按 terminal_growth / ROIC 约束。",
+                "accounting_period": null
+              },
+              "roic": {
+                "value": 0.15,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bear 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bear"
+                },
+                "currency": null,
+                "derivation": "终值期资本回报率假设。",
+                "accounting_period": null
+              }
+            },
+            "base": {
+              "probability": {
+                "value": 0.5,
+                "source": {
+                  "name": "分析师估值假设：CLEAN base 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-base"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "free_cash_flows": {
+                "value": [100, 110, 120, 130, 140],
+                "source": {
+                  "name": "分析师估值假设：CLEAN base 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-base"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "margins": {
+                "value": [0.16, 0.17, 0.18, 0.18, 0.18],
+                "source": {
+                  "name": "分析师估值假设：CLEAN base 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-base"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "reinvestment_rate": {
+                "value": 0.2,
+                "source": {
+                  "name": "分析师估值假设：CLEAN base 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-base"
+                },
+                "currency": null,
+                "derivation": "终值期再投资率按 terminal_growth / ROIC 约束。",
+                "accounting_period": null
+              },
+              "roic": {
+                "value": 0.15,
+                "source": {
+                  "name": "分析师估值假设：CLEAN base 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-base"
+                },
+                "currency": null,
+                "derivation": "终值期资本回报率假设。",
+                "accounting_period": null
+              }
+            },
+            "bull": {
+              "probability": {
+                "value": 0.25,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bull 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bull"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "free_cash_flows": {
+                "value": [120, 140, 160, 180, 200],
+                "source": {
+                  "name": "分析师估值假设：CLEAN bull 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bull"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "margins": {
+                "value": [0.16, 0.17, 0.18, 0.19, 0.2],
+                "source": {
+                  "name": "分析师估值假设：CLEAN bull 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bull"
+                },
+                "currency": null,
+                "derivation": null,
+                "accounting_period": null
+              },
+              "reinvestment_rate": {
+                "value": 0.2,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bull 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bull"
+                },
+                "currency": null,
+                "derivation": "终值期再投资率按 terminal_growth / ROIC 约束。",
+                "accounting_period": null
+              },
+              "roic": {
+                "value": 0.15,
+                "source": {
+                  "name": "分析师估值假设：CLEAN bull 情景",
+                  "kind": "valuation_assumption",
+                  "as_of": "2026-07-30T11:00:00Z",
+                  "url": "https://example.com/assumptions/clean-bull"
+                },
+                "currency": null,
+                "derivation": "终值期资本回报率假设。",
+                "accounting_period": null
+              }
+            }
+          }
         }
       },
       "reverse_dcf": {
