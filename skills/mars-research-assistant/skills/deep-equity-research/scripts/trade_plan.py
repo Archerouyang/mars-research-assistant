@@ -249,25 +249,34 @@ TERMINAL_CHECK_STATUSES = {"pass", "warn", "fail"}
 
 def _terminal_failures(valuation: dict[str, Any]) -> list[tuple[str, str]]:
     results = valuation.get("results")
-    dcf = results.get("dcf") if isinstance(results, dict) else None
-    if not isinstance(dcf, dict) or dcf.get("status") != "computed":
-        return []
-    checks = dcf.get("terminal_value_checks") if isinstance(dcf, dict) else None
-    if not isinstance(checks, dict):
-        return [("terminal_checks_missing", "DCF 未提供完整终值三查结果。")]
     failures: list[tuple[str, str]] = []
-    for name in TERMINAL_CHECK_NAMES:
-        check = checks.get(name)
-        if not isinstance(check, dict):
-            failures.append((f"{name}_missing", "终值三查缺少该检查结果。"))
+    for model in ("dcf", "driver_dcf"):
+        entry = results.get(model) if isinstance(results, dict) else None
+        if not isinstance(entry, dict) or entry.get("status") != "computed":
             continue
-        status = check.get("status")
-        if status not in TERMINAL_CHECK_STATUSES:
-            failures.append((name, f"终值检查状态非法：{status!r}。"))
+        checks = entry.get("terminal_value_checks")
+        if not isinstance(checks, dict):
+            failures.append((f"{model}.terminal_checks_missing", "未提供完整终值三查结果。"))
             continue
-        if status == "fail":
-            detail = check.get("detail")
-            failures.append((name, detail if isinstance(detail, str) else "未提供失败详情"))
+        quality = entry.get("quality") if model == "driver_dcf" else None
+        quality_usable = isinstance(quality, dict) and quality.get("status") == "usable"
+        for name in TERMINAL_CHECK_NAMES:
+            check = checks.get(name)
+            if not isinstance(check, dict):
+                failures.append((f"{model}.{name}_missing", "终值三查缺少该检查结果。"))
+                continue
+            status = check.get("status")
+            if status not in TERMINAL_CHECK_STATUSES:
+                failures.append((f"{model}.{name}", f"终值检查状态非法：{status!r}。"))
+                continue
+            if status == "fail" or (model == "driver_dcf" and quality_usable and status != "pass"):
+                detail = check.get("detail")
+                failures.append(
+                    (
+                        f"{model}.{name}",
+                        detail if isinstance(detail, str) else "终值检查未通过或缺少失败详情",
+                    )
+                )
     return failures
 
 
@@ -402,11 +411,42 @@ def _number_or_none(value: object) -> float | None:
 def _resolve_value_source(
     valuation: dict[str, Any], safety_margin: float
 ) -> dict[str, Any] | None:
-    """Resolve the value band deterministically: a computed DCF value zone
-    first, otherwise the first computed point estimate among EPV, EVA, SOTP
-    anchored into an explicit band. Returns None when no model applies."""
+    """Resolve the value band deterministically: a driver-based DCF whose
+    generic quality gate is usable takes precedence; when a driver model was
+    attempted but fails the gate no fundamental target is formed (the legacy
+    baseline DCF must not be dressed up as a target). Without any driver
+    model the legacy behavior is unchanged: a computed DCF value zone first,
+    otherwise the first computed point estimate among EPV, EVA, SOTP anchored
+    into an explicit band. Returns None when no model applies."""
     results = valuation.get("results")
     if not isinstance(results, dict):
+        return None
+    driver = results.get("driver_dcf")
+    if isinstance(driver, dict):
+        quality = driver.get("quality")
+        quality_status = quality.get("status") if isinstance(quality, dict) else None
+        if driver.get("status") == "computed" and quality_status == "usable":
+            zone = driver.get("value_zone")
+            if isinstance(zone, dict):
+                low = _number_or_none(zone.get("low"))
+                high = _number_or_none(zone.get("high"))
+                weighted = _number_or_none(driver.get("probability_weighted_per_share"))
+                if (
+                    low is not None
+                    and high is not None
+                    and 0 < low <= high
+                    and weighted is not None
+                    and weighted > 0
+                ):
+                    return {
+                        "model": "driver_dcf",
+                        "zone_low": low,
+                        "zone_high": high,
+                        "target": weighted,
+                        "target_basis": "driver_dcf",
+                        "entry_basis": ENTRY_BASIS,
+                        "band_note": None,
+                    }
         return None
     dcf = results.get("dcf")
     if isinstance(dcf, dict) and dcf.get("status") == "computed":
@@ -763,6 +803,12 @@ def build_plan(
         )
     elif value_source["model"] == "dcf":
         record("valuation", True, "三情景 DCF 已计算，价值区间有效。")
+    elif value_source["model"] == "driver_dcf":
+        record(
+            "valuation",
+            True,
+            "驱动型 DCF 质量门槛为 usable，价值区间有效。",
+        )
     else:
         record(
             "valuation",

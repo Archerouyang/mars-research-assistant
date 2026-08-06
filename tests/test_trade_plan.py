@@ -251,6 +251,88 @@ class TradePlanTests(unittest.TestCase):
             self.assertIn(json.dumps(value), html)
         self.assertFalse(TRADE_DIRECTIVE.search(html))
 
+    def test_driver_dcf_usable_becomes_value_source(self) -> None:
+        # 通用质量门槛为 usable 的驱动型 DCF 优先于 baseline DCF 成为
+        # 基本面目标来源（basis=driver_dcf），zone/target 取自驱动型结果。
+        valuation = self._valuation()
+        baseline = valuation["results"]["dcf"]
+        zone = baseline["value_zone"]
+        weighted = baseline["probability_weighted_per_share"]
+        valuation["results"]["driver_dcf"] = {
+            "model_kind": "driver_dcf",
+            "model_version": "v1.0.3-valuation-1",
+            "status": "computed",
+            "scenarios": [],
+            "probability_weighted_per_share": weighted,
+            "value_zone": {"low": zone["low"], "high": zone["high"]},
+            "terminal_value_checks": {
+                name: {"status": "pass", "detail": "离线验收示例：终值检查。"}
+                for name in (
+                    "long_run_growth",
+                    "mature_margin",
+                    "reinvestment_roic_consistency",
+                )
+            },
+            "quality": {
+                "status": "usable",
+                "flags": [],
+                "reasons": ["全部质量检查通过，可形成基本面参考值。"],
+            },
+        }
+        earnings = self._earnings()
+        evidence = self._fixture_evidence("technical-evidence-qualified.json")
+        result, plan, _ = self._run_trade_plan(
+            valuation, self._evidence_path(evidence), earnings
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(plan["status"], "entry_plan")
+        target = plan["target_plan"]["fundamental_target"]
+        self.assertEqual(target["basis"], "driver_dcf")
+        self.assertEqual(target["level"], round(weighted, 6))
+        self.assertEqual(plan["gates"]["valuation"]["pass"], True)
+        self.assertIn("驱动型 DCF", plan["gates"]["valuation"]["reason"])
+
+    def test_driver_dcf_below_gate_forms_no_fundamental_target(self) -> None:
+        # 已提供 driver_model 但质量门槛非 usable：不形成基本面目标，也
+        # 不得回退把旧 baseline DCF 包装成目标价。
+        valuation = self._valuation()
+        earnings = self._earnings()
+        evidence = self._fixture_evidence("technical-evidence-qualified.json")
+        for quality_status in ("conditional", "unreliable"):
+            with self.subTest(quality_status=quality_status):
+                valuation["results"]["driver_dcf"] = {
+                    "model_kind": "driver_dcf",
+                    "model_version": "v1.0.3-valuation-1",
+                    "status": "computed",
+                    "scenarios": [],
+                    "probability_weighted_per_share": 180.0,
+                    "value_zone": {"low": 150.0, "high": 180.0},
+                    "terminal_value_checks": {
+                        name: {"status": "pass", "detail": "离线验收示例：终值检查。"}
+                        for name in (
+                            "long_run_growth",
+                            "mature_margin",
+                            "reinvestment_roic_consistency",
+                        )
+                    },
+                    "quality": {
+                        "status": quality_status,
+                        "flags": ["short_forecast_horizon"],
+                        "reasons": ["显式预测期短于 5 年。"],
+                    },
+                }
+                result, plan, _ = self._run_trade_plan(
+                    valuation,
+                    self._evidence_path(evidence),
+                    earnings,
+                    output_name=f"trade-plan-{quality_status}.json",
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(plan["status"], "watch")
+                self.assertFalse(plan["gates"]["valuation"]["pass"])
+                self.assertIsNone(plan["target_plan"]["fundamental_target"]["level"])
+                self.assertIsNone(plan["entry_plan"]["zone"])
+
     def test_earnings_quality_c_grade_veto(self) -> None:
         valuation = self._valuation()
         earnings = self._earnings("earnings-quality-c.json")

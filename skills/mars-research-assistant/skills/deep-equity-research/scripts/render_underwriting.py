@@ -54,12 +54,14 @@ CORE_BASELINE_FIELDS = ("revenue", "net_income", "operating_cash_flow")
 CORE_BASELINE_LABELS = {"revenue": "收入", "net_income": "净利润", "operating_cash_flow": "经营现金流"}
 FUNDAMENTAL_TARGET_LABELS = {
     "probability_weighted": "概率加权公允价值",
+    "driver_dcf": "驱动型 DCF 概率加权每股价值",
     "epv": "EPV 每股公允价值",
     "eva": "剩余收益（EVA）每股公允价值",
     "sotp": "SOTP 分部加总每股公允价值",
 }
+DRIVER_QUALITY_STATUSES = {"usable", "conditional", "unreliable"}
 EVIDENCE_ID_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
-VALUATION_STATUSES = {"computed", "missing_inputs", "not_applicable", "no_solution"}
+VALUATION_STATUSES = {"computed", "missing_inputs", "invalid_inputs", "not_applicable", "no_solution"}
 EARNINGS_COMPONENT_STATUSES = {"computed", "missing", "not_applicable"}
 TERMINAL_CHECK_NAMES = (
     "long_run_growth",
@@ -427,6 +429,7 @@ def _model_status_line(name: str, result: object) -> str:
     if status == "computed":
         metrics = {
             "dcf": ("概率加权每股公允价值", result.get("probability_weighted_per_share"), _fmt),
+            "driver_dcf": ("驱动型 DCF 概率加权每股", result.get("probability_weighted_per_share"), _fmt),
             "reverse_dcf": ("现价隐含 FCF 年化增长", result.get("implied_fcf_cagr"), _pct),
             "pvgo": ("PVGO 占现价比例", result.get("pvgo_share_of_price"), _pct),
             "epv": ("EPV 每股", result.get("epv_per_share"), _fmt),
@@ -462,23 +465,24 @@ def _model_status_line(name: str, result: object) -> str:
 def _validate_terminal_checks(valuation: dict[str, Any], trade_plan: dict[str, Any]) -> None:
     """Keep a forged entry plan from bypassing a failed/unknown DCF terminal check."""
     results = valuation.get("results")
-    dcf = results.get("dcf") if isinstance(results, dict) else None
-    if not isinstance(dcf, dict) or dcf.get("status") != "computed":
-        return
-    checks = dcf.get("terminal_value_checks")
-    if not isinstance(checks, dict):
-        raise UnderwritingError("computed DCF requires terminal_value_checks")
     failures: list[str] = []
-    for name in TERMINAL_CHECK_NAMES:
-        check = checks.get(name)
-        if not isinstance(check, dict):
-            failures.append(name)
+    for model in ("dcf", "driver_dcf"):
+        entry = results.get(model) if isinstance(results, dict) else None
+        if not isinstance(entry, dict) or entry.get("status") != "computed":
             continue
-        status = check.get("status")
-        if status not in TERMINAL_CHECK_STATUSES:
-            raise UnderwritingError(f"terminal check {name} status is not supported: {status}")
-        if status == "fail":
-            failures.append(name)
+        checks = entry.get("terminal_value_checks")
+        if not isinstance(checks, dict):
+            raise UnderwritingError(f"computed {model} requires terminal_value_checks")
+        for name in TERMINAL_CHECK_NAMES:
+            check = checks.get(name)
+            if not isinstance(check, dict):
+                failures.append(f"{model}.{name}")
+                continue
+            status = check.get("status")
+            if status not in TERMINAL_CHECK_STATUSES:
+                raise UnderwritingError(f"terminal check {name} status is not supported: {status}")
+            if status == "fail":
+                failures.append(f"{model}.{name}")
     if not failures:
         return
     gates = trade_plan.get("gates")
@@ -636,6 +640,152 @@ def _dcf_inputs_lines(dcf: dict[str, Any], currency: str) -> list[str]:
     return lines
 
 
+def _driver_dcf_quality(driver: object) -> str | None:
+    """Read the generic driver-DCF quality gate; fail closed on unknown states."""
+    if not isinstance(driver, dict):
+        return None
+    quality = driver.get("quality")
+    if not isinstance(quality, dict):
+        if driver.get("status") == "computed":
+            raise UnderwritingError("computed driver_dcf requires a quality object")
+        return None
+    status = _text(quality.get("status"), "driver_dcf quality")
+    if status not in DRIVER_QUALITY_STATUSES:
+        raise UnderwritingError(
+            f"driver_dcf quality status is not supported: {status}"
+        )
+    if driver.get("status") == "computed":
+        checks = driver.get("terminal_value_checks")
+        if not isinstance(checks, dict):
+            raise UnderwritingError("computed driver_dcf requires terminal_value_checks")
+        for name in TERMINAL_CHECK_NAMES:
+            check = checks.get(name)
+            if not isinstance(check, dict):
+                raise UnderwritingError(f"driver_dcf terminal check {name} is missing")
+            check_status = check.get("status")
+            if check_status not in TERMINAL_CHECK_STATUSES:
+                raise UnderwritingError(
+                    f"driver_dcf terminal check {name} status is not supported: {check_status}"
+                )
+            if status == "usable" and check_status != "pass":
+                raise UnderwritingError(
+                    f"usable driver_dcf requires terminal check {name} to pass"
+                )
+    return status
+
+
+def _driver_dcf_lines(driver: dict[str, Any], currency: str) -> list[str]:
+    """Render the driver-based DCF layered by its generic quality gate.
+
+    Only a ``usable`` gate earns the 定制 DCF 参考值 framing; conditional
+    outputs stay 条件性模型输出 and unreliable ones 估值模型待重建 — the
+    baseline DCF number is never dressed up as a fundamental target."""
+    quality_status = _driver_dcf_quality(driver)
+    quality = driver.get("quality") if isinstance(driver.get("quality"), dict) else {}
+    lines = [
+        "### 驱动型 DCF（经营驱动逐段推导现金流）",
+        f"- 模型：{_text(driver.get('model_kind'), 'driver_dcf model_kind')}"
+        f"（model_version：{_text(driver.get('model_version'), 'driver_dcf model_version')}）。",
+        f"- 公式：{_statement(driver.get('formula'), 'driver_dcf formula') if driver.get('formula') else 'NOPAT = revenue × operating_margin × (1 − tax_rate)；FCF = NOPAT + D&A − capex − ΔNWC。'}",
+    ]
+    if quality_status is not None:
+        reasons = quality.get("reasons", [])
+        reason_text = (
+            "；".join(_statement(item, "driver_dcf quality reason") for item in reasons)
+            if isinstance(reasons, list) and reasons
+            else "未记录原因"
+        )
+        lines.append(f"- 质量门槛：**{quality_status}**——{reason_text}。")
+    status = driver.get("status")
+    if status != "computed":
+        detail = driver.get("detail")
+        missing = driver.get("missing")
+        if isinstance(missing, list) and missing:
+            lines.append(
+                "- 状态："
+                + _text(status, "driver_dcf status")
+                + "；缺少输入："
+                + ", ".join(_text(item, "driver_dcf missing") for item in missing)
+                + "；不输出参考值。"
+            )
+        else:
+            lines.append(
+                f"- 状态：{_text(status, 'driver_dcf status')}"
+                + (f"——{_statement(detail, 'driver_dcf detail')}" if detail else "")
+            )
+        lines.append("")
+        return lines
+    scenarios = driver.get("scenarios", [])
+    lines.extend([
+        "| 情景 | 概率 | 预测期 | 推导 FCF 路径 | 企业价值 | 股权价值 | 每股价值 |",
+        "| --- | ---: | ---: | --- | ---: | ---: | ---: |",
+    ])
+    for scenario in scenarios:
+        if not isinstance(scenario, dict):
+            raise UnderwritingError("driver_dcf scenario must be an object")
+        flows = scenario.get("free_cash_flows")
+        flow_text = (
+            ", ".join(_fmt(item, "driver_dcf fcf") for item in flows)
+            if isinstance(flows, list)
+            else "未获取到"
+        )
+        lines.append(
+            f"| {_text(scenario.get('name'), 'driver_dcf scenario')} "
+            f"| {_pct(scenario.get('probability'), 'driver_dcf probability')} "
+            f"| {_number(scenario.get('forecast_periods'), 'driver_dcf periods'):.0f} "
+            f"| {flow_text} "
+            f"| {_fmt(scenario.get('enterprise_value'), 'driver_dcf enterprise_value')} "
+            f"| {_fmt(scenario.get('equity_value'), 'driver_dcf equity_value')} "
+            f"| {_fmt(scenario.get('per_share'), 'driver_dcf per_share')} |"
+        )
+    weighted = _number(
+        driver.get("probability_weighted_per_share"), "driver_dcf weighted"
+    )
+    zone = driver.get("value_zone")
+    zone_text = (
+        f"{_fmt(zone.get('low'), 'driver_dcf zone low')} – "
+        f"{_fmt(zone.get('high'), 'driver_dcf zone high')} {currency}"
+        if isinstance(zone, dict)
+        else "未计算"
+    )
+    lines.append("")
+    if quality_status == "usable":
+        lines.append(
+            f"定制 DCF 参考值（可作为基本面目标候选）：**{_fmt(weighted)} {currency}**；"
+            f"参考区间：{zone_text}。"
+        )
+    elif quality_status == "conditional":
+        lines.append(
+            f"条件性模型输出：{_fmt(weighted)} {currency}（参考区间 {zone_text}）；"
+            "质量门槛为 conditional，未形成基本面目标。"
+        )
+    else:
+        lines.append(
+            "估值模型待重建：质量门槛为 unreliable，"
+            "以上数值仅为留档模型输出，不构成基本面目标。"
+        )
+    assumptions = driver.get("terminal_assumptions")
+    if isinstance(assumptions, dict):
+        lines.append(
+            f"- 终值假设：永续增长率 {_pct(assumptions.get('terminal_growth'), 'driver_dcf terminal_growth')}，"
+            f"WACC {_pct(assumptions.get('wacc'), 'driver_dcf wacc')}；"
+            f"{_statement(assumptions.get('detail'), 'driver_dcf terminal detail') if assumptions.get('detail') else ''}"
+        )
+    checks = driver.get("terminal_value_checks")
+    if not isinstance(checks, dict):
+        raise UnderwritingError("computed driver_dcf requires terminal_value_checks")
+    for check_name in TERMINAL_CHECK_NAMES:
+        check = checks.get(check_name)
+        if not isinstance(check, dict):
+            raise UnderwritingError(f"driver_dcf terminal check {check_name} is missing")
+        lines.append(
+            f"- **{check_name}**：{_text(check.get('status'), f'driver check {check_name}')}——"
+            f"{_statement(check.get('detail'), f'driver check {check_name}')}"
+        )
+    lines.append("")
+    return lines
+
+
 def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
     results = valuation.get("results")
     if not isinstance(results, dict):
@@ -651,9 +801,20 @@ def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
         "| 模型 | 状态 | 关键数值 / 原因 |",
         "| --- | --- | --- |",
     ]
-    for name in ("dcf", "reverse_dcf", "pvgo", "epv", "eva", "sotp", "monte_carlo"):
+    model_names = ["dcf"]
+    if "driver_dcf" in results:
+        model_names.append("driver_dcf")
+    model_names.extend(["reverse_dcf", "pvgo", "epv", "eva", "sotp", "monte_carlo"])
+    for name in model_names:
         lines.append(_model_status_line(name, results.get(name)))
     lines.append("")
+    driver = results.get("driver_dcf")
+    driver_quality = _driver_dcf_quality(driver)
+    driver_usable = (
+        isinstance(driver, dict)
+        and driver.get("status") == "computed"
+        and driver_quality == "usable"
+    )
     dcf = results.get("dcf")
     if isinstance(dcf, dict) and dcf.get("status") == "computed":
         scenarios = dcf.get("scenarios", [])
@@ -692,7 +853,19 @@ def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
                         f"- **{check_name}**：{_text(check.get('status'), f'terminal check {check_name}')}——"
                         f"{_statement(check.get('detail'), f'terminal check {check_name}')}"
                     )
+        if driver_usable:
+            lines.append(
+                "- 模型角色：baseline（可审计基线）；基本面参考值以质量门槛为 "
+                "usable 的驱动型 DCF 为准。"
+            )
+        else:
+            lines.append(
+                "- 模型角色：baseline（可审计基线）。该现金流路径为直接给定、"
+                "未由经营驱动逐项推导，按通用质量门槛不构成基本面目标。"
+            )
         lines.append("")
+    if isinstance(driver, dict):
+        lines.extend(_driver_dcf_lines(driver, currency))
     # DCF 关键输入节无论 dcf 状态（computed/missing_inputs/no_solution 等）
     # 都出现；无 inputs_provenance 时逐项“未获取到”。
     if isinstance(dcf, dict):
@@ -700,6 +873,16 @@ def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
     reverse = results.get("reverse_dcf")
     pvgo = results.get("pvgo")
     priced_in: list[str] = ["### 现价定价了什么"]
+    if driver_usable:
+        priced_in.append(
+            "- 基本面参考值已由质量门槛为 usable 的驱动型 DCF 形成；"
+            "以下市场隐含条件用于对照，不构成价值目标。"
+        )
+    else:
+        priced_in.append(
+            "- 未形成基本面目标：现金流路径须由经营驱动推导且质量门槛为 usable "
+            "才具备资格；当前输出为条件性模型输出或估值模型待重建。"
+        )
     if isinstance(reverse, dict) and reverse.get("status") == "computed":
         priced_in.append(
             f"- 反向 DCF：{_statement(reverse.get('detail'), 'reverse_dcf detail') if reverse.get('detail') else ''}"
@@ -716,6 +899,9 @@ def _valuation_lines(valuation: dict[str, Any], currency: str) -> list[str]:
         )
     else:
         priced_in.append("- PVGO 分解：见模型结果总览中的状态与原因。")
+    priced_in.append(
+        "- 反向 DCF 与 PVGO 均为市场隐含条件与预期分解，仅供对照，不构成价值目标。"
+    )
     priced_in.append("")
     lines.extend(priced_in)
     return lines
@@ -1332,32 +1518,52 @@ def _watch_valuation_cards(
 ) -> list[tuple[str, str]]:
     """Valuation reference cards for a watch trade plan.
 
+    Only a driver-based DCF whose generic quality gate is ``usable`` may be
+    shown as 定制 DCF 参考值 / 参考区间；a ``conditional`` gate is shown as
+    条件性模型输出，and anything else — including the legacy baseline DCF
+    whose cash-flow path is hand-supplied rather than driver-derived — is
+    shown as 基本面目标 未形成 / 估值模型状态 待重建，never as a 基本面估值锚.
     Reads only values already computed in the valuation artifact and shows
     every finite value verbatim — the renderer adds no positivity or ordering
     rules of its own; only missing or non-finite values fail closed to
-    未计算. A computed DCF shows the probability-weighted anchor and its
-    value_zone; otherwise the first computed EPV/EVA/SOTP point estimate is
-    shown as the anchor and no range is constructed. Labels stay
-    non-actionable in every branch."""
+    未计算. When no DCF applies, the first computed EPV/EVA/SOTP point
+    estimate keeps the legacy non-actionable anchor card."""
     results = valuation.get("results")
     results = results if isinstance(results, dict) else {}
-    dcf = results.get("dcf")
-    if isinstance(dcf, dict) and dcf.get("status") == "computed":
-        anchor = _finite_number(dcf.get("probability_weighted_per_share"))
-        zone = dcf.get("value_zone")
+    driver = results.get("driver_dcf")
+    if isinstance(driver, dict) and driver.get("status") == "computed":
+        quality_status = _driver_dcf_quality(driver)
+        weighted = _finite_number(driver.get("probability_weighted_per_share"))
+        zone = driver.get("value_zone")
         low = _finite_number(zone.get("low")) if isinstance(zone, dict) else None
         high = _finite_number(zone.get("high")) if isinstance(zone, dict) else None
+        zone_text = (
+            f"{_fmt(low)} – {_fmt(high)} {currency}"
+            if low is not None and high is not None
+            else "未计算"
+        )
+        if quality_status == "usable":
+            return [
+                (
+                    "定制 DCF 参考值",
+                    f"{_fmt(weighted)} {currency}" if weighted is not None else "未计算",
+                ),
+                ("定制 DCF 参考区间", zone_text),
+            ]
+        if quality_status == "conditional":
+            return [
+                (
+                    "条件性模型输出",
+                    f"{_fmt(weighted)} {currency}" if weighted is not None else "未计算",
+                ),
+                ("估值参考区间", zone_text),
+            ]
+        return [("基本面目标", "未形成"), ("估值模型状态", "待重建")]
+    dcf = results.get("dcf")
+    if isinstance(dcf, dict) and dcf.get("status") == "computed":
         return [
-            (
-                "基本面估值锚",
-                f"{_fmt(anchor)} {currency}" if anchor is not None else "未计算",
-            ),
-            (
-                "DCF 估值参考区间",
-                f"{_fmt(low)} – {_fmt(high)} {currency}"
-                if low is not None and high is not None
-                else "未计算",
-            ),
+            ("基本面目标", "未形成"),
+            ("估值模型状态", "待重建（baseline 未由驱动推导）"),
         ]
     for model, key in (
         ("epv", "epv_per_share"),
@@ -1374,7 +1580,7 @@ def _watch_valuation_cards(
             ("基本面估值锚", f"{_fmt(anchor)} {currency}"),
             ("估值参考区间", "未计算"),
         ]
-    return [("基本面估值锚", "未计算"), ("估值参考区间", "未计算")]
+    return [("基本面目标", "未形成"), ("估值模型状态", "待重建")]
 
 
 def render_html(fixture: dict[str, Any], markdown: str) -> str:

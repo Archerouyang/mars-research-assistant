@@ -562,5 +562,338 @@ class ValuationEngineTests(unittest.TestCase):
                 self.assertFalse(output.exists())
 
 
+DRIVER_SOURCE = {
+    "name": "Example driver assumption",
+    "kind": "valuation_assumption",
+    "as_of": "2026-07-30T00:00:00Z",
+    "url": "https://example.com/driver",
+}
+
+
+def driver_model_payload() -> dict:
+    """Generic two-scenario driver model; no relation to any real issuer."""
+    base_arrays = {
+        "revenue": [1000.0, 1100.0, 1200.0, 1300.0, 1400.0],
+        "operating_margin": [0.12, 0.13, 0.14, 0.15, 0.16],
+        "tax_rate": [0.25, 0.25, 0.25, 0.25, 0.25],
+        "depreciation_amortization": [30.0, 30.0, 30.0, 30.0, 30.0],
+        "capex": [50.0, 50.0, 50.0, 50.0, 50.0],
+        "change_in_nwc": [10.0, 10.0, 10.0, 10.0, 10.0],
+    }
+    bull_arrays = {
+        "revenue": [1000.0, 1150.0, 1300.0, 1450.0, 1600.0],
+        "operating_margin": [0.13, 0.14, 0.15, 0.16, 0.17],
+        "tax_rate": [0.25, 0.25, 0.25, 0.25, 0.25],
+        "depreciation_amortization": [30.0, 30.0, 30.0, 30.0, 30.0],
+        "capex": [55.0, 55.0, 55.0, 55.0, 55.0],
+        "change_in_nwc": [12.0, 12.0, 12.0, 12.0, 12.0],
+    }
+    return {
+        "scenarios": [
+            {
+                "name": "conservative",
+                "probability": {"value": 0.5, "rationale": "离线验收示例：保守情景概率。"},
+                "forecast_periods": 5,
+                "reinvestment_rate": {"value": 0.3},
+                "roic": {"value": 0.1},
+                "source": dict(DRIVER_SOURCE),
+                **base_arrays,
+            },
+            {
+                "name": "optimistic",
+                "probability": {"value": 0.5, "rationale": "离线验收示例：乐观情景概率。"},
+                "forecast_periods": 5,
+                "reinvestment_rate": {"value": 0.3},
+                "roic": {"value": 0.1},
+                "source": dict(DRIVER_SOURCE),
+                **bull_arrays,
+            },
+        ]
+    }
+
+
+def driver_fcf_path(scenario: dict) -> list[float]:
+    """Reference implementation of NOPAT/FCF derivation for assertions."""
+    periods = scenario["forecast_periods"]
+    nopat = [
+        scenario["revenue"][year]
+        * scenario["operating_margin"][year]
+        * (1 - scenario["tax_rate"][year])
+        for year in range(periods)
+    ]
+    return [
+        nopat[year]
+        + scenario["depreciation_amortization"][year]
+        - scenario["capex"][year]
+        - scenario["change_in_nwc"][year]
+        for year in range(periods)
+    ]
+
+
+class DriverDcfTests(unittest.TestCase):
+    def _run_with_driver(
+        self, mutate_driver: Callable[[dict], None] | None = None,
+        mutate_fixture: Callable[[dict], None] | None = None,
+    ) -> tuple[subprocess.CompletedProcess[str], Path]:
+        fixture = json.loads(FULL_FIXTURE.read_text(encoding="utf-8"))
+        driver = driver_model_payload()
+        if mutate_driver is not None:
+            mutate_driver(driver)
+        fixture["models"]["dcf"]["driver_model"] = driver
+        if mutate_fixture is not None:
+            mutate_fixture(fixture)
+        temporary = tempfile.TemporaryDirectory(prefix="mars-v103-driver-")
+        self.addCleanup(temporary.cleanup)
+        temporary_path = Path(temporary.name)
+        modified = temporary_path / "modified.json"
+        modified.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
+        output = temporary_path / "mars-research" / "valuation.json"
+        return self._run_engine(modified, output), output
+
+    def _run_engine(self, fixture: Path, output: Path) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(VALUATION_ENGINE), "--input", str(fixture), "--output", str(output)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def test_driver_dcf_derives_fcf_and_values(self) -> None:
+        result, output = self._run_with_driver()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        fixture = json.loads(FULL_FIXTURE.read_text(encoding="utf-8"))
+        dcf_input = fixture["models"]["dcf"]
+        wacc = dcf_input["wacc"]["value"]
+        growth = dcf_input["terminal_growth"]["value"]
+        net_debt = dcf_input["net_debt"]["value"]
+        shares = dcf_input["shares_outstanding"]["value"]
+
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["model_kind"], "driver_dcf")
+        self.assertEqual(driver["model_version"], "v1.0.3-valuation-1")
+        self.assertEqual(driver["status"], "computed")
+        self.assertEqual(driver["quality"]["status"], "usable")
+        self.assertEqual(driver["quality"]["flags"], [])
+        payload = driver_model_payload()
+        weighted = 0.0
+        per_shares = []
+        for entry, source in zip(driver["scenarios"], payload["scenarios"]):
+            with self.subTest(scenario=entry["name"]):
+                self.assertEqual(entry["name"], source["name"])
+                expected_fcf = driver_fcf_path(source)
+                self.assertEqual(entry["forecast_periods"], source["forecast_periods"])
+                self.assertEqual(entry["drivers"]["revenue"], source["revenue"])
+                for actual, expected in zip(entry["free_cash_flows"], expected_fcf):
+                    self.assertAlmostEqual(actual, expected, delta=1e-6)
+                expected_per_share = scenario_per_share(
+                    expected_fcf, wacc, growth, net_debt, shares
+                )
+                per_shares.append(expected_per_share)
+                self.assertAlmostEqual(entry["per_share"], expected_per_share, delta=1e-6)
+                self.assertIn("terminal_value", entry)
+                self.assertIn("terminal_value_share_of_enterprise", entry)
+                weighted += source["probability"]["value"] * expected_per_share
+        self.assertAlmostEqual(
+            driver["probability_weighted_per_share"], weighted, delta=1e-6
+        )
+        self.assertAlmostEqual(driver["value_zone"]["low"], min(per_shares), delta=1e-6)
+        self.assertAlmostEqual(driver["value_zone"]["high"], weighted, delta=1e-6)
+        for key in ("long_run_growth", "mature_margin", "reinvestment_roic_consistency"):
+            self.assertEqual(driver["terminal_value_checks"][key]["status"], "pass")
+        self.assertEqual(
+            driver["terminal_assumptions"]["terminal_growth"], growth
+        )
+        self.assertEqual(driver["terminal_assumptions"]["wacc"], wacc)
+        # 旧 DCF 保持 baseline 兼容：数值不变，仅加角色标记。
+        baseline = artifact["results"]["dcf"]
+        self.assertEqual(baseline["model_role"], "baseline")
+        self.assertIn("probability_weighted_per_share", baseline)
+        self.assertEqual(artifact["data_gaps"], [])
+
+    def test_driver_model_absent_keeps_legacy_output(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mars-v103-driver-") as temporary:
+            output = Path(temporary) / "valuation.json"
+            result = self._run_engine(FULL_FIXTURE, output)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            artifact = json.loads(output.read_text(encoding="utf-8"))
+        self.assertNotIn("driver_dcf", artifact["results"])
+        self.assertEqual(artifact["results"]["dcf"]["model_role"], "baseline")
+
+    def test_driver_dcf_missing_field_fails_closed(self) -> None:
+        def mutate(driver: dict) -> None:
+            del driver["scenarios"][1]["capex"]
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "missing_inputs")
+        self.assertIn("scenarios[1].capex", driver["missing"])
+        self.assertEqual(driver["quality"]["status"], "unreliable")
+        self.assertNotIn("per_share", json.dumps(driver, ensure_ascii=False))
+
+    def test_driver_dcf_requires_reinvestment_and_roic(self) -> None:
+        for field in ("reinvestment_rate", "roic"):
+            with self.subTest(field=field):
+                def mutate(driver: dict, field: str = field) -> None:
+                    del driver["scenarios"][0][field]
+
+                result, output = self._run_with_driver(mutate_driver=mutate)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                artifact = json.loads(output.read_text(encoding="utf-8"))
+                driver = artifact["results"]["driver_dcf"]
+                self.assertEqual(driver["status"], "missing_inputs")
+                self.assertIn(f"scenarios[0].{field}", driver["missing"])
+                self.assertEqual(driver["quality"]["status"], "unreliable")
+
+    def test_driver_dcf_array_length_mismatch_fails_closed(self) -> None:
+        def mutate(driver: dict) -> None:
+            driver["scenarios"][0]["capex"] = [50.0, 50.0]
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("forecast_periods", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_driver_dcf_non_finite_value_fails_closed(self) -> None:
+        def mutate(driver: dict) -> None:
+            driver["scenarios"][0]["revenue"][2] = 1e999
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("finite", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_driver_dcf_negative_revenue_is_invalid(self) -> None:
+        def mutate(driver: dict) -> None:
+            driver["scenarios"][0]["revenue"][0] = -5.0
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "invalid_inputs")
+        self.assertIn("revenue", driver["detail"])
+        self.assertEqual(driver["quality"]["status"], "unreliable")
+        self.assertNotIn("probability_weighted_per_share", driver)
+
+    def test_driver_dcf_probability_sum_is_enforced(self) -> None:
+        def mutate(driver: dict) -> None:
+            driver["scenarios"][0]["probability"]["value"] = 0.7
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "invalid_inputs")
+        self.assertIn("概率", driver["detail"])
+
+    def test_driver_dcf_short_horizon_is_conditional(self) -> None:
+        def mutate(driver: dict) -> None:
+            for scenario in driver["scenarios"]:
+                scenario["forecast_periods"] = 3
+                for field in (
+                    "revenue",
+                    "operating_margin",
+                    "tax_rate",
+                    "depreciation_amortization",
+                    "capex",
+                    "change_in_nwc",
+                ):
+                    scenario[field] = scenario[field][:3]
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "computed")
+        self.assertEqual(driver["quality"]["status"], "conditional")
+        self.assertIn("short_forecast_horizon", driver["quality"]["flags"])
+        self.assertTrue(
+            any(
+                "conditional" in gap and "未形成基本面目标" in gap
+                for gap in artifact["data_gaps"]
+            ),
+            artifact["data_gaps"],
+        )
+
+    def test_driver_dcf_terminal_check_fail_is_unreliable(self) -> None:
+        def mutate(driver: dict) -> None:
+            # 终值年经营利润率远超成熟利润率基准 → mature_margin fail。
+            for scenario in driver["scenarios"]:
+                scenario["operating_margin"][-1] = 0.5
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "computed")
+        self.assertEqual(
+            driver["terminal_value_checks"]["mature_margin"]["status"], "fail"
+        )
+        self.assertEqual(driver["quality"]["status"], "unreliable")
+        self.assertIn("terminal_check_fail:mature_margin", driver["quality"]["flags"])
+        self.assertTrue(
+            any(
+                "unreliable" in gap and "未形成基本面目标" in gap
+                for gap in artifact["data_gaps"]
+            ),
+            artifact["data_gaps"],
+        )
+
+    def test_driver_dcf_missing_or_stale_key_source_is_conditional(self) -> None:
+        def drop_source(fixture: dict) -> None:
+            del fixture["models"]["dcf"]["shares_outstanding"]["source"]
+
+        result, output = self._run_with_driver(mutate_fixture=drop_source)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["quality"]["status"], "conditional")
+        self.assertIn(
+            "key_source_missing:shares_outstanding", driver["quality"]["flags"]
+        )
+
+        def stale_source(fixture: dict) -> None:
+            fixture["models"]["dcf"]["net_debt"]["source"]["as_of"] = (
+                "2024-01-01T00:00:00Z"
+            )
+
+        result, output = self._run_with_driver(mutate_fixture=stale_source)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["quality"]["status"], "conditional")
+        self.assertIn("key_source_stale:net_debt", driver["quality"]["flags"])
+
+        def stale_scenario_source(driver: dict) -> None:
+            for scenario in driver["scenarios"]:
+                scenario["source"]["as_of"] = "2024-01-01T00:00:00Z"
+
+        result, output = self._run_with_driver(mutate_driver=stale_scenario_source)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["quality"]["status"], "conditional")
+        self.assertIn(
+            "scenario_source_stale:conservative", driver["quality"]["flags"]
+        )
+
+    def test_driver_dcf_non_positive_terminal_fcf_is_unreliable(self) -> None:
+        def mutate(driver: dict) -> None:
+            # 终值年 capex 远超 NOPAT → 终值年 FCF 非正。
+            driver["scenarios"][0]["capex"][-1] = 500.0
+
+        result, output = self._run_with_driver(mutate_driver=mutate)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        artifact = json.loads(output.read_text(encoding="utf-8"))
+        driver = artifact["results"]["driver_dcf"]
+        self.assertEqual(driver["status"], "computed")
+        self.assertEqual(driver["quality"]["status"], "unreliable")
+        self.assertIn("non_positive_terminal_fcf", driver["quality"]["flags"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,18 @@ Monte Carlo — from an explicit JSON input and writes a recomputable JSON
 artifact. Missing inputs fail closed per model; no fair-value number is ever
 invented.
 
+The legacy three-scenario DCF (``results.dcf``) discounts hand-supplied
+``scenario.free_cash_flows`` and is kept as an auditable baseline
+(``model_role: "baseline"``); its ``scenario.margins`` only feed the terminal
+checks.  An optional generic driver-based DCF (``models.dcf.driver_model`` →
+``results.driver_dcf``) derives each scenario's FCF path from operating
+drivers — NOPAT = revenue × operating_margin × (1 − tax_rate)，FCF = NOPAT +
+D&A − capex − ΔNWC — so high-growth / transition / stable stages are explicit
+year-by-year paths.  A generic quality gate (usable / conditional /
+unreliable) decides whether the driver DCF may anchor a fundamental target;
+the baseline never qualifies on its own, and no parameter may be reverse-
+tuned to fit the market price.
+
 Input provenance: every ``{"value": ...}`` input may carry ``source``
 (``{"name", "kind", "as_of", "url"}``, kind from the contract enum; a
 source object missing any of these fields is rejected fail closed),
@@ -106,6 +118,34 @@ DCF_KEY_SOURCE_REQUIRED = (
     "wacc",
     "terminal_growth",
 )
+# Generic driver-based DCF (models.dcf.driver_model): FCF paths are derived
+# from operating drivers instead of being hand-fed.  High-growth / transition
+# / stable phases are expressed as explicit year-by-year driver paths (margin
+# and growth fade); no parameter is ever tuned to fit the market price.
+DRIVER_MODEL_KIND = "driver_dcf"
+DRIVER_FORMULA = (
+    "NOPAT = revenue × operating_margin × (1 − tax_rate)；"
+    "FCF = NOPAT + D&A − capex − ΔNWC；高增长/过渡/稳定阶段由逐年显式驱动路径表达。"
+)
+DRIVER_ARRAY_FIELDS = (
+    "revenue",
+    "operating_margin",
+    "tax_rate",
+    "depreciation_amortization",
+    "capex",
+    "change_in_nwc",
+)
+DRIVER_SHARED_REQUIRED = (
+    "shares_outstanding",
+    "net_debt",
+    "wacc",
+    "terminal_growth",
+    "long_run_growth_cap",
+    "mature_margin_benchmark",
+)
+MIN_USABLE_FORECAST_PERIODS = 5
+MAX_FORECAST_PERIODS = 30
+STALE_SOURCE_DAYS = 400
 
 
 def _text(value: object, context: str) -> str:
@@ -591,6 +631,397 @@ def _run_dcf(spec: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         result["source_gaps"] = source_gaps
         gaps.extend(
             f"dcf: 关键输入 {name} 缺少来源（source），模型已照算并在此标注来源缺口。"
+            for name in source_gaps
+        )
+    return result, gaps
+
+
+def _parse_driver_scenarios(
+    raw: object,
+) -> tuple[list[dict[str, Any]], list[str], list[str], dict[str, Any], list[str]]:
+    """Parse driver_model scenarios; fail closed on any structural break.
+
+    Returns (scenarios, missing, violations, provenance, source_gaps).  Arrays
+    must match forecast_periods exactly; nothing is padded or guessed.
+    """
+    if not isinstance(raw, list) or not raw:
+        raise ValuationError("dcf driver_model scenarios requires a non-empty list")
+    scenarios: list[dict[str, Any]] = []
+    missing: list[str] = []
+    violations: list[str] = []
+    provenance: dict[str, Any] = {}
+    source_gaps: list[str] = []
+    for index, item in enumerate(raw):
+        context = f"driver_model scenarios[{index}]"
+        if not isinstance(item, dict):
+            raise ValuationError(f"{context} requires an object")
+        scenario_source = (
+            _source(item["source"], context)
+            if item.get("source") is not None
+            else None
+        )
+        record: dict[str, Any] = {
+            "name": _text(item.get("name"), context),
+            "probability": None,
+            "rationale": None,
+            "forecast_periods": None,
+            "drivers": None,
+            "margins": None,
+            "source": scenario_source,
+        }
+        inputs_provenance: dict[str, Any] = {}
+        probability = item.get("probability")
+        probability_value, probability_provenance = _provenance(
+            probability,
+            f"{context} probability",
+            inherited_from="scenario",
+            fallback_source=scenario_source,
+        )
+        if probability_value is None:
+            missing.append(f"scenarios[{index}].probability")
+        else:
+            record["probability"] = probability_value
+            assert probability_provenance is not None
+            inputs_provenance["probability"] = probability_provenance
+            if probability_provenance["source"] is None:
+                source_gaps.append(f"driver_model.scenarios[{index}].probability")
+        if isinstance(probability, dict):
+            if probability.get("rationale") is None:
+                missing.append(f"scenarios[{index}].probability.rationale")
+            else:
+                record["rationale"] = _guarded_text(
+                    probability["rationale"], f"{context} probability rationale"
+                )
+        periods_raw = item.get("forecast_periods")
+        if periods_raw is None:
+            missing.append(f"scenarios[{index}].forecast_periods")
+        else:
+            periods_value = _number(periods_raw, f"{context} forecast_periods")
+            if (
+                not periods_value.is_integer()
+                or not 1 <= periods_value <= MAX_FORECAST_PERIODS
+            ):
+                raise ValuationError(
+                    f"{context} forecast_periods must be an integer in "
+                    f"1..{MAX_FORECAST_PERIODS}"
+                )
+            record["forecast_periods"] = int(periods_value)
+        drivers: dict[str, list[float]] = {}
+        if record["forecast_periods"] is not None:
+            periods = record["forecast_periods"]
+            for field in DRIVER_ARRAY_FIELDS:
+                raw_array = item.get(field)
+                if raw_array is None:
+                    missing.append(f"scenarios[{index}].{field}")
+                    continue
+                if not isinstance(raw_array, list) or len(raw_array) != periods:
+                    raise ValuationError(
+                        f"{context} {field} requires a list of exactly "
+                        f"{periods} values (forecast_periods)"
+                    )
+                values = [_number(value, f"{context} {field}") for value in raw_array]
+                drivers[field] = values
+                inputs_provenance[field] = _list_provenance(
+                    values, scenario_source, "scenario"
+                )
+            if len(drivers) == len(DRIVER_ARRAY_FIELDS):
+                record["drivers"] = drivers
+                # _terminal_checks 对照成熟利润率基准时使用终值年经营利润率。
+                record["margins"] = drivers["operating_margin"]
+                if any(value < 0 for value in drivers["revenue"]):
+                    violations.append(f"scenarios[{index}].revenue 存在负值")
+                if any(
+                    not -1 <= value <= 1 for value in drivers["operating_margin"]
+                ):
+                    violations.append(
+                        f"scenarios[{index}].operating_margin 超出 [-1, 1]"
+                    )
+                if any(not 0 <= value < 1 for value in drivers["tax_rate"]):
+                    violations.append(f"scenarios[{index}].tax_rate 超出 [0, 1)")
+        for required in ("reinvestment_rate", "roic"):
+            value, entry_provenance = _provenance(
+                item.get(required),
+                f"{context} {required}",
+                inherited_from="scenario",
+                fallback_source=scenario_source,
+            )
+            if value is None:
+                missing.append(f"scenarios[{index}].{required}")
+            else:
+                record[required] = value
+                assert entry_provenance is not None
+                inputs_provenance[required] = entry_provenance
+        provenance[record["name"]] = inputs_provenance
+        scenarios.append(record)
+    names = [scenario["name"] for scenario in scenarios]
+    if len(set(names)) != len(names):
+        violations.append("driver_model 情景名称必须唯一")
+    return scenarios, missing, violations, provenance, source_gaps
+
+
+def _driver_quality(
+    status: str,
+    computed: list[dict[str, Any]],
+    checks: dict[str, Any] | None,
+    scenarios: list[dict[str, Any]],
+    shared_provenance: dict[str, Any],
+    weighted: float | None,
+    computed_moment: datetime,
+) -> dict[str, Any]:
+    """Generic applicability gate: usable / conditional / unreliable.
+
+    A driver DCF may only anchor a fundamental target when every check is
+    clean; missing key sources, stale share/debt sources, short horizons or
+    terminal-check warnings degrade to conditional, and failed terminal
+    checks or a non-meaningful terminal value degrade to unreliable.
+    """
+    if status != "computed":
+        return {
+            "status": "unreliable",
+            "flags": [f"model_status:{status}"],
+            "reasons": ["模型未完成计算，不能形成基本面目标。"],
+        }
+    unreliable: list[str] = []
+    conditional: list[str] = []
+    flags: list[str] = []
+    for name, check in (checks or {}).items():
+        if check["status"] == "fail":
+            unreliable.append(f"终值检查 {name} 判定 fail：{check['detail']}")
+            flags.append(f"terminal_check_fail:{name}")
+        elif check["status"] == "warn":
+            conditional.append(f"终值检查 {name} 判定 warn：{check['detail']}")
+            flags.append(f"terminal_check_warn:{name}")
+    for scenario in computed:
+        if scenario["free_cash_flows"][-1] <= 0:
+            unreliable.append(
+                f"情景 {scenario['name']} 终值年 FCF 非正，永续终值公式不适用。"
+            )
+            flags.append("non_positive_terminal_fcf")
+    if weighted is None or weighted <= 0:
+        unreliable.append("概率加权每股价值非正，模型输出不具备经济意义。")
+        flags.append("non_positive_weighted_value")
+    shortest = min(scenario["forecast_periods"] for scenario in scenarios)
+    if shortest < MIN_USABLE_FORECAST_PERIODS:
+        conditional.append(
+            f"显式预测期 {shortest} 年短于 {MIN_USABLE_FORECAST_PERIODS} 年，"
+            "高增长/过渡/稳定路径覆盖不足。"
+        )
+        flags.append("short_forecast_horizon")
+    for scenario in scenarios:
+        source = scenario.get("source")
+        if not isinstance(source, dict):
+            conditional.append(f"情景 {scenario['name']} 缺少来源（source）。")
+            flags.append(f"scenario_source_missing:{scenario['name']}")
+            continue
+        age_days = (
+            computed_moment - _as_of_moment(
+                source["as_of"], f"driver_dcf {scenario['name']} source"
+            )
+        ).days
+        if age_days > STALE_SOURCE_DAYS:
+            conditional.append(
+                f"情景 {scenario['name']} 来源过时（as_of 距 computed_as_of "
+                f"{age_days} 天，超过 {STALE_SOURCE_DAYS} 天）。"
+            )
+            flags.append(f"scenario_source_stale:{scenario['name']}")
+    for key in ("shares_outstanding", "net_debt"):
+        record = shared_provenance.get(key)
+        source = record.get("source") if isinstance(record, dict) else None
+        if not isinstance(source, dict):
+            conditional.append(f"关键输入 {key} 缺少来源（source）。")
+            flags.append(f"key_source_missing:{key}")
+            continue
+        age_days = (
+            computed_moment - _as_of_moment(source["as_of"], f"driver_dcf {key}")
+        ).days
+        if age_days > STALE_SOURCE_DAYS:
+            conditional.append(
+                f"关键输入 {key} 来源过时（as_of 距 computed_as_of "
+                f"{age_days} 天，超过 {STALE_SOURCE_DAYS} 天）。"
+            )
+            flags.append(f"key_source_stale:{key}")
+    if unreliable:
+        status_value = "unreliable"
+        reasons = unreliable + conditional
+    elif conditional:
+        status_value = "conditional"
+        reasons = conditional
+    else:
+        status_value = "usable"
+        reasons = ["全部质量检查通过，可形成基本面参考值。"]
+    return {"status": status_value, "flags": flags, "reasons": reasons}
+
+
+def _driver_missing(missing: list[str]) -> tuple[dict[str, Any], list[str]]:
+    result, gaps = _missing("driver_dcf", missing)
+    result["model_kind"] = DRIVER_MODEL_KIND
+    result["model_version"] = MODEL_VERSION
+    result["quality"] = _driver_quality(
+        "missing_inputs", [], None, [], {}, None, datetime.now(timezone.utc)
+    )
+    return result, gaps
+
+
+def _driver_invalid(detail: str) -> tuple[dict[str, Any], list[str]]:
+    result, gaps = _invalid("driver_dcf", detail)
+    result["model_kind"] = DRIVER_MODEL_KIND
+    result["model_version"] = MODEL_VERSION
+    result["quality"] = _driver_quality(
+        "invalid_inputs", [], None, [], {}, None, datetime.now(timezone.utc)
+    )
+    return result, gaps
+
+
+def _run_driver_dcf(
+    spec: dict[str, Any], computed_moment: datetime
+) -> tuple[dict[str, Any], list[str]]:
+    """Driver-based multi-stage DCF sharing the dcf block's capital inputs.
+
+    FCF paths are derived — NOPAT = revenue × operating_margin ×
+    (1 − tax_rate)，FCF = NOPAT + D&A − capex − ΔNWC — so year-by-year margin
+    and growth fade express the high-growth / transition / stable stages.
+    """
+    fields, shared_provenance = _inputs_provenance(
+        spec, DRIVER_SHARED_REQUIRED, "driver_dcf"
+    )
+    missing = [name for name, value in fields.items() if value is None]
+    scenarios: list[dict[str, Any]] = []
+    scenario_provenance: dict[str, Any] = {}
+    source_gaps: list[str] = []
+    violations: list[str] = []
+    raw_model = spec.get("driver_model")
+    if raw_model is None:
+        missing.append("driver_model")
+    elif not isinstance(raw_model, dict):
+        raise ValuationError("dcf driver_model requires an object")
+    else:
+        raw_scenarios = raw_model.get("scenarios")
+        if raw_scenarios is None:
+            missing.append("driver_model.scenarios")
+        else:
+            scenarios, scenario_missing, violations, scenario_provenance, source_gaps = (
+                _parse_driver_scenarios(raw_scenarios)
+            )
+            missing.extend(scenario_missing)
+    if missing:
+        return _driver_missing(missing)
+    if violations:
+        return _driver_invalid("、".join(violations) + "，模型拒绝运行。")
+    out_of_range = [
+        scenario["name"]
+        for scenario in scenarios
+        if not 0 <= scenario["probability"] <= 1
+    ]
+    if out_of_range:
+        return _driver_invalid(
+            f"情景概率必须落在 [0, 1] 区间，越界情景：{', '.join(out_of_range)}，模型拒绝运行。"
+        )
+    total_probability = sum(scenario["probability"] for scenario in scenarios)
+    if abs(total_probability - 1.0) > PROBABILITY_TOLERANCE:
+        return _driver_invalid(
+            f"情景概率合计 {total_probability:.6f}，超出 1±1e-6 的容差，模型拒绝运行。"
+        )
+    shares = fields["shares_outstanding"]
+    net_debt = fields["net_debt"]
+    wacc = fields["wacc"]
+    growth = fields["terminal_growth"]
+    if shares <= 0 or not 0 < growth < wacc < 1:
+        return _driver_invalid(
+            "要求 shares_outstanding 为正且 0 < terminal_growth < WACC < 1。"
+        )
+    computed: list[dict[str, Any]] = []
+    for scenario in scenarios:
+        drivers = scenario["drivers"]
+        periods = scenario["forecast_periods"]
+        nopat_path = [
+            drivers["revenue"][year]
+            * drivers["operating_margin"][year]
+            * (1 - drivers["tax_rate"][year])
+            for year in range(periods)
+        ]
+        fcf_path = [
+            nopat_path[year]
+            + drivers["depreciation_amortization"][year]
+            - drivers["capex"][year]
+            - drivers["change_in_nwc"][year]
+            for year in range(periods)
+        ]
+        enterprise, equity = _dcf_equity(fcf_path, wacc, growth, net_debt)
+        terminal = fcf_path[-1] * (1 + growth) / (wacc - growth)
+        pv_terminal = terminal / (1 + wacc) ** periods
+        computed.append(
+            {
+                "name": scenario["name"],
+                "probability": scenario["probability"],
+                "forecast_periods": periods,
+                "drivers": {
+                    field: [_round6(value) for value in drivers[field]]
+                    for field in DRIVER_ARRAY_FIELDS
+                },
+                "nopat_path": [_round6(value) for value in nopat_path],
+                "free_cash_flows": [_round6(value) for value in fcf_path],
+                "terminal_value": _round6(terminal),
+                "terminal_value_share_of_enterprise": (
+                    _round6(pv_terminal / enterprise) if enterprise else None
+                ),
+                "enterprise_value": _round6(enterprise),
+                "equity_value": _round6(equity),
+                "per_share": _round6(equity / shares),
+            }
+        )
+    weighted = sum(
+        scenario["probability"] * entry["per_share"]
+        for scenario, entry in zip(scenarios, computed)
+    )
+    checks, gaps = _terminal_checks(fields, scenarios)
+    quality = _driver_quality(
+        "computed",
+        computed,
+        checks,
+        scenarios,
+        shared_provenance,
+        weighted,
+        computed_moment,
+    )
+    if quality["status"] != "usable":
+        gaps.append(
+            f"driver_dcf: 质量门槛判定 {quality['status']}："
+            f"{'；'.join(quality['reasons'])}未形成基本面目标。"
+        )
+    result = {
+        "model_kind": DRIVER_MODEL_KIND,
+        "model_version": MODEL_VERSION,
+        "status": "computed",
+        "formula": DRIVER_FORMULA,
+        "scenarios": computed,
+        "probability_weighted_per_share": _round6(weighted),
+        "value_zone": {
+            "low": _round6(min(entry["per_share"] for entry in computed)),
+            "high": _round6(weighted),
+        },
+        "terminal_assumptions": {
+            "terminal_growth": growth,
+            "wacc": wacc,
+            "detail": (
+                "终值沿用 Gordon 增长：terminal = FCF_n × (1 + g) / (WACC − g)，"
+                "按 (1 + WACC)^n 折现；参数与 baseline dcf 共享，"
+                "严禁为贴近市场价格反向调整 WACC、g、FCF 或概率。"
+            ),
+        },
+        "terminal_value_checks": checks,
+        "quality": quality,
+        "inputs_provenance": {
+            "shared": shared_provenance,
+            "scenarios": {
+                scenario["name"]: scenario_provenance[scenario["name"]]
+                for scenario in scenarios
+            },
+        },
+    }
+    if source_gaps:
+        result["source_gaps"] = source_gaps
+        gaps.extend(
+            f"driver_dcf: 关键输入 {name} 缺少来源（source），模型已照算并在此标注来源缺口。"
             for name in source_gaps
         )
     return result, gaps
@@ -1192,6 +1623,9 @@ def compute_valuation(fixture: dict[str, Any]) -> dict[str, Any]:
             raise ValuationError(f"{name} status must be requested or not_applicable")
         if name == "dcf":
             result, model_gaps = _run_dcf(spec)
+            # 旧三情景 DCF 保留为可审计 baseline；其现金流路径为直接给定、
+            # 未由经营驱动推导，按通用质量门槛不构成基本面目标。
+            result["model_role"] = "baseline"
         elif name == "reverse_dcf":
             result, model_gaps = _run_reverse_dcf(spec, dcf_spec)
         elif name == "pvgo":
@@ -1206,6 +1640,10 @@ def compute_valuation(fixture: dict[str, Any]) -> dict[str, Any]:
             result, model_gaps = _run_monte_carlo(spec, dcf_spec)
         results[name] = result
         gaps.extend(model_gaps)
+        if name == "dcf" and spec.get("driver_model") is not None:
+            driver_result, driver_gaps = _run_driver_dcf(spec, computed_moment)
+            results["driver_dcf"] = driver_result
+            gaps.extend(driver_gaps)
     _check_source_times(results, computed_moment, "results")
     artifact: dict[str, Any] = {
         "identity": identity,

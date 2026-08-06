@@ -43,6 +43,55 @@ def load_fixture(name: str) -> dict:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
+def driver_dcf_artifact(quality_status: str = "usable") -> dict:
+    """Generic driver-DCF result block for renderer tests (no real issuer)."""
+    reasons = {
+        "usable": ["全部质量检查通过，可形成基本面参考值。"],
+        "conditional": ["显式预测期 3 年短于 5 年，高增长/过渡/稳定路径覆盖不足。"],
+        "unreliable": ["情景 base 终值年 FCF 非正，永续终值公式不适用。"],
+    }
+    return {
+        "model_kind": "driver_dcf",
+        "model_version": "v1.0.3-valuation-1",
+        "status": "computed",
+        "formula": "NOPAT = revenue × operating_margin × (1 − tax_rate)；FCF = NOPAT + D&A − capex − ΔNWC。",
+        "scenarios": [
+            {
+                "name": "base",
+                "probability": 1.0,
+                "forecast_periods": 5,
+                "free_cash_flows": [60.0, 77.25, 96.0, 116.25, 138.0],
+                "terminal_value": 2500.0,
+                "terminal_value_share_of_enterprise": 0.62,
+                "enterprise_value": 4000.0,
+                "equity_value": 4200.0,
+                "per_share": 42.0,
+            }
+        ],
+        "probability_weighted_per_share": 42.0,
+        "value_zone": {"low": 38.5, "high": 42.0},
+        "terminal_assumptions": {
+            "terminal_growth": 0.03,
+            "wacc": 0.1,
+            "detail": "离线验收示例：终值假设记录。",
+        },
+        "terminal_value_checks": {
+            name: {"status": "pass", "detail": "离线验收示例：终值检查。"}
+            for name in (
+                "long_run_growth",
+                "mature_margin",
+                "reinvestment_roic_consistency",
+            )
+        },
+        "quality": {
+            "status": quality_status,
+            "flags": [],
+            "reasons": reasons[quality_status],
+        },
+        "inputs_provenance": {"shared": {}, "scenarios": {}},
+    }
+
+
 def run_renderer(fixture: dict, directory: Path, html: bool = False) -> subprocess.CompletedProcess:
     input_path = directory / "inputs.json"
     input_path.write_text(json.dumps(fixture, ensure_ascii=False), encoding="utf-8")
@@ -175,36 +224,103 @@ class UnderwritingRenderTests(unittest.TestCase):
         for word in TRADE_DIRECTIVE_WORDS:
             self.assertNotIn(word, markdown)
 
-    def test_watch_computed_dcf_html_shows_valuation_anchor_and_zone(self) -> None:
-        # watch + 已计算 DCF：摘要卡展示估值 artifact 已有的非行动性参考值，
-        # 不得再显示“未计算”，也不得标注为交易目标或入场价值带。
-        fixture, _ = self.render("underwriting-inputs-watch.json", html=True)
+    def test_watch_baseline_dcf_is_not_a_fundamental_anchor(self) -> None:
+        # 旧 baseline DCF（无 driver_model）现金流路径未由经营驱动推导，按
+        # 通用质量门槛不再展示为“基本面估值锚”：卡片显示未形成/待重建，
+        # 数值仅以 baseline 身份留档在第 7 章，reverse DCF 并列为市场隐含
+        # 条件而非价值目标。
+        fixture, markdown = self.render("underwriting-inputs-watch.json", html=True)
         html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
         dcf = fixture["valuation"]["results"]["dcf"]
         weighted = f"{dcf['probability_weighted_per_share']:.6f}".rstrip("0").rstrip(".")
-        zone_low = f"{dcf['value_zone']['low']:.6f}".rstrip("0").rstrip(".")
-        zone_high = f"{dcf['value_zone']['high']:.6f}".rstrip("0").rstrip(".")
-        self.assertIn('<div class="card-title">基本面估值锚</div>', html_view)
-        self.assertIn(
-            f'<div class="card-value">{weighted} USD</div>', html_view
-        )
-        self.assertIn('<div class="card-title">DCF 估值参考区间</div>', html_view)
-        self.assertIn(
-            f'<div class="card-value">{zone_low} – {zone_high} USD</div>', html_view
-        )
-        # 四张卡无一为“未计算”，且不使用交易目标类措辞。
-        self.assertNotIn('<div class="card-value">未计算</div>', html_view)
-        self.assertNotIn('<div class="card-title">基本面目标</div>', html_view)
-        self.assertNotIn('<div class="card-title">价值区间</div>', html_view)
+        self.assertIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertIn('<div class="card-value">未形成</div>', html_view)
+        self.assertIn('<div class="card-title">估值模型状态</div>', html_view)
+        self.assertIn("待重建", html_view)
+        self.assertNotIn("基本面估值锚", html_view)
+        self.assertNotIn("DCF 估值参考区间", html_view)
         self.assertNotIn("入场价值带", html_view)
+        # baseline 数值仍在第 7 章留档，且明确标注角色与质量门槛结论。
+        self.assertIn(weighted, markdown)
+        self.assertIn("模型角色：baseline（可审计基线）", markdown)
+        self.assertIn("不构成基本面目标", markdown)
+        self.assertIn("未形成基本面目标", markdown)
+        self.assertIn("不构成价值目标", markdown)
+
+    def test_watch_driver_dcf_usable_shows_custom_reference(self) -> None:
+        # 通用 driver DCF 质量门槛 usable：才显示“定制 DCF 参考值/参考区间”。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        fixture["valuation"]["results"]["driver_dcf"] = driver_dcf_artifact("usable")
+        result = run_renderer(fixture, self.workdir, html=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        markdown = (self.workdir / "underwriting.md").read_text(encoding="utf-8")
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        self.assertIn('<div class="card-title">定制 DCF 参考值</div>', html_view)
+        self.assertIn('<div class="card-value">42 USD</div>', html_view)
+        self.assertIn('<div class="card-title">定制 DCF 参考区间</div>', html_view)
+        self.assertIn('<div class="card-value">38.5 – 42 USD</div>', html_view)
+        self.assertNotIn("基本面估值锚", html_view)
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn("### 驱动型 DCF（经营驱动逐段推导现金流）", chapter_seven)
+        self.assertIn("质量门槛：**usable**", chapter_seven)
+        self.assertIn("定制 DCF 参考值（可作为基本面目标候选）：**42 USD**", chapter_seven)
+        self.assertIn("基本面参考值以质量门槛为 usable 的驱动型 DCF 为准", chapter_seven)
+        for word in TRADE_DIRECTIVE_WORDS:
+            self.assertNotIn(word, markdown)
+
+    def test_watch_driver_dcf_conditional_shows_conditional_output(self) -> None:
+        # conditional：显示“条件性模型输出”，不得显示“基本面估值锚”或参考值框架。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        fixture["valuation"]["results"]["driver_dcf"] = driver_dcf_artifact("conditional")
+        result = run_renderer(fixture, self.workdir, html=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        markdown = (self.workdir / "underwriting.md").read_text(encoding="utf-8")
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        self.assertIn('<div class="card-title">条件性模型输出</div>', html_view)
+        self.assertIn('<div class="card-value">42 USD</div>', html_view)
+        self.assertIn('<div class="card-title">估值参考区间</div>', html_view)
+        self.assertNotIn("基本面估值锚", html_view)
+        self.assertNotIn("定制 DCF 参考值", html_view)
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn("质量门槛：**conditional**", chapter_seven)
+        self.assertIn("条件性模型输出：42 USD", chapter_seven)
+        self.assertIn("未形成基本面目标", chapter_seven)
+
+    def test_watch_driver_dcf_unreliable_shows_rebuild_state(self) -> None:
+        # unreliable：显示“估值模型待重建/未形成基本面目标”，不给任何价值框架。
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        fixture["valuation"]["results"]["driver_dcf"] = driver_dcf_artifact("unreliable")
+        result = run_renderer(fixture, self.workdir, html=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        markdown = (self.workdir / "underwriting.md").read_text(encoding="utf-8")
+        html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
+        self.assertIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertIn('<div class="card-value">未形成</div>', html_view)
+        self.assertIn('<div class="card-title">估值模型状态</div>', html_view)
+        self.assertIn('<div class="card-value">待重建</div>', html_view)
+        self.assertNotIn("基本面估值锚", html_view)
+        self.assertNotIn("条件性模型输出</div>", html_view)
+        chapter_seven = markdown.split("## 7. ", 1)[1].split("## 8. ", 1)[0]
+        self.assertIn("质量门槛：**unreliable**", chapter_seven)
+        self.assertIn("估值模型待重建", chapter_seven)
+
+    def test_driver_dcf_unknown_quality_status_fails_closed(self) -> None:
+        fixture = load_fixture("underwriting-inputs-watch.json")
+        driver = driver_dcf_artifact("usable")
+        driver["quality"]["status"] = "excellent"
+        fixture["valuation"]["results"]["driver_dcf"] = driver
+        result = run_renderer(fixture, self.workdir)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("quality status is not supported", result.stderr)
 
     def test_watch_html_shows_finite_values_without_renderer_thresholds(self) -> None:
-        # 渲染层不设 >0 / low<=high 之类新规则：有限数值一律原样展示，
-        # 仅缺失或非有限才“未计算”。
+        # 渲染层不设 >0 / low<=high 之类新规则：usable 驱动型 DCF 的有限数值
+        # 一律原样展示，仅缺失或非有限才“未计算”。
         fixture = load_fixture("underwriting-inputs-watch.json")
-        dcf = fixture["valuation"]["results"]["dcf"]
-        dcf["probability_weighted_per_share"] = 0
-        dcf["value_zone"] = {"low": 16.560666, "high": 13.097573}
+        driver = driver_dcf_artifact("usable")
+        driver["probability_weighted_per_share"] = 0
+        driver["value_zone"] = {"low": 16.560666, "high": 13.097573}
+        fixture["valuation"]["results"]["driver_dcf"] = driver
         result = run_renderer(fixture, self.workdir, html=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
@@ -378,8 +494,8 @@ class UnderwritingRenderTests(unittest.TestCase):
         )
 
     def test_watch_without_computed_valuation_html_cards_fail_closed(self) -> None:
-        # 无任何已计算适用模型时，两项估值卡 fail closed 显示“未计算”，
-        # 且统一使用非行动标签，不出现“基本面目标 / 价值区间”。
+        # 无任何已计算适用模型时，估值卡 fail closed 显示“未形成/待重建”，
+        # 不出现“基本面估值锚 / 价值区间”等目标化措辞。
         fixture = load_fixture("underwriting-inputs-watch.json")
         for model in ("dcf", "epv", "eva", "sotp"):
             fixture["valuation"]["results"][model] = {
@@ -389,10 +505,11 @@ class UnderwritingRenderTests(unittest.TestCase):
         result = run_renderer(fixture, self.workdir, html=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         html_view = (self.workdir / "underwriting.html").read_text(encoding="utf-8")
-        self.assertEqual(html_view.count('<div class="card-value">未计算</div>'), 2)
-        self.assertIn('<div class="card-title">基本面估值锚</div>', html_view)
-        self.assertIn('<div class="card-title">估值参考区间</div>', html_view)
-        self.assertNotIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertIn('<div class="card-title">基本面目标</div>', html_view)
+        self.assertIn('<div class="card-value">未形成</div>', html_view)
+        self.assertIn('<div class="card-title">估值模型状态</div>', html_view)
+        self.assertIn('<div class="card-value">待重建</div>', html_view)
+        self.assertNotIn("基本面估值锚", html_view)
         self.assertNotIn('<div class="card-title">价值区间</div>', html_view)
         self.assertNotIn("DCF 估值参考区间", html_view)
 

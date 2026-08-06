@@ -52,6 +52,13 @@ A/H 对比四个可一次多选的选项，不得暗示单选；裸 ticker 可�
 - 估值一律由 `scripts/dcf.py` 运行并写入 `valuation.json`：三情景概率加权 DCF、反向
   DCF、PVGO、EPV、EVA/剩余收益、适用时 SOTP 与可选蒙特卡洛；概率显式且合计为 1，终值
   三查留档；不适用或缺输入显式记录，语言模型不得心算或补造数字。
+- 旧三情景 DCF 为可审计 baseline（`model_role: "baseline"`），其手工给定的现金流
+  路径不构成基本面目标。可选的通用驱动型 DCF（`models.dcf.driver_model`）按
+  NOPAT = revenue × operating_margin × (1 − tax_rate)、FCF = NOPAT + D&A − capex − ΔNWC
+  逐年推导现金流，高增长/过渡/稳定阶段写进显式驱动路径；通用质量门槛
+  （usable/conditional/unreliable）决定是否有资格形成“基本面目标/定制 DCF 参考值”，
+  未达 usable 时报告只能标注“条件性模型输出/估值模型待重建”，并优先并列 reverse
+  DCF 的市场隐含条件。严禁为贴近市价反向调整 WACC、g、FCF 或概率。
 - 财报质量由 `scripts/earnings_quality.py` 输出 A–D（应计、Beneish 适用性门、收入确认
   红旗、现金流、审计/治理），规则版本可复核；C/D 确定性否决多头 `entry_plan`，但不产生
   做空建议；数据不足时为暂定级。
